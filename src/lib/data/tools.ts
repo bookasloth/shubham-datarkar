@@ -1,0 +1,77 @@
+import type { Tool } from "@/lib/data/types";
+
+export const tools: Tool[] = [
+  {
+    slug: "seo-audit",
+    name: "Instant SEO Audit",
+    icon: "Gauge",
+    category: "SEO",
+    description: "Enter a URL and get a technical SEO audit in seconds. No signup for the core report.",
+    status: "Live",
+    uses: 9100,
+  },
+  {
+    slug: "roas-calculator",
+    name: "ROAS & Budget Modeler",
+    icon: "Calculator",
+    category: "Performance",
+    description: "Model projected returns across SEO, content, and paid before you spend a rupee.",
+    status: "Live",
+    uses: 5600,
+  },
+  {
+    slug: "copy-analyzer",
+    name: "Copy Analyzer",
+    icon: "PenLine",
+    category: "Content",
+    description: "Paste landing-page copy and get feedback on headline strength, clarity, and objections.",
+    status: "Live",
+    uses: 4200,
+  },
+  {
+    slug: "content-brief",
+    name: "Content Brief Generator",
+    icon: "FileText",
+    category: "SEO",
+    description: "Turn a target keyword into a full SEO brief: structure, word count, and angles.",
+    status: "Beta",
+    uses: 2800,
+  },
+  {
+    slug: "headline-tester",
+    name: "Headline Tester",
+    icon: "Type",
+    category: "Content",
+    description: "Score and rewrite headlines for clarity, curiosity, and search intent.",
+    status: "Live",
+    uses: 3100,
+  },
+  {
+    slug: "schema-generator",
+    name: "Schema Generator",
+    icon: "Braces",
+    category: "SEO",
+    description: "Generate valid JSON-LD for articles, FAQs, and breadcrumbs in a click.",
+    status: "Live",
+    uses: 1900,
+  },
+  {
+    slug: "utm-builder",
+    name: "UTM Builder",
+    icon: "Link2",
+    category: "Performance",
+    description: "Build clean, consistent campaign URLs with a saved naming convention.",
+    status: "Live",
+    uses: 2400,
+  },
+  {
+    slug: "readability-checker",
+    name: "Readability Checker",
+    icon: "BookOpen",
+    category: "Content",
+    description: "Check reading level, sentence length, and rhythm before you publish.",
+    status: "Soon",
+  },
+];
+
+export const getTool = (slug: string) => tools.find((t) => t.slug === slug);
