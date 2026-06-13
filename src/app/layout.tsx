@@ -5,7 +5,7 @@ import "./globals.css";
 import { site } from "@/lib/site";
 import { buildMetadata, personSchema } from "@/lib/seo";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Navbar } from "@/components/layout/navbar";
+import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
 import { CommandMenu } from "@/components/layout/command-menu";
 import { ToastProvider } from "@/components/ui/toast";
@@ -63,7 +63,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
             <CommandMenu />
             <div className="flex min-h-dvh flex-col">
-              <Navbar />
+              <Header />
               <main id="main" className="flex-1">
                 {children}
               </main>

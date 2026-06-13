@@ -293,6 +293,19 @@
     width: 45%;
     animation: progress-indeterminate 1.2s ease-in-out infinite;
   }
+
+  /* Header burger surface: left drawer on mobile, slide-down mega on desktop. */
+  @keyframes sheet-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes sheet-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  @keyframes mega-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+  @keyframes mega-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-12px); } }
+
+  .burger-anim[data-state="open"] { animation: sheet-in-left var(--dur-slow) var(--ease-out-quint); }
+  .burger-anim[data-state="closed"] { animation: sheet-out-left var(--dur-base) ease-in; }
+  @media (min-width: 1024px) {
+    .burger-anim[data-state="open"] { animation: mega-in var(--dur-base) var(--ease-out-quint); }
+    .burger-anim[data-state="closed"] { animation: mega-out var(--dur-fast) ease-in; }
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
