@@ -2,6 +2,7 @@ import { ArrowUpRight } from "lucide-react";
 import type { Platform } from "@/lib/data/types";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Icon } from "@/lib/icons";
 
 /** Venture/platform card — the whole card links out to the original site. */
 export function PlatformCard({ platform }: { platform: Platform }) {
@@ -14,8 +15,11 @@ export function PlatformCard({ platform }: { platform: Platform }) {
     >
       <Card interactive className="flex h-full flex-col p-6">
         <div className="flex items-start justify-between">
-          <span className="grid size-10 place-items-center rounded-card bg-foreground font-display text-xs font-bold text-background">
-            {platform.initials}
+          <span
+            className="grid size-11 place-items-center rounded-card"
+            style={{ backgroundColor: platform.accent }}
+          >
+            <Icon name={platform.icon} className="size-5 text-zinc-900" />
           </span>
           <ArrowUpRight className="size-4 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
         </div>

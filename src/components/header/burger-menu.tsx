@@ -5,13 +5,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { navGroups, primaryNav, site } from "@/lib/site";
+import { primaryNav, site } from "@/lib/site";
 import { caseStudies } from "@/lib/data/case-studies";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
 
 const latestCases = caseStudies.slice(0, 4);
+
+function SpotifyIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden>
+      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.586 14.424a.622.622 0 0 1-.857.207c-2.348-1.435-5.304-1.76-8.785-.964a.622.622 0 1 1-.277-1.215c3.809-.871 7.077-.496 9.713 1.115a.623.623 0 0 1 .206.857zM17.81 13.7a.78.78 0 0 1-1.072.257c-2.687-1.652-6.785-2.131-9.965-1.166a.779.779 0 1 1-.45-1.49c3.632-1.102 8.147-.568 11.23 1.327a.78.78 0 0 1 .257 1.072zm.105-2.835C14.692 8.95 9.375 8.775 6.298 9.71a.935.935 0 1 1-.542-1.79c3.532-1.072 9.404-.866 13.115 1.337a.935.935 0 0 1-.956 1.608z" />
+    </svg>
+  );
+}
 
 /**
  * Primary navigation surface. Radix Dialog gives focus trap, scroll lock,
@@ -75,26 +83,27 @@ export function BurgerMenu() {
                 ))}
               </div>
 
-              <div className="mt-6 grid gap-6 sm:grid-cols-2">
-                {navGroups.map((group) => (
-                  <div key={group.label}>
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                      {group.label}
-                    </p>
-                    <ul className="mt-2 flex flex-col">
-                      {group.items.map((it) => (
-                        <li key={it.href}>
-                          <Link
-                            href={it.href}
-                            className="block rounded-btn px-2 py-1.5 text-sm text-muted-foreground transition-ui hover:bg-accent hover:text-foreground"
-                          >
-                            {it.label}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
+              {/* Spotify — dedicated section with a playlist CTA */}
+              <div className="mt-8 rounded-card border border-border bg-card p-5">
+                <div className="flex items-center gap-2.5">
+                  <SpotifyIcon className="size-6 text-[#1DB954]" />
+                  <p className="font-display text-base font-bold">Spotify</p>
+                </div>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  The soundtrack behind the work — focus, build, repeat.
+                </p>
+                <a
+                  href={site.spotifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    buttonVariants({ size: "default" }),
+                    "mt-4 w-full bg-[#1DB954] text-black hover:bg-[#1ed760]",
+                  )}
+                >
+                  <SpotifyIcon className="size-4" />
+                  Visit My Playlist
+                </a>
               </div>
             </nav>
 

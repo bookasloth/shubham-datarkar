@@ -96,7 +96,10 @@ export type Platform = {
   description: string;
   category: string;
   url: string;
-  initials: string;
+  /** Icon registry key (see @/lib/icons). */
+  icon: string;
+  /** Pastel background for the icon tile (hex). */
+  accent: string;
 };
 
 export type Brand = { name: string };

@@ -3,6 +3,7 @@ import type { Platform } from "@/lib/data/types";
 /**
  * Headline ventures / platforms shown on the homepage. Each card links out to
  * the original website. URLs are placeholders until the real domains are wired.
+ * `icon` keys map to @/lib/icons; `accent` is the pastel icon-tile background.
  */
 export const platforms: Platform[] = [
   {
@@ -11,7 +12,8 @@ export const platforms: Platform[] = [
     description: "A strategy-led practice focused on positioning, structured distribution, SEO, and measurable growth.",
     category: "Agency",
     url: "https://theboguscompany.com",
-    initials: "BC",
+    icon: "Megaphone",
+    accent: "#FCE0E4",
   },
   {
     name: "Timewheel Internet",
@@ -19,7 +21,8 @@ export const platforms: Platform[] = [
     description: "Building membership software, booking systems, and event ticketing tools designed for simplicity and operational control.",
     category: "SaaS Studio",
     url: "https://timewheel.in",
-    initials: "TW",
+    icon: "Clock",
+    accent: "#DCE9FB",
   },
   {
     name: "Marketing Bug",
@@ -27,7 +30,8 @@ export const platforms: Platform[] = [
     description: "Clear thinking on growth, distribution, and digital leverage.",
     category: "Newsletter",
     url: "https://marketingbug.in",
-    initials: "MB",
+    icon: "Newspaper",
+    accent: "#DEF3E3",
   },
   {
     name: "ChaiPani",
@@ -35,7 +39,8 @@ export const platforms: Platform[] = [
     description: "A simple way for audiences to support creators directly.",
     category: "Payments",
     url: "https://chaipani.app",
-    initials: "CP",
+    icon: "CreditCard",
+    accent: "#FCEBD5",
   },
   {
     name: "Corporate Puppet",
@@ -43,7 +48,8 @@ export const platforms: Platform[] = [
     description: "Short-form content and conversations exploring modern corporate culture and performance.",
     category: "Media",
     url: "https://corporatepuppet.com",
-    initials: "CP",
+    icon: "Clapperboard",
+    accent: "#EAE2F8",
   },
   {
     name: "JNV Connect",
@@ -51,6 +57,7 @@ export const platforms: Platform[] = [
     description: "Membership, messaging, events, and digital networking built for long-term connection.",
     category: "Community",
     url: "https://jnvconnect.in",
-    initials: "JC",
+    icon: "Users",
+    accent: "#FBF0CE",
   },
 ];

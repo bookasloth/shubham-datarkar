@@ -47,11 +47,11 @@ export default function HomePage() {
 
       {/* 1 — Hero */}
       <Section bleed className="relative overflow-hidden border-b border-border">
-        <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top_left,#000_20%,transparent_70%)]" aria-hidden />
+        <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />
         <Container className="relative py-24 md:py-32">
-          <div className="max-w-3xl">
+          <div className="mx-auto max-w-3xl text-center">
             <Reveal>
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center justify-center gap-3">
                 <Badge variant="outline">
                   <span className="size-1.5 rounded-full bg-foreground" aria-hidden />
                   Available for Hire
@@ -65,7 +65,7 @@ export default function HomePage() {
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mt-6 max-w-xl text-lg text-muted-foreground">
+              <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
                 I&rsquo;m Shubham Datarkar — developer, digital strategist, storyteller &amp; builder. I focus on how
                 brands communicate clearly, convert intentionally, and build structures that compound over time. This
                 space documents my thinking, frameworks, tools, and lessons from building in public.
@@ -75,7 +75,7 @@ export default function HomePage() {
               <p className="mt-4 text-sm text-muted-foreground">If you value clarity over noise, we&rsquo;ll work well together.</p>
             </Reveal>
             <Reveal delay={0.2}>
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
                   <CalendarCheck />
                   Book a discovery call

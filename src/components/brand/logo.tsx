@@ -3,9 +3,13 @@ import { cn } from "@/lib/utils";
 import { site } from "@/lib/site";
 
 /**
- * The recognizable mark used on every page: a monogram tile + wordmark.
- * Pure monochrome so it reads on light or dark surfaces.
+ * Brand mark. Image-based — currently the Google logo as a PLACEHOLDER until
+ * the final mark is ready. Swap `LOGO_SRC` for the real asset (drop it in
+ * /public) when available. `showWordmark` is kept for API compatibility.
  */
+const LOGO_SRC =
+  "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
+
 export function Logo({
   className,
   showWordmark = true,
@@ -15,23 +19,17 @@ export function Logo({
   showWordmark?: boolean;
   href?: string | null;
 }) {
+  void showWordmark;
+
   const mark = (
-    <span className={cn("group inline-flex items-center gap-2.5", className)}>
-      <span
-        aria-hidden
-        className="grid size-8 place-items-center rounded-btn bg-foreground font-display text-sm font-extrabold leading-none text-background transition-ui group-hover:-translate-y-px"
-      >
-        SD
-      </span>
-      {showWordmark && (
-        <span className="flex flex-col leading-none">
-          <span className="font-display text-sm font-bold tracking-tight">{site.name}</span>
-          <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
-            {site.alias}
-          </span>
-        </span>
-      )}
-    </span>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={LOGO_SRC}
+      alt={`${site.name} (placeholder logo)`}
+      width={272}
+      height={92}
+      className={cn("h-6 w-auto select-none", className)}
+    />
   );
 
   if (href === null) return mark;
@@ -39,7 +37,7 @@ export function Logo({
     <Link
       href={href}
       aria-label={`${site.name} — home`}
-      className="rounded-btn focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="inline-flex rounded-btn focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       {mark}
     </Link>

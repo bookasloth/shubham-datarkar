@@ -18,6 +18,8 @@ export const site = {
     "Shubham Datarkar (The Kalamwala) builds things that make other things easier — ads, brands, and entire software. Copywriter, marketer, and founder behind The Bogus Company, Book A Sloth, and Timewheel Internet.",
   // External booking software — Book A Sloth, his own scheduling product.
   bookingUrl: "https://bookasloth.in",
+  // PLACEHOLDER playlist — swap for the real Spotify playlist URL.
+  spotifyUrl: "https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M",
 } as const;
 
 export const companies = [
