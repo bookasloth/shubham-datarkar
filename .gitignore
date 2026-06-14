@@ -42,3 +42,4 @@ next-env.d.ts
 
 # local agent/tooling state (worktrees, caches, launch config)
 /.claude/
+/graphify-out/
