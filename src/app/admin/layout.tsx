@@ -4,7 +4,8 @@ import { SignOutButton } from "@/components/admin/sign-out-button";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
-  // later slices add: /admin/posts, /admin/subscribers
+  { href: "/admin/posts", label: "Posts" },
+  // later slices add: /admin/subscribers
 ];
 
 export default async function AdminLayout({
