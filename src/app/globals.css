@@ -1,0 +1,318 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ */
+/*  Dark mode = class strategy (driven by next-themes), not media query */
+/* ------------------------------------------------------------------ */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ================================================================== */
+/*  DESIGN TOKENS — Pure monochrome. Black / white / gray only.       */
+/*  Functional status tones are intentionally desaturated.            */
+/* ================================================================== */
+:root {
+  /* Surfaces */
+  --background: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #ffffff;
+  --card-foreground: #0a0a0a;
+  --popover: #ffffff;
+  --popover-foreground: #0a0a0a;
+
+  /* Brand-neutral primary (ink) */
+  --primary: #0a0a0a;
+  --primary-foreground: #fafafa;
+
+  /* Secondary / muted / accent (all grayscale) */
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #6b6b73;
+  --accent: #f4f4f5;
+  --accent-foreground: #18181b;
+
+  /* Lines + focus */
+  --border: #e4e4e7;
+  --input: #e4e4e7;
+  --ring: #0a0a0a;
+
+  /* Desaturated functional states (used sparingly, never decorative) */
+  --success: #2f7d57;
+  --success-foreground: #ffffff;
+  --warning: #8a6d1f;
+  --warning-foreground: #ffffff;
+  --danger: #b23b30;
+  --danger-foreground: #ffffff;
+
+  /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
+  --radius-btn: 4px;
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-img: 12px;
+
+  /* Elevation — paper floating above glass (very subtle) */
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 6px -2px rgb(0 0 0 / 0.05);
+  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.12), 0 4px 12px -4px rgb(0 0 0 / 0.06);
+
+  /* Shared motion language */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --dur-fast: 150ms;
+  --dur-base: 200ms;
+  --dur-slow: 300ms;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #fafafa;
+  --card: #101012;
+  --card-foreground: #fafafa;
+  --popover: #101012;
+  --popover-foreground: #fafafa;
+
+  --primary: #fafafa;
+  --primary-foreground: #0a0a0a;
+
+  --secondary: #1b1b1f;
+  --secondary-foreground: #fafafa;
+  --muted: #18181b;
+  --muted-foreground: #a1a1aa;
+  --accent: #1b1b1f;
+  --accent-foreground: #fafafa;
+
+  --border: #27272a;
+  --input: #2a2a2e;
+  --ring: #fafafa;
+
+  --success: #4ea884;
+  --warning: #c9a94a;
+  --danger: #e0695e;
+
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
+  --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
+  --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.45);
+  --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+}
+
+/* ================================================================== */
+/*  Tailwind theme mapping — exposes tokens as utilities              */
+/* ================================================================== */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-danger: var(--danger);
+  --color-danger-foreground: var(--danger-foreground);
+
+  --radius-btn: var(--radius-btn);
+  --radius-input: var(--radius-input);
+  --radius-card: var(--radius-card);
+  --radius-img: var(--radius-img);
+
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Fonts — Plus Jakarta Sans (display / h1–h4), Poppins (body / UI) */
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Content width ceilings */
+  --container-prose: 720px;
+  --container-page: 1280px;
+}
+
+/* ================================================================== */
+/*  Base layer                                                        */
+/* ================================================================== */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    scrollbar-gutter: stable;
+  }
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.7;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  p { text-wrap: pretty; }
+
+  /* Visible, monochrome focus ring — WCAG AA keyboard support */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+  /* Remove the ring for mouse users who didn't tab in */
+  :focus:not(:focus-visible) { outline: none; }
+
+  ::selection {
+    background: var(--foreground);
+    color: var(--background);
+  }
+
+  /* Thin monochrome scrollbar */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border) transparent;
+  }
+  *::-webkit-scrollbar { width: 10px; height: 10px; }
+  *::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 999px;
+    border: 3px solid var(--background);
+  }
+}
+
+/* ================================================================== */
+/*  Motion — one shared language. Respects reduced-motion.            */
+/* ================================================================== */
+@layer utilities {
+  .transition-ui {
+    transition-property: color, background-color, border-color, box-shadow,
+      transform, opacity;
+    transition-timing-function: var(--ease-out-quint);
+    transition-duration: var(--dur-base);
+  }
+
+  /* Editorial reading column */
+  .prose-column { max-width: var(--container-prose); }
+
+  /* Infinite marquee for tickers (testimonials, logos) */
+  @keyframes marquee-x {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  .animate-marquee {
+    animation: marquee-x var(--marquee-duration, 40s) linear infinite;
+  }
+  .marquee-mask {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  }
+
+  /* Subtle grid/dot background used on hero + section dividers */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px),
+      linear-gradient(to bottom, color-mix(in srgb, var(--foreground) 5%, transparent) 1px, transparent 1px);
+    background-size: 64px 64px;
+  }
+  .bg-dots {
+    background-image: radial-gradient(
+      color-mix(in srgb, var(--foreground) 9%, transparent) 1px,
+      transparent 1px
+    );
+    background-size: 22px 22px;
+  }
+}
+
+/* ================================================================== */
+/*  Radix overlay enter/exit — one shared animation vocabulary.        */
+/*  Radix waits for these CSS animations before unmounting.            */
+/* ================================================================== */
+@layer components {
+  @keyframes overlay-in { from { opacity: 0; } to { opacity: 1; } }
+  @keyframes overlay-out { from { opacity: 1; } to { opacity: 0; } }
+  @keyframes pop-in {
+    from { opacity: 0; transform: translateY(4px) scale(0.98); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @keyframes pop-out {
+    from { opacity: 1; transform: translateY(0) scale(1); }
+    to { opacity: 0; transform: translateY(4px) scale(0.98); }
+  }
+  @keyframes sheet-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes sheet-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
+  @keyframes accordion-down { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
+  @keyframes accordion-up { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
+
+  .overlay-anim[data-state="open"] { animation: overlay-in var(--dur-base) ease; }
+  .overlay-anim[data-state="closed"] { animation: overlay-out var(--dur-fast) ease; }
+  .pop-anim[data-state="open"] { animation: pop-in var(--dur-base) var(--ease-out-quint); }
+  .pop-anim[data-state="closed"] { animation: pop-out var(--dur-fast) ease-in; }
+  .sheet-anim[data-state="open"] { animation: sheet-in-right var(--dur-slow) var(--ease-out-quint); }
+  .sheet-anim[data-state="closed"] { animation: sheet-out-right var(--dur-base) ease-in; }
+  .acc-anim[data-state="open"] { animation: accordion-down var(--dur-base) var(--ease-out-quint); }
+  .acc-anim[data-state="closed"] { animation: accordion-up var(--dur-fast) var(--ease-out-quint); }
+
+  @keyframes collapsible-down { from { height: 0; } to { height: var(--radix-collapsible-content-height); } }
+  @keyframes collapsible-up { from { height: var(--radix-collapsible-content-height); } to { height: 0; } }
+  .collapsible-anim[data-state="open"] { animation: collapsible-down var(--dur-base) var(--ease-out-quint); }
+  .collapsible-anim[data-state="closed"] { animation: collapsible-up var(--dur-fast) var(--ease-out-quint); }
+
+  @keyframes progress-indeterminate {
+    0% { left: -45%; }
+    100% { left: 100%; }
+  }
+  .progress-indeterminate {
+    position: absolute;
+    top: 0;
+    height: 100%;
+    width: 45%;
+    animation: progress-indeterminate 1.2s ease-in-out infinite;
+  }
+
+  /* Header burger surface: left drawer on mobile, slide-down mega on desktop. */
+  @keyframes sheet-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes sheet-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+  @keyframes mega-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+  @keyframes mega-out { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateY(-12px); } }
+
+  .burger-anim[data-state="open"] { animation: sheet-in-left var(--dur-slow) var(--ease-out-quint); }
+  .burger-anim[data-state="closed"] { animation: sheet-out-left var(--dur-base) ease-in; }
+  @media (min-width: 1024px) {
+    .burger-anim[data-state="open"] { animation: mega-in var(--dur-base) var(--ease-out-quint); }
+    .burger-anim[data-state="closed"] { animation: mega-out var(--dur-fast) ease-in; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
