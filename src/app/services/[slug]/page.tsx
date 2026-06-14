@@ -132,21 +132,23 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 <Badge variant="muted">{service.tagline}</Badge>
                 <div className="mt-4">
                   <span className="text-xs text-muted-foreground">Starting at</span>
-                  <div className="font-display text-3xl font-extrabold tracking-tight">{service.startingAt}</div>
+                  <div className="flex items-baseline gap-1.5 flex-wrap">
+                    <span className="font-display text-3xl font-extrabold tracking-tight">{service.startingAt}</span>
+                    <span className="text-[10px] text-muted-foreground">+ ₹11.8 Booking Charges</span>
+                  </div>
                 </div>
                 <a
                   href={site.bookingUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full")}
+                  className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full hover:bg-[#fe5100] hover:text-black")}
                 >
                   <CalendarCheck />
                   Book a call
                 </a>
-                <Link href="/contact" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-2 w-full")}>
+                <Link href="/contact" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-2 w-full hover:bg-[#fe5100] hover:text-black hover:border-[#fe5100]")}>
                   Send a brief
                 </Link>
-                <p className="mt-4 text-center text-xs text-muted-foreground">Typical reply within 1 business day.</p>
               </Card>
             </aside>
           </div>
