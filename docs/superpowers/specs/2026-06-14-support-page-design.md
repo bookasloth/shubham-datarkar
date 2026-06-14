@@ -92,7 +92,9 @@ Reuse existing UI primitives (`button`, `card`, `badge`, `avatar`, `avatar-group
 
 ---
 
-## 6. Data model (Supabase — project `BAS - Dot Com`, ref `xwvciqkayammbvsidqig`)
+## 6. Data model (Supabase — Shubham's OWN separate project)
+
+> **Infra rule:** This site uses its own Supabase account/project (NOT the connected "BAS - Dot Com" MCP project, ref `xwvciqkayammbvsidqig`, which belongs to a different business). No MCP migrations/reads/writes against BAS. DB changes ship as SQL migration files the user runs in their own Supabase SQL editor; the app connects via `.env.local` only.
 
 ### Table `supports`
 | Column | Type | Notes |
@@ -129,7 +131,7 @@ Server creates a session; client widget collects payment; webhook confirms. Card
 4. **Webhook** `POST /api/support/webhook`: verify signature (`ZOHO_WEBHOOK_SECRET`); on success mark row `paid` + store `zoho_payment_id`; on failure mark `failed`.
 5. **Client**: success state "Thank you"; the support appears on the wall once the webhook has confirmed.
 
-Build against **sandbox** (`https://paymentssandbox.zoho.in`, scopes `ZohoPaySandbox.*`); flip to live by swapping env. Follow Zoho dev docs for exact endpoints/params at build time:
+**Decision (2026-06-14): build against LIVE** (`https://payments.zoho.in`, scopes `ZohoPay.*`) — no sandbox access. Test with smallest real amount (1 toffee = ₹5) and refund via dashboard. Amount validation + webhook signature verification MUST be confirmed working before public launch. Follow Zoho dev docs for exact endpoints/params at build time:
 - https://www.zoho.com/in/payments/api/v1/introduction/
 - https://www.zoho.com/in/payments/developerdocs/web-integration/integrate-widget/
 - https://www.zoho.com/us/payments/faq/general/sandbox/
@@ -145,7 +147,7 @@ ZOHO_OAUTH_CLIENT_ID=
 ZOHO_OAUTH_CLIENT_SECRET=
 ZOHO_OAUTH_REFRESH_TOKEN=
 ZOHO_WEBHOOK_SECRET=
-ZOHO_API_BASE=https://paymentssandbox.zoho.in
+ZOHO_API_BASE=https://payments.zoho.in
 ```
 
 ---
