@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { blogCategories, getPostsByCategory } from "@/lib/data/posts";
+import { blogCategories } from "@/lib/data/posts";
+import { getPublishedPostsByCategory } from "@/lib/blog/queries";
 import type { BlogCategory } from "@/lib/data/types";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -11,9 +12,7 @@ import { PostCard } from "@/components/cards/post-card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FileText } from "lucide-react";
 
-export function generateStaticParams() {
-  return blogCategories.map((c) => ({ category: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;
@@ -27,7 +26,7 @@ export default async function BlogCategoryPage({ params }: { params: Promise<{ c
   const cat = blogCategories.find((c) => c.slug === category);
   if (!cat) notFound();
 
-  const categoryPosts = getPostsByCategory(cat.slug as BlogCategory);
+  const categoryPosts = await getPublishedPostsByCategory(cat.slug as BlogCategory);
 
   return (
     <>
