@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { ArticleBody } from "@/components/content/article-body";
+import { ReadingProgress } from "@/components/content/reading-progress";
 import { PostCard } from "@/components/cards/post-card";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { Reveal } from "@/components/motion/reveal";
@@ -44,6 +45,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
 
   return (
     <>
+      <ReadingProgress />
       <JsonLd
         data={[
           articleSchema({

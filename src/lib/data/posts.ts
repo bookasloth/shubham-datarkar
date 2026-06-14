@@ -83,6 +83,322 @@ function body(intro: string): ContentBlock[] {
   ];
 }
 
+/**
+ * Kitchen-sink body for "SEO Is Infrastructure, Not Traffic".
+ * Exercises every supported content block + inline mark, woven into a real
+ * editorial flow. The page <h1> is the post title; in-body headings start at h2.
+ */
+function seoInfrastructureBody(): ContentBlock[] {
+  return [
+    {
+      type: "lead",
+      text: [
+        "Most teams treat SEO like a content treadmill — publish forever or rankings die. That isn't infrastructure; it's a ",
+        { t: "i", text: "job" },
+        ". Real SEO is built like a system that keeps paying out ",
+        { t: "mark", text: "long after the work is done" },
+        ".",
+      ],
+    },
+    {
+      type: "p",
+      text: [
+        "I've shipped this model across a ",
+        { t: "tooltip", text: "UAE cake shop", tip: "Occasion Cakes — ranked #1 for 40+ local queries." },
+        ", a real-estate brand, and three SaaS products. The pattern never changes: build one ",
+        { t: "b", text: "owned mechanism" },
+        ", instrument it, then let it compound. Everything below is the playbook — and a ",
+        { t: "popover", text: "live demonstration", content: "This very article renders every content block our CMS supports, in natural editorial order." },
+        " of how we present it.",
+      ],
+    },
+    { type: "tags", items: ["SEO", "Systems", "Compounding", "Technical SEO", "Content"] },
+
+    {
+      type: "takeaways",
+      items: [
+        "Treat every page as infrastructure with an owner, a job, and a review date.",
+        ["Depth beats breadth — a complete cluster outranks a scattered ", { t: "i", text: "library" }, " every time."],
+        "Instrument one north-star metric; ignore vanity dashboards.",
+        "If you stopped publishing for a month and results held, you built a system.",
+      ],
+    },
+
+    { type: "figure", featured: true, image: { seed: "seo-architecture-map", alt: "Diagram of a pillar-and-cluster content architecture", ratio: "16/9", caption: ["A pillar page anchored by tightly interlinked supporting articles — the ", { t: "b", text: "spine" }, " of an owned SEO system."] } },
+
+    { type: "h2", text: "Why the usual approach quietly fails" },
+    {
+      type: "p",
+      text: [
+        "The default failure mode is effort without leverage — doing more of the same and hoping volume rescues a weak mechanism. It rarely does. You can publish ",
+        { t: "code", text: "1 post/day" },
+        " for a year and still rank for nothing that converts.",
+      ],
+    },
+    {
+      type: "callout",
+      variant: "warning",
+      text: "Publishing cadence is an input, not an outcome. Optimising the input while the mechanism is broken just burns budget faster.",
+    },
+    {
+      type: "p",
+      text: [
+        "Work that compounds shares three traits. Miss any one and the asset decays the moment you stop pushing it",
+        { t: "fn", n: 1 },
+        ".",
+      ],
+    },
+    {
+      type: "ul",
+      items: [
+        { text: [{ t: "b", text: "Owned" }, " — it lives on an asset you control, not a rented feed."], items: ["Your domain, your CMS, your email list — not someone else's algorithm."] },
+        { text: [{ t: "b", text: "Measurable" }, " — one north-star number you check weekly."], items: ["Not a 40-widget dashboard nobody opens."] },
+        [{ t: "b", text: "Self-improving" }, " — each cycle feeds the next with data, links, or distribution."],
+      ],
+    },
+
+    {
+      type: "pullquote",
+      text: "Growth is not forced. It is designed.",
+      cite: "An operating principle from the farm",
+    },
+
+    { type: "h2", text: "The mechanism, step by step" },
+    {
+      type: "p",
+      text: [
+        "Start narrow. Pick the one query, channel, or surface where you can plausibly become ",
+        { t: "u", text: "the best answer" },
+        " within ninety days. Press ",
+        { t: "kbd", text: "⌘" },
+        " ",
+        { t: "kbd", text: "K" },
+        " on most modern tools and you'll find the search box — that box is your battlefield.",
+      ],
+    },
+    {
+      type: "steps",
+      items: [
+        { title: "Map the real demand", detail: "The questions in the exact words people use — not your internal jargon." },
+        { title: "Build the spine", detail: ["One pillar asset, deeply interlinked with supporting pieces. ", { t: "i", text: "Depth before breadth." }] },
+        { title: "Instrument it", detail: "Define the single metric that proves it's working." },
+        { title: "Compound it", detail: "Refresh, expand, and redistribute on a fixed cadence." },
+      ],
+    },
+
+    { type: "h3", text: "What the build actually looks like" },
+    {
+      type: "p",
+      text: "In production this means treating every asset — a page, a campaign, a product — as infrastructure. Here's the schema we attach to each page so it always has an owner and a job:",
+    },
+    {
+      type: "code",
+      filename: "content/page.config.ts",
+      lang: "ts",
+      code: `// Every page is infrastructure: it has an owner, a job, a review date.
+export const page = {
+  slug: "local-seo-for-bakeries",
+  intent: "commercial",     // informational | commercial | transactional
+  owner: "shubham",
+  northStar: "qualified_calls",
+  reviewEvery: 90,          // days
+  links: { pillar: "/seo-system", cluster: ["/gbp", "/reviews"] },
+};
+
+// If a page can't answer "what's your job?", it shouldn't ship.
+function audit(p) {
+  return p.intent && p.northStar && p.owner;
+}`,
+    },
+    {
+      type: "callout",
+      variant: "tip",
+      text: ["Give every page a ", { t: "code", text: "reviewEvery" }, " date. Stale infrastructure is how rankings quietly rot — schedule the refresh before you publish, not after you slip."],
+    },
+
+    { type: "h4", text: "A quick before / after" },
+    {
+      type: "table",
+      columns: ["Metric", "Before", "After (180 days)"],
+      rows: [
+        ["Organic sessions / mo", "120", [{ t: "b", text: "50,400" }]],
+        ["Qualified calls / mo", "3", [{ t: "b", text: "71" }]],
+        ["Cost per acquisition", "₹9,800", [{ t: "b", text: "₹3,100" }]],
+        ["Aggregator dependence", "82%", [{ t: "b", text: "19%" }]],
+      ],
+      caption: "Occasion Cakes — six months after switching from cadence to infrastructure.",
+    },
+
+    { type: "metricsGrid", metrics: [
+      { value: 420, suffix: "x", label: "Organic growth" },
+      { value: 96, suffix: "%", label: "First-page queries" },
+      { value: 3.1, decimals: 1, suffix: "x", label: "Blended ROAS" },
+      { value: 19, label: "Outlets opened" },
+    ] },
+
+    { type: "h2", text: "Owned vs rented: the real comparison" },
+    {
+      type: "comparisonTable",
+      columns: ["Owned SEO", "Paid ads", "Marketplaces"],
+      rows: [
+        { label: "Compounds over time", cells: [true, false, false] },
+        { label: "Survives a budget pause", cells: [true, false, "partial"] },
+        { label: "You control the data", cells: [true, "partial", false] },
+        { label: "Instant on", cells: [false, true, true] },
+      ],
+    },
+    {
+      type: "comparisonCards",
+      cards: [
+        { title: "Renting attention", subtitle: "Ads, aggregators, feeds", rows: [
+          { label: "Time to results", value: "Days" },
+          { label: "Cost trajectory", value: "Rising" },
+          { label: "Stops when you stop", value: "Yes" },
+        ] },
+        { title: "Owning the asset", subtitle: "Search + email + product", highlight: true, rows: [
+          { label: "Time to results", value: "Weeks" },
+          { label: "Cost trajectory", value: "Falling" },
+          { label: "Stops when you stop", value: "No" },
+        ] },
+      ],
+    },
+
+    { type: "prosCons", pros: [
+      "Compounds without ongoing spend",
+      "Builds a defensible moat",
+      "Generates first-party data",
+    ], cons: [
+      "Slow to start — weeks, not days",
+      "Requires editorial discipline",
+      "Hard to fake or shortcut",
+    ] },
+
+    { type: "divider" },
+
+    { type: "h2", text: "See it in motion" },
+    { type: "p", text: "A two-minute walkthrough of the architecture, and the audio version for the commute." },
+    { type: "video", id: "dQw4w9WgXcQ", title: "SEO as infrastructure — a 2-minute walkthrough", caption: "Whiteboard version of the pillar-cluster spine." },
+    { type: "audio", title: "SEO Is Infrastructure (audio edition)", subtitle: "Narrated by the author · 3:34" },
+
+    { type: "h3", text: "From the field" },
+    { type: "figures", images: [
+      { seed: "gbp-before", alt: "Google Business Profile before optimisation" },
+      { seed: "gbp-after", alt: "Google Business Profile after optimisation" },
+    ] },
+    { type: "caption", text: "Left: the profile we inherited. Right: ninety days of infrastructure." },
+
+    { type: "p", text: "Local intent is geographic — so the storefront on the map matters as much as the one on the street." },
+    { type: "map", query: "Mumbai, India", label: "Service area — Mumbai Metropolitan Region" },
+
+    { type: "p", text: "The full campaign gallery — swipe through the assets we shipped:" },
+    { type: "gallery", images: [
+      { seed: "asset-pillar", alt: "Pillar page wireframe" },
+      { seed: "asset-cluster", alt: "Cluster article template" },
+      { seed: "asset-schema", alt: "Structured-data schema" },
+      { seed: "asset-report", alt: "Monthly reporting dashboard" },
+    ] },
+
+    { type: "expertInsight", name: "Priya Nair", role: "Head of Growth, Meridian", quote: ["The reframe that stuck with me: ", { t: "i", text: "stop measuring traffic, start measuring whether the asset still does its job." }, " It changed how our whole team plans content."] },
+
+    { type: "h2", text: "Instrumentation that doesn't lie" },
+    { type: "p", text: ["Pick one north-star, then watch how each cluster contributes. Here's roughly where a healthy system sits at the six-month mark", { t: "fn", n: 2 }, ":"] },
+    { type: "progress", label: "Pillar coverage", value: 86 },
+    { type: "progress", label: "Internal-link density", value: 72 },
+    { type: "progress", label: "Refresh cadence adherence", value: 64 },
+
+    { type: "statCards", stats: [
+      { value: "90 days", label: "To first-page", sub: "for the target cluster" },
+      { value: "1 metric", label: "North-star", sub: "qualified calls" },
+      { value: "0", label: "Rented feeds", sub: "everything owned" },
+    ] },
+
+    { type: "callout", variant: "info", title: "Definitions", text: ["A ", { t: "b", text: "cluster" }, " is a pillar page plus every supporting article that links to it. A ", { t: "b", text: "spine" }, " is how those clusters interlink across the whole site."] },
+
+    { type: "h2", text: "Common questions" },
+    { type: "faq", items: [
+      { q: "How long until this works?", a: ["Most clusters reach the first page within ", { t: "b", text: "60–120 days" }, " if the mechanism is sound and the domain isn't penalised."] },
+      { q: "Do I still need paid ads?", a: "Yes — to buy speed while the owned system warms up. Then ads become optional, not load-bearing." },
+      { q: "What about AI-written content?", a: ["Use it to accelerate research and drafting. Never let it replace judgement — see the ", { t: "code", text: "audit()" }, " gate above."] },
+    ] },
+
+    { type: "tabs", items: [
+      { label: "Local", content: ["For local businesses, the Google Business Profile ", { t: "i", text: "is" }, " the storefront. Reviews and occasion-based pages do the qualifying."] },
+      { label: "SaaS", content: "For SaaS, the docs and use-case pages are the spine. Each integration becomes a cluster." },
+      { label: "Marketplace", content: "On marketplaces you rent reach — so mirror every listing onto an owned page you control." },
+    ] },
+
+    { type: "expand", summary: "Show the 12-week rollout calendar", content: ["Weeks 1–2: demand map + audit. Weeks 3–6: pillar build. Weeks 7–10: cluster articles + internal links. Weeks 11–12: instrumentation + first refresh. Then repeat on a ", { t: "b", text: "90-day" }, " loop."] },
+
+    { type: "h2", text: "The journey that taught me this" },
+    { type: "timeline", items: [
+      { marker: "2019", title: "Sold words by the hour", description: "Copywriting. Effort without leverage." },
+      { marker: "2021", title: "Discovered SEO", description: "Watched one page outperform a year of posts." },
+      { marker: "2024", title: "Started the SaaS studio", description: "Turned the playbook into products." },
+      { marker: "2026", title: "Built the Digital HQ", description: "Infrastructure, all the way down." },
+    ] },
+
+    { type: "authorNote", text: "I rewrote this essay three times. The first two versions were about tactics. This one is about ownership — and it's the only version I'd stake my name on." },
+
+    { type: "socialEmbed", author: "Shubham Datarkar", handle: "@thekalamwala", text: "Hot take: your content calendar is a liability if removing it kills your traffic. Build assets, not obligations.", date: "Jun 4, 2026" },
+
+    { type: "quote", text: "If you stopped publishing for a month, would this still produce results? If yes, you built a system. If no, you bought a campaign.", cite: "The test I run on every asset" },
+
+    { type: "spacer", size: "sm" },
+
+    { type: "h2", text: "Take this with you" },
+    { type: "download", title: "The SEO Infrastructure Checklist", description: "The exact 12-week rollout, as a printable one-pager.", meta: "PDF · 240 KB · updated Jun 2026" },
+    { type: "tasklist", items: [
+      { text: "Map demand in the user's own words", done: true },
+      { text: "Ship one pillar + 5 cluster articles", done: true },
+      { text: ["Wire the ", { t: "code", text: "northStar" }, " metric"], done: false },
+      { text: "Schedule the 90-day refresh", done: false },
+    ] },
+
+    { type: "resourceList", items: [
+      { title: "Local SEO teardown: UAE cake shop", kind: "Case study", href: "/blog/seo/rank-uae-cake-shop-local-seo" },
+      { title: "Why most marketing fails before it starts", kind: "Essay", href: "/blog/content/why-most-marketing-fails-before-it-starts" },
+      { title: "AI in my actual workflow", kind: "Guide", href: "/blog/ai/ai-in-my-actual-workflow" },
+    ] },
+
+    { type: "quickFacts", facts: [
+      { label: "Best for", value: "Owned, durable growth" },
+      { label: "Time to results", value: "60–120 days" },
+      { label: "Ongoing cost", value: "Falls over time" },
+      { label: "Hardest part", value: "Editorial discipline" },
+    ] },
+
+    { type: "h2", text: "Work with this model" },
+    { type: "p", text: "Three ways in, depending on whether you want a map, a build, or an ongoing engine." },
+    { type: "pricing" },
+
+    { type: "buttonGroup", buttons: [
+      { label: "Book a strategy call", href: "/book" },
+      { label: "See case studies", href: "/case-studies", variant: "outline" },
+      { label: "Browse the blog", href: "/blog", variant: "ghost" },
+    ] },
+
+    { type: "cta", title: "Ready to build infrastructure?", text: "Let's design a system that compounds whether you show up or not.", button: "Start a project", href: "/contact" },
+
+    { type: "newsletter", title: "One signal every Tuesday", text: "Get the next playbook in your inbox — no noise, just systems that ship." },
+
+    { type: "summary", text: ["Stop renting attention. Build one owned mechanism, instrument a single metric, and refresh on a fixed cadence. ", { t: "b", text: "Structure beats noise" }, " — every time."] },
+
+    { type: "relatedCard", slug: "from-copywriter-to-system-builder" },
+
+    { type: "references", items: [
+      { label: "Search Quality Rater Guidelines", href: "https://developers.google.com/search", source: "Google" },
+      { label: "The Compounding Engine essay", href: "https://shubhamdatarkar.com/blog", source: "Internal" },
+    ] },
+
+    { type: "footnotes", items: [
+      { n: 1, text: "Decay rate varies by niche, but un-refreshed pages typically lose first-page positions within 6–12 months." },
+      { n: 2, text: ["Numbers are illustrative composites across client engagements, not a single account. See ", { t: "a", text: "case studies", href: "/case-studies" }, " for sourced figures."] },
+    ] },
+
+    { type: "small", text: ["Last reviewed June 2026. This article is itself a demo of every block our editor supports — H", { t: "sub", text: "2" }, "–H", { t: "sub", text: "4" }, ", media, data, and conversion components, rendered at scale", { t: "sup", text: "★" }, "."] },
+  ];
+}
+
 export const posts: Post[] = [
   {
     slug: "rank-uae-cake-shop-local-seo",
@@ -155,9 +471,7 @@ export const posts: Post[] = [
     tags: ["SEO", "Strategy", "Systems"],
     date: "2026-03-25",
     words: 2100,
-    body: body(
-      "Most teams treat SEO like a content treadmill — publish forever or rankings die. That's not infrastructure; that's a job. Real SEO is built like a system that keeps paying out long after the work is done.",
-    ),
+    body: seoInfrastructureBody(),
   },
   {
     slug: "why-most-marketing-fails-before-it-starts",

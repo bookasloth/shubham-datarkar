@@ -4,6 +4,34 @@ import * as React from "react";
 import { Check, Copy } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+const KEYWORDS = new Set([
+  "const", "let", "var", "function", "return", "if", "else", "for", "while", "import", "from",
+  "export", "default", "await", "async", "new", "class", "extends", "type", "interface", "of",
+  "in", "true", "false", "null", "undefined", "void", "echo", "cd", "npm", "npx", "git", "sudo",
+]);
+
+/**
+ * Minimal, dependency-free, monochrome syntax highlighting. Distinguishes
+ * comments / strings / keywords / numbers using weight + opacity only — no
+ * color, staying inside the grayscale design system.
+ */
+function highlight(code: string): React.ReactNode[] {
+  const tokenRe = /(\/\/[^\n]*|#[^\n]*|\/\*[\s\S]*?\*\/)|("(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`)|(\b\d[\d_.]*\b)|([A-Za-z_$][\w$]*)|([\s\S])/g;
+  const out: React.ReactNode[] = [];
+  let m: RegExpExecArray | null;
+  let i = 0;
+  while ((m = tokenRe.exec(code))) {
+    const [, comment, str, num, word, other] = m;
+    if (comment) out.push(<span key={i} className="italic text-muted-foreground">{comment}</span>);
+    else if (str) out.push(<span key={i} className="text-foreground/65">{str}</span>);
+    else if (num) out.push(<span key={i} className="font-medium">{num}</span>);
+    else if (word) out.push(KEYWORDS.has(word) ? <span key={i} className="font-semibold text-foreground">{word}</span> : <span key={i}>{word}</span>);
+    else out.push(other);
+    i++;
+  }
+  return out;
+}
+
 /** Code block with an optional filename header and a copy button. */
 export function CodeBlock({
   code,
@@ -39,7 +67,7 @@ export function CodeBlock({
         </button>
       </div>
       <pre className="overflow-x-auto p-4 text-sm leading-relaxed">
-        <code className="font-mono text-foreground">{code}</code>
+        <code className="font-mono text-foreground">{highlight(code)}</code>
       </pre>
     </div>
   );
