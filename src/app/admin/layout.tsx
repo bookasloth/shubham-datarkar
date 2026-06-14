@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/session";
 import { SignOutButton } from "@/components/admin/sign-out-button";
+import { ENTITY_LIST } from "@/lib/content/registry";
 
 const NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/posts", label: "Posts" },
-  // later slices add: /admin/subscribers
+  ...ENTITY_LIST.map((e) => ({ href: `/admin/content/${e.key}`, label: e.label })),
+  { href: "/admin/subscribers", label: "Subscribers" },
 ];
 
 export default async function AdminLayout({
