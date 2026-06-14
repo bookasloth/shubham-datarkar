@@ -1,22 +1,26 @@
 import { Heart } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf } from "@/lib/support/config";
-import type { MockSupporter } from "@/lib/data/support-content";
+import type { RecentSupporter } from "@/lib/support/queries";
+
+const displayName = (name: string | null) => name ?? "A supporter";
 
 /** Light social proof under the support button. */
-export function SupporterStrip({ supporters }: { supporters: MockSupporter[] }) {
+export function SupporterStrip({ supporters }: { supporters: RecentSupporter[] }) {
   if (!supporters.length) return null;
   const shown = supporters.slice(0, 5);
   const extra = Math.max(0, supporters.length - shown.length);
-  const lead = supporters[0]?.name.split(" ")[0] ?? "Someone";
+  const lead = supporters[0]?.name?.split(" ")[0] ?? "Someone";
   const others = Math.max(0, supporters.length - 1);
 
   return (
     <div className="mt-6 flex items-center gap-3 rounded-card border border-border bg-card p-4">
       <div className="flex -space-x-2">
         {shown.map((s) => (
-          <Avatar key={s.name} className="size-8 rounded-full ring-2 ring-card">
-            <AvatarFallback className="rounded-full text-[10px] font-semibold">{initialsOf(s.name)}</AvatarFallback>
+          <Avatar key={s.id} className="size-8 rounded-full ring-2 ring-card">
+            <AvatarFallback className="rounded-full text-[10px] font-semibold">
+              {initialsOf(displayName(s.name))}
+            </AvatarFallback>
           </Avatar>
         ))}
         {extra > 0 && (

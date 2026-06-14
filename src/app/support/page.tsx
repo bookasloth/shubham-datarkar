@@ -1,7 +1,7 @@
 import { buildMetadata } from "@/lib/seo";
 import { SupportPanel } from "@/components/support/support-panel";
 import { SupporterStrip } from "@/components/support/supporter-strip";
-import { supportSupporters } from "@/lib/data/support-content";
+import { getRecentSupporters } from "@/lib/support/queries";
 
 export const metadata = buildMetadata({
   title: "Support",
@@ -9,8 +9,8 @@ export const metadata = buildMetadata({
   path: "/support",
 });
 
-export default function SupportPage() {
-  const recent = supportSupporters.filter((s) => s.recent);
+export default async function SupportPage() {
+  const recent = await getRecentSupporters();
   return (
     <div>
       <div>
