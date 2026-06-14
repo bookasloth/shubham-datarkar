@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
+import { subscribe } from "@/lib/subscribers/actions";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -29,10 +30,14 @@ export function NewsletterForm({
       return;
     }
     setStatus("loading");
-    // Placeholder: swap for a real ConvertKit/Resend call later.
-    await new Promise((r) => setTimeout(r, 800));
+    const result = await subscribe(email);
+    if (!result.ok) {
+      setStatus("error");
+      toast({ title: "Couldn't subscribe", description: result.error ?? "Try again.", variant: "danger" });
+      return;
+    }
     setStatus("success");
-    toast({ title: "You're on the list", description: "Check your inbox to confirm.", variant: "success" });
+    toast({ title: "You're on the list", description: "One signal every Tuesday — no noise.", variant: "success" });
   }
 
   if (status === "success") {
