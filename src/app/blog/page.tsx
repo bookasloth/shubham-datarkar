@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { posts, featuredPosts, blogCategories } from "@/lib/data/posts";
+import { blogCategories } from "@/lib/data/posts";
+import { getPublishedPosts } from "@/lib/blog/queries";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { CategoryNav } from "@/components/content/category-nav";
@@ -19,8 +20,22 @@ export const metadata = buildMetadata({
   path: "/blog",
 });
 
-export default function BlogPage() {
-  const lead = featuredPosts[0];
+export const dynamic = "force-dynamic";
+
+export default async function BlogPage() {
+  const posts = await getPublishedPosts();
+  const lead = posts.find((p) => p.featured) ?? posts[0];
+
+  if (!lead) {
+    return (
+      <Section>
+        <Container>
+          <p className="text-muted-foreground">No posts yet.</p>
+        </Container>
+      </Section>
+    );
+  }
+
   const category = blogCategories.find((c) => c.slug === lead.category);
   const rest = posts.filter((p) => p.slug !== lead.slug);
 

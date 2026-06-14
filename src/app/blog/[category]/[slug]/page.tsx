@@ -2,7 +2,8 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight } from "lucide-react";
 import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
-import { posts, getPost, blogCategories, author } from "@/lib/data/posts";
+import { blogCategories, author } from "@/lib/data/posts";
+import { getPublishedPost, getPublishedPostsByCategory, getPublishedPosts } from "@/lib/blog/queries";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -16,13 +17,11 @@ import { Reveal } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate, readingTime } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return posts.map((p) => ({ category: p.category, slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }) {
   const { category, slug } = await params;
-  const post = getPost(slug);
+  const post = await getPublishedPost(slug);
   if (!post) return buildMetadata({ title: "Article", path: `/blog/${category}/${slug}` });
   return buildMetadata({
     title: post.title,
@@ -35,13 +34,15 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
 
 export default async function ArticlePage({ params }: { params: Promise<{ category: string; slug: string }> }) {
   const { category, slug } = await params;
-  const post = getPost(slug);
+  const post = await getPublishedPost(slug);
   if (!post || post.category !== category) notFound();
 
   const cat = blogCategories.find((c) => c.slug === post.category);
-  const related = posts.filter((p) => p.slug !== post.slug && p.category === post.category).slice(0, 3);
-  const fallback = posts.filter((p) => p.slug !== post.slug).slice(0, 3);
-  const relatedPosts = related.length ? related : fallback;
+  const sameCat = await getPublishedPostsByCategory(post.category);
+  const related = sameCat.filter((p) => p.slug !== post.slug).slice(0, 3);
+  const relatedPosts = related.length
+    ? related
+    : (await getPublishedPosts()).filter((p) => p.slug !== post.slug).slice(0, 3);
 
   return (
     <>
