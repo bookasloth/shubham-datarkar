@@ -1,10 +1,12 @@
 import { Crown, Flame, Shield } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf, type Tier } from "@/lib/support/config";
-import type { MockSupporter } from "@/lib/data/support-content";
+import type { Supporter } from "@/lib/support/queries";
 import { cn } from "@/lib/utils";
 
 const ICON = { crown: Crown, shield: Shield, flame: Flame } as const;
+
+const displayName = (name: string | null) => name ?? "Anonymous";
 
 /**
  * A ranked tier of supporters. Rank shown by icon + ring weight, never color.
@@ -16,7 +18,7 @@ export function TierSection({
   max = 12,
 }: {
   tier: Tier;
-  supporters: MockSupporter[];
+  supporters: Supporter[];
   max?: number;
 }) {
   const Icon = ICON[tier.icon];
@@ -49,7 +51,7 @@ export function TierSection({
       ) : (
         <div className="mt-5 flex flex-wrap gap-3">
           {shown.map((s) => (
-            <div key={s.name} className="flex w-16 flex-col items-center gap-1.5 text-center" title={s.name}>
+            <div key={s.key} className="flex w-16 flex-col items-center gap-1.5 text-center" title={displayName(s.name)}>
               <div className="relative">
                 <Avatar
                   className={cn(
@@ -59,7 +61,7 @@ export function TierSection({
                       : "ring-1 ring-border",
                   )}
                 >
-                  <AvatarFallback className="rounded-full text-xs font-semibold">{initialsOf(s.name)}</AvatarFallback>
+                  <AvatarFallback className="rounded-full text-xs font-semibold">{initialsOf(displayName(s.name))}</AvatarFallback>
                 </Avatar>
                 {isTop && (
                   <span className="absolute -right-1 -top-1 flex size-5 items-center justify-center rounded-full border-2 border-card bg-foreground text-background">
@@ -67,7 +69,7 @@ export function TierSection({
                   </span>
                 )}
               </div>
-              <span className="w-full truncate text-xs text-muted-foreground">{s.name.split(" ")[0]}</span>
+              <span className="w-full truncate text-xs text-muted-foreground">{displayName(s.name).split(" ")[0]}</span>
             </div>
           ))}
           {extra > 0 && (

@@ -1,7 +1,9 @@
 /**
- * Mock content for the Support module — profile, updates, supporters, stats.
- * Swap for live Supabase queries once the payments pipeline is wired; the
- * shapes here mirror what those queries will return.
+ * Static content for the Support module — profile + the mock-authored Updates
+ * feed (no DB table for updates in v1).
+ *
+ * Supporters, tiers, and stats are now LIVE from Supabase
+ * (see `src/lib/support/queries.ts`), no longer mocked here.
  */
 
 import { site, socials } from "@/lib/site";
@@ -13,8 +15,8 @@ export const supportProfile = {
   location: site.location,
   isVerified: true,
   socials,
-  /** Mock until the supporters table is live. */
-  supporterCount: 128,
+  /** Fallback only; the live count comes from `getSupportStats()`. */
+  supporterCount: 0,
   achievements: ["3 companies building", "200+ pieces shipped", "Builders List weekly"],
 };
 
@@ -66,31 +68,3 @@ export const supportUpdates: UpdatePost[] = [
     body: "One signal every Tuesday, and a thousand of you now read it. Onwards. If you have a topic you want torn apart, hit reply — I read every one.",
   },
 ];
-
-export type MockSupporter = { name: string; lifetime: number; recent?: boolean };
-
-/** Lifetimes chosen to populate all three tiers + the recent strip. */
-export const supportSupporters: MockSupporter[] = [
-  { name: "Aanya Rao", lifetime: 3400, recent: true },
-  { name: "Vikram Mehta", lifetime: 2900 },
-  { name: "Neha Kulkarni", lifetime: 2500, recent: true },
-  { name: "Rahul Deshpande", lifetime: 1800 },
-  { name: "Priya Nair", lifetime: 1500, recent: true },
-  { name: "Karan Shah", lifetime: 1200 },
-  { name: "Ishita Bose", lifetime: 1000 },
-  { name: "Arjun Pillai", lifetime: 600, recent: true },
-  { name: "Sara Khan", lifetime: 420 },
-  { name: "Dev Patel", lifetime: 300, recent: true },
-  { name: "Megha Iyer", lifetime: 250 },
-  { name: "Rohit Verma", lifetime: 180 },
-  { name: "Ananya Das", lifetime: 120, recent: true },
-  { name: "Tanvi Joshi", lifetime: 100 },
-];
-
-/** Headline metrics. Mock until derived from paid rows. */
-export const supportStats = {
-  supporters: 128,
-  coffees: 642,
-  toffees: 1180,
-  topThisMonth: 9,
-};

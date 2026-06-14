@@ -92,7 +92,7 @@ Reuse existing UI primitives (`button`, `card`, `badge`, `avatar`, `avatar-group
 
 ---
 
-## 6. Data model (Supabase — project `BAS - Dot Com`, ref `xwvciqkayammbvsidqig`)
+## 6. Data model (Supabase — Shubham's OWN project, ref `oyzzgjrefkppqkxjccot`. NOT the BAS project `xwvciqkayammbvsidqig`.)
 
 ### Table `supports`
 | Column | Type | Notes |

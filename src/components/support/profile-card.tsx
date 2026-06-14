@@ -5,8 +5,9 @@ import { supportProfile } from "@/lib/data/support-content";
 import { initialsOf } from "@/lib/support/config";
 
 /** Persistent identity sidebar. Pure monochrome, data from site content. */
-export function ProfileCard() {
+export function ProfileCard({ supporterCount }: { supporterCount?: number }) {
   const p = supportProfile;
+  const count = supporterCount ?? p.supporterCount;
   return (
     <div className="overflow-hidden rounded-card border border-border bg-card">
       <div className="h-24 border-b border-border bg-dots" />
@@ -41,7 +42,7 @@ export function ProfileCard() {
 
         <div className="mt-4 flex items-center gap-2 rounded-input border border-border bg-muted/40 px-3 py-2.5 text-sm">
           <Heart className="size-4" />
-          <span className="font-semibold text-foreground">{p.supporterCount}</span>
+          <span className="font-semibold text-foreground">{count}</span>
           <span className="text-muted-foreground">supporters and counting</span>
         </div>
 
