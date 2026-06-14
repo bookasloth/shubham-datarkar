@@ -1,5 +1,6 @@
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { products } from "@/lib/data/products";
+import type { Product } from "@/lib/data/types";
+import { getPublishedEntities } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { CtaBand } from "@/components/sections/cta-band";
@@ -13,7 +14,10 @@ export const metadata = buildMetadata({
   path: "/products",
 });
 
-export default function ProductsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ProductsPage() {
+  const products = await getPublishedEntities<Product>("products");
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Products", path: "/products" }])} />

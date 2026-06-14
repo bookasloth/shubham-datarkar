@@ -11,7 +11,8 @@ import {
   Users,
 } from "lucide-react";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { products, getProduct } from "@/lib/data/products";
+import type { Product } from "@/lib/data/types";
+import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -21,13 +22,11 @@ import { ProductCard } from "@/components/cards/product-card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getPublishedEntityBySlug<Product>("products", slug);
   if (!product) return buildMetadata({ title: "Product", path: `/products/${slug}` });
   return buildMetadata({ title: `${product.name} — ${product.tagline}`, description: product.about.slice(0, 160), path: `/products/${product.slug}` });
 }
@@ -60,10 +59,12 @@ const bookASloth = {
 
 export default async function ProductBrandPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getPublishedEntityBySlug<Product>("products", slug);
   if (!product) notFound();
 
-  const related = products.filter((p) => p.slug !== product.slug).slice(0, 3);
+  const related = (await getPublishedEntities<Product>("products"))
+    .filter((p) => p.slug !== product.slug)
+    .slice(0, 3);
   const isSloth = product.slug === "book-a-sloth";
 
   return (

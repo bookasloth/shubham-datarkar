@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, CalendarCheck, Quote } from "lucide-react";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { caseStudies, getCaseStudy } from "@/lib/data/case-studies";
+import type { CaseStudy } from "@/lib/data/types";
+import { getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -15,13 +16,11 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return caseStudies.map((c) => ({ slug: c.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const study = getCaseStudy(slug);
+  const study = await getPublishedEntityBySlug<CaseStudy>("case_studies", slug);
   if (!study) return buildMetadata({ title: "Case Study", path: `/case-studies/${slug}` });
   return buildMetadata({
     title: study.title,
@@ -42,7 +41,7 @@ function Block({ title, children }: { title: string; children: React.ReactNode }
 
 export default async function CaseStudyPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const study = getCaseStudy(slug);
+  const study = await getPublishedEntityBySlug<CaseStudy>("case_studies", slug);
   if (!study) notFound();
 
   const ctx = study.context;

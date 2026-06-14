@@ -1,5 +1,6 @@
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { testimonials } from "@/lib/data/testimonials";
+import type { Testimonial } from "@/lib/data/types";
+import { getPublishedEntities } from "@/lib/content/queries";
 import { stats } from "@/lib/data/site-content";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -15,7 +16,10 @@ export const metadata = buildMetadata({
   path: "/testimonials",
 });
 
-export default function TestimonialsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function TestimonialsPage() {
+  const testimonials = await getPublishedEntities<Testimonial>("testimonials");
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Testimonials", path: "/testimonials" }])} />

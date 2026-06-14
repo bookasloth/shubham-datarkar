@@ -4,9 +4,9 @@ import { ArrowRight, CalendarCheck, Check } from "lucide-react";
 import { site } from "@/lib/site";
 import { buildMetadata, organizationSchema } from "@/lib/seo";
 import { platforms } from "@/lib/data/platforms";
-import { featuredCaseStudies } from "@/lib/data/case-studies";
-import { featuredPosts } from "@/lib/data/posts";
-import { testimonials } from "@/lib/data/testimonials";
+import type { CaseStudy, Testimonial } from "@/lib/data/types";
+import { getPublishedEntities } from "@/lib/content/queries";
+import { getPublishedPosts } from "@/lib/blog/queries";
 import { stats, capabilities } from "@/lib/data/site-content";
 
 import { Container, Section } from "@/components/layout/container";
@@ -40,7 +40,13 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-export default function HomePage() {
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const allCaseStudies = await getPublishedEntities<CaseStudy>("case_studies");
+  const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
+  const testimonials = await getPublishedEntities<Testimonial>("testimonials");
+  const featuredPosts = (await getPublishedPosts()).filter((p) => p.featured).slice(0, 3);
   return (
     <>
       <JsonLd data={organizationSchema()} />
