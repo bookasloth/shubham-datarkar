@@ -7,6 +7,8 @@ import { QuoteEditor, PullquoteEditor } from "./editors/quotes";
 import { CodeEditor } from "./editors/code";
 import { DividerEditor, SpacerEditor, TagsEditor } from "./editors/utility";
 import { UlEditor, OlEditor, TasklistEditor } from "./editors/lists";
+import { TableEditor, ComparisonTableEditor, PricingEditor } from "./editors/tables";
+import { StatCardsEditor, MetricsGridEditor, ProgressEditor, ComparisonCardsEditor } from "./editors/data";
 
 export type BlockEditorProps<T extends ContentBlock = ContentBlock> = {
   block: T;
@@ -41,19 +43,19 @@ export const registry = {
   quote: { create: () => ({ type: "quote", text: "" }), Editor: QuoteEditor },
   pullquote: { create: () => ({ type: "pullquote", text: "" }), Editor: PullquoteEditor },
   code: { create: () => ({ type: "code", code: "" }), Editor: CodeEditor },
-  table: { create: () => ({ type: "table", columns: [], rows: [] }), Editor: JsonEditor },
-  comparisonTable: { create: () => ({ type: "comparisonTable", columns: [], rows: [] }), Editor: JsonEditor },
-  pricing: { create: () => ({ type: "pricing" }), Editor: JsonEditor },
+  table: { create: () => ({ type: "table", columns: [], rows: [] }), Editor: TableEditor },
+  comparisonTable: { create: () => ({ type: "comparisonTable", columns: [], rows: [] }), Editor: ComparisonTableEditor },
+  pricing: { create: () => ({ type: "pricing" }), Editor: PricingEditor },
   callout: { create: () => ({ type: "callout", text: "" }), Editor: JsonEditor },
   faq: { create: () => ({ type: "faq", items: [] }), Editor: JsonEditor },
   tabs: { create: () => ({ type: "tabs", items: [] }), Editor: JsonEditor },
   expand: { create: () => ({ type: "expand", summary: "", content: "" }), Editor: JsonEditor },
   socialEmbed: { create: () => ({ type: "socialEmbed", author: "", handle: "", text: "", date: "" }), Editor: JsonEditor },
   map: { create: () => ({ type: "map", query: "", label: "" }), Editor: JsonEditor },
-  statCards: { create: () => ({ type: "statCards", stats: [] }), Editor: JsonEditor },
-  metricsGrid: { create: () => ({ type: "metricsGrid", metrics: [] }), Editor: JsonEditor },
-  progress: { create: () => ({ type: "progress", label: "", value: 0 }), Editor: JsonEditor },
-  comparisonCards: { create: () => ({ type: "comparisonCards", cards: [] }), Editor: JsonEditor },
+  statCards: { create: () => ({ type: "statCards", stats: [] }), Editor: StatCardsEditor },
+  metricsGrid: { create: () => ({ type: "metricsGrid", metrics: [] }), Editor: MetricsGridEditor },
+  progress: { create: () => ({ type: "progress", label: "", value: 0 }), Editor: ProgressEditor },
+  comparisonCards: { create: () => ({ type: "comparisonCards", cards: [] }), Editor: ComparisonCardsEditor },
   divider: { create: () => ({ type: "divider" }), Editor: DividerEditor },
   spacer: { create: () => ({ type: "spacer", size: "md" }), Editor: SpacerEditor },
   tags: { create: () => ({ type: "tags", items: [] }), Editor: TagsEditor },
