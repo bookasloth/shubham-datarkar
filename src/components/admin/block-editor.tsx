@@ -3,45 +3,17 @@
 import * as React from "react";
 import type { ContentBlock } from "@/lib/data/types";
 import { Button } from "@/components/ui/button";
+import { BLOCK_TYPES, type BlockGroup } from "@/components/admin/blocks/block-types";
+import { registry, type BlockEditorProps } from "@/components/admin/blocks/registry";
 
-const CORE_TYPES = [
-  "lead",
-  "p",
-  "h2",
-  "h3",
-  "quote",
-  "callout",
-  "code",
-  "ul",
-  "ol",
-  "tags",
-  "takeaways",
-  "divider",
-] as const;
-
-function newBlock(type: string): ContentBlock {
-  switch (type) {
-    case "ul":
-    case "ol":
-      return { type, items: [""] } as ContentBlock;
-    case "tags":
-      return { type: "tags", items: [] };
-    case "takeaways":
-      return { type: "takeaways", items: [""] };
-    case "divider":
-      return { type: "divider" };
-    case "callout":
-      return { type: "callout", text: "" };
-    case "code":
-      return { type: "code", code: "" };
-    default:
-      return { type, text: "" } as ContentBlock;
-  }
-}
+const GROUP_ORDER: BlockGroup[] = [
+  "Typography", "Lists", "Media", "Quotes", "Code", "Tables", "Callouts",
+  "Interactive", "Embeds", "Data & statistics", "Utility", "Conversion", "Knowledge", "Advanced",
+];
 
 export function BlockEditor({ initial }: { initial: ContentBlock[] }) {
   const [blocks, setBlocks] = React.useState<ContentBlock[]>(initial.length ? initial : []);
-  const [addType, setAddType] = React.useState<string>("p");
+  const [addType, setAddType] = React.useState<ContentBlock["type"]>("p");
 
   const update = (i: number, next: ContentBlock) =>
     setBlocks((b) => b.map((x, idx) => (idx === i ? next : x)));
@@ -59,121 +31,55 @@ export function BlockEditor({ initial }: { initial: ContentBlock[] }) {
     <div className="grid gap-3">
       <input type="hidden" name="body" value={JSON.stringify(blocks)} readOnly />
 
-      {blocks.map((block, i) => (
-        <div key={i} className="rounded-card border border-border p-3">
-          <div className="mb-2 flex items-center justify-between">
-            <span className="text-xs font-medium uppercase text-muted-foreground">
-              {block.type}
-            </span>
-            <div className="flex gap-1">
-              <Button type="button" size="sm" variant="ghost" onClick={() => move(i, -1)}>
-                ↑
-              </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => move(i, 1)}>
-                ↓
-              </Button>
-              <Button type="button" size="sm" variant="ghost" onClick={() => remove(i)}>
-                ✕
-              </Button>
+      {blocks.map((block, i) => {
+        const entry = registry[block.type] as { Editor: (p: BlockEditorProps) => React.ReactNode } | undefined;
+        const Editor = entry?.Editor;
+        return (
+          <div key={i} className="rounded-card border border-border p-3">
+            <div className="mb-2 flex items-center justify-between">
+              <span className="text-xs font-medium uppercase text-muted-foreground">{block.type}</span>
+              <div className="flex gap-1">
+                <Button type="button" size="sm" variant="ghost" onClick={() => move(i, -1)}>↑</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => move(i, 1)}>↓</Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => remove(i)}>✕</Button>
+              </div>
             </div>
+            {Editor ? (
+              <Editor block={block} onChange={(b) => update(i, b)} />
+            ) : (
+              <textarea
+                className="min-h-24 w-full rounded-btn border border-border bg-background p-2 font-mono text-xs"
+                defaultValue={JSON.stringify(block, null, 2)}
+                onChange={(e) => { try { update(i, JSON.parse(e.target.value)); } catch { /* ignore */ } }}
+              />
+            )}
           </div>
-          <BlockFields block={block} onChange={(b) => update(i, b)} />
-        </div>
-      ))}
+        );
+      })}
 
       <div className="flex items-center gap-2">
         <select
           value={addType}
-          onChange={(e) => setAddType(e.target.value)}
+          onChange={(e) => setAddType(e.target.value as ContentBlock["type"])}
           className="rounded-btn border border-border bg-background px-2 py-1.5 text-sm"
         >
-          {CORE_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
+          {GROUP_ORDER.map((group) => (
+            <optgroup key={group} label={group}>
+              {BLOCK_TYPES.filter((b) => b.group === group).map((b) => (
+                <option key={b.type} value={b.type}>{b.label}</option>
+              ))}
+            </optgroup>
           ))}
         </select>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          onClick={() => setBlocks((b) => [...b, newBlock(addType)])}
+          onClick={() => setBlocks((b) => [...b, registry[addType].create()])}
         >
           Add block
         </Button>
       </div>
     </div>
-  );
-}
-
-function BlockFields({
-  block,
-  onChange,
-}: {
-  block: ContentBlock;
-  onChange: (b: ContentBlock) => void;
-}) {
-  const type = block.type;
-
-  if (type === "divider") return null;
-
-  if (
-    type === "p" ||
-    type === "lead" ||
-    type === "h2" ||
-    type === "h3" ||
-    type === "quote" ||
-    type === "callout"
-  ) {
-    const raw = (block as { text?: unknown }).text;
-    const text = typeof raw === "string" ? raw : JSON.stringify(raw ?? "");
-    return (
-      <textarea
-        className="min-h-20 w-full rounded-btn border border-border bg-background p-2 text-sm"
-        value={text}
-        onChange={(e) => onChange({ ...block, text: e.target.value } as ContentBlock)}
-      />
-    );
-  }
-
-  if (type === "code") {
-    return (
-      <textarea
-        className="min-h-24 w-full rounded-btn border border-border bg-background p-2 font-mono text-sm"
-        value={(block as { code: string }).code}
-        onChange={(e) => onChange({ ...block, code: e.target.value } as ContentBlock)}
-      />
-    );
-  }
-
-  if (type === "ul" || type === "ol" || type === "tags" || type === "takeaways") {
-    const items = (block as { items: unknown[] }).items.map((x) =>
-      typeof x === "string" ? x : JSON.stringify(x),
-    );
-    return (
-      <textarea
-        className="min-h-20 w-full rounded-btn border border-border bg-background p-2 text-sm"
-        placeholder="one item per line"
-        value={items.join("\n")}
-        onChange={(e) =>
-          onChange({ ...block, items: e.target.value.split("\n").filter(Boolean) } as ContentBlock)
-        }
-      />
-    );
-  }
-
-  // Fallback: raw JSON for any advanced block type.
-  return (
-    <textarea
-      className="min-h-24 w-full rounded-btn border border-border bg-background p-2 font-mono text-xs"
-      value={JSON.stringify(block, null, 2)}
-      onChange={(e) => {
-        try {
-          onChange(JSON.parse(e.target.value));
-        } catch {
-          /* ignore until valid JSON */
-        }
-      }}
-    />
   );
 }
