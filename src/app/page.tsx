@@ -13,7 +13,6 @@ import { Container, Section } from "@/components/layout/container";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/lib/icons";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -55,23 +54,14 @@ export default async function HomePage() {
       <Section bleed className="relative overflow-hidden border-b border-border">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />
         <Container className="relative py-24 md:py-32">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="mx-auto max-w-5xl text-center">
             <Reveal>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Badge variant="outline">
-                  <span className="size-1.5 rounded-full bg-foreground" aria-hidden />
-                  Available for Hire
-                </Badge>
-                <span className="text-sm text-muted-foreground">{site.location}</span>
-              </div>
-            </Reveal>
-            <Reveal delay={0.05}>
-              <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
+              <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
                 I build growth systems for startups that are just getting started.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
-              <p className="mx-auto mt-6 max-w-xl text-lg text-muted-foreground">
+              <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
                 I&rsquo;m Shubham Datarkar — developer, digital strategist, storyteller &amp; builder. I focus on how
                 brands communicate clearly, convert intentionally, and build structures that compound over time. This
                 space documents my thinking, frameworks, tools, and lessons from building in public.
@@ -80,18 +70,16 @@ export default async function HomePage() {
             <Reveal delay={0.15}>
               <p className="mt-4 text-sm text-muted-foreground">If you value clarity over noise, we&rsquo;ll work well together.</p>
             </Reveal>
-            <Reveal delay={0.2}>
-              <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-                <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-                  <CalendarCheck />
-                  Book a discovery call
-                </a>
-                <Link href="/work" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-                  See my work
-                  <ArrowRight />
-                </Link>
-              </div>
-            </Reveal>
+            <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
+              <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
+                <CalendarCheck />
+                Book a discovery call
+              </a>
+              <Link href="/work" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+                See my work
+                <ArrowRight />
+              </Link>
+            </div>
           </div>
         </Container>
       </Section>
