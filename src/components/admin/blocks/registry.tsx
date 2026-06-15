@@ -1,7 +1,6 @@
 "use client";
 import * as React from "react";
 import type { ContentBlock } from "@/lib/data/types";
-import { JsonEditor } from "./editors/json-editor";
 import { H2Editor, H3Editor, H4Editor, LeadEditor, PEditor, SmallEditor, CaptionEditor } from "./editors/typography";
 import { QuoteEditor, PullquoteEditor } from "./editors/quotes";
 import { CodeEditor } from "./editors/code";
@@ -12,6 +11,10 @@ import { StatCardsEditor, MetricsGridEditor, ProgressEditor, ComparisonCardsEdit
 import { FaqEditor, TabsEditor, ExpandEditor } from "./editors/interactive";
 import { SocialEmbedEditor, MapEditor } from "./editors/embeds";
 import { FigureEditor, FiguresEditor, GalleryEditor, VideoEditor, AudioEditor } from "./editors/media";
+import { CalloutEditor } from "./editors/callouts";
+import { CtaEditor, NewsletterEditor, DownloadEditor, ButtonGroupEditor } from "./editors/conversion";
+import { TakeawaysEditor, SummaryEditor, ProsConsEditor, StepsEditor, TimelineEditor, ReferencesEditor, FootnotesEditor } from "./editors/knowledge";
+import { AuthorNoteEditor, ExpertInsightEditor, RelatedCardEditor, ResourceListEditor, QuickFactsEditor } from "./editors/advanced";
 
 export type BlockEditorProps<T extends ContentBlock = ContentBlock> = {
   block: T;
@@ -49,7 +52,7 @@ export const registry = {
   table: { create: () => ({ type: "table", columns: [], rows: [] }), Editor: TableEditor },
   comparisonTable: { create: () => ({ type: "comparisonTable", columns: [], rows: [] }), Editor: ComparisonTableEditor },
   pricing: { create: () => ({ type: "pricing" }), Editor: PricingEditor },
-  callout: { create: () => ({ type: "callout", text: "" }), Editor: JsonEditor },
+  callout: { create: () => ({ type: "callout", text: "" }), Editor: CalloutEditor },
   faq: { create: () => ({ type: "faq", items: [] }), Editor: FaqEditor },
   tabs: { create: () => ({ type: "tabs", items: [] }), Editor: TabsEditor },
   expand: { create: () => ({ type: "expand", summary: "", content: "" }), Editor: ExpandEditor },
@@ -62,20 +65,20 @@ export const registry = {
   divider: { create: () => ({ type: "divider" }), Editor: DividerEditor },
   spacer: { create: () => ({ type: "spacer", size: "md" }), Editor: SpacerEditor },
   tags: { create: () => ({ type: "tags", items: [] }), Editor: TagsEditor },
-  cta: { create: () => ({ type: "cta", title: "", text: "", button: "", href: "" }), Editor: JsonEditor },
-  newsletter: { create: () => ({ type: "newsletter", title: "", text: "" }), Editor: JsonEditor },
-  download: { create: () => ({ type: "download", title: "", description: "", meta: "" }), Editor: JsonEditor },
-  buttonGroup: { create: () => ({ type: "buttonGroup", buttons: [] }), Editor: JsonEditor },
-  takeaways: { create: () => ({ type: "takeaways", items: [""] }), Editor: JsonEditor },
-  summary: { create: () => ({ type: "summary", text: "" }), Editor: JsonEditor },
-  prosCons: { create: () => ({ type: "prosCons", pros: [], cons: [] }), Editor: JsonEditor },
-  steps: { create: () => ({ type: "steps", items: [] }), Editor: JsonEditor },
-  timeline: { create: () => ({ type: "timeline", items: [] }), Editor: JsonEditor },
-  references: { create: () => ({ type: "references", items: [] }), Editor: JsonEditor },
-  footnotes: { create: () => ({ type: "footnotes", items: [] }), Editor: JsonEditor },
-  authorNote: { create: () => ({ type: "authorNote", text: "" }), Editor: JsonEditor },
-  expertInsight: { create: () => ({ type: "expertInsight", name: "", role: "", quote: "" }), Editor: JsonEditor },
-  relatedCard: { create: () => ({ type: "relatedCard", slug: "" }), Editor: JsonEditor },
-  resourceList: { create: () => ({ type: "resourceList", items: [] }), Editor: JsonEditor },
-  quickFacts: { create: () => ({ type: "quickFacts", facts: [] }), Editor: JsonEditor },
+  cta: { create: () => ({ type: "cta", title: "", text: "", button: "", href: "" }), Editor: CtaEditor },
+  newsletter: { create: () => ({ type: "newsletter", title: "", text: "" }), Editor: NewsletterEditor },
+  download: { create: () => ({ type: "download", title: "", description: "", meta: "" }), Editor: DownloadEditor },
+  buttonGroup: { create: () => ({ type: "buttonGroup", buttons: [] }), Editor: ButtonGroupEditor },
+  takeaways: { create: () => ({ type: "takeaways", items: [""] }), Editor: TakeawaysEditor },
+  summary: { create: () => ({ type: "summary", text: "" }), Editor: SummaryEditor },
+  prosCons: { create: () => ({ type: "prosCons", pros: [], cons: [] }), Editor: ProsConsEditor },
+  steps: { create: () => ({ type: "steps", items: [] }), Editor: StepsEditor },
+  timeline: { create: () => ({ type: "timeline", items: [] }), Editor: TimelineEditor },
+  references: { create: () => ({ type: "references", items: [] }), Editor: ReferencesEditor },
+  footnotes: { create: () => ({ type: "footnotes", items: [] }), Editor: FootnotesEditor },
+  authorNote: { create: () => ({ type: "authorNote", text: "" }), Editor: AuthorNoteEditor },
+  expertInsight: { create: () => ({ type: "expertInsight", name: "", role: "", quote: "" }), Editor: ExpertInsightEditor },
+  relatedCard: { create: () => ({ type: "relatedCard", slug: "" }), Editor: RelatedCardEditor },
+  resourceList: { create: () => ({ type: "resourceList", items: [] }), Editor: ResourceListEditor },
+  quickFacts: { create: () => ({ type: "quickFacts", facts: [] }), Editor: QuickFactsEditor },
 } satisfies RegistryShape;
