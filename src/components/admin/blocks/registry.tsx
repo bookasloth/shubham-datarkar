@@ -2,6 +2,10 @@
 import * as React from "react";
 import type { ContentBlock } from "@/lib/data/types";
 import { JsonEditor } from "./editors/json-editor";
+import { H2Editor, H3Editor, H4Editor, LeadEditor, PEditor, SmallEditor, CaptionEditor } from "./editors/typography";
+import { QuoteEditor, PullquoteEditor } from "./editors/quotes";
+import { CodeEditor } from "./editors/code";
+import { DividerEditor, SpacerEditor, TagsEditor } from "./editors/utility";
 
 export type BlockEditorProps<T extends ContentBlock = ContentBlock> = {
   block: T;
@@ -18,13 +22,13 @@ type RegistryShape = { [K in ContentBlock["type"]]: Entry<Extract<ContentBlock, 
 
 // Every block type filled in below. `satisfies RegistryShape` => missing key is a compile error.
 export const registry = {
-  h2: { create: () => ({ type: "h2", text: "" }), Editor: JsonEditor },
-  h3: { create: () => ({ type: "h3", text: "" }), Editor: JsonEditor },
-  h4: { create: () => ({ type: "h4", text: "" }), Editor: JsonEditor },
-  lead: { create: () => ({ type: "lead", text: "" }), Editor: JsonEditor },
-  p: { create: () => ({ type: "p", text: "" }), Editor: JsonEditor },
-  small: { create: () => ({ type: "small", text: "" }), Editor: JsonEditor },
-  caption: { create: () => ({ type: "caption", text: "" }), Editor: JsonEditor },
+  h2: { create: () => ({ type: "h2", text: "" }), Editor: H2Editor },
+  h3: { create: () => ({ type: "h3", text: "" }), Editor: H3Editor },
+  h4: { create: () => ({ type: "h4", text: "" }), Editor: H4Editor },
+  lead: { create: () => ({ type: "lead", text: "" }), Editor: LeadEditor },
+  p: { create: () => ({ type: "p", text: "" }), Editor: PEditor },
+  small: { create: () => ({ type: "small", text: "" }), Editor: SmallEditor },
+  caption: { create: () => ({ type: "caption", text: "" }), Editor: CaptionEditor },
   ul: { create: () => ({ type: "ul", items: [""] }), Editor: JsonEditor },
   ol: { create: () => ({ type: "ol", items: [""] }), Editor: JsonEditor },
   tasklist: { create: () => ({ type: "tasklist", items: [{ text: "", done: false }] }), Editor: JsonEditor },
@@ -33,9 +37,9 @@ export const registry = {
   gallery: { create: () => ({ type: "gallery", images: [] }), Editor: JsonEditor },
   video: { create: () => ({ type: "video", id: "", title: "" }), Editor: JsonEditor },
   audio: { create: () => ({ type: "audio", title: "" }), Editor: JsonEditor },
-  quote: { create: () => ({ type: "quote", text: "" }), Editor: JsonEditor },
-  pullquote: { create: () => ({ type: "pullquote", text: "" }), Editor: JsonEditor },
-  code: { create: () => ({ type: "code", code: "" }), Editor: JsonEditor },
+  quote: { create: () => ({ type: "quote", text: "" }), Editor: QuoteEditor },
+  pullquote: { create: () => ({ type: "pullquote", text: "" }), Editor: PullquoteEditor },
+  code: { create: () => ({ type: "code", code: "" }), Editor: CodeEditor },
   table: { create: () => ({ type: "table", columns: [], rows: [] }), Editor: JsonEditor },
   comparisonTable: { create: () => ({ type: "comparisonTable", columns: [], rows: [] }), Editor: JsonEditor },
   pricing: { create: () => ({ type: "pricing" }), Editor: JsonEditor },
@@ -49,9 +53,9 @@ export const registry = {
   metricsGrid: { create: () => ({ type: "metricsGrid", metrics: [] }), Editor: JsonEditor },
   progress: { create: () => ({ type: "progress", label: "", value: 0 }), Editor: JsonEditor },
   comparisonCards: { create: () => ({ type: "comparisonCards", cards: [] }), Editor: JsonEditor },
-  divider: { create: () => ({ type: "divider" }), Editor: JsonEditor },
-  spacer: { create: () => ({ type: "spacer", size: "md" }), Editor: JsonEditor },
-  tags: { create: () => ({ type: "tags", items: [] }), Editor: JsonEditor },
+  divider: { create: () => ({ type: "divider" }), Editor: DividerEditor },
+  spacer: { create: () => ({ type: "spacer", size: "md" }), Editor: SpacerEditor },
+  tags: { create: () => ({ type: "tags", items: [] }), Editor: TagsEditor },
   cta: { create: () => ({ type: "cta", title: "", text: "", button: "", href: "" }), Editor: JsonEditor },
   newsletter: { create: () => ({ type: "newsletter", title: "", text: "" }), Editor: JsonEditor },
   download: { create: () => ({ type: "download", title: "", description: "", meta: "" }), Editor: JsonEditor },
