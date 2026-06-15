@@ -9,6 +9,9 @@ import { DividerEditor, SpacerEditor, TagsEditor } from "./editors/utility";
 import { UlEditor, OlEditor, TasklistEditor } from "./editors/lists";
 import { TableEditor, ComparisonTableEditor, PricingEditor } from "./editors/tables";
 import { StatCardsEditor, MetricsGridEditor, ProgressEditor, ComparisonCardsEditor } from "./editors/data";
+import { FaqEditor, TabsEditor, ExpandEditor } from "./editors/interactive";
+import { SocialEmbedEditor, MapEditor } from "./editors/embeds";
+import { FigureEditor, FiguresEditor, GalleryEditor, VideoEditor, AudioEditor } from "./editors/media";
 
 export type BlockEditorProps<T extends ContentBlock = ContentBlock> = {
   block: T;
@@ -35,11 +38,11 @@ export const registry = {
   ul: { create: () => ({ type: "ul", items: [""] }), Editor: UlEditor },
   ol: { create: () => ({ type: "ol", items: [""] }), Editor: OlEditor },
   tasklist: { create: () => ({ type: "tasklist", items: [{ text: "", done: false }] }), Editor: TasklistEditor },
-  figure: { create: () => ({ type: "figure", image: { seed: "", alt: "" } }), Editor: JsonEditor },
-  figures: { create: () => ({ type: "figures", images: [] }), Editor: JsonEditor },
-  gallery: { create: () => ({ type: "gallery", images: [] }), Editor: JsonEditor },
-  video: { create: () => ({ type: "video", id: "", title: "" }), Editor: JsonEditor },
-  audio: { create: () => ({ type: "audio", title: "" }), Editor: JsonEditor },
+  figure: { create: () => ({ type: "figure", image: { seed: "", alt: "" } }), Editor: FigureEditor },
+  figures: { create: () => ({ type: "figures", images: [] }), Editor: FiguresEditor },
+  gallery: { create: () => ({ type: "gallery", images: [] }), Editor: GalleryEditor },
+  video: { create: () => ({ type: "video", id: "", title: "" }), Editor: VideoEditor },
+  audio: { create: () => ({ type: "audio", title: "" }), Editor: AudioEditor },
   quote: { create: () => ({ type: "quote", text: "" }), Editor: QuoteEditor },
   pullquote: { create: () => ({ type: "pullquote", text: "" }), Editor: PullquoteEditor },
   code: { create: () => ({ type: "code", code: "" }), Editor: CodeEditor },
@@ -47,11 +50,11 @@ export const registry = {
   comparisonTable: { create: () => ({ type: "comparisonTable", columns: [], rows: [] }), Editor: ComparisonTableEditor },
   pricing: { create: () => ({ type: "pricing" }), Editor: PricingEditor },
   callout: { create: () => ({ type: "callout", text: "" }), Editor: JsonEditor },
-  faq: { create: () => ({ type: "faq", items: [] }), Editor: JsonEditor },
-  tabs: { create: () => ({ type: "tabs", items: [] }), Editor: JsonEditor },
-  expand: { create: () => ({ type: "expand", summary: "", content: "" }), Editor: JsonEditor },
-  socialEmbed: { create: () => ({ type: "socialEmbed", author: "", handle: "", text: "", date: "" }), Editor: JsonEditor },
-  map: { create: () => ({ type: "map", query: "", label: "" }), Editor: JsonEditor },
+  faq: { create: () => ({ type: "faq", items: [] }), Editor: FaqEditor },
+  tabs: { create: () => ({ type: "tabs", items: [] }), Editor: TabsEditor },
+  expand: { create: () => ({ type: "expand", summary: "", content: "" }), Editor: ExpandEditor },
+  socialEmbed: { create: () => ({ type: "socialEmbed", author: "", handle: "", text: "", date: "" }), Editor: SocialEmbedEditor },
+  map: { create: () => ({ type: "map", query: "", label: "" }), Editor: MapEditor },
   statCards: { create: () => ({ type: "statCards", stats: [] }), Editor: StatCardsEditor },
   metricsGrid: { create: () => ({ type: "metricsGrid", metrics: [] }), Editor: MetricsGridEditor },
   progress: { create: () => ({ type: "progress", label: "", value: 0 }), Editor: ProgressEditor },
