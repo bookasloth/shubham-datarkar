@@ -4,6 +4,7 @@ import type { ContentBlock } from "@/lib/data/types";
 import type { BlockEditorProps } from "../registry";
 import { ListField } from "../fields/list-field";
 import { RepeaterField } from "../fields/repeater-field";
+import { RichTextField } from "../fields/rich-text-field";
 import { TextField } from "../fields/text-field";
 
 /* ------------------------------------------------------------------ */
@@ -34,9 +35,9 @@ export function TableEditor({ block, onChange }: BlockEditorProps<TableBlock>) {
           />
         )}
       />
-      <TextField
+      <RichTextField
         label="Caption"
-        value={typeof block.caption === "string" ? (block.caption ?? "") : ""}
+        value={block.caption ?? ""}
         onChange={(caption) => onChange({ ...block, caption })}
       />
     </div>
