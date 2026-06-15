@@ -2,6 +2,7 @@ import Link from "next/link";
 import { getAllPostsAdmin } from "@/lib/blog/queries";
 import { countEntities } from "@/lib/content/queries";
 import { getSubscribers } from "@/lib/subscribers/queries";
+import { getPaymentStats } from "@/lib/payments/queries";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
 export const dynamic = "force-dynamic";
@@ -16,6 +17,7 @@ export default async function AdminDashboardPage() {
     ENTITY_LIST.map(async (e) => ({ def: e, count: await countEntities(e.table) })),
   );
   const subscribers = await getSubscribers();
+  const payments = await getPaymentStats();
 
   return (
     <div>
@@ -34,6 +36,7 @@ export default async function AdminDashboardPage() {
           <Stat key={def.key} label={def.label} value={count} href={`/admin/content/${def.key}`} />
         ))}
         <Stat label="Subscribers" value={subscribers.length} href="/admin/subscribers" />
+        <Stat label="Paid supports" value={payments.paidCount} href="/admin/payments" />
       </div>
     </div>
   );
