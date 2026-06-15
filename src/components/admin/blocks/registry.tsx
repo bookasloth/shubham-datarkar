@@ -6,6 +6,7 @@ import { H2Editor, H3Editor, H4Editor, LeadEditor, PEditor, SmallEditor, Caption
 import { QuoteEditor, PullquoteEditor } from "./editors/quotes";
 import { CodeEditor } from "./editors/code";
 import { DividerEditor, SpacerEditor, TagsEditor } from "./editors/utility";
+import { UlEditor, OlEditor, TasklistEditor } from "./editors/lists";
 
 export type BlockEditorProps<T extends ContentBlock = ContentBlock> = {
   block: T;
@@ -29,9 +30,9 @@ export const registry = {
   p: { create: () => ({ type: "p", text: "" }), Editor: PEditor },
   small: { create: () => ({ type: "small", text: "" }), Editor: SmallEditor },
   caption: { create: () => ({ type: "caption", text: "" }), Editor: CaptionEditor },
-  ul: { create: () => ({ type: "ul", items: [""] }), Editor: JsonEditor },
-  ol: { create: () => ({ type: "ol", items: [""] }), Editor: JsonEditor },
-  tasklist: { create: () => ({ type: "tasklist", items: [{ text: "", done: false }] }), Editor: JsonEditor },
+  ul: { create: () => ({ type: "ul", items: [""] }), Editor: UlEditor },
+  ol: { create: () => ({ type: "ol", items: [""] }), Editor: OlEditor },
+  tasklist: { create: () => ({ type: "tasklist", items: [{ text: "", done: false }] }), Editor: TasklistEditor },
   figure: { create: () => ({ type: "figure", image: { seed: "", alt: "" } }), Editor: JsonEditor },
   figures: { create: () => ({ type: "figures", images: [] }), Editor: JsonEditor },
   gallery: { create: () => ({ type: "gallery", images: [] }), Editor: JsonEditor },
