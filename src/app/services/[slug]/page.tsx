@@ -3,7 +3,8 @@ import { notFound } from "next/navigation";
 import { ArrowRight, CalendarCheck, Check } from "lucide-react";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema } from "@/lib/seo";
-import { services, getService } from "@/lib/data/services";
+import type { Service } from "@/lib/data/types";
+import { getPublishedEntityBySlug } from "@/lib/content/queries";
 import { faqs } from "@/lib/data/site-content";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -16,13 +17,11 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Icon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
-export function generateStaticParams() {
-  return services.map((s) => ({ slug: s.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = getService(slug);
+  const service = await getPublishedEntityBySlug<Service>("services", slug);
   if (!service) return buildMetadata({ title: "Service", path: `/services/${slug}` });
   return buildMetadata({ title: service.name, description: service.outcome, path: `/services/${service.slug}` });
 }
@@ -31,7 +30,7 @@ const serviceFaqs = faqs.filter((f) => f.group === "Working together" || f.group
 
 export default async function ServiceDetailPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const service = getService(slug);
+  const service = await getPublishedEntityBySlug<Service>("services", slug);
   if (!service) notFound();
 
   return (

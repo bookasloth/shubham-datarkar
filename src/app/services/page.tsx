@@ -1,5 +1,6 @@
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
-import { services } from "@/lib/data/services";
+import type { Service } from "@/lib/data/types";
+import { getPublishedEntities } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { SectionHeading } from "@/components/layout/section-heading";
@@ -22,7 +23,10 @@ const how = [
   { step: "Compound", detail: "Instrument it, hand it over, and let it run without me." },
 ];
 
-export default function ServicesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ServicesPage() {
+  const services = await getPublishedEntities<Service>("services");
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])} />
