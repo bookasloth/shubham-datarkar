@@ -1,11 +1,14 @@
 import {
+  Asterisk,
   BookOpen,
   Braces,
+  Bug,
   Calculator,
   CalendarCheck,
   Clapperboard,
   Clock,
   Code2,
+  Coffee,
   Compass,
   CreditCard,
   FileText,
@@ -22,11 +25,32 @@ import {
   Type,
   Users,
   Workflow,
-  type LucideIcon,
 } from "lucide-react";
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
-const registry: Record<string, LucideIcon> = {
+/** Custom necktie glyph — lucide has no tie. Matches lucide's 24-grid stroke style. */
+function Tie({ className }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={cn("size-5", className)}
+      aria-hidden
+    >
+      <path d="M9 3h6l-1 4h-4z" />
+      <path d="M14 7l2.5 7L12 21l-4.5-7L10 7" />
+    </svg>
+  );
+}
+
+type IconCmp = React.ComponentType<{ className?: string }>;
+
+const registry: Record<string, IconCmp> = {
   Search,
   Target,
   PenLine,
@@ -51,6 +75,10 @@ const registry: Record<string, LucideIcon> = {
   CreditCard,
   Clapperboard,
   Users,
+  Asterisk,
+  Bug,
+  Coffee,
+  Tie,
 };
 
 /** Render a lucide icon by its string name (used for CMS-style data). */

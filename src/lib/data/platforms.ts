@@ -12,8 +12,8 @@ export const platforms: Platform[] = [
     description: "A strategy-led practice focused on positioning, structured distribution, SEO, and measurable growth.",
     category: "Agency",
     url: "https://theboguscompany.com",
-    icon: "Megaphone",
-    accent: "#FCE0E4",
+    icon: "Asterisk",
+    accent: "#C9EFD2",
   },
   {
     name: "Timewheel Internet",
@@ -22,7 +22,7 @@ export const platforms: Platform[] = [
     category: "SaaS Studio",
     url: "https://timewheel.in",
     icon: "Clock",
-    accent: "#DCE9FB",
+    accent: "linear-gradient(135deg, #FBD0D5 0%, #FBEFC9 35%, #C9EFD2 70%, #CFE0FB 100%)",
   },
   {
     name: "Marketing Bug",
@@ -30,8 +30,8 @@ export const platforms: Platform[] = [
     description: "Clear thinking on growth, distribution, and digital leverage.",
     category: "Newsletter",
     url: "https://marketingbug.in",
-    icon: "Newspaper",
-    accent: "#DEF3E3",
+    icon: "Bug",
+    accent: "#FBC9D2",
   },
   {
     name: "ChaiPani",
@@ -39,8 +39,8 @@ export const platforms: Platform[] = [
     description: "A simple way for audiences to support creators directly.",
     category: "Payments",
     url: "https://chaipani.app",
-    icon: "CreditCard",
-    accent: "#FCEBD5",
+    icon: "Coffee",
+    accent: "linear-gradient(135deg, #D9BE9A 0%, #F2DFAE 100%)",
   },
   {
     name: "Corporate Puppet",
@@ -48,7 +48,7 @@ export const platforms: Platform[] = [
     description: "Short-form content and conversations exploring modern corporate culture and performance.",
     category: "Media",
     url: "https://corporatepuppet.com",
-    icon: "Clapperboard",
+    icon: "Tie",
     accent: "#EAE2F8",
   },
   {

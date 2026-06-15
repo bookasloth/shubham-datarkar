@@ -17,7 +17,7 @@ export function PlatformCard({ platform }: { platform: Platform }) {
         <div className="flex items-start justify-between">
           <span
             className="grid size-11 place-items-center rounded-card"
-            style={{ backgroundColor: platform.accent }}
+            style={{ background: platform.accent }}
           >
             <Icon name={platform.icon} className="size-5 text-zinc-900" />
           </span>
