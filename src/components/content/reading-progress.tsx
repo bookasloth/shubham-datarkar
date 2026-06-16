@@ -39,7 +39,7 @@ export function ReadingProgress() {
       aria-valuenow={Math.round(pct)}
     >
       <div
-        className="h-full origin-left bg-foreground transition-[width] duration-150 ease-out"
+        className="h-full origin-left bg-brand transition-[width] duration-150 ease-out"
         style={{ width: `${pct}%` }}
       />
     </div>
