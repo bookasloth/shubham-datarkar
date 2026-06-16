@@ -9,6 +9,7 @@ const NAV = [
   ...ENTITY_LIST.map((e) => ({ href: `/admin/content/${e.key}`, label: e.label })),
   { href: "/admin/subscribers", label: "Subscribers" },
   { href: "/admin/payments", label: "Payments" },
+  { href: "/admin/integrations", label: "Integrations" },
 ];
 
 export default async function AdminLayout({
