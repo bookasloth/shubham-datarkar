@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, companies } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { principles, stats } from "@/lib/data/site-content";
@@ -36,7 +37,7 @@ export default function AboutPage() {
         actions={
           <>
             <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-              <CalendarCheck />
+              <BrandIcon name="CalendarCheck" />
               Book a call
             </a>
             <Link href="/work" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>

@@ -54,7 +54,7 @@ export function ItemPicker({
                 "size-10 rounded-full border text-sm font-medium tabular-nums transition-ui",
                 active
                   ? "border-foreground bg-foreground text-background"
-                  : "border-border bg-background text-foreground hover:-translate-y-px hover:border-foreground",
+                  : "border-border bg-background text-foreground hover:border-foreground",
               )}
             >
               {p}

@@ -62,7 +62,7 @@ export function AudioPlayer({
         onClick={() => setPlaying((p) => !p)}
         aria-label={playing ? "Pause" : "Play"}
         aria-pressed={playing}
-        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-ui hover:-translate-y-px hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&_svg]:size-4.5"
+        className="flex size-11 shrink-0 items-center justify-center rounded-full bg-foreground text-background transition-ui hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring [&_svg]:size-4.5"
       >
         {playing ? <Pause /> : <Play className="ml-0.5" />}
       </button>

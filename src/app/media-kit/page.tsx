@@ -1,4 +1,4 @@
-import { Mail } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, companies } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
@@ -44,7 +44,7 @@ export default function MediaKitPage() {
         crumbs={[{ label: "Home", href: "/" }, { label: "Media Kit" }]}
         actions={
           <a href={`mailto:${site.email}`} className={cn(buttonVariants({ size: "lg" }))}>
-            <Mail />
+            <BrandIcon name="Mail" />
             Email for assets
           </a>
         }
@@ -117,7 +117,7 @@ export default function MediaKitPage() {
             <div className="flex gap-2">
               <CopyButton value={site.email} label="Copy email" />
               <a href={`mailto:${site.email}`} className={cn(buttonVariants())}>
-                <Mail />
+                <BrandIcon name="Mail" />
                 Email me
               </a>
             </div>

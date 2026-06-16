@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Download } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { resources } from "@/lib/data/site-content";
 import { Container, Section } from "@/components/layout/container";
@@ -43,7 +44,7 @@ export default function ResourcesPage() {
                     href="/newsletter"
                     className={cn(buttonVariants({ variant: "outline", size: "sm" }), "mt-5 w-fit")}
                   >
-                    <Download />
+                    <BrandIcon name="Download" />
                     Get it free
                   </Link>
                 </Card>

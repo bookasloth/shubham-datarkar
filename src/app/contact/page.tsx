@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CalendarCheck, Mail, MessageSquare } from "lucide-react";
+import { Mail, MessageSquare } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
@@ -52,7 +53,7 @@ export default function ContactPage() {
                   rel="noopener noreferrer"
                   className={cn(buttonVariants({ size: "lg" }), "mt-4 w-full")}
                 >
-                  <CalendarCheck />
+                  <BrandIcon name="CalendarCheck" />
                   Book a call
                 </a>
                 <Separator className="my-5" />
