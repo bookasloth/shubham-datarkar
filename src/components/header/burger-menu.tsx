@@ -47,11 +47,8 @@ export function BurgerMenu() {
         <Dialog.Content
           aria-describedby={undefined}
           className={cn(
-            "burger-anim fixed z-[96] flex flex-col bg-background outline-none",
-            // Mobile: left drawer
-            "inset-y-0 left-0 w-[88%] max-w-sm border-r border-border",
-            // Desktop (>= lg): full-width slide-down mega panel
-            "lg:inset-x-0 lg:bottom-auto lg:max-h-[100dvh] lg:w-full lg:max-w-none lg:overflow-y-auto lg:border-r-0 lg:border-b lg:border-border",
+            "burger-anim fixed inset-x-0 top-0 z-[96] flex max-h-[100dvh] w-full flex-col",
+            "overflow-y-auto border-b border-border bg-background outline-none",
           )}
         >
           {/* Top row — own Logo + Close (the bar is covered while open) */}
