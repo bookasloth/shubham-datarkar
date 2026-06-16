@@ -43,6 +43,10 @@
   --danger: #b23b30;
   --danger-foreground: #ffffff;
 
+  /* Brand accent — the one orange, used sparingly (links, primary CTAs) */
+  --brand: #ff4800;
+  --brand-foreground: #ffffff;
+
   /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
   --radius-btn: 4px;
   --radius-input: 8px;
@@ -88,6 +92,10 @@
   --warning: #c9a94a;
   --danger: #e0695e;
 
+  /* Brand stays the same orange in dark mode */
+  --brand: #ff4800;
+  --brand-foreground: #ffffff;
+
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.45);
@@ -121,6 +129,8 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-brand: var(--brand); /* orange #ff4800 — palette Insert + selected tile */
+  --color-brand-foreground: var(--brand-foreground);
 
   --radius-btn: var(--radius-btn);
   --radius-input: var(--radius-input);
