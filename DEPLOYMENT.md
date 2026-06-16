@@ -129,3 +129,20 @@ After credentials + webhook are configured (steps 4–5), test on production in
 If the row stays `pending`, the webhook isn't reaching the server — re-check the
 webhook URL + signing secret. Only flip to live mode once the sandbox flow is
 green end-to-end.
+
+---
+
+## 7. Configure Kit (email/newsletter)
+
+Newsletter signups dual-write: they always save to the Supabase `subscribers`
+table, and are also pushed to a Kit form. Kit is no-op until configured (signups
+still save to Supabase in the meantime).
+
+1. In **`/admin/integrations` → Kit (email)**, fill in:
+   - **API Key** — Kit → Settings → Advanced → API → your V4 API Key
+   - **Form ID** — Kit → Grow → Forms → open the form → numeric ID in the URL
+2. **Save** (encrypted into Vault), then **Test Connect** — hits the Kit account
+   endpoint; green = key valid.
+3. Verify end-to-end: submit the newsletter form on the site, then confirm the
+   subscriber appears in the Kit form's subscribers. The push is fail-safe — a
+   Kit error is logged but never blocks the Supabase signup.
