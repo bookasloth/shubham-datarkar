@@ -6,7 +6,6 @@ import {
   Check,
   CircleCheck,
   CircleX,
-  Download,
   FileText,
   Info,
   Lightbulb,
@@ -18,6 +17,7 @@ import {
   ThumbsUp,
   TriangleAlert,
 } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import type { RichText as RichTextValue, Stat } from "@/lib/data/types";
 import { RichText } from "@/components/content/rich-text";
 import { Alert, AlertDescription, AlertTitle, type AlertProps } from "@/components/ui/alert";
@@ -309,7 +309,7 @@ export function DownloadCard({
         <p className="mt-1 text-xs text-muted-foreground">{meta}</p>
       </div>
       <Button variant="outline" className="shrink-0">
-        <Download /> {button}
+        <BrandIcon name="Download" /> {button}
       </Button>
     </Card>
   );

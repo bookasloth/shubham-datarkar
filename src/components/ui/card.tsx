@@ -11,7 +11,7 @@ export function Card({
       className={cn(
         "rounded-card border border-border bg-card text-card-foreground",
         interactive &&
-          "transition-ui hover:-translate-y-0.5 hover:shadow-md focus-within:-translate-y-0.5 focus-within:shadow-md",
+          "transition-ui hover:shadow-md focus-within:shadow-md",
         className,
       )}
       {...props}

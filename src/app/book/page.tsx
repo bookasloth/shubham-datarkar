@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { CalendarCheck, Check } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
@@ -48,7 +49,7 @@ export default function BookPage() {
               rel="noopener noreferrer"
               className={cn(buttonVariants({ size: "lg" }), "mt-8")}
             >
-              <CalendarCheck />
+              <BrandIcon name="CalendarCheck" />
               Open the calendar
             </a>
 

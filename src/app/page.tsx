@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 
 import { site } from "@/lib/site";
 import { buildMetadata, organizationSchema } from "@/lib/seo";
@@ -72,7 +73,7 @@ export default async function HomePage() {
             </Reveal>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-                <CalendarCheck />
+                <BrandIcon name="CalendarCheck" />
                 Book a discovery call
               </a>
               <Link href="/work" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
@@ -216,7 +217,7 @@ export default async function HomePage() {
                   description="No forms, no back-and-forth. Pick a slot and we'll talk through your growth, product, or positioning problem — and leave with a clear next step."
                 />
                 <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }), "mt-8")}>
-                  <CalendarCheck />
+                  <BrandIcon name="CalendarCheck" />
                   Open the calendar
                 </a>
               </div>

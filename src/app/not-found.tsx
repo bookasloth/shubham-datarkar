@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Home, Search } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { Container, Section } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,11 +24,11 @@ export default function NotFound() {
         </p>
         <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
           <Link href="/" className={cn(buttonVariants({ size: "lg" }))}>
-            <Home />
+            <BrandIcon name="Home" />
             Back home
           </Link>
           <Link href="/search" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-            <Search />
+            <BrandIcon name="Search" />
             Search the site
           </Link>
         </div>

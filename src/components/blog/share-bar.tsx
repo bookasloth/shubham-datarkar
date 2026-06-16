@@ -38,7 +38,7 @@ export function ShareBar({ url, title, className }: { url: string; title: string
   }
 
   const btn =
-    "grid size-9 place-items-center rounded-full border border-border text-foreground transition-ui hover:-translate-y-px hover:bg-accent hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
+    "grid size-9 place-items-center rounded-full border border-border text-foreground transition-ui hover:bg-accent hover:shadow-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>

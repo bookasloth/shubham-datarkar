@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { MapPin, Settings } from "lucide-react";
+import { MapPin } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
@@ -43,7 +44,7 @@ export default function ProfilePage() {
               </div>
             </div>
             <Link href="/settings" className={cn(buttonVariants({ variant: "outline" }))}>
-              <Settings />
+              <BrandIcon name="Settings" />
               Edit profile
             </Link>
           </div>
