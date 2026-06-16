@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { ITEMS, FEE_PCT, formatMoney } from "@/lib/support/config";
 import { computeAmount } from "@/lib/support/amount";
+import { openZohoCheckout } from "@/lib/support/checkout";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MSG_MAX = 250;
@@ -44,18 +45,73 @@ export function SupportPanel() {
     }
     setEmailErr(undefined);
     setLoading(true);
-    // TODO(payments): POST /api/support/session then open the Zoho checkout
-    // widget with the returned payment_session_id. Mocked for now.
-    await new Promise((r) => setTimeout(r, 900));
-    setLoading(false);
-    toast({
-      title: "Thank you!",
-      description: `Your ${formatMoney(amount.base)} support means a lot.`,
-      variant: "success",
-    });
-    setCoffeeQty(coffee.defaultQty);
-    setToffeeQty(toffee.defaultQty);
-    setMessage("");
+
+    try {
+      const res = await fetch("/api/support/session", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          coffeeUnits: coffeeQty,
+          toffeeUnits: toffeeQty,
+          coversFee,
+          anonymous,
+          email,
+          name: name || undefined,
+          message: message || undefined,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+
+      if (!res.ok) {
+        toast({
+          title: "Couldn't start payment",
+          description: data?.error ?? "Please try again.",
+          variant: "danger",
+        });
+        return;
+      }
+
+      const outcome = await openZohoCheckout({
+        paymentsSessionId: data.paymentsSessionId,
+        accountId: data.accountId,
+        apiKey: data.apiKey,
+        amount: data.amount,
+        currency: data.currency,
+        symbol: data.symbol,
+        email,
+        name: name || undefined,
+      });
+
+      if (outcome.status === "paid") {
+        toast({
+          title: "Thank you!",
+          description: `Your ${formatMoney(amount.base)} support means a lot.`,
+          variant: "success",
+        });
+        setCoffeeQty(coffee.defaultQty);
+        setToffeeQty(toffee.defaultQty);
+        setMessage("");
+      } else if (outcome.status === "cancelled") {
+        toast({
+          title: "Payment cancelled",
+          description: "No charge was made — your details are still here.",
+        });
+      } else {
+        toast({
+          title: "Payment failed",
+          description: outcome.message,
+          variant: "danger",
+        });
+      }
+    } catch {
+      toast({
+        title: "Something went wrong",
+        description: "Please try again in a moment.",
+        variant: "danger",
+      });
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (

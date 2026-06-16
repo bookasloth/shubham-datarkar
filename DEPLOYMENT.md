@@ -95,19 +95,37 @@ Credentials are entered through the UI, not env vars. Start in **sandbox**.
    existing value on later edits).
 4. Click **Test Connect** — it exchanges the refresh token for an access token.
    Green = credentials valid. No money moves.
-5. To go live later: flip **Live mode** on, replace the credentials with live
-   values (and a `ZohoPay.*`-scoped refresh token), Save, Test Connect again.
+5. **Register the webhook** in Zoho Payments → Settings → Webhooks:
+   - URL: `https://shubhamdatarkar.com/api/support/webhook`
+   - Events: `payment.succeeded`, `payment.failed`
+   - Copy the signing secret into the **Webhook Secret** field in the admin and Save.
+6. To go live later: flip **Live mode** on, replace the credentials with live
+   values (and a `ZohoPay.*`-scoped refresh token), Save, Test Connect again, and
+   point the webhook at the live events.
 
 ---
 
-## 5. Status / not-yet-live
+## 6. Smoke-test the payment flow (sandbox)
 
-The Zoho **credentials admin + connection test** are deployed. The actual
-**payment write path is not built yet** — `support-panel.tsx` still uses a mocked
-submit, and these are pending:
+The full payment write path is built:
 
-- `src/app/api/support/session/route.ts` — insert pending `supports` row + create Zoho payment session
-- `src/app/api/support/webhook/route.ts` — verify Zoho signature → mark row paid/failed
-- wire the support form to call the session route and open the Zoho checkout widget
+- `src/app/api/support/session/route.ts` — validates + recomputes the amount
+  server-side, inserts a pending `supports` row, mints a Zoho token, creates a
+  payment session.
+- `src/lib/support/checkout.ts` + `support-panel.tsx` — open the Zoho checkout
+  widget with the returned session.
+- `src/app/api/support/webhook/route.ts` — verifies the HMAC signature and flips
+  the row to `paid`/`failed`.
 
-Until those ship, `/support` collects no real payments and records no rows.
+After credentials + webhook are configured (steps 4–5), test on production in
+**sandbox** mode:
+
+1. Go to `/support`, pick a coffee/toffee, enter an email, submit.
+2. The Zoho sandbox widget opens — complete a sandbox payment.
+3. Confirm the row in **/admin/payments** flips from `pending` to `paid`
+   (the webhook does this; allow a few seconds).
+4. Confirm the supporter appears on `/support/supporters`.
+
+If the row stays `pending`, the webhook isn't reaching the server — re-check the
+webhook URL + signing secret. Only flip to live mode once the sandbox flow is
+green end-to-end.
