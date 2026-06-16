@@ -3,6 +3,7 @@ import type { ContentBlock, ListItem, RichText as RichTextValue } from "@/lib/da
 import { slugify } from "@/lib/utils";
 
 import { RichText } from "@/components/content/rich-text";
+import { AffiliateProvider } from "@/components/content/affiliate-context";
 import { AudioPlayer } from "@/components/content/audio-player";
 import { Figure, Gallery, MapEmbed, SideBySide, SocialEmbed, VideoEmbed } from "@/components/content/editorial-media";
 import {
@@ -361,14 +362,16 @@ function Block({ block }: { block: ContentBlock }) {
   }
 }
 
-export function ArticleBody({ blocks }: { blocks: ContentBlock[] }) {
+export function ArticleBody({ blocks, affiliateDomains }: { blocks: ContentBlock[]; affiliateDomains?: string[] }) {
   return (
-    <TooltipProvider delayDuration={150}>
-      <div className="flex flex-col gap-7">
-        {blocks.map((block, i) => (
-          <Block key={i} block={block} />
-        ))}
-      </div>
-    </TooltipProvider>
+    <AffiliateProvider domains={affiliateDomains}>
+      <TooltipProvider delayDuration={150}>
+        <div className="flex flex-col gap-7">
+          {blocks.map((block, i) => (
+            <Block key={i} block={block} />
+          ))}
+        </div>
+      </TooltipProvider>
+    </AffiliateProvider>
   );
 }

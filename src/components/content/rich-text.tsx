@@ -7,8 +7,10 @@ import { Kbd } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { isAffiliateUrl } from "@/lib/content/affiliate";
+import { useAffiliateDomains } from "@/components/content/affiliate-context";
 
 function InlineSpan({ node }: { node: InlineNode }) {
+  const affiliateDomains = useAffiliateDomains();
   if (typeof node === "string") return <>{node}</>;
 
   switch (node.t) {
@@ -42,7 +44,7 @@ function InlineSpan({ node }: { node: InlineNode }) {
       return <sup className="text-[0.7em]">{node.text}</sup>;
     case "a": {
       const external = /^https?:\/\//.test(node.href);
-      const affiliate = external && isAffiliateUrl(node.href);
+      const affiliate = external && isAffiliateUrl(node.href, affiliateDomains);
 
       // Affiliate: new tab, rel="sponsored", with a "Sponsored" tooltip.
       if (affiliate) {
