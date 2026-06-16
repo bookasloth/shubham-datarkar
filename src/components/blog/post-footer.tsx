@@ -1,9 +1,8 @@
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Container, Section } from "@/components/layout/container";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
+import { ReactionBar } from "./reaction-bar";
 import { ShareBar } from "./share-bar";
 import { site } from "@/lib/site";
 import { formatDate } from "@/lib/utils";
@@ -11,21 +10,18 @@ import { formatDate } from "@/lib/utils";
 type RelatedItem = { slug: string; category: string; title: string; date: string };
 
 /**
- * Post-footer block: meta + share bar, comments CTA, Read Next, newsletter.
- * Comment wiring lands later — the count + button are UI-only for now.
+ * Post-footer block: meta + share bar, reaction bar, Read Next, newsletter.
  */
 export function PostFooter({
   post,
   categoryLabel,
   authorName,
   related,
-  commentCount = 0,
 }: {
   post: { slug: string; category: string; title: string };
   categoryLabel: string;
   authorName: string;
   related: RelatedItem[];
-  commentCount?: number;
 }) {
   const url = `${site.url}/blog/${post.category}/${post.slug}`;
 
@@ -41,25 +37,13 @@ export function PostFooter({
                 {authorName}
               </Link>
             </span>
-            <span className="inline-flex items-center gap-1 text-muted-foreground">
-              <MessageSquare className="size-4" />
-              {commentCount}
-            </span>
             <Badge variant="muted">{categoryLabel}</Badge>
           </div>
           <ShareBar url={url} title={post.title} />
         </div>
 
-        {/* Comments CTA */}
-        <div className="flex flex-col gap-6 border-b border-border py-10 sm:flex-row sm:items-center sm:justify-between">
-          <div className="max-w-sm">
-            <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Comments</p>
-            <h2 className="mt-2 text-2xl font-bold tracking-tight">Join the discussion and share your opinion</h2>
-          </div>
-          <Button size="lg" className="shrink-0">
-            Add a Comment
-          </Button>
-        </div>
+        {/* Reactions */}
+        <ReactionBar slug={`${post.category}/${post.slug}`} />
 
         {/* Read Next */}
         {related.length > 0 && (
