@@ -12,6 +12,7 @@ export const EMAIL_BRAND = {
   logoHeader: "https://company-assets.bookasloth.in/images/sd/email/shubham-logo-primary.png",
   logoFooter: "https://company-assets.bookasloth.in/images/sd/email/shubham-logo-secondary.png",
   welcomeGif: "https://company-assets.bookasloth.in/images/sd/email/welcome.gif",
+  unsubscribeGif: "https://company-assets.bookasloth.in/images/sd/email/unsubscribe.gif",
   accent: "#ff4800",
   linkColor: "#c43700",
   company: ["Timewheel Internet Pvt Ltd", "2nd Floor, Eureka Coworking", "Mate Sqr, Nagpur, 440030"],
@@ -35,6 +36,8 @@ export type RenderEmailOptions = {
   bodyHtml: string;
   /** Optional primary button. */
   cta?: EmailCta;
+  /** Optional trusted HTML rendered after the CTA, before the hero. */
+  afterCta?: string;
   /** Optional full-width hero image URL (e.g. the welcome gif). */
   heroImageUrl?: string;
   /** Right-side header label. Defaults to "Welcome to <brand>". */
@@ -130,6 +133,7 @@ export function renderEmail(opts: RenderEmailOptions): string {
                 <h1 style="margin:0 0 6px 0; font-size:24px; font-weight:600; color:#202124;">${opts.title}</h1>
                 ${opts.bodyHtml}
                 ${ctaBlock}
+                ${opts.afterCta ?? ""}
               </td>
             </tr>
             ${heroBlock}
