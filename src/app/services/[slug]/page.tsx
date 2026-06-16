@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CalendarCheck, Check } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema } from "@/lib/seo";
 import type { Service } from "@/lib/data/types";
@@ -53,7 +54,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
         actions={
           <>
             <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-              <CalendarCheck />
+              <BrandIcon name="CalendarCheck" />
               Book a call
             </a>
             <Link href="/contact" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
@@ -142,7 +143,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                   rel="noopener noreferrer"
                   className={cn(buttonVariants({ size: "lg" }), "mt-6 w-full hover:bg-[#fe5100] hover:text-black")}
                 >
-                  <CalendarCheck />
+                  <BrandIcon name="CalendarCheck" />
                   Book a call
                 </a>
                 <Link href="/contact" className={cn(buttonVariants({ variant: "outline", size: "lg" }), "mt-2 w-full hover:bg-[#fe5100] hover:text-black hover:border-[#fe5100]")}>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRight, CalendarCheck, Quote } from "lucide-react";
+import { ArrowRight, Quote } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import type { CaseStudy } from "@/lib/data/types";
@@ -177,7 +178,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               <p className="text-lg font-semibold">Want results like this?</p>
               <div className="flex gap-3">
                 <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants())}>
-                  <CalendarCheck />
+                  <BrandIcon name="CalendarCheck" />
                   Book a call
                 </a>
                 <Link href="/case-studies" className={cn(buttonVariants({ variant: "outline" }))}>

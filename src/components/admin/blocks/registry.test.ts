@@ -3,15 +3,19 @@ import { BLOCK_TYPES } from "./block-types";
 import { registry } from "./registry";
 
 describe("BLOCK_TYPES", () => {
-  it("lists all 50 block types with a group each", () => {
+  it("lists all 50 block types with a group, icon and rank each", () => {
     expect(BLOCK_TYPES).toHaveLength(50);
     for (const b of BLOCK_TYPES) {
       expect(typeof b.type).toBe("string");
       expect(typeof b.group).toBe("string");
       expect(typeof b.label).toBe("string");
+      expect(b.icon, `missing icon: ${b.type}`).toBeTruthy();
+      expect(typeof b.rank).toBe("number");
     }
     // unique types
     expect(new Set(BLOCK_TYPES.map((b) => b.type)).size).toBe(50);
+    // unique ranks (deterministic palette order)
+    expect(new Set(BLOCK_TYPES.map((b) => b.rank)).size).toBe(50);
   });
 });
 

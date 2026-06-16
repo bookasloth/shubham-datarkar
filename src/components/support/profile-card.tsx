@@ -49,7 +49,7 @@ export function ProfileCard({ supporterCount }: { supporterCount?: number }) {
                 })
               }
               aria-label="Verified — what's this?"
-              className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-card bg-white text-orange-500 transition-ui hover:-translate-y-px focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+              className="absolute bottom-0 right-0 flex size-6 items-center justify-center rounded-full border-2 border-card bg-white text-brand transition-ui focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
               title="Verified"
             >
               <BadgeCheck className="size-3.5" />

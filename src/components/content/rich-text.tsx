@@ -6,8 +6,11 @@ import type { InlineNode, RichText as RichTextValue } from "@/lib/data/types";
 import { Kbd } from "@/components/ui/kbd";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { isAffiliateUrl } from "@/lib/content/affiliate";
+import { useAffiliateDomains } from "@/components/content/affiliate-context";
 
 function InlineSpan({ node }: { node: InlineNode }) {
+  const affiliateDomains = useAffiliateDomains();
   if (typeof node === "string") return <>{node}</>;
 
   switch (node.t) {
@@ -41,12 +44,37 @@ function InlineSpan({ node }: { node: InlineNode }) {
       return <sup className="text-[0.7em]">{node.text}</sup>;
     case "a": {
       const external = /^https?:\/\//.test(node.href);
+      const affiliate = external && isAffiliateUrl(node.href, affiliateDomains);
+
+      // Affiliate: new tab, rel="sponsored", with a "Sponsored" tooltip.
+      if (affiliate) {
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <a
+                href={node.href}
+                target="_blank"
+                rel="sponsored noopener noreferrer"
+                className="smart-link"
+              >
+                {node.text}
+              </a>
+            </TooltipTrigger>
+            <TooltipContent className="normal-case">Sponsored</TooltipContent>
+          </Tooltip>
+        );
+      }
+
+      // External: new tab + rel. Internal: client-side nav via next/link.
+      if (external) {
+        return (
+          <a href={node.href} target="_blank" rel="noopener noreferrer" className="smart-link">
+            {node.text}
+          </a>
+        );
+      }
       return (
-        <Link
-          href={node.href}
-          {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
-          className="font-medium text-foreground underline decoration-foreground/30 underline-offset-[3px] transition-ui hover:decoration-foreground"
-        >
+        <Link href={node.href} className="smart-link">
           {node.text}
         </Link>
       );

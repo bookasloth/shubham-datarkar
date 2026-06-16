@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Mic } from "lucide-react";
+import { ArrowRight } from "lucide-react";
+import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { press } from "@/lib/data/site-content";
@@ -44,7 +45,7 @@ export default function SpeakingPage() {
         actions={
           <>
             <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-              <Mic />
+              <BrandIcon name="Mic" />
               Book me to speak
             </a>
             <Link href="/contact" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>

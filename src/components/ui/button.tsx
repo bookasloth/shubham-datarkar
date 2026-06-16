@@ -6,27 +6,28 @@ import { Spinner } from "@/components/ui/spinner";
 
 /**
  * The one button. Shared interaction language across the whole site:
- * hover lifts 1px with a subtle shadow, active presses back down,
- * all in ~180ms. Focus-visible shows the monochrome ring.
+ * hover deepens the shadow/background (no movement), all in ~180ms.
+ * Focus-visible shows the monochrome ring. Carries `group/btn` so brand
+ * icons (see BrandIcon) can react to button hover.
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn text-sm font-medium transition-ui select-none " +
+  "group/btn inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-btn text-sm font-medium transition-ui select-none " +
     "outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring " +
-    "disabled:pointer-events-none disabled:opacity-50 active:translate-y-0 " +
+    "disabled:pointer-events-none disabled:opacity-50 " +
     "[&_svg]:pointer-events-none [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-primary text-primary-foreground shadow-xs hover:-translate-y-px hover:shadow-sm active:shadow-xs",
+          "bg-primary text-primary-foreground shadow-xs hover:shadow-sm active:shadow-xs",
         secondary:
-          "bg-secondary text-secondary-foreground hover:-translate-y-px hover:bg-accent hover:shadow-sm",
+          "bg-secondary text-secondary-foreground hover:bg-accent hover:shadow-sm",
         outline:
-          "border border-border bg-background text-foreground hover:-translate-y-px hover:bg-accent hover:shadow-sm",
+          "border border-border bg-background text-foreground hover:bg-accent hover:shadow-sm",
         ghost: "text-foreground hover:bg-accent",
         link: "text-foreground underline-offset-4 hover:underline",
         destructive:
-          "bg-danger text-danger-foreground shadow-xs hover:-translate-y-px hover:shadow-sm",
+          "bg-danger text-danger-foreground shadow-xs hover:shadow-sm",
       },
       size: {
         sm: "h-8 px-3 text-xs [&_svg]:size-3.5",

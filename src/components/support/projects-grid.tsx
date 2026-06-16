@@ -23,7 +23,7 @@ export function ProjectsGrid() {
             type="button"
             onClick={() => setActive(proj)}
             aria-label={proj.name}
-            className="aspect-square overflow-hidden rounded-[3px] border border-border bg-muted/40 transition-ui hover:-translate-y-px hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="aspect-square overflow-hidden rounded-[3px] border border-border bg-muted/40 transition-ui hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={proj.logo} alt="" className="size-full object-cover" />
