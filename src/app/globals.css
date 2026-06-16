@@ -38,6 +38,7 @@
   /* Brand — the one color in the system. Only surfaces on user
      interaction (focus, selection, hover, scroll). Never decorative. */
   --brand: #ff4800;
+  --brand-foreground: #ffffff;
 
   /* Desaturated functional states (used sparingly, never decorative) */
   --success: #2f7d57;
@@ -46,10 +47,6 @@
   --warning-foreground: #ffffff;
   --danger: #b23b30;
   --danger-foreground: #ffffff;
-
-  /* Brand accent — the one orange, used sparingly (links, primary CTAs) */
-  --brand: #ff4800;
-  --brand-foreground: #ffffff;
 
   /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
   --radius-btn: 4px;
@@ -94,14 +91,11 @@
 
   /* Brand holds the same value on dark — orange reads on black and white. */
   --brand: #ff4800;
+  --brand-foreground: #ffffff;
 
   --success: #4ea884;
   --warning: #c9a94a;
   --danger: #e0695e;
-
-  /* Brand stays the same orange in dark mode */
-  --brand: #ff4800;
-  --brand-foreground: #ffffff;
 
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.4);
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
@@ -130,15 +124,14 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-brand: var(--brand);
+  --color-brand: var(--brand); /* orange #ff4800 — focus/selection/scroll + palette Insert */
+  --color-brand-foreground: var(--brand-foreground);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
-  --color-brand: var(--brand); /* orange #ff4800 — palette Insert + selected tile */
-  --color-brand-foreground: var(--brand-foreground);
 
   --radius-btn: var(--radius-btn);
   --radius-input: var(--radius-input);
