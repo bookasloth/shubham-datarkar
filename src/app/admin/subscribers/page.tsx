@@ -1,4 +1,6 @@
+import { Download } from "lucide-react";
 import { getSubscribers } from "@/lib/subscribers/queries";
+import { buttonVariants } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
 
@@ -7,9 +9,19 @@ export default async function AdminSubscribersPage() {
 
   return (
     <div>
-      <div className="mb-6 flex items-center justify-between">
+      <div className="mb-6 flex items-center justify-between gap-4">
         <h1 className="text-2xl font-bold tracking-tight">Subscribers</h1>
-        <span className="text-sm text-muted-foreground">{subscribers.length} total</span>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">{subscribers.length} total</span>
+          <a
+            href="/admin/subscribers/export"
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+            aria-disabled={subscribers.length === 0}
+          >
+            <Download />
+            Download CSV
+          </a>
+        </div>
       </div>
       <div className="overflow-hidden rounded-card border border-border">
         <table className="w-full text-sm">
