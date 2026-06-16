@@ -3,12 +3,15 @@ import { cn } from "@/lib/utils";
 import { site } from "@/lib/site";
 
 /**
- * Brand mark. Image-based — currently the Google logo as a PLACEHOLDER until
- * the final mark is ready. Swap `LOGO_SRC` for the real asset (drop it in
- * /public) when available. `showWordmark` is kept for API compatibility.
+ * Brand mark. Two hosted variants swapped by theme via the `dark:` class
+ * variant (next-themes uses the `.dark` class), so it's SSR-safe with no
+ * flash and needs no client JS.
+ *  - light theme → black wordmark
+ *  - dark theme  → white wordmark
+ * `showWordmark` is kept for API compatibility.
  */
-const LOGO_SRC =
-  "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png";
+const LOGO_LIGHT = "https://company-assets.bookasloth.in/images/sd/website/logo-black.webp";
+const LOGO_DARK = "https://company-assets.bookasloth.in/images/sd/website/logo-white.webp";
 
 export function Logo({
   className,
@@ -22,14 +25,21 @@ export function Logo({
   void showWordmark;
 
   const mark = (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={LOGO_SRC}
-      alt={`${site.name} (placeholder logo)`}
-      width={272}
-      height={92}
-      className={cn("h-6 w-auto select-none", className)}
-    />
+    <span className={cn("inline-flex items-center", className)}>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={LOGO_LIGHT}
+        alt={site.name}
+        className="block h-6 w-auto select-none dark:hidden"
+      />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src={LOGO_DARK}
+        alt=""
+        aria-hidden
+        className="hidden h-6 w-auto select-none dark:block"
+      />
+    </span>
   );
 
   if (href === null) return mark;
