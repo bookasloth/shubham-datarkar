@@ -20,31 +20,6 @@ export const supportProfile = {
   achievements: ["3 companies building", "200+ pieces shipped", "Builders List weekly"],
 };
 
-/** Company-assets base for project logos. */
-const PROJECT_LOGO_BASE = "https://company-assets.bookasloth.in/images/sd/website/projects";
-
-export type SupportProject = {
-  key: string;
-  name: string;
-  /** Square logo, sourced from company-assets. */
-  logo: string;
-  /** One-line "what it is". PLACEHOLDER copy — replace with real blurbs. */
-  blurb: string;
-  /** External link. PLACEHOLDER "#" — replace with real URLs. */
-  href: string;
-};
-
-export const supportProjects: SupportProject[] = [
-  { key: "nnawca", name: "NNAWCA", logo: `${PROJECT_LOGO_BASE}/nnawca.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "coffee-and-toffee", name: "Coffee and Toffee", logo: `${PROJECT_LOGO_BASE}/coffee-and-toffee.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "the-parliament", name: "The Parliament", logo: `${PROJECT_LOGO_BASE}/the-parliament.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "marketing-bug", name: "Marketing Bug", logo: `${PROJECT_LOGO_BASE}/marketing-bug.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "book-a-sloth", name: "Book A Sloth", logo: `${PROJECT_LOGO_BASE}/book-a-sloth.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "rajmudra-media", name: "Rajmudra Media", logo: `${PROJECT_LOGO_BASE}/rajmudra-media.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "corporate-puppets", name: "Corporate Puppets", logo: `${PROJECT_LOGO_BASE}/corporate-puppets.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "shubham-datarkar", name: "Shubham Datarkar", logo: `${PROJECT_LOGO_BASE}/shubham-datarkar.webp`, blurb: "Project overview coming soon.", href: "#" },
-];
-
 export type UpdatePost =
   | { id: string; date: string; variant: "text"; title: string; body: string }
   | { id: string; date: string; variant: "image"; title: string; body: string; imageAlt: string }
