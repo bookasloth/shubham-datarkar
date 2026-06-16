@@ -165,33 +165,37 @@ export function SupportPanel() {
             maxLength={MSG_MAX}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Say hi, leave a note, or tell me what to build next."
-            className="min-h-24"
+            className="min-h-16"
           />
           <p className="text-right text-xs tabular-nums text-muted-foreground">
             {message.length}/{MSG_MAX}
           </p>
         </div>
 
-        <label className="flex items-start gap-3 text-sm">
-          <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5" />
-          <span>
-            Cover the gateway fees (+{Math.round(FEE_PCT * 100)}%) so the full amount reaches me.{" "}
-            {coversFee && amount.fee > 0 && (
-              <span className="text-muted-foreground">Adds {formatMoney(amount.fee)} at checkout.</span>
-            )}
-          </span>
-        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5 data-[state=checked]:border-brand data-[state=checked]:bg-white data-[state=checked]:text-brand" />
+            <span>Cover the {Math.round(FEE_PCT * 100)}% fee so I get the full amount.</span>
+          </label>
 
-        <label className="flex items-start gap-3 text-sm">
-          <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
-          <span>Show me as anonymous on the supporters wall.</span>
-        </label>
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5 data-[state=checked]:border-brand data-[state=checked]:bg-white data-[state=checked]:text-brand" />
+            <span>Show me as anonymous.</span>
+          </label>
+        </div>
       </div>
 
-      <Button type="submit" size="lg" loading={loading} disabled={disabled} className="w-full">
-        {!loading && <Heart />}
-        {disabled ? "Pick a coffee or toffee" : `Support with ${formatMoney(amount.base)}`}
-      </Button>
+      <div className="grid gap-1.5">
+        <Button type="submit" size="lg" loading={loading} disabled={disabled} className="group w-full">
+          {!loading && <Heart className="transition-colors group-hover:fill-brand group-hover:text-brand" />}
+          {disabled ? "Pick a coffee or toffee" : `Support with ${formatMoney(amount.base)}`}
+        </Button>
+        {coversFee && amount.fee > 0 && (
+          <p className="text-center text-xs text-muted-foreground">
+            Includes {formatMoney(amount.fee)} to cover gateway fees.
+          </p>
+        )}
+      </div>
     </form>
   );
 }

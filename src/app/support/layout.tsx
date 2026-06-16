@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function SupportLayout({ children }: { children: ReactNode }) {
   const stats = await getSupportStats();
   return (
-    <Section>
+    <Section className="pt-8 md:pt-10">
       <Container>
         <div className="grid gap-8 lg:grid-cols-[340px_minmax(0,1fr)] lg:gap-[26px]">
           <aside className="lg:sticky lg:top-24 lg:self-start">
