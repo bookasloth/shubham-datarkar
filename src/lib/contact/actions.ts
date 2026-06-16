@@ -3,6 +3,7 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
+import { renderEmail } from "@/lib/email/template";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -65,7 +66,10 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
         ["Project type", projectType ?? "—"],
         ["Budget", budget ?? "—"],
       ]
-        .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#666">${k}</td><td>${esc(String(v))}</td></tr>`)
+        .map(
+          ([k, v]) =>
+            `<tr><td style="padding:4px 12px 4px 0;color:#5f6368;font-size:14px">${k}</td><td style="font-size:14px;color:#2d2d2d">${esc(String(v))}</td></tr>`,
+        )
         .join("");
 
       const notify = await sendEmail(creds, {
@@ -73,7 +77,14 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
         replyTo: email,
         subject: `New contact: ${name}${projectType ? ` — ${projectType}` : ""}`,
         text: `New contact from ${name} <${email}>\nProject: ${projectType ?? "—"}\nBudget: ${budget ?? "—"}\n\n${message}`,
-        html: `<h2 style="margin:0 0 12px">New contact submission</h2><table style="border-collapse:collapse">${rows}</table><p style="margin-top:16px;white-space:pre-wrap">${esc(message)}</p>`,
+        html: renderEmail({
+          preheader: `New contact from ${name}`,
+          headerTagline: "<strong>Contact form</strong>",
+          title: "New contact submission",
+          bodyHtml: `<table role="presentation" style="border-collapse:collapse;margin:4px 0 18px">${rows}</table><p style="margin:0;font-size:14px;color:#2d2d2d;line-height:1.7;white-space:pre-wrap">${esc(message)}</p>`,
+          cta: { label: "Reply", href: `mailto:${email}` },
+          footerNote: "Sent to you because someone submitted the contact form on shubhamdatarkar.com.",
+        }),
       });
 
       if (notify.ok) {
@@ -83,11 +94,17 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
       }
 
       // Auto-reply to the sender.
+      const firstName = name.split(" ")[0] || "there";
       const reply = await sendEmail(creds, {
         to: email,
         subject: "Thanks — I got your message",
-        text: `Hi ${name.split(" ")[0] || "there"},\n\nThanks for reaching out — I read every message and reply within one business day, usually sooner.\n\n— Shubham`,
-        html: `<p>Hi ${esc(name.split(" ")[0] || "there")},</p><p>Thanks for reaching out — I read every message and reply within one business day, usually sooner.</p><p>— Shubham</p>`,
+        text: `Hi ${firstName},\n\nThanks for reaching out — I read every message and reply within one business day, usually sooner.\n\n— Shubham`,
+        html: renderEmail({
+          preheader: "Thanks for reaching out — I'll reply within a business day.",
+          headerTagline: "<strong>Shubham Datarkar</strong>",
+          title: `Thanks, ${esc(firstName)}`,
+          bodyHtml: `<p style="margin:0 0 18px;font-size:14px;color:#2d2d2d;line-height:1.7">Thanks for reaching out — I read every message and reply within one business day, usually sooner.</p><p style="margin:0;font-size:14px;color:#2d2d2d;line-height:1.7">— Shubham</p>`,
+        }),
       });
       if (!reply.ok) console.warn("[contact] auto-reply failed:", reply.error);
     }
