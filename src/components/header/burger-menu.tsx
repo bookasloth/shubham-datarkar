@@ -65,9 +65,9 @@ export function BurgerMenu() {
             </Dialog.Close>
           </div>
 
-          <div className="grid flex-1 gap-8 overflow-y-auto p-4 lg:mx-auto lg:w-full lg:max-w-[var(--container-page)] lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:overflow-visible lg:px-8 lg:pb-12 lg:pt-2">
+          <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 overflow-y-auto p-4 lg:mx-auto lg:w-full lg:max-w-[var(--container-page)] lg:grid-cols-[1.1fr_1fr] lg:gap-12 lg:overflow-visible lg:px-8 lg:pb-12 lg:pt-2">
             {/* Left: navigation */}
-            <nav aria-label="Primary">
+            <nav aria-label="Primary" className="min-w-0">
               <div className="flex flex-col">
                 {primaryNav.map((item) => (
                   <Link
@@ -108,7 +108,7 @@ export function BurgerMenu() {
             </nav>
 
             {/* Right: latest cases */}
-            <aside>
+            <aside className="min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
                 Latest cases
               </p>
