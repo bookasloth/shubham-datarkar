@@ -56,7 +56,7 @@ export function PostFooter({
             <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Comments</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Join the discussion and share your opinion</h2>
           </div>
-          <Button size="lg" className="shrink-0">
+          <Button size="sm" className="shrink-0">
             Add a Comment
           </Button>
         </div>
