@@ -29,7 +29,7 @@ export function MoreMenu() {
         <Popover.Content
           align="end"
           sideOffset={8}
-          className="pop-anim z-[110] w-80 rounded-card border border-border bg-popover p-4 text-popover-foreground shadow-md outline-none"
+          className="pop-anim z-[110] w-80 rounded-card border border-border bg-background/80 p-4 text-foreground shadow-md backdrop-blur-md outline-none"
         >
           <h2 className="font-display text-sm font-bold">Find what you need</h2>
           <p className="mt-1 text-xs text-muted-foreground">
