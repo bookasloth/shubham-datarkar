@@ -1,21 +1,29 @@
 /**
- * Affiliate-link detection for blog/article content. Any link whose host is
- * (or is a subdomain of) a listed domain is treated as affiliate: it gets a
- * "Sponsored" tooltip and rel="sponsored". Add your partner/affiliate domains
- * here — no per-link tagging needed.
+ * Affiliate-link detection for blog/article content. A link whose host is (or
+ * is a subdomain of) an allowlisted domain is treated as affiliate: "Sponsored"
+ * tooltip + rel="sponsored". The allowlist is managed in /admin/affiliate
+ * (Supabase); these defaults are the seed + the fallback when the table can't
+ * be read.
  */
-export const AFFILIATE_DOMAINS: string[] = [
-  "amzn.to",
-  "amazon.in",
-  "amazon.com",
-  // add affiliate/partner domains here, e.g. "go.example.com", "ref.partner.com"
-];
+export const DEFAULT_AFFILIATE_DOMAINS: string[] = ["amzn.to", "amazon.in", "amazon.com"];
 
-/** True when href points at a listed affiliate domain. */
-export function isAffiliateUrl(href: string): boolean {
+/** Reduce arbitrary user input to a bare hostname, or null if unusable. */
+export function normalizeDomain(input: string): string | null {
+  const raw = input.trim().toLowerCase();
+  if (!raw) return null;
+  try {
+    const host = new URL(raw.includes("://") ? raw : `https://${raw}`).hostname.replace(/^www\./, "");
+    return host || null;
+  } catch {
+    return null;
+  }
+}
+
+/** True when href points at an allowlisted affiliate domain. */
+export function isAffiliateUrl(href: string, domains: string[] = DEFAULT_AFFILIATE_DOMAINS): boolean {
   try {
     const host = new URL(href, "https://shubhamdatarkar.com").hostname.replace(/^www\./, "");
-    return AFFILIATE_DOMAINS.some((d) => host === d || host.endsWith(`.${d}`));
+    return domains.some((d) => host === d || host.endsWith(`.${d}`));
   } catch {
     return false;
   }

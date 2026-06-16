@@ -579,3 +579,29 @@ revoke all on function public.get_email_secret() from public, anon, authenticate
 grant execute on function public.set_email_secret(jsonb) to service_role;
 grant execute on function public.get_email_secret() to service_role;
 
+
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+-- FILE: supabase/migrations/20260617000001_affiliate_domains.sql
+-- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+-- Affiliate domain allowlist (non-secret config) managed in /admin/affiliate.
+-- Target: your OWN Supabase project. Run manually.
+
+create table if not exists public.affiliate_domains (
+  id         uuid primary key default gen_random_uuid(),
+  domain     text not null unique,
+  created_at timestamptz not null default now()
+);
+
+insert into public.affiliate_domains (domain)
+values ('amzn.to'), ('amazon.in'), ('amazon.com')
+on conflict (domain) do nothing;
+
+alter table public.affiliate_domains enable row level security;
+
+drop policy if exists affiliate_domains_authenticated_read on public.affiliate_domains;
+create policy affiliate_domains_authenticated_read
+  on public.affiliate_domains
+  for select
+  to authenticated
+  using (true);
+

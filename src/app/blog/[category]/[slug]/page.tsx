@@ -7,6 +7,7 @@ import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { ArticleBody } from "@/components/content/article-body";
+import { getAffiliateDomains } from "@/lib/content/affiliate-queries";
 import { ReadingProgress } from "@/components/content/reading-progress";
 import { PostFooter } from "@/components/blog/post-footer";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -40,6 +41,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
     (p) => p.slug !== post.slug && !sameCatRelated.some((s) => s.slug === p.slug),
   );
   const relatedPosts = [...sameCatRelated, ...others].slice(0, 4);
+  const affiliateDomains = await getAffiliateDomains();
 
   return (
     <>
@@ -93,7 +95,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
       <Section>
         <Container size="prose">
           <article>
-            <ArticleBody blocks={post.body} />
+            <ArticleBody blocks={post.body} affiliateDomains={affiliateDomains} />
           </article>
         </Container>
       </Section>
