@@ -43,7 +43,7 @@ export function ItemPicker({
               className={cn(
                 "size-10 rounded-full border text-sm font-medium tabular-nums transition-ui",
                 active
-                  ? "border-foreground bg-foreground text-background"
+                  ? "border-orange-500 bg-orange-500 text-white"
                   : "border-border bg-background text-foreground hover:-translate-y-px hover:border-foreground",
               )}
             >

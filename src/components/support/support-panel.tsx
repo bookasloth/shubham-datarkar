@@ -165,7 +165,7 @@ export function SupportPanel() {
             maxLength={MSG_MAX}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Say hi, leave a note, or tell me what to build next."
-            className="min-h-24"
+            className="min-h-16"
           />
           <p className="text-right text-xs tabular-nums text-muted-foreground">
             {message.length}/{MSG_MAX}
@@ -174,20 +174,20 @@ export function SupportPanel() {
 
         <div className="grid gap-4 sm:grid-cols-2">
           <label className="flex items-start gap-3 text-sm">
-            <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5" />
+            <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5 data-[state=checked]:border-orange-500 data-[state=checked]:bg-white data-[state=checked]:text-orange-500" />
             <span>Cover the {Math.round(FEE_PCT * 100)}% fee so I get the full amount.</span>
           </label>
 
           <label className="flex items-start gap-3 text-sm">
-            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5 data-[state=checked]:border-orange-500 data-[state=checked]:bg-white data-[state=checked]:text-orange-500" />
             <span>Show me as anonymous.</span>
           </label>
         </div>
       </div>
 
       <div className="grid gap-1.5">
-        <Button type="submit" size="lg" loading={loading} disabled={disabled} className="w-full">
-          {!loading && <Heart />}
+        <Button type="submit" size="lg" loading={loading} disabled={disabled} className="group w-full">
+          {!loading && <Heart className="transition-colors group-hover:fill-[#ff4800] group-hover:text-[#ff4800]" />}
           {disabled ? "Pick a coffee or toffee" : `Support with ${formatMoney(amount.base)}`}
         </Button>
         {coversFee && amount.fee > 0 && (
