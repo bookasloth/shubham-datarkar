@@ -10,6 +10,7 @@ import { Footer } from "@/components/layout/footer";
 import { CommandMenu } from "@/components/layout/command-menu";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -72,6 +73,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           </ToastProvider>
         </ThemeProvider>
         <JsonLd data={personSchema()} />
+        <SpeedInsights />
       </body>
     </html>
   );
