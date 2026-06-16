@@ -48,7 +48,7 @@ export function BurgerMenu() {
           aria-describedby={undefined}
           className={cn(
             "burger-anim fixed inset-x-0 top-0 z-[96] flex max-h-[100dvh] w-full flex-col",
-            "overflow-y-auto border-b border-border bg-background outline-none",
+            "overflow-y-auto border-b border-border bg-background/80 backdrop-blur-md outline-none",
           )}
         >
           {/* Top row — own Logo + Close (the bar is covered while open) */}
