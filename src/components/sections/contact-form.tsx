@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/toast";
+import { submitContact } from "@/lib/contact/actions";
 
 const PROJECT_TYPES = ["Agency Work", "Consulting", "Speaking", "Partnership", "Other"];
 const BUDGETS = ["Under ₹1L / mo", "₹1L–3L / mo", "₹3L–6L / mo", "₹6L+ / mo", "Not sure yet"];
@@ -42,10 +43,19 @@ export function ContactForm() {
     setErrors(found);
     if (Object.keys(found).length) return;
     setLoading(true);
-    // Placeholder submit — wire to Resend/an API route later. Routing logic
-    // would branch on projectType to the right inbox/calendar.
-    await new Promise((r) => setTimeout(r, 900));
+    const res = await submitContact({
+      name: values.name,
+      email: values.email,
+      projectType: values.projectType,
+      budget: values.budget || undefined,
+      message: values.message,
+    });
     setLoading(false);
+
+    if (!res.ok) {
+      toast({ title: "Couldn't send", description: res.error ?? "Please try again.", variant: "danger" });
+      return;
+    }
     setDone(true);
     toast({ title: "Message sent", description: "I'll reply within one business day.", variant: "success" });
   }

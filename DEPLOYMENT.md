@@ -146,3 +146,25 @@ still save to Supabase in the meantime).
 3. Verify end-to-end: submit the newsletter form on the site, then confirm the
    subscriber appears in the Kit form's subscribers. The push is fail-safe — a
    Kit error is logged but never blocks the Supabase signup.
+
+---
+
+## 8. Configure Email (SMTP) for the contact form
+
+Contact-form submissions always save to the `contacts` table (visible in
+**/admin/contacts**). When SMTP is configured they also email a notification to
+you + an auto-reply to the sender. Email is fail-safe and no-ops until set up.
+
+1. In **`/admin/integrations` → Email (SMTP)**, set the SSL/TLS toggle (on = 465,
+   off = 587) and fill in: SMTP host, port, username, password, from name,
+   from email, and the notify email (where submissions are sent to you).
+   - Common: Zoho Mail `smtp.zoho.in` 465; Gmail `smtp.gmail.com` 465 with an
+     app password. The from email must be allowed by the SMTP host.
+2. **Save** (encrypted into Vault), then **Test Connect** — verifies the SMTP
+   login without sending. Green = good.
+3. Verify end-to-end: submit `/contact`, confirm the row in **/admin/contacts**
+   (marked emailed), the notification lands in your inbox, and the sender gets
+   the auto-reply.
+
+> Note: SMTP runs from Vercel's Node functions (ports 465/587). Fine for
+> contact-form volume.

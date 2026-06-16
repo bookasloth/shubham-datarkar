@@ -1,12 +1,18 @@
 import { getZohoStatus } from "@/lib/zoho/store";
 import { getKitStatus } from "@/lib/kit/store";
+import { getEmailStatus } from "@/lib/email/store";
 import { ZohoIntegrationForm } from "@/components/admin/zoho-integration-form";
 import { KitIntegrationForm } from "@/components/admin/kit-integration-form";
+import { EmailIntegrationForm } from "@/components/admin/email-integration-form";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminIntegrationsPage() {
-  const [zoho, kit] = await Promise.all([getZohoStatus(), getKitStatus()]);
+  const [zoho, kit, email] = await Promise.all([
+    getZohoStatus(),
+    getKitStatus(),
+    getEmailStatus(),
+  ]);
 
   return (
     <div>
@@ -30,6 +36,14 @@ export default async function AdminIntegrationsPage() {
           subscribers table).
         </p>
         <KitIntegrationForm status={kit} />
+      </section>
+
+      <section className="mt-12 max-w-xl border-t border-border pt-8">
+        <h2 className="text-lg font-semibold">Email (SMTP)</h2>
+        <p className="mb-4 mt-0.5 text-sm text-muted-foreground">
+          Sends contact-form notifications to you + an auto-reply to the sender.
+        </p>
+        <EmailIntegrationForm status={email} />
       </section>
     </div>
   );

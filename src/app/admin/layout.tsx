@@ -8,6 +8,7 @@ const NAV = [
   { href: "/admin/posts", label: "Posts" },
   ...ENTITY_LIST.map((e) => ({ href: `/admin/content/${e.key}`, label: e.label })),
   { href: "/admin/subscribers", label: "Subscribers" },
+  { href: "/admin/contacts", label: "Contacts" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/integrations", label: "Integrations" },
 ];
