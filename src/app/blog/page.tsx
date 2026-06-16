@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { PostCard } from "@/components/cards/post-card";
+import { BlogHeroArt } from "@/components/blog/hero-art";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate, readingTime } from "@/lib/utils";
@@ -56,7 +57,7 @@ export default async function BlogPage() {
           {/* Featured lead */}
           <Link href={`/blog/${lead.category}/${lead.slug}`} className="group mt-8 block">
             <Card interactive className="overflow-hidden md:grid md:grid-cols-2">
-              <div className="bg-grid hidden bg-muted/40 md:block" aria-hidden />
+              <BlogHeroArt className="hidden md:block" />
               <div className="flex flex-col p-8">
                 <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   <Badge variant="muted">{category?.label}</Badge>
