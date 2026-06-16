@@ -409,9 +409,21 @@ export const posts: Post[] = [
     date: "2026-06-04",
     words: 2200,
     featured: true,
-    body: body(
-      "Most local businesses think SEO is a mystery. It isn't. For Occasion Cakes in the UAE, it was a system: own local intent completely, treat the Google Business Profile as the storefront, and let occasion-based content do the qualifying. Here's the whole playbook.",
-    ),
+    body: [
+      ...body(
+        "Most local businesses think SEO is a mystery. It isn't. For Occasion Cakes in the UAE, it was a system: own local intent completely, treat the Google Business Profile as the storefront, and let occasion-based content do the qualifying. Here's the whole playbook.",
+      ),
+      {
+        type: "p",
+        text: [
+          "If you want the same system applied to your business, the fastest path is a short audit — I map the demand, build the spine, and wire the one metric that proves it works. You can see how it played out across the full set of ",
+          { t: "a", text: "case studies", href: "/case-studies" },
+          ", or ",
+          { t: "a", text: "start the conversation", href: "/contact" },
+          " directly.",
+        ],
+      },
+    ],
   },
   {
     slug: "selling-land-by-telling-stories",
