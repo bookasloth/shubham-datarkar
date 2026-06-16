@@ -1,6 +1,6 @@
 "use server";
 
-import { supabaseAnon } from "@/lib/supabase/server";
+import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
 import { getKitCredentials } from "@/lib/kit/store";
 import { kitAddSubscriberToForm } from "@/lib/kit/client";
 
@@ -37,5 +37,24 @@ export async function subscribe(
   // Dual-write to Kit (fail-safe; idempotent for existing/duplicate emails).
   await pushToKit(e);
 
+  return { ok: true };
+}
+
+/**
+ * Mark a subscriber unsubscribed. Returns a generic success regardless of
+ * whether the email existed (no enumeration). Kit's own unsubscribe handles
+ * the newsletter side; this updates our Supabase record.
+ */
+export async function unsubscribe(email: string): Promise<{ ok: boolean }> {
+  const e = email.trim().toLowerCase();
+  if (!EMAIL_RE.test(e)) return { ok: false };
+
+  const { error } = await supabaseAdmin()
+    .from("subscribers")
+    .update({ status: "unsubscribed" })
+    .eq("email", e);
+  if (error) console.warn("[subscribers] unsubscribe failed:", error.message);
+
+  // Always report success — don't reveal whether the address was on the list.
   return { ok: true };
 }
