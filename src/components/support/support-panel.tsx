@@ -172,26 +172,30 @@ export function SupportPanel() {
           </p>
         </div>
 
-        <label className="flex items-start gap-3 text-sm">
-          <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5" />
-          <span>
-            Cover the gateway fees (+{Math.round(FEE_PCT * 100)}%) so the full amount reaches me.{" "}
-            {coversFee && amount.fee > 0 && (
-              <span className="text-muted-foreground">Adds {formatMoney(amount.fee)} at checkout.</span>
-            )}
-          </span>
-        </label>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox checked={coversFee} onCheckedChange={(v) => setCoversFee(v === true)} className="mt-0.5" />
+            <span>Cover the {Math.round(FEE_PCT * 100)}% fee so I get the full amount.</span>
+          </label>
 
-        <label className="flex items-start gap-3 text-sm">
-          <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
-          <span>Show me as anonymous on the supporters wall.</span>
-        </label>
+          <label className="flex items-start gap-3 text-sm">
+            <Checkbox checked={anonymous} onCheckedChange={(v) => setAnonymous(v === true)} className="mt-0.5" />
+            <span>Show me as anonymous.</span>
+          </label>
+        </div>
       </div>
 
-      <Button type="submit" size="lg" loading={loading} disabled={disabled} className="w-full">
-        {!loading && <Heart />}
-        {disabled ? "Pick a coffee or toffee" : `Support with ${formatMoney(amount.base)}`}
-      </Button>
+      <div className="grid gap-1.5">
+        <Button type="submit" size="lg" loading={loading} disabled={disabled} className="w-full">
+          {!loading && <Heart />}
+          {disabled ? "Pick a coffee or toffee" : `Support with ${formatMoney(amount.base)}`}
+        </Button>
+        {coversFee && amount.fee > 0 && (
+          <p className="text-center text-xs text-muted-foreground">
+            Includes {formatMoney(amount.fee)} to cover gateway fees.
+          </p>
+        )}
+      </div>
     </form>
   );
 }
