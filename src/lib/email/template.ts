@@ -17,10 +17,10 @@ export const EMAIL_BRAND = {
   company: ["Timewheel Internet Pvt Ltd", "2nd Floor, Eureka Coworking", "Mate Sqr, Nagpur, 440030"],
   links: [
     { label: "About", href: "https://shubhamdatarkar.com/about" },
-    { label: "Help Center", href: "https://shubhamdatarkar.com/pages/help.html" },
-    { label: "Privacy", href: "https://shubhamdatarkar.com/pages/privacy-policy.html" },
-    { label: "Terms of Use", href: "https://shubhamdatarkar.com/pages/terms-of-use.html" },
-    { label: "Unsubscribe", href: "https://shubhamdatarkar.com/pages/unsubscribe.html" },
+    { label: "Help Center", href: "https://shubhamdatarkar.com/pages/help" },
+    { label: "Privacy", href: "https://shubhamdatarkar.com/pages/privacy-policy" },
+    { label: "Terms of Use", href: "https://shubhamdatarkar.com/pages/terms-of-use" },
+    { label: "Unsubscribe", href: "https://shubhamdatarkar.com/pages/unsubscribe" },
   ],
 } as const;
 
