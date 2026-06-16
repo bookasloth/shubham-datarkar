@@ -13,9 +13,12 @@ export default async function SupportPage() {
   const recent = await getRecentSupporters();
   return (
     <div>
-      <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-display text-2xl font-bold tracking-tight">Buy me a coffee or a toffee</h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
+          <span className="mr-3 text-border" aria-hidden>
+            |
+          </span>
           Pick how many, leave a note, done in under a minute.
         </p>
       </div>
