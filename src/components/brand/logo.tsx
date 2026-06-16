@@ -25,19 +25,19 @@ export function Logo({
   void showWordmark;
 
   const mark = (
-    <span className={cn("inline-flex items-center", className)}>
+    <span className="inline-flex items-center">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={LOGO_LIGHT}
         alt={site.name}
-        className="block h-6 w-auto select-none dark:hidden"
+        className={cn("block h-9 w-auto select-none dark:hidden", className)}
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={LOGO_DARK}
         alt=""
         aria-hidden
-        className="hidden h-6 w-auto select-none dark:block"
+        className={cn("hidden h-9 w-auto select-none dark:block", className)}
       />
     </span>
   );
