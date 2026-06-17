@@ -64,6 +64,32 @@ repo `bookasloth/shubham-datarkar` to hand to it.
 
 ---
 
+## 0b. Local development (no Vercel, no live site)
+
+Run the full app on your machine. It points at the **same** Supabase project as
+production (there is no separate local database), so apply the schema once and
+both local + prod use it.
+
+1. **`.env.local`** in the project root (gitignored — never committed). Add all
+   of §1's variables: Supabase URL/anon/service-role copied from Supabase →
+   Settings → API, and `COMMENTER_TOKEN_SECRET` + `COMMENTER_OTP_PEPPER`
+   generated with `openssl rand -base64 48` (run twice, distinct values).
+2. **Schema + bucket**: apply §2 (full setup + the support-updates migrations) in
+   your Supabase SQL editor and create the public `support-media` bucket. One
+   time — shared with production.
+3. **Install + run**:
+   ```bash
+   npm install
+   npm run dev
+   ```
+4. Open `http://localhost:3000`. Sign in at `/login` to reach `/admin`.
+   `/support/updates` (feed) and `/admin/updates` (authoring) work fully.
+
+Before the schema is applied, every DB read fail-safes to empty, so the app
+still boots and renders — you just see empty states until the tables exist.
+
+---
+
 ## 1. Environment variables
 
 Set these in **Vercel → Project → Settings → Environment Variables** (and mirror
