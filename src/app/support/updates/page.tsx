@@ -1,6 +1,8 @@
 import { buildMetadata } from "@/lib/seo";
-import { UpdatePost } from "@/components/support/update-post";
-import { supportUpdates } from "@/lib/data/support-content";
+import { UpdateCard } from "@/components/support/update-card";
+import { getUpdatesFeed } from "@/lib/support/updates";
+
+export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
   title: "Updates",
@@ -8,8 +10,10 @@ export const metadata = buildMetadata({
   path: "/support/updates",
 });
 
-export default function UpdatesPage() {
-  if (!supportUpdates.length) {
+export default async function UpdatesPage() {
+  const updates = await getUpdatesFeed();
+
+  if (!updates.length) {
     return (
       <div className="rounded-card border border-border bg-card p-10 text-center">
         <h2 className="font-display text-lg font-bold tracking-tight">No updates yet</h2>
@@ -29,8 +33,8 @@ export default function UpdatesPage() {
         </p>
       </div>
       <div className="mt-5 grid gap-4">
-        {supportUpdates.map((post) => (
-          <UpdatePost key={post.id} post={post} />
+        {updates.map((u) => (
+          <UpdateCard key={u.code} update={u} />
         ))}
       </div>
     </div>
