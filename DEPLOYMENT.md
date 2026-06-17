@@ -20,6 +20,15 @@ in `.env.local` for local dev). All belong to your own Supabase project.
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Supabase → Settings → API → `anon` public key | Public. RLS-restricted. |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Supabase → Settings → API → `service_role` key | **Secret. Server-only.** Bypasses RLS; reads/writes the Vault-backed Zoho credentials and the `supports` table. Never expose to the client. |
 | `ADMIN_EMAIL` | optional | — | If set, only this email may access `/admin`. If unset, any authenticated Supabase user passes. |
+| `COMMENTER_TOKEN_SECRET` | yes (for comments) | generate: `openssl rand -base64 48` | **Secret. Server-only.** HMAC key that signs the `sd_commenter` verified-commenter cookie. Rotating it invalidates every existing commenter session (forces re-verify). |
+| `COMMENTER_OTP_PEPPER` | yes (for comments) | generate: `openssl rand -base64 48` (a **different** value) | **Secret. Server-only.** Pepper mixed into the email-verification OTP hash at rest. Rotating it invalidates any in-flight OTP codes. |
+
+> The two `COMMENTER_*` vars gate commenting on support updates (the verify gate
+> mounts in sub-project 4). Nothing reads them until comments ship, so they are
+> safe to set now — but the comment flow will 500/refuse to verify without them.
+> Generate each with `openssl rand -base64 48` (or
+> `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`),
+> use a distinct value for each, and never commit them.
 
 > Zoho Payments credentials are **not** environment variables — they are stored
 > encrypted in Supabase Vault and managed through `/admin/integrations`
@@ -42,6 +51,32 @@ service-role RPCs).
 
 For incremental changes, apply only the new migration file(s) under
 `supabase/migrations/` instead of the whole bundle.
+
+### Support updates + commenter verification (sub-projects 1 & 3)
+
+Not yet in `full_setup.sql` — apply these two migrations (idempotent) in the SQL
+editor:
+
+- [`supabase/migrations/20260617000003_support_updates.sql`](supabase/migrations/20260617000003_support_updates.sql)
+  — `support_updates` (DB-backed posts) + `support_settings` (the 5 reusable
+  thank-you images).
+- [`supabase/migrations/20260617000004_comment_verifications.sql`](supabase/migrations/20260617000004_comment_verifications.sql)
+  — transient OTP store for commenter email verification (service-role only).
+
+Then create a **public** Storage bucket named **`support-media`** (Supabase →
+Storage → New bucket → toggle **Public**) — it holds admin-uploaded post images
+and thank-you images. Video posts embed YouTube/Vimeo URLs, so no upload there.
+
+Verify:
+
+```sql
+select count(*) from public.support_updates;              -- expect 0
+select id, thankyou_images from public.support_settings;  -- expect 1 row: (1, [])
+select to_regclass('public.comment_verifications');       -- expect: comment_verifications (not null)
+```
+
+Also set the `COMMENTER_TOKEN_SECRET` + `COMMENTER_OTP_PEPPER` env vars (section 1)
+before the comment flow ships.
 
 ### Verify the schema applied
 
