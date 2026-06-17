@@ -9,6 +9,61 @@ Run through this checklist on first deploy and whenever a step's inputs change
 
 ---
 
+## 0. Go-live runbook — do in this order
+
+The ordered first-deploy sequence. Each step links to its detailed section below.
+Tick as you go.
+
+**Before the day:** you already have your own Supabase project
+(ref `oyzzgjrefkppqkxjccot`). You still need a **Vercel account** and the GitHub
+repo `bookasloth/shubham-datarkar` to hand to it.
+
+1. [ ] **Apply the database schema** (§2) in Supabase → SQL Editor:
+   - Run [`supabase/deploy/full_setup.sql`](supabase/deploy/full_setup.sql).
+   - Run [`supabase/migrations/20260617000003_support_updates.sql`](supabase/migrations/20260617000003_support_updates.sql)
+     and [`supabase/migrations/20260617000004_comment_verifications.sql`](supabase/migrations/20260617000004_comment_verifications.sql).
+   - Run the §2 verify queries — all green.
+2. [ ] **Create the Storage bucket** (§2): Supabase → Storage → New bucket →
+   name `support-media` → toggle **Public**.
+3. [ ] **Create a Vercel account** and **import** the GitHub repo. Framework
+   auto-detects as Next.js. Do **not** deploy yet — it fails without env vars.
+4. [ ] **Set all environment variables** in Vercel → Settings → Environment
+   Variables, scope **Production** (§1):
+   - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
+     `SUPABASE_SERVICE_ROLE_KEY` — copy from Supabase → Settings → API.
+   - `COMMENTER_TOKEN_SECRET`, `COMMENTER_OTP_PEPPER` — generate **fresh**
+     production values: `openssl rand -base64 48` (run twice, distinct).
+     Do **not** reuse the local-dev values.
+   - `ADMIN_EMAIL` (optional) — lock `/admin` to your email.
+5. [ ] **Deploy** (§3): push to `main` (or hit Deploy in Vercel). Confirm the
+   build is green in the Vercel dashboard.
+6. [ ] **Add the custom domain** shubhamdatarkar.com: Vercel → Settings →
+   Domains → add → update DNS as instructed. Wait for the cert.
+7. [ ] **Enable Speed Insights** once (§3).
+8. [ ] **Configure integrations** in `/admin/integrations` (sign in at `/login`
+   first):
+   - Zoho Payments — **sandbox** first (§4), then **Test Connect**.
+   - Register the Zoho **webhook** (§4 step 5):
+     `https://shubhamdatarkar.com/api/support/webhook`, events
+     `payment.succeeded` + `payment.failed`.
+   - Kit / newsletter (§7) — Save + Test Connect.
+   - Email / SMTP (§8) — Save + Test Connect.
+9. [ ] **Smoke-test** on production (§6 + below):
+   - Support payment in **sandbox** → row flips `pending`→`paid` in
+     `/admin/payments`, supporter shows on `/support/supporters`.
+   - Newsletter signup → appears in Kit.
+   - Contact form → row in `/admin/contacts` + notification email + auto-reply.
+   - `/admin/updates` → create a text/image/video post → it appears on
+     `/support/updates` and its `/support/updates/{code}` page resolves.
+10. [ ] **Go live for payments**: once the sandbox flow is green end-to-end,
+    flip Zoho **Live mode** on, swap in live credentials + a `ZohoPay.*` refresh
+    token, Save, Test Connect, and repoint the webhook (§4 step 6).
+
+> Comments (the verify gate that uses `COMMENTER_*`) ship in a later sub-project;
+> the vars are set now so nothing breaks when that lands.
+
+---
+
 ## 1. Environment variables
 
 Set these in **Vercel → Project → Settings → Environment Variables** (and mirror
