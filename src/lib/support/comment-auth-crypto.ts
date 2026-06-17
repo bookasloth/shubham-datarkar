@@ -46,7 +46,7 @@ export function hashOtp(code: string): string {
   return createHash("sha256").update(`${code}:${pepper()}`).digest("hex");
 }
 
-/** Email → supporter_key, matching support_lifetime: sha256(lower(trim(email))). */
+/** Email → supporter_key, matching support_lifetime: sha256(lower(email)). */
 export function emailKey(email: string): string {
-  return createHash("sha256").update(email.trim().toLowerCase()).digest("hex");
+  return createHash("sha256").update(email.toLowerCase()).digest("hex");
 }

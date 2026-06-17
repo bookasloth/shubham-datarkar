@@ -31,8 +31,8 @@ describe("otp hashing", () => {
 });
 
 describe("emailKey", () => {
-  it("matches the support_lifetime recipe sha256(lower(trim(email)))", () => {
+  it("matches the support_lifetime recipe sha256(lower(email))", () => {
     const expected = createHash("sha256").update("foo@bar.com").digest("hex");
-    expect(emailKey("  Foo@Bar.com ")).toBe(expected);
+    expect(emailKey("Foo@Bar.com")).toBe(expected);
   });
 });
