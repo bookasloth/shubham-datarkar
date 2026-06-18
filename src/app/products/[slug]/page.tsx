@@ -10,7 +10,7 @@ import {
   CreditCard,
   Users,
 } from "lucide-react";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, productSchema } from "@/lib/seo";
 import type { Product } from "@/lib/data/types";
 import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -70,11 +70,14 @@ export default async function ProductBrandPage({ params }: { params: Promise<{ s
   return (
     <div style={{ ["--brand" as string]: product.color }}>
       <JsonLd
-        data={breadcrumbSchema([
-          { name: "Home", path: "/" },
-          { name: "Products", path: "/products" },
-          { name: product.name, path: `/products/${product.slug}` },
-        ])}
+        data={[
+          productSchema(product),
+          breadcrumbSchema([
+            { name: "Home", path: "/" },
+            { name: "Products", path: "/products" },
+            { name: product.name, path: `/products/${product.slug}` },
+          ]),
+        ]}
       />
 
       {/* Accent bar (brand touch 1) */}
