@@ -2,7 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const privatePaths = ["/dashboard", "/profile", "/settings", "/login", "/success", "/search"];
+  const privatePaths = ["/admin", "/dashboard", "/profile", "/settings", "/login", "/success", "/search"];
   return {
     rules: [
       { userAgent: "*", allow: "/", disallow: privatePaths },

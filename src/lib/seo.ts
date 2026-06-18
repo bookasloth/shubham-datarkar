@@ -48,7 +48,7 @@ export function buildMetadata({
       card: "summary_large_image",
       title: fullTitle,
       description,
-      creator: "@kalamwala",
+      creator: "@sndatarkar",
     },
   };
 }
@@ -77,7 +77,27 @@ export function organizationSchema() {
     name: "The Bogus Company",
     founder: { "@type": "Person", name: site.name },
     url: site.url,
+    logo: `${site.url}/opengraph-image`,
     sameAs,
+  };
+}
+
+export function websiteSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: site.name,
+    alternateName: site.alias,
+    url: site.url,
+    publisher: { "@type": "Person", name: site.name },
+    potentialAction: {
+      "@type": "SearchAction",
+      target: {
+        "@type": "EntryPoint",
+        urlTemplate: `${site.url}/search?q={search_term_string}`,
+      },
+      "query-input": "required name=search_term_string",
+    },
   };
 }
 
@@ -94,7 +114,7 @@ export function articleSchema(input: {
     "@type": "Article",
     headline: input.title,
     description: input.description,
-    image: input.image ?? `${site.url}/og/default.png`,
+    image: input.image ?? `${site.url}/opengraph-image`,
     datePublished: input.datePublished,
     dateModified: input.dateModified ?? input.datePublished,
     author: { "@type": "Person", name: site.name, url: site.url },
