@@ -11,6 +11,8 @@ import { CommandMenu } from "@/components/layout/command-menu";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { Analytics } from "@vercel/analytics/next";
+import { AiReferrer } from "@/components/analytics/ai-referrer";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -89,6 +91,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </ThemeProvider>
         <JsonLd data={[personSchema(), websiteSchema()]} />
         <SpeedInsights />
+        <Analytics />
+        <AiReferrer />
       </body>
     </html>
   );

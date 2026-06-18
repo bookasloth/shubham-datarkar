@@ -66,7 +66,34 @@ export function personSchema() {
     jobTitle: "Founder, Marketer & Copywriter",
     address: { "@type": "PostalAddress", addressLocality: "Nagpur", addressCountry: "IN" },
     sameAs,
-    knowsAbout: ["Copywriting", "SEO", "Performance Marketing", "Content Marketing", "SaaS", "WordPress"],
+    knowsAbout: [
+      "Copywriting",
+      "Conversion Copywriting",
+      "SEO",
+      "Generative Engine Optimization",
+      "Performance Marketing",
+      "Content Marketing",
+      "Growth Marketing",
+      "Branding",
+      "AI Automation",
+      "SaaS",
+      "Product Strategy",
+      "Entrepreneurship",
+      "WordPress",
+    ],
+  };
+}
+
+/**
+ * ProfilePage wrapper for the /about page — tells search + answer engines this
+ * page is the canonical profile of the Person entity (boosts entity confidence).
+ */
+export function profilePageSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ProfilePage",
+    // Nested entity drops its own @context (undefined keys are omitted by JSON.stringify).
+    mainEntity: { ...personSchema(), "@context": undefined },
   };
 }
 

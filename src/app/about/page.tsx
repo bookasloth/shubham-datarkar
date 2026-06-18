@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, companies } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, profilePageSchema } from "@/lib/seo";
 import { principles, stats } from "@/lib/data/site-content";
 import { experience } from "@/lib/data/experience";
 import { Container, Section } from "@/components/layout/container";
@@ -28,7 +28,12 @@ export const metadata = buildMetadata({
 export default function AboutPage() {
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }])} />
+      <JsonLd
+        data={[
+          profilePageSchema(),
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }]),
+        ]}
+      />
       <PageHero
         eyebrow="About"
         title="Marketer who builds. Builder who markets."

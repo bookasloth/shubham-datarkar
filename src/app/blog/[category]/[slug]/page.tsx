@@ -25,6 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
     path: `/blog/${post.category}/${post.slug}`,
     type: "article",
     publishedTime: post.date,
+    modifiedTime: post.dateModified,
   });
 }
 
@@ -53,6 +54,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
             description: post.excerpt,
             path: `/blog/${post.category}/${post.slug}`,
             datePublished: post.date,
+            dateModified: post.dateModified,
           }),
           breadcrumbSchema([
             { name: "Home", path: "/" },
@@ -87,6 +89,12 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               <div className="text-muted-foreground">
                 <time dateTime={post.date}>{formatDate(post.date)}</time> · {readingTime(post.words)} min read
               </div>
+              {post.dateModified &&
+              new Date(post.dateModified).getTime() - new Date(post.date).getTime() > 86_400_000 ? (
+                <div className="text-xs text-muted-foreground">
+                  Updated <time dateTime={post.dateModified}>{formatDate(post.dateModified)}</time>
+                </div>
+              ) : null}
             </div>
           </div>
         </Container>

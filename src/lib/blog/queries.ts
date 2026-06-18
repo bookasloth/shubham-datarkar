@@ -30,7 +30,7 @@ type DbRow = {
   updated_at: string;
 };
 
-const POST_COLS = "slug,title,excerpt,category,tags,words,featured,body,published_at";
+const POST_COLS = "slug,title,excerpt,category,tags,words,featured,body,published_at,updated_at";
 
 function toPost(r: DbRow): Post {
   return {
@@ -40,6 +40,7 @@ function toPost(r: DbRow): Post {
     category: r.category as BlogCategory,
     tags: r.tags ?? [],
     date: r.published_at ?? "",
+    dateModified: r.updated_at ?? undefined,
     words: Number(r.words ?? 0),
     featured: r.featured ?? false,
     body: (Array.isArray(r.body) ? r.body : []) as Post["body"],
