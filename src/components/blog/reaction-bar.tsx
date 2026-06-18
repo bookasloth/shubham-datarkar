@@ -39,6 +39,10 @@ export function ReactionBar({
   useEffect(() => {
     try {
       const stored = localStorage.getItem(storageKey);
+      // Post-mount read: the server has no localStorage, so this can't move to
+      // a lazy useState initializer without a hydration mismatch. One extra
+      // render on mount is the correct trade-off here.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (stored) setPick(stored as ReactionKey);
     } catch {
       /* localStorage unavailable — fine, just no restored pick */

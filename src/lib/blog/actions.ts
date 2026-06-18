@@ -5,7 +5,22 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
 import { countWords } from "@/lib/blog/words";
+import { pingIndexNow } from "@/lib/seo/indexnow";
+import { site } from "@/lib/site";
 import type { ContentBlock } from "@/lib/data/types";
+
+type PostFields = ReturnType<typeof fields>;
+
+/** Ping IndexNow for a post that is published AND already live (not scheduled). */
+async function notifyIfLive(p: PostFields): Promise<void> {
+  if (p.status !== "published" || !p.published_at) return;
+  if (new Date(p.published_at) > new Date()) return;
+  await pingIndexNow([
+    `${site.url}/blog/${p.category}/${p.slug}`,
+    `${site.url}/blog`,
+    `${site.url}/sitemap.xml`,
+  ]);
+}
 
 function parseBody(raw: FormDataEntryValue | null): ContentBlock[] {
   if (typeof raw !== "string" || !raw) return [];
@@ -48,18 +63,22 @@ function fields(formData: FormData) {
 export async function createPost(formData: FormData): Promise<void> {
   await requireAdmin();
   const supabase = await supabaseAuthServer();
-  const { error } = await supabase.from("posts").insert(fields(formData));
+  const data = fields(formData);
+  const { error } = await supabase.from("posts").insert(data);
   if (error) throw new Error(error.message);
   revalidatePath("/blog");
+  await notifyIfLive(data);
   redirect("/admin/posts");
 }
 
 export async function updatePost(id: string, formData: FormData): Promise<void> {
   await requireAdmin();
   const supabase = await supabaseAuthServer();
-  const { error } = await supabase.from("posts").update(fields(formData)).eq("id", id);
+  const data = fields(formData);
+  const { error } = await supabase.from("posts").update(data).eq("id", id);
   if (error) throw new Error(error.message);
   revalidatePath("/blog");
+  await notifyIfLive(data);
   redirect("/admin/posts");
 }
 

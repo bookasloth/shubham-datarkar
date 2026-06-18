@@ -123,6 +123,8 @@ export type Post = {
   category: BlogCategory;
   tags: string[];
   date: string;
+  /** Last edit time (DB `updated_at`). Drives visible freshness + schema `dateModified`. */
+  dateModified?: string;
   words: number;
   featured?: boolean;
   body: ContentBlock[];

@@ -34,9 +34,9 @@ export function UnsubscribeForm() {
         <div className="flex size-12 items-center justify-center rounded-full bg-foreground text-background">
           <Check className="size-6" />
         </div>
-        <h2 className="mt-5 text-xl font-bold tracking-tight">You're unsubscribed</h2>
+        <h2 className="mt-5 text-xl font-bold tracking-tight">You&apos;re unsubscribed</h2>
         <p className="mt-2 max-w-sm text-sm text-muted-foreground">
-          If that email was on the list, it's been removed. No more newsletters. You can resubscribe anytime.
+          If that email was on the list, it&apos;s been removed. No more newsletters. You can resubscribe anytime.
         </p>
       </div>
     );

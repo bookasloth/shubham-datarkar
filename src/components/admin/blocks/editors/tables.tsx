@@ -87,7 +87,6 @@ export function ComparisonTableEditor({ block, onChange }: BlockEditorProps<Comp
 /* pricing                                                              */
 /* ------------------------------------------------------------------ */
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function PricingEditor(_props: BlockEditorProps<Extract<ContentBlock, { type: "pricing" }>>) {
   return (
     <p className="text-xs text-muted-foreground">Uses the site pricing plans. No options.</p>

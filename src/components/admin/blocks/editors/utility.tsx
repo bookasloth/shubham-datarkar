@@ -5,7 +5,6 @@ import { SelectField } from "../fields/select-field";
 import { ListField } from "../fields/list-field";
 
 type Divider = Extract<ContentBlock, { type: "divider" }>;
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function DividerEditor(_props: BlockEditorProps<Divider>) {
   return <p className="text-xs text-muted-foreground">No options.</p>;
 }

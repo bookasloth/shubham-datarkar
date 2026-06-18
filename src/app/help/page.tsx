@@ -72,7 +72,7 @@ export default function HelpPage() {
             ))}
 
             <div className="flex flex-wrap items-center gap-3 rounded-card border border-border p-6">
-              <p className="text-sm text-muted-foreground">Didn't find your answer?</p>
+              <p className="text-sm text-muted-foreground">Didn&apos;t find your answer?</p>
               <Button asChild size="sm">
                 <Link href="/contact">Contact me</Link>
               </Button>

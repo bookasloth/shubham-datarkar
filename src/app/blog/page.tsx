@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { blogCategories } from "@/lib/data/posts";
 import { getPublishedPosts } from "@/lib/blog/queries";
@@ -15,11 +16,17 @@ import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate, readingTime } from "@/lib/utils";
 
-export const metadata = buildMetadata({
-  title: "Blog",
-  description: "Essays, playbooks, and teardowns on SEO, AI, performance marketing, content, SaaS, and founder life.",
-  path: "/blog",
-});
+export const metadata = {
+  ...buildMetadata({
+    title: "Blog",
+    description: "Essays, playbooks, and teardowns on SEO, AI, performance marketing, content, SaaS, and founder life.",
+    path: "/blog",
+  }),
+  alternates: {
+    canonical: `${site.url}/blog`,
+    types: { "application/rss+xml": `${site.url}/feed.xml` },
+  },
+};
 
 export const dynamic = "force-dynamic";
 
