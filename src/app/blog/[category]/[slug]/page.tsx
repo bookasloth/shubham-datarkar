@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { site } from "@/lib/site";
 import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
 import { blogCategories, author } from "@/lib/data/posts";
 import { getPublishedPost, getPublishedPostsByCategory, getPublishedPosts } from "@/lib/blog/queries";
@@ -55,6 +56,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
             path: `/blog/${post.category}/${post.slug}`,
             datePublished: post.date,
             dateModified: post.dateModified,
+            image: `${site.url}/blog/${post.category}/${post.slug}/opengraph-image`,
           }),
           breadcrumbSchema([
             { name: "Home", path: "/" },

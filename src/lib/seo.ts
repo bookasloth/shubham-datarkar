@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { site, sameAs } from "@/lib/site";
+import type { Service, Product, Testimonial } from "@/lib/data/types";
 
 type SeoInput = {
   title?: string;
@@ -172,5 +173,92 @@ export function faqSchema(items: { question: string; answer: string }[]) {
       name: item.question,
       acceptedAnswer: { "@type": "Answer", text: item.answer },
     })),
+  };
+}
+
+/**
+ * Service offering — provider is the Person. An `Offer` is attached only when a
+ * real starting price exists ("On request" services emit no Offer rather than a
+ * priceless one). No numeric `price`: the rates are ranges ("₹1.5L / month"),
+ * carried honestly in the Offer description.
+ */
+export function serviceSchema(service: Service) {
+  const url = `${site.url}/services/${service.slug}`;
+  const hasPrice = service.startingAt.trim().toLowerCase() !== "on request";
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    name: service.name,
+    serviceType: service.name,
+    description: service.description,
+    provider: { "@type": "Person", name: site.name, url: site.url },
+    areaServed: "Worldwide",
+    url,
+    ...(hasPrice
+      ? {
+          offers: {
+            "@type": "Offer",
+            priceCurrency: "INR",
+            url,
+            availability: "https://schema.org/InStock",
+            description: `Starting at ${service.startingAt}`,
+          },
+        }
+      : {}),
+  };
+}
+
+/**
+ * Product (SaaS) entity. No public price, so no `Offer` is fabricated — name,
+ * description, category, brand, and live URL only.
+ */
+export function productSchema(product: Product) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.about,
+    category: product.category,
+    brand: { "@type": "Brand", name: product.name },
+    ...(product.url ? { url: product.url } : {}),
+  };
+}
+
+/**
+ * Client testimonials as `Review` nodes about the Person. Ratings are omitted
+ * (no real numeric scores exist — a fabricated 5★ AggregateRating would be a
+ * structured-data violation), so this feeds entity trust without faking stars.
+ */
+export function reviewSchema(testimonials: Testimonial[]) {
+  return testimonials.map((t) => ({
+    "@context": "https://schema.org",
+    "@type": "Review",
+    reviewBody: t.quote,
+    author: {
+      "@type": "Person",
+      name: t.name,
+      ...(t.role ? { jobTitle: t.role } : {}),
+      ...(t.company ? { worksFor: { "@type": "Organization", name: t.company } } : {}),
+    },
+    itemReviewed: { "@type": "Person", name: site.name, url: site.url },
+  }));
+}
+
+/**
+ * Speaking offering on /speaking — an honest `Service`, not `Event`: there are
+ * no scheduled engagements with real dates/venues to mark up. Swap to `Event`
+ * schema once concrete talks exist.
+ */
+export function speakingServiceSchema() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Speaking & Workshops",
+    name: "Keynotes & Workshops by Shubham Datarkar",
+    description:
+      "Keynotes and workshops on SEO, AI workflows, and founder-led growth — built on real experiments and outcomes.",
+    provider: { "@type": "Person", name: site.name, url: site.url },
+    areaServed: "Worldwide",
+    url: `${site.url}/speaking`,
   };
 }

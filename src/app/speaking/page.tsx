@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, speakingServiceSchema } from "@/lib/seo";
 import { press } from "@/lib/data/site-content";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -36,7 +36,12 @@ const formats = [
 export default function SpeakingPage() {
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Speaking", path: "/speaking" }])} />
+      <JsonLd
+        data={[
+          speakingServiceSchema(),
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Speaking", path: "/speaking" }]),
+        ]}
+      />
       <PageHero
         eyebrow="Speaking"
         title="Talks with receipts"

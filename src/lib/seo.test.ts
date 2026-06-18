@@ -4,8 +4,26 @@ import {
   websiteSchema,
   organizationSchema,
   buildMetadata,
+  serviceSchema,
+  productSchema,
+  reviewSchema,
+  speakingServiceSchema,
 } from "@/lib/seo";
 import { site } from "@/lib/site";
+import type { Service, Product, Testimonial } from "@/lib/data/types";
+
+const makeService = (over: Partial<Service> = {}): Service => ({
+  slug: "seo",
+  name: "SEO & Organic Growth",
+  icon: "Search",
+  tagline: "Compounding traffic",
+  outcome: "Own your category in search.",
+  description: "SEO as infrastructure.",
+  deliverables: ["Audit"],
+  process: [{ step: "Audit", detail: "Find what's winnable." }],
+  startingAt: "₹1.5L / month",
+  ...over,
+});
 
 describe("articleSchema", () => {
   const base = { title: "T", description: "D", path: "/blog/seo/x", datePublished: "2026-01-01" };
@@ -43,5 +61,73 @@ describe("buildMetadata", () => {
   it("twitter card creator is the real X handle", () => {
     const m = buildMetadata();
     expect((m.twitter as { creator?: string } | null)?.creator).toBe("@sndatarkar");
+  });
+});
+
+describe("serviceSchema", () => {
+  it("is a Service provided by the Person, with a priced Offer", () => {
+    const s = serviceSchema(makeService()) as Record<string, unknown>;
+    expect(s["@type"]).toBe("Service");
+    expect((s.provider as { name?: string }).name).toBe(site.name);
+    expect(s.url).toBe(`${site.url}/services/seo`);
+    const offer = s.offers as { "@type"?: string; priceCurrency?: string; description?: string };
+    expect(offer["@type"]).toBe("Offer");
+    expect(offer.priceCurrency).toBe("INR");
+    expect(offer.description).toContain("₹1.5L / month");
+  });
+
+  it("omits the Offer when the service is priced 'On request'", () => {
+    const s = serviceSchema(makeService({ slug: "speaking", startingAt: "On request" })) as Record<string, unknown>;
+    expect("offers" in s).toBe(false);
+  });
+});
+
+describe("productSchema", () => {
+  const base: Product = {
+    slug: "book-a-sloth",
+    name: "Book A Sloth",
+    color: "#D95D00",
+    tagline: "Easy scheduling.",
+    about: "A booking platform.",
+    category: "Scheduling SaaS",
+    status: "Beta",
+    url: "https://bookasloth.in",
+  };
+
+  it("is a Product with brand + category, and keeps the live URL", () => {
+    const s = productSchema(base) as Record<string, unknown>;
+    expect(s["@type"]).toBe("Product");
+    expect((s.brand as { name?: string }).name).toBe("Book A Sloth");
+    expect(s.category).toBe("Scheduling SaaS");
+    expect(s.url).toBe("https://bookasloth.in");
+  });
+
+  it("omits url when the product has none", () => {
+    const s = productSchema({ ...base, url: undefined }) as Record<string, unknown>;
+    expect("url" in s).toBe(false);
+  });
+});
+
+describe("reviewSchema", () => {
+  const testimonials: Testimonial[] = [
+    { quote: "Rare clarity.", name: "Sri", role: "Founder", company: "Ad Agency", initials: "SR" },
+  ];
+
+  it("maps each testimonial to a Review of the Person, with no fabricated rating", () => {
+    const [r] = reviewSchema(testimonials);
+    expect(r["@type"]).toBe("Review");
+    expect(r.reviewBody).toBe("Rare clarity.");
+    expect((r.author as { name?: string }).name).toBe("Sri");
+    expect((r.itemReviewed as { url?: string }).url).toBe(site.url);
+    expect("reviewRating" in r).toBe(false);
+  });
+});
+
+describe("speakingServiceSchema", () => {
+  it("is a Speaking & Workshops Service, not an Event", () => {
+    const s = speakingServiceSchema();
+    expect(s["@type"]).toBe("Service");
+    expect(s.serviceType).toBe("Speaking & Workshops");
+    expect(s.url).toBe(`${site.url}/speaking`);
   });
 });

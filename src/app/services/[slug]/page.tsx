@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema, faqSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, faqSchema, serviceSchema } from "@/lib/seo";
 import type { Service } from "@/lib/data/types";
 import { getPublishedEntityBySlug } from "@/lib/content/queries";
 import { faqs } from "@/lib/data/site-content";
@@ -38,6 +38,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
     <>
       <JsonLd
         data={[
+          serviceSchema(service),
           breadcrumbSchema([
             { name: "Home", path: "/" },
             { name: "Services", path: "/services" },

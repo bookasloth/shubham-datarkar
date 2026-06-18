@@ -1,4 +1,4 @@
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, reviewSchema } from "@/lib/seo";
 import type { Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { stats } from "@/lib/data/site-content";
@@ -22,7 +22,12 @@ export default async function TestimonialsPage() {
   const testimonials = await getPublishedEntities<Testimonial>("testimonials");
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Testimonials", path: "/testimonials" }])} />
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Testimonials", path: "/testimonials" }]),
+          ...reviewSchema(testimonials),
+        ]}
+      />
       <PageHero
         eyebrow="Testimonials"
         title="In their words"
