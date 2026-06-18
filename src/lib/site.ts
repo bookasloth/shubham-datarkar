@@ -152,10 +152,10 @@ export const footerNav: NavGroup[] = [
 export type SocialLink = { label: string; href: string; handle: string };
 
 export const socials: SocialLink[] = [
-  { label: "X / Twitter", href: "https://x.com/", handle: "@kalamwala" },
-  { label: "LinkedIn", href: "https://linkedin.com/in/", handle: "in/shubhamdatarkar" },
-  { label: "GitHub", href: "https://github.com/", handle: "@shubhamdatarkar" },
-  { label: "YouTube", href: "https://youtube.com/", handle: "@thekalamwala" },
+  { label: "X / Twitter", href: "https://x.com/sndatarkar", handle: "@sndatarkar" },
+  { label: "LinkedIn", href: "https://www.linkedin.com/in/sndatarkar", handle: "in/sndatarkar" },
+  { label: "YouTube", href: "https://www.youtube.com/@sndatarkar", handle: "@sndatarkar" },
+  { label: "Instagram", href: "https://www.instagram.com/sndatarkar", handle: "@sndatarkar" },
 ];
 
 export const sameAs = socials.map((s) => s.href);
