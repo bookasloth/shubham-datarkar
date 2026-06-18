@@ -320,6 +320,16 @@ zone* does. So:
 > exact A/CNAME values Vercel shows (they have changed over time — don't hard-code
 > an IP).
 
+### The `verification` meta code is redundant with DNS
+
+The codebase also wires optional Google/Bing verification `<meta>` tags via the
+`GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` env vars (in
+`src/app/layout.tsx`, commit `785d63e` on the support branch). If you verify with
+the **DNS domain property** (the recommended path above), this is **not needed** —
+the tags only render when those env vars are set, and the DNS route never sets them.
+Harmless to leave (it emits nothing when unset). Only set the env vars if you ever
+switch to **URL-prefix / HTML-tag** verification instead of DNS.
+
 ### SEO go-live checklist (run at cutover, not before)
 
 Doing these before the new site is live would point engines at the **old** site.
