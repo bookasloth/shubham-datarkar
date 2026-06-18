@@ -39,6 +39,7 @@ repo `bookasloth/shubham-datarkar` to hand to it.
    build is green in the Vercel dashboard.
 6. [ ] **Add the custom domain** shubhamdatarkar.com: Vercel → Settings →
    Domains → add → update DNS as instructed. Wait for the cert.
+   (Currently on Hostinger — see §9 for the cutover that keeps GSC + email intact.)
 7. [ ] **Enable Speed Insights** once (§3).
 8. [ ] **Configure integrations** in `/admin/integrations` (sign in at `/login`
    first):
@@ -58,6 +59,9 @@ repo `bookasloth/shubham-datarkar` to hand to it.
 10. [ ] **Go live for payments**: once the sandbox flow is green end-to-end,
     flip Zoho **Live mode** on, swap in live credentials + a `ZohoPay.*` refresh
     token, Save, Test Connect, and repoint the webhook (§4 step 6).
+11. [ ] **SEO go-live** (§9): confirm `/sitemap.xml` + `/robots.txt` serve the new
+    site, submit the sitemap in Google Search Console, import to Bing, and
+    spot-check a blog post in the Rich Results Test.
 
 > Comments (the verify gate that uses `COMMENTER_*`) ship in a later sub-project;
 > the vars are set now so nothing breaks when that lands.
@@ -284,3 +288,51 @@ you + an auto-reply to the sender. Email is fail-safe and no-ops until set up.
 
 > Note: SMTP runs from Vercel's Node functions (ports 465/587). Fine for
 > contact-form volume.
+
+---
+
+## 9. DNS cutover (Hostinger → Vercel) & SEO go-live
+
+The current shubhamdatarkar.com runs on **Hostinger** (the old site). This repo is
+the **new** site, deployed on **Vercel**. The SEO work in `src/lib/seo.ts`,
+`src/lib/site.ts`, and `src/app/robots.ts` (PR #30) is live in code but only takes
+effect once the domain points at the Vercel deployment.
+
+### Pointing the domain at Vercel — pick one
+
+Google Search Console verifies **shubhamdatarkar.com** with a **DNS TXT record** in
+the domain's DNS zone. Switching the *host* doesn't touch it; switching the *DNS
+zone* does. So:
+
+- **A) Keep DNS at Hostinger (recommended).** In Vercel → Settings → Domains, add
+  `shubhamdatarkar.com`; Vercel shows the exact records. At Hostinger DNS, repoint
+  only the **A** (`@`) and **CNAME** (`www`) records to the values Vercel gives.
+  Leave everything else. The GSC verification TXT record and your **MX/email**
+  records stay put → **GSC stays verified, email keeps working**, zero migration.
+
+- **B) Move nameservers to Vercel.** Hostinger's DNS zone goes dead, so you must
+  re-create in Vercel DNS: the **GSC verification TXT record** (same value — *not* a
+  new property), all **MX records** (or `hello@shubhamdatarkar.com` breaks), plus
+  SPF/other TXT. More work, more breakage surface — only if you want Vercel to
+  manage DNS.
+
+> Either way you **never need a new GSC property** — it is the same domain. Use the
+> exact A/CNAME values Vercel shows (they have changed over time — don't hard-code
+> an IP).
+
+### SEO go-live checklist (run at cutover, not before)
+
+Doing these before the new site is live would point engines at the **old** site.
+
+1. [ ] Domain resolves to the Vercel deployment; TLS cert issued.
+2. [ ] `https://shubhamdatarkar.com/sitemap.xml` serves the **new** sitemap
+   (from `src/app/sitemap.ts`) and `/robots.txt` shows the new rules (incl. the
+   `/admin` disallow).
+3. [ ] Google Search Console → **Sitemaps** → submit `sitemap.xml`.
+4. [ ] Bing Webmaster Tools → **Import from Google Search Console** (carries the
+   DNS verification + sitemap), or verify the domain directly.
+5. [ ] Run a live blog post URL through Google's **Rich Results Test** — confirm
+   Person / WebSite / Organization / Article render and `Article.image` resolves.
+
+> Bing verification is what lets **ChatGPT Search** retrieve the site, so don't
+> skip step 4.
