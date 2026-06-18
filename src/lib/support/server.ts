@@ -56,13 +56,21 @@ export async function attachSession(id: string, sessionId: string): Promise<void
   if (error) console.warn("[support] attachSession failed:", error.message);
 }
 
-/** Flip a support row to paid/failed, matched by session id (preferred) or row id. */
+export type SupportRow = { id: string; name: string | null; anonymous: boolean };
+
+/**
+ * Flip a support row to paid/failed, matched by session id (preferred) or row id.
+ * Only matches rows NOT already at the target status, so repeated webhook
+ * deliveries are idempotent — `updated` is true exactly once per real transition,
+ * which is what gates the one-time auto thank-you post. Returns the row's public
+ * fields so the caller can build that post without a second query.
+ */
 export async function markSupportStatus(opts: {
   sessionId?: string | null;
   supportId?: string | null;
   status: "paid" | "failed";
   paymentId?: string | null;
-}): Promise<{ updated: boolean }> {
+}): Promise<{ updated: boolean; support?: SupportRow }> {
   const patch: Record<string, unknown> = { status: opts.status };
   if (opts.paymentId) patch.zoho_payment_id = opts.paymentId;
 
@@ -71,10 +79,18 @@ export async function markSupportStatus(opts: {
   else if (opts.supportId) q = q.eq("id", opts.supportId);
   else return { updated: false };
 
-  const { data, error } = await q.select("id");
+  // Idempotency guard: skip rows already at the target status (webhook re-delivery).
+  q = q.neq("status", opts.status);
+
+  const { data, error } = await q.select("id, name, anonymous");
   if (error) {
     console.warn("[support] markSupportStatus failed:", error.message);
     return { updated: false };
   }
-  return { updated: (data?.length ?? 0) > 0 };
+  const row = data?.[0] as { id: string; name: string | null; anonymous: boolean } | undefined;
+  if (!row) return { updated: false };
+  return {
+    updated: true,
+    support: { id: String(row.id), name: row.name, anonymous: !!row.anonymous },
+  };
 }
