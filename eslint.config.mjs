@@ -18,6 +18,20 @@ const eslintConfig = defineConfig([
     ".claude/**",
     "next-env.d.ts",
   ]),
+  {
+    // Leading underscore marks an intentionally-unused binding — required for
+    // server-action signatures (prevState, formData) we don't read.
+    rules: {
+      "@typescript-eslint/no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+          caughtErrorsIgnorePattern: "^_",
+        },
+      ],
+    },
+  },
 ]);
 
 export default eslintConfig;
