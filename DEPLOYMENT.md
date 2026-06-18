@@ -20,8 +20,9 @@ repo `bookasloth/shubham-datarkar` to hand to it.
 
 1. [ ] **Apply the database schema** (§2) in Supabase → SQL Editor:
    - Run [`supabase/deploy/full_setup.sql`](supabase/deploy/full_setup.sql).
-   - Run [`supabase/migrations/20260617000003_support_updates.sql`](supabase/migrations/20260617000003_support_updates.sql)
-     and [`supabase/migrations/20260617000004_comment_verifications.sql`](supabase/migrations/20260617000004_comment_verifications.sql).
+   - Run [`supabase/migrations/20260617000003_support_updates.sql`](supabase/migrations/20260617000003_support_updates.sql),
+     [`supabase/migrations/20260617000004_comment_verifications.sql`](supabase/migrations/20260617000004_comment_verifications.sql),
+     and [`supabase/migrations/20260618000001_support_comments.sql`](supabase/migrations/20260618000001_support_comments.sql).
    - Run the §2 verify queries — all green.
 2. [ ] **Create the Storage bucket** (§2): Supabase → Storage → New bucket →
    name `support-media` → toggle **Public**.
@@ -137,9 +138,9 @@ service-role RPCs).
 For incremental changes, apply only the new migration file(s) under
 `supabase/migrations/` instead of the whole bundle.
 
-### Support updates + commenter verification (sub-projects 1 & 3)
+### Support updates + comments (sub-projects 1–5)
 
-Not yet in `full_setup.sql` — apply these two migrations (idempotent) in the SQL
+Not yet in `full_setup.sql` — apply these three migrations (idempotent) in the SQL
 editor:
 
 - [`supabase/migrations/20260617000003_support_updates.sql`](supabase/migrations/20260617000003_support_updates.sql)
@@ -147,6 +148,8 @@ editor:
   thank-you images).
 - [`supabase/migrations/20260617000004_comment_verifications.sql`](supabase/migrations/20260617000004_comment_verifications.sql)
   — transient OTP store for commenter email verification (service-role only).
+- [`supabase/migrations/20260618000001_support_comments.sql`](supabase/migrations/20260618000001_support_comments.sql)
+  — `support_comments` (threaded comments; service-role only, email kept private).
 
 Then create a **public** Storage bucket named **`support-media`** (Supabase →
 Storage → New bucket → toggle **Public**) — it holds admin-uploaded post images
@@ -158,6 +161,7 @@ Verify:
 select count(*) from public.support_updates;              -- expect 0
 select id, thankyou_images from public.support_settings;  -- expect 1 row: (1, [])
 select to_regclass('public.comment_verifications');       -- expect: comment_verifications (not null)
+select to_regclass('public.support_comments');            -- expect: support_comments (not null)
 ```
 
 Also set the `COMMENTER_TOKEN_SECRET` + `COMMENTER_OTP_PEPPER` env vars (section 1)
