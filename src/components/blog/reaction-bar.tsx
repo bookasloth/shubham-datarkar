@@ -20,8 +20,17 @@ const ICONS: Record<ReactionKey, LucideIcon> = {
  * per post (localStorage), switchable, toggle-off. Counts stay hidden until
  * the reader interacts, then reveal for all six. Failures are swallowed
  * silently: this is a feel-good vanity widget, it must never nag.
+ *
+ * `slug` namespaces the counter (blog uses `category/slug`; support updates use
+ * `update:<code>`). `title` lets non-blog surfaces relabel the prompt.
  */
-export function ReactionBar({ slug }: { slug: string }) {
+export function ReactionBar({
+  slug,
+  title = "How was this article?",
+}: {
+  slug: string;
+  title?: string;
+}) {
   const storageKey = `reaction:${slug}`;
   const [pick, setPick] = useState<ReactionKey | null>(null);
   const [counts, setCounts] = useState<ReactionCounts | null>(null); // null = hidden
@@ -60,7 +69,7 @@ export function ReactionBar({ slug }: { slug: string }) {
     <div className="flex flex-col gap-6 border-b border-border py-10 sm:flex-row sm:items-center sm:justify-between">
       <div className="max-w-sm">
         <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Reactions</p>
-        <h2 className="mt-2 text-2xl font-bold tracking-tight">How was this article?</h2>
+        <h2 className="mt-2 text-2xl font-bold tracking-tight">{title}</h2>
       </div>
       <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
         {REACTIONS.map((r) => {

@@ -4,7 +4,13 @@ import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { UpdateCard } from "@/components/support/update-card";
+import { ReactionBar } from "@/components/blog/reaction-bar";
+import { CommentSection } from "@/components/support/comment-section";
 import { getUpdateByCode } from "@/lib/support/updates";
+import { getComments } from "@/lib/support/comments";
+import { buildCommentTree } from "@/lib/support/comment-tree";
+import { getVerifiedCommenter } from "@/lib/support/comment-auth";
+import { getAdminUser } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +35,12 @@ export default async function UpdatePage({
   const update = await getUpdateByCode(code);
   if (!update) notFound();
 
+  const [commentRows, me, admin] = await Promise.all([
+    getComments(code),
+    getVerifiedCommenter(),
+    getAdminUser(),
+  ]);
+
   return (
     <div className="grid gap-6">
       <UpdateCard update={update} />
@@ -40,8 +52,14 @@ export default async function UpdatePage({
         </Button>
       </div>
 
-      {/* Comments slot — sub-project 4. Reactions slot — sub-project 5. */}
-      <div id="comments" />
+      <ReactionBar slug={`update:${code}`} title="What did you think?" />
+
+      <CommentSection
+        code={code}
+        comments={buildCommentTree(commentRows)}
+        initialName={me?.name ?? null}
+        isAdmin={!!admin}
+      />
     </div>
   );
 }
