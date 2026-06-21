@@ -36,7 +36,8 @@ export const metadata: Metadata = {
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,
   manifest: "/manifest.webmanifest",
-  icons: { icon: "/favicon.ico" },
+  // favicon.ico, icon.svg, and apple-icon.png in src/app/ are auto-emitted as
+  // <link rel="icon"/apple-touch-icon> by Next's file conventions.
   // Search-engine ownership tags. Sourced from env so no token is committed;
   // Next renders <meta google-site-verification> / <meta msvalidate.01> only
   // when the matching var is set (empty = no tag, safe default).
