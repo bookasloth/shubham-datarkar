@@ -13,6 +13,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { AiReferrer } from "@/components/analytics/ai-referrer";
+import { GoogleTagManager } from "@/components/analytics/google-tag-manager";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -70,6 +71,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${jakarta.variable} ${poppins.variable}`}
     >
       <body className="min-h-dvh bg-background text-foreground antialiased">
+        <GoogleTagManager />
         <ThemeProvider>
           <ToastProvider>
             {/* Accessibility: skip directly to main content */}
