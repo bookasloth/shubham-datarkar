@@ -4,25 +4,20 @@ import * as React from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
-import { posts, blogCategories } from "@/lib/data/posts";
+import { blogCategories } from "@/lib/data/posts";
 import { tools } from "@/lib/data/tools";
 import { caseStudies } from "@/lib/data/case-studies";
 import { services } from "@/lib/data/services";
 import { products } from "@/lib/data/products";
 import { portfolioItems } from "@/lib/data/portfolio";
+import type { Post } from "@/lib/data/types";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
 type Entry = { title: string; href: string; type: string; description: string };
 
-const index: Entry[] = [
-  ...posts.map((p) => ({
-    title: p.title,
-    href: `/blog/${p.category}/${p.slug}`,
-    type: "Article",
-    description: p.excerpt,
-  })),
+const staticIndex: Entry[] = [
   ...caseStudies.map((c) => ({
     title: c.title,
     href: `/case-studies/${c.slug}`,
@@ -36,16 +31,29 @@ const index: Entry[] = [
   ...blogCategories.map((c) => ({ title: `${c.label} articles`, href: `/blog/${c.slug}`, type: "Category", description: c.description })),
 ];
 
-export function SearchClient() {
+export function SearchClient({ articles = [] }: { articles?: Post[] }) {
   const params = useSearchParams();
   const initial = params.get("q") ?? "";
   const [query, setQuery] = React.useState(initial);
+
+  const index = React.useMemo<Entry[]>(
+    () => [
+      ...articles.map((p) => ({
+        title: p.title,
+        href: `/blog/${p.category}/${p.slug}`,
+        type: "Article",
+        description: p.excerpt,
+      })),
+      ...staticIndex,
+    ],
+    [articles],
+  );
 
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
     return index.filter((e) => (e.title + " " + e.description + " " + e.type).toLowerCase().includes(q));
-  }, [query]);
+  }, [query, index]);
 
   return (
     <div>

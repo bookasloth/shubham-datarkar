@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
-import { posts, blogCategories } from "@/lib/data/posts";
+import { blogCategories } from "@/lib/data/posts";
+import { getPublishedPosts } from "@/lib/blog/queries";
 import { caseStudies } from "@/lib/data/case-studies";
 import { services } from "@/lib/data/services";
 import { tools } from "@/lib/data/tools";
 import { products } from "@/lib/data/products";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const posts = await getPublishedPosts();
   const base = site.url;
   const now = new Date();
 
