@@ -4,7 +4,36 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
-import { getEntity } from "@/lib/content/registry";
+import { getEntity, type EntityKey } from "@/lib/content/registry";
+
+/**
+ * Revalidate every public ISR page that renders a given entity, so admin edits
+ * go live immediately instead of waiting out the 5-min revalidate window.
+ * The `[slug]` form + "page" revalidates all prerendered detail paths at once.
+ */
+function revalidateEntity(key: EntityKey): void {
+  switch (key) {
+    case "case-studies":
+      revalidatePath("/"); // home shows featured case studies
+      revalidatePath("/case-studies");
+      revalidatePath("/case-studies/[slug]", "page");
+      break;
+    case "products":
+      revalidatePath("/products");
+      revalidatePath("/products/[slug]", "page");
+      break;
+    case "services":
+      revalidatePath("/services");
+      revalidatePath("/services/[slug]", "page");
+      break;
+    case "testimonials":
+      revalidatePath("/"); // home marquee
+      revalidatePath("/testimonials");
+      break;
+    case "projects":
+      break; // no public route
+  }
+}
 
 /** Parse the editor form into a row. Throws on invalid JSON or unknown entity. */
 function parseRow(entityKey: string, formData: FormData) {
@@ -40,7 +69,7 @@ export async function createEntity(entityKey: string, formData: FormData): Promi
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.from(def.table).insert(row);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidateEntity(def.key);
   redirect(`/admin/content/${def.key}`);
 }
 
@@ -50,7 +79,7 @@ export async function updateEntity(entityKey: string, id: string, formData: Form
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.from(def.table).update(row).eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidateEntity(def.key);
   redirect(`/admin/content/${def.key}`);
 }
 
@@ -61,6 +90,6 @@ export async function deleteEntity(entityKey: string, id: string): Promise<void>
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.from(def.table).delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/");
+  revalidateEntity(def.key);
   redirect(`/admin/content/${def.key}`);
 }
