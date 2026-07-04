@@ -47,6 +47,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* KPIs */}
+      <h2 className="sr-only">Key metrics</h2>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
         <KPIWidget label="Published" value={published} href="/admin/posts" />
         <KPIWidget label="Drafts" value={drafts} href="/admin/posts" />
@@ -59,6 +60,7 @@ export default async function AdminDashboardPage() {
       </div>
 
       {/* Content entity counts */}
+      <h2 className="sr-only">Content</h2>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {entityCounts.map(({ def, count }) => (
           <KPIWidget key={def.key} label={def.label} value={count} href={`/admin/content/${def.key}`} />
@@ -70,7 +72,7 @@ export default async function AdminDashboardPage() {
         <RecentCard title="Recent posts" viewAllHref="/admin/posts" isEmpty={recentPosts.length === 0}>
           {recentPosts.map((p) => (
             <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
-              <Link href="/admin/posts" className="min-w-0 flex-1 truncate text-sm text-admin-text hover:text-admin-accent">
+              <Link href={`/admin/posts/${p.id}`} className="min-w-0 flex-1 truncate text-sm text-admin-text hover:text-admin-accent">
                 {p.title}
               </Link>
               <StatusBadge tone={postTone(p.status)}>{p.status}</StatusBadge>
