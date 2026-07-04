@@ -86,7 +86,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
   const tileColor = (t?: Tile) =>
     t === "correct" ? "bg-green-600 text-white border-green-600 dark:bg-green-500 dark:border-green-500"
       : t === "present" ? "bg-yellow-500 text-white border-yellow-500 dark:bg-yellow-400 dark:border-yellow-400 dark:text-black"
-      : t === "absent" ? "bg-muted-foreground/60 text-white border-muted-foreground/60"
+      : t === "absent" ? "bg-neutral-500 text-white border-neutral-500 dark:bg-neutral-600 dark:border-neutral-600"
       : "border-border";
 
   function share() {
@@ -151,7 +151,7 @@ function KeyBtn({ label, onClick, state, wide }: { label: string; onClick: () =>
   const bg =
     state === "correct" ? "bg-green-600 text-white dark:bg-green-500"
       : state === "present" ? "bg-yellow-500 text-white dark:bg-yellow-400 dark:text-black"
-      : state === "absent" ? "bg-muted-foreground/60 text-white"
+      : state === "absent" ? "bg-neutral-500 text-white dark:bg-neutral-600"
       : "bg-secondary text-secondary-foreground";
   return (
     <button onClick={onClick} className={`h-12 rounded-btn font-semibold uppercase transition-ui ${bg} ${wide ? "px-3" : "w-8"}`}>

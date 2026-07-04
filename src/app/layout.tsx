@@ -8,6 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
 import { CommandMenu } from "@/components/layout/command-menu";
+import { ChromeGate } from "@/components/layout/chrome-gate";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -82,11 +83,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </a>
             <CommandMenu />
             <div className="flex min-h-dvh flex-col">
-              <Header />
+              <ChromeGate><Header /></ChromeGate>
               <main id="main" className="flex-1">
                 {children}
               </main>
-              <Footer />
+              <ChromeGate><Footer /></ChromeGate>
             </div>
           </ToastProvider>
         </ThemeProvider>
