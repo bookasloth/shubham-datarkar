@@ -11,7 +11,6 @@ import { ProjectsGrid } from "./projects-grid";
 import { supportProfile } from "@/lib/data/support-content";
 import { initialsOf } from "@/lib/support/config";
 
-const PHOTO = "https://company-assets.bookasloth.in/images/sd/website/profile.webp";
 const COFFEE_TOFFEE_LOGO = "https://company-assets.bookasloth.in/images/sd/website/coffee-toffee-logo.webp";
 
 /** Persistent identity sidebar. */
@@ -33,7 +32,7 @@ export function ProfileCard({ supporterCount }: { supporterCount?: number }) {
       <div className="px-6 pb-6 text-center">
         <div className="relative -mt-10 mx-auto w-fit">
           <Avatar className="size-20 rounded-full border-2 border-card">
-            <AvatarImage src={PHOTO} alt={p.name} />
+            <AvatarImage src={p.photo} alt={p.name} />
             <AvatarFallback className="rounded-full bg-foreground text-lg font-bold text-background">
               {initialsOf(p.name)}
             </AvatarFallback>
