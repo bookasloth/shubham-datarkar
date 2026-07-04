@@ -39,6 +39,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
 
   // submit result once per finished game, only when authed
   useEffect(() => {
+    if (isArchive) return; // never persist replays of past puzzles (would corrupt streaks)
     if (status === "playing") return;
     if (!user) return;
     if (submitted.current) return;
@@ -50,7 +51,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
       guesses,
       timeMs: null,
     });
-  }, [status, user, guesses, puzzleNumber]);
+  }, [isArchive, status, user, guesses, puzzleNumber]);
 
   const rows: Tile[][] = guesses.map((g) => scoreGuess(g, answer));
 

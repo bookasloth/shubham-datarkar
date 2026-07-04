@@ -36,6 +36,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
 
   // submit result once per finished game, only when authed
   useEffect(() => {
+    if (isArchive) return; // never persist replays of past puzzles (would corrupt streaks)
     if (status === "playing") return;
     if (!user) return;
     if (submitted.current) return;
@@ -47,7 +48,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
       guesses: history.map((r) => r.guess),
       timeMs: null,
     });
-  }, [status, user, history, puzzleNumber]);
+  }, [isArchive, status, user, history, puzzleNumber]);
 
   function flash(m: string) {
     setToast(m);
