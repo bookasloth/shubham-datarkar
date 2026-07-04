@@ -7,12 +7,9 @@ import {
   getStreakBoard,
   type GameKey,
 } from "@/lib/games/leaderboard-queries";
+import { GAMES } from "@/lib/games/registry";
 import { cn } from "@/lib/utils";
 
-const GAMES: { key: GameKey; name: string }[] = [
-  { key: "alfazy", name: "Alfazy" },
-  { key: "hit_and_blow", name: "Hit and Blow" },
-];
 const BOARDS = ["daily", "weekly", "monthly", "streak"] as const;
 type Board = (typeof BOARDS)[number];
 

@@ -1,12 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { puzzleNumberFor } from "@/lib/daily";
+import { GAMES } from "@/lib/games/registry";
 import PuzzleCountdown from "@/components/games/PuzzleCountdown";
-
-const GAMES = [
-  { slug: "alfazy", name: "Alfazy", tag: "Guess the 5-letter word" },
-  { slug: "hit-and-blow", name: "Hit and Blow", tag: "Crack the 4-digit code" },
-];
 
 export default function GamesHub() {
   const today = puzzleNumberFor();
