@@ -24,9 +24,9 @@ export default async function SupportersPage() {
 
   return (
     <div className="grid gap-6">
-      <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h2 className="font-display text-2xl font-bold tracking-tight">Supporters</h2>
-        <p className="mt-1 text-sm text-muted-foreground">The people keeping the lights on. Thank you.</p>
+        <p className="text-sm text-muted-foreground">The people keeping the lights on. Thank you.</p>
       </div>
       <StatsBar stats={stats} />
       <div className="grid gap-4">
