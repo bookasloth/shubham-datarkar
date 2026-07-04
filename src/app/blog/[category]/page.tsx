@@ -12,7 +12,12 @@ import { PostCard } from "@/components/cards/post-card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { FileText } from "lucide-react";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
+
+// Category set is a fixed list — prerender all of them at build.
+export function generateStaticParams() {
+  return blogCategories.map((c) => ({ category: c.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params;

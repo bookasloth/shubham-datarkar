@@ -40,13 +40,18 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function HomePage() {
-  const allCaseStudies = await getPublishedEntities<CaseStudy>("case_studies");
+  // Fire all three reads in parallel — they're independent, so serial awaits
+  // just stack their latencies onto TTFB.
+  const [allCaseStudies, testimonials, allPosts] = await Promise.all([
+    getPublishedEntities<CaseStudy>("case_studies"),
+    getPublishedEntities<Testimonial>("testimonials"),
+    getPublishedPosts(),
+  ]);
   const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
-  const testimonials = await getPublishedEntities<Testimonial>("testimonials");
-  const featuredPosts = (await getPublishedPosts()).filter((p) => p.featured).slice(0, 3);
+  const featuredPosts = allPosts.filter((p) => p.featured).slice(0, 3);
   return (
     <>
       <JsonLd data={organizationSchema()} />

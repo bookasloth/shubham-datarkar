@@ -14,7 +14,7 @@ export const metadata = buildMetadata({
   path: "/case-studies",
 });
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function CaseStudiesPage() {
   const caseStudies = await getPublishedEntities<CaseStudy>("case_studies");
