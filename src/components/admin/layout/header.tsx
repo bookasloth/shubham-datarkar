@@ -1,10 +1,17 @@
 "use client";
 
+import Link from "next/link";
 import { Search, Plus } from "lucide-react";
 import { Breadcrumbs } from "./breadcrumbs";
 import { AdminCommand, ADMIN_OPEN_COMMAND_EVENT } from "./admin-command";
 import { NotificationsBell } from "./notifications-bell";
 import { ProfileMenu } from "./profile-menu";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 export function Header({ email }: { email: string }) {
   const openCommand = () => window.dispatchEvent(new Event(ADMIN_OPEN_COMMAND_EVENT));
@@ -21,14 +28,22 @@ export function Header({ email }: { email: string }) {
           <span className="hidden sm:inline">Search…</span>
           <kbd className="hidden rounded bg-admin-surface-hover px-1.5 text-[10px] sm:inline">⌘K</kbd>
         </button>
-        <button
-          type="button"
-          onClick={() => window.dispatchEvent(new Event(ADMIN_OPEN_COMMAND_EVENT))}
-          aria-label="Quick create"
-          className="flex size-9 items-center justify-center rounded-btn bg-admin-accent text-admin-accent-fg transition-[opacity] duration-150 hover:opacity-90 [&_svg]:size-4"
-        >
-          <Plus aria-hidden />
-        </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Quick create"
+            className="flex size-9 items-center justify-center rounded-btn bg-admin-accent text-admin-accent-fg transition-[opacity] duration-150 hover:opacity-90 [&_svg]:size-4"
+          >
+            <Plus aria-hidden />
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" data-admin>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/posts/new">New post</Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/admin/updates/new">New update</Link>
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
         <NotificationsBell />
         <ProfileMenu email={email} />
       </div>

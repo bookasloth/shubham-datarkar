@@ -81,7 +81,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Skip to content
             </a>
-            <CommandMenu />
+            <ChromeGate><CommandMenu /></ChromeGate>
             <div className="flex min-h-dvh flex-col">
               <ChromeGate><Header /></ChromeGate>
               <main id="main" className="flex-1">
