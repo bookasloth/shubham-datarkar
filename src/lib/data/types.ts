@@ -2,7 +2,7 @@
 
 export type IconName = string;
 
-export type BlogCategory = "seo" | "ai" | "performance" | "content" | "saas" | "founder";
+export type BlogCategory = "seo" | "ai" | "performance" | "content" | "saas" | "founder" | "build-in-public";
 
 /* ------------------------------------------------------------------ */
 /*  Inline rich text — serializable spans a CMS would emit.            */
