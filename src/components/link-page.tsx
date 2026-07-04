@@ -8,6 +8,8 @@ type LinkPageProps = {
   categories: LinkCategory[];
 };
 
+const LOGO_URL = "https://website-assets.shubhamdatarkar.com/logos/shubham-logo-secondary.png";
+
 const BLOB_COLORS = ["#ff6a25", "#FF4D93", "#36abff", "#45ff74", "#9d3aff"];
 
 const BLOBS = [
@@ -17,34 +19,6 @@ const BLOBS = [
   { color: BLOB_COLORS[3], top: "70%", left: "20%", duration: 9 },
   { color: BLOB_COLORS[4], top: "45%", left: "40%", duration: 4 },
 ];
-
-function LinkRow({ link }: { link: LinkCategory["links"][number] }) {
-  const [hover, setHover] = useState(false);
-
-  return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-      style={{
-        display: "block",
-        padding: "16px",
-        textDecoration: "none",
-        fontSize: "16px",
-        fontWeight: 500,
-        backgroundColor: hover ? link.color : "#1A1D24",
-        color: "#ffffff",
-        borderRadius: "4px",
-        border: "0.5px solid rgba(255,255,255,0.55)",
-        transition: "background-color 0.2s ease",
-      }}
-    >
-      {link.title}
-    </a>
-  );
-}
 
 export function LinkPage({ categories }: LinkPageProps) {
   const [activeTab, setActiveTab] = useState(categories[0]?.slug ?? "");
@@ -59,6 +33,7 @@ export function LinkPage({ categories }: LinkPageProps) {
           50% { transform: translate(100px, -80px) scale(1.2); }
           100% { transform: translate(-80px, 120px) scale(0.9); }
         }
+        .sd-link:hover { background-color: var(--hover-color) !important; }
       `}</style>
 
       {/* Animated fluid background */}
@@ -104,7 +79,7 @@ export function LinkPage({ categories }: LinkPageProps) {
         {/* Profile header */}
         <div className="flex flex-col items-center">
           <img
-            src="https://website-assets.shubhamdatarkar.com/logos/shubham-logo-secondary.png"
+            src={LOGO_URL}
             alt={site.name}
             style={{
               width: "50px",
@@ -165,7 +140,28 @@ export function LinkPage({ categories }: LinkPageProps) {
         {/* Links list */}
         <div className="flex flex-col" style={{ gap: "12px" }}>
           {activeCategory?.links.map((link) => (
-            <LinkRow key={link.id} link={link} />
+            <a
+              key={link.id}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sd-link"
+              style={{
+                "--hover-color": link.color,
+                display: "block",
+                padding: "16px",
+                textDecoration: "none",
+                fontSize: "16px",
+                fontWeight: 500,
+                backgroundColor: "#1A1D24",
+                color: "#ffffff",
+                borderRadius: "4px",
+                border: "0.5px solid rgba(255,255,255,0.55)",
+                transition: "background-color 0.2s ease",
+              } as React.CSSProperties}
+            >
+              {link.title}
+            </a>
           ))}
         </div>
 
