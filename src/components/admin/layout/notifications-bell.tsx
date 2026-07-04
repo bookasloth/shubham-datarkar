@@ -24,7 +24,7 @@ export function NotificationsBell() {
           <span className="absolute right-2 top-2 size-1.5 rounded-full bg-admin-accent" aria-hidden />
         )}
       </PopoverTrigger>
-      <PopoverContent align="end" className="w-72 border-admin-border bg-admin-surface p-0 text-admin-text">
+      <PopoverContent align="end" className="w-72 border-admin-border bg-admin-surface p-0 text-admin-text" data-admin>
         <div className="border-b border-admin-border px-3 py-2 text-sm font-medium">Notifications</div>
         {notifications.length === 0 ? (
           <p className="px-3 py-6 text-center text-sm text-admin-text-muted">You're all caught up.</p>
