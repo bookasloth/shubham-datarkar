@@ -15,10 +15,13 @@ function parseCategoryRow(formData: FormData) {
 }
 
 function parseLinkRow(formData: FormData) {
+  const url = String(formData.get("url") ?? "").trim();
+  if (url && !/^https?:\/\/|^mailto:|^#$/.test(url))
+    throw new Error("URL must start with http://, https://, or mailto:");
   return {
     category_id: String(formData.get("category_id") ?? "").trim(),
     title: String(formData.get("title") ?? "").trim(),
-    url: String(formData.get("url") ?? "").trim(),
+    url,
     color: String(formData.get("color") ?? "").trim(),
     sort: Number(formData.get("sort") ?? 0) || 0,
     published: formData.get("published") === "on",
