@@ -43,6 +43,17 @@ export function nextOffset(loadedCount: number): number {
 }
 
 /**
+ * Wraps an index into the range [0, count) with wrap-around in both directions.
+ * Used by the lightbox for ArrowLeft/Right and swipe navigation: stepping past
+ * the last photo lands on the first, and vice versa. Returns 0 for a non-positive
+ * count so callers never index into an empty list.
+ */
+export function wrapIndex(index: number, count: number): number {
+  if (count <= 0) return 0;
+  return ((index % count) + count) % count;
+}
+
+/**
  * Predicate: does a photo match the active tag? A null/empty active tag means
  * "All" and matches everything. Matching is exact against the photo's tags.
  */

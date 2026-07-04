@@ -6,6 +6,7 @@ import {
   nextOffset,
   matchesTag,
   filterByTag,
+  wrapIndex,
 } from "./gallery";
 
 describe("formatPhotoDate", () => {
@@ -57,6 +58,36 @@ describe("nextOffset", () => {
 
   it("clamps negatives to 0", () => {
     expect(nextOffset(-5)).toBe(0);
+  });
+});
+
+describe("wrapIndex", () => {
+  it("returns the index unchanged when in range", () => {
+    expect(wrapIndex(0, 5)).toBe(0);
+    expect(wrapIndex(3, 5)).toBe(3);
+    expect(wrapIndex(4, 5)).toBe(4);
+  });
+
+  it("wraps forward past the last index to the first", () => {
+    expect(wrapIndex(5, 5)).toBe(0);
+    expect(wrapIndex(6, 5)).toBe(1);
+  });
+
+  it("wraps backward before zero to the last index", () => {
+    expect(wrapIndex(-1, 5)).toBe(4);
+    expect(wrapIndex(-2, 5)).toBe(3);
+    expect(wrapIndex(-6, 5)).toBe(4);
+  });
+
+  it("returns 0 for a non-positive count", () => {
+    expect(wrapIndex(3, 0)).toBe(0);
+    expect(wrapIndex(0, -1)).toBe(0);
+  });
+
+  it("handles a single-item list", () => {
+    expect(wrapIndex(0, 1)).toBe(0);
+    expect(wrapIndex(1, 1)).toBe(0);
+    expect(wrapIndex(-1, 1)).toBe(0);
   });
 });
 
