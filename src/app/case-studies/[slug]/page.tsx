@@ -5,7 +5,7 @@ import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import type { CaseStudy } from "@/lib/data/types";
-import { getPublishedEntityBySlug } from "@/lib/content/queries";
+import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -17,7 +17,13 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
+
+// Prerender every published case study at build so first visit is CDN-instant.
+export async function generateStaticParams() {
+  const studies = await getPublishedEntities<CaseStudy>("case_studies");
+  return studies.map((c) => ({ slug: c.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

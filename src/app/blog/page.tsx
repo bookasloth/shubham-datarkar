@@ -28,7 +28,7 @@ export const metadata = {
   },
 };
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function BlogPage() {
   const posts = await getPublishedPosts();

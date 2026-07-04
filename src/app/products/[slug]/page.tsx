@@ -22,7 +22,13 @@ import { ProductCard } from "@/components/cards/product-card";
 import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
+
+// Prerender every published product at build so first visit is CDN-instant.
+export async function generateStaticParams() {
+  const products = await getPublishedEntities<Product>("products");
+  return products.map((p) => ({ slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
