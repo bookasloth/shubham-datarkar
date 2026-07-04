@@ -51,7 +51,12 @@ export default async function HomePage() {
     getPublishedPosts(),
   ]);
   const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
-  const featuredPosts = allPosts.filter((p) => p.featured).slice(0, 3);
+  // Writing rail: lead with one featured post, then fill with the most recent —
+  // 3 total. allPosts is newest-first, so the recent slice is just the top rows
+  // minus whatever's already featured. Falls back to 3 recent if none featured.
+  const featuredPost = allPosts.find((p) => p.featured);
+  const recentPosts = allPosts.filter((p) => p.slug !== featuredPost?.slug).slice(0, featuredPost ? 2 : 3);
+  const homePosts = featuredPost ? [featuredPost, ...recentPosts] : recentPosts;
   return (
     <>
       <JsonLd data={organizationSchema()} />
@@ -175,7 +180,7 @@ export default async function HomePage() {
             </div>
           </div>
           <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
-            {featuredPosts.map((p) => (
+            {homePosts.map((p) => (
               <StaggerItem key={p.slug}>
                 <PostCard post={p} />
               </StaggerItem>
