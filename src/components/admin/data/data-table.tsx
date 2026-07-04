@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
-  DropdownMenuCheckboxItem, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator,
+  DropdownMenuCheckboxItem, DropdownMenuLabel, DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { SearchInput, AdminEmptyState } from "@/components/admin";
 import { sortRows, paginate, filterRows } from "./table-utils";
@@ -191,7 +191,7 @@ export function DataTable<T>({
                         type="button"
                         onClick={() => toggleSort(c.key)}
                         className={cn(
-                          "flex items-center gap-1 transition-[color] duration-150 hover:text-admin-text [&_svg]:size-3.5",
+                          "flex items-center gap-1 outline-none transition-[color] duration-150 hover:text-admin-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admin-accent [&_svg]:size-3.5",
                           active ? "text-admin-accent" : "text-admin-text-muted",
                         )}
                       >
@@ -269,7 +269,7 @@ export function DataTable<T>({
               type="button"
               onClick={() => setPage(safePage - 1)}
               disabled={safePage <= 1}
-              className="rounded-btn border border-admin-border px-2 py-1 transition-[border-color] duration-150 hover:border-admin-border-hover disabled:opacity-40"
+              className="rounded-btn border border-admin-border px-2 py-1 outline-none transition-[border-color] duration-150 hover:border-admin-border-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admin-accent disabled:opacity-40"
             >
               Prev
             </button>
@@ -278,7 +278,7 @@ export function DataTable<T>({
               type="button"
               onClick={() => setPage(safePage + 1)}
               disabled={safePage >= pageCount}
-              className="rounded-btn border border-admin-border px-2 py-1 transition-[border-color] duration-150 hover:border-admin-border-hover disabled:opacity-40"
+              className="rounded-btn border border-admin-border px-2 py-1 outline-none transition-[border-color] duration-150 hover:border-admin-border-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admin-accent disabled:opacity-40"
             >
               Next
             </button>
