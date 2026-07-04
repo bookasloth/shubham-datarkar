@@ -12,18 +12,26 @@ export type StatRow = {
 };
 
 export async function getMyStats(): Promise<StatRow[]> {
+  const user = await getGameUser();
+  if (!user) return [];
   const supabase = await supabaseAuthServer();
+  // RLS already scopes to the caller; the explicit filter is defense-in-depth
+  // so a future RLS-policy drift can't silently leak other users' rows.
   const { data } = await supabase
     .from("streaks")
-    .select("game, current_streak, max_streak, total_played, total_won");
+    .select("game, current_streak, max_streak, total_played, total_won")
+    .eq("user_id", user.id);
   return (data ?? []) as StatRow[];
 }
 
 export async function getMyRecent(limit = 10) {
+  const user = await getGameUser();
+  if (!user) return [];
   const supabase = await supabaseAuthServer();
   const { data } = await supabase
     .from("game_results")
     .select("game, puzzle_number, status, guesses")
+    .eq("user_id", user.id)
     .order("puzzle_number", { ascending: false })
     .limit(limit);
   return (data ?? []) as { game: string; puzzle_number: number; status: string; guesses: number }[];
