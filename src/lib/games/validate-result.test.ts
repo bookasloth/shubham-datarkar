@@ -1,27 +1,43 @@
 import { describe, it, expect } from "vitest";
 import { validateResult } from "./validate-result";
+import { puzzleNumberFor } from "@/lib/daily";
 import { answerFor } from "./alfazy";
 import { secretFor } from "./hit-and-blow";
 
-describe("validateResult", () => {
-  it("accepts a genuine Alfazy win (last guess equals the answer)", () => {
-    // Uses the real answerFor(0) for puzzle 0 to build a valid payload.
+const today = puzzleNumberFor();
+
+describe("validateResult — alfazy", () => {
+  it("accepts a genuine win on today's puzzle (last guess equals the answer)", () => {
     const r = validateResult({
       game: "alfazy",
-      puzzleNumber: 0,
+      puzzleNumber: today,
       status: "won",
-      guesses: [answerFor(0)],
+      guesses: [answerFor(today)],
       timeMs: 1000,
     });
     expect(r.valid).toBe(true);
   });
 
-  it("rejects a claimed win whose guesses never reach the answer", () => {
+  it("rejects a claimed win whose guess never reaches the answer", () => {
+    const answer = answerFor(today);
+    const guess = answer === "zzzzz" ? "qqqqq" : "zzzzz";
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: today,
+      status: "won",
+      guesses: [guess],
+      timeMs: 1000,
+    });
+    expect(r.valid).toBe(false);
+  });
+
+  it("rejects a genuine-looking win submitted for a NON-today (archive) puzzle", () => {
+    // Puzzle 0 is in the past; even with its real answer, only today is submittable.
     const r = validateResult({
       game: "alfazy",
       puzzleNumber: 0,
       status: "won",
-      guesses: ["zzzzz"],
+      guesses: [answerFor(0)],
       timeMs: 1000,
     });
     expect(r.valid).toBe(false);
@@ -30,51 +46,74 @@ describe("validateResult", () => {
   it("rejects more guesses than the game allows", () => {
     const r = validateResult({
       game: "alfazy",
-      puzzleNumber: 0,
+      puzzleNumber: today,
       status: "lost",
-      guesses: Array(99).fill("aaaaa"),
+      guesses: Array(7).fill("aaaaa"),
       timeMs: null,
     });
     expect(r.valid).toBe(false);
   });
 
-  describe("hit_and_blow", () => {
-    it("accepts a genuine win (last guess equals the secret)", () => {
-      // Uses the real secretFor(0) for puzzle 0 to build a valid payload.
-      const r = validateResult({
-        game: "hit_and_blow",
-        puzzleNumber: 0,
-        status: "won",
-        guesses: [secretFor(0)],
-        timeMs: 1000,
-      });
-      expect(r.valid).toBe(true);
+  it("rejects a guess that is not a legal move (non-letters)", () => {
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: today,
+      status: "won",
+      guesses: ["12345"],
+      timeMs: 1000,
     });
+    expect(r.valid).toBe(false);
+  });
 
-    it("rejects a claimed win whose guess never matches the secret", () => {
-      const secret = secretFor(0);
-      const guess = secret === "9999" ? "8888" : "9999";
-      const r = validateResult({
-        game: "hit_and_blow",
-        puzzleNumber: 0,
-        status: "won",
-        guesses: [guess],
-        timeMs: 1000,
-      });
-      expect(r.valid).toBe(false);
+  it("rejects a 'lost' that did not exhaust all guesses", () => {
+    const answer = answerFor(today);
+    const filler = answer === "aaaaa" ? "bbbbb" : "aaaaa";
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: today,
+      status: "lost",
+      guesses: Array(3).fill(filler),
+      timeMs: null,
     });
+    expect(r.valid).toBe(false);
+  });
+});
 
-    it("rejects a win-then-padded-loss (premature win hidden behind a later losing guess)", () => {
-      const secret = secretFor(0);
-      const filler = secret === "0000" ? "1111" : "0000";
-      const r = validateResult({
-        game: "hit_and_blow",
-        puzzleNumber: 0,
-        status: "lost",
-        guesses: [secret, filler],
-        timeMs: 1000,
-      });
-      expect(r.valid).toBe(false);
+describe("validateResult — hit_and_blow", () => {
+  it("accepts a genuine win on today's puzzle (last guess equals the secret)", () => {
+    const r = validateResult({
+      game: "hit_and_blow",
+      puzzleNumber: today,
+      status: "won",
+      guesses: [secretFor(today)],
+      timeMs: 1000,
     });
+    expect(r.valid).toBe(true);
+  });
+
+  it("rejects a claimed win whose guess never matches the secret", () => {
+    const secret = secretFor(today);
+    const guess = ["0123", "1234", "2345"].find((g) => g !== secret)!;
+    const r = validateResult({
+      game: "hit_and_blow",
+      puzzleNumber: today,
+      status: "won",
+      guesses: [guess],
+      timeMs: 1000,
+    });
+    expect(r.valid).toBe(false);
+  });
+
+  it("rejects a win-then-padded-loss (premature win hidden behind a later losing guess)", () => {
+    const secret = secretFor(today);
+    const filler = ["0123", "1234", "2345"].find((g) => g !== secret)!;
+    const r = validateResult({
+      game: "hit_and_blow",
+      puzzleNumber: today,
+      status: "lost",
+      guesses: [secret, filler],
+      timeMs: 1000,
+    });
+    expect(r.valid).toBe(false);
   });
 });

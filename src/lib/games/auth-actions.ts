@@ -8,7 +8,7 @@ export type GamesAuthState = { error: string } | undefined;
 /** Only allow same-app return paths; never an open redirect. */
 function safeNext(raw: FormDataEntryValue | null): string {
   const v = String(raw ?? "");
-  return v.startsWith("/games") ? v : "/games";
+  return v === "/games" || v.startsWith("/games/") ? v : "/games";
 }
 
 export async function signUp(

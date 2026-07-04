@@ -8,7 +8,7 @@ export default async function GamesLoginPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next } = await searchParams;
-  const safeNext = next && next.startsWith("/games") ? next : "/games";
+  const safeNext = next === "/games" || next?.startsWith("/games/") ? next : "/games";
 
   if (await getGameUser()) redirect(safeNext);
 
