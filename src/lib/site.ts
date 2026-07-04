@@ -103,6 +103,7 @@ export const primaryNav: NavItem[] = [
   { label: "Work", href: "/work" },
   { label: "Services", href: "/services" },
   { label: "Blog", href: "/blog" },
+  { label: "Games", href: "/games" },
 ];
 
 export const footerNav: NavGroup[] = [
@@ -135,6 +136,7 @@ export const footerNav: NavGroup[] = [
       { label: "Resources", href: "/resources" },
       { label: "Tools", href: "/tools" },
       { label: "Products", href: "/products" },
+      { label: "Games", href: "/games" },
     ],
   },
   {
