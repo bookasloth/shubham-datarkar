@@ -6,6 +6,7 @@ import { ENTITY_LIST } from "@/lib/content/registry";
 const NAV = [
   { href: "/admin", label: "Dashboard" },
   { href: "/admin/posts", label: "Posts" },
+  { href: "/admin/photos", label: "Photos" },
   { href: "/admin/updates", label: "Updates" },
   { href: "/admin/links", label: "Links" },
   ...ENTITY_LIST.map((e) => ({ href: `/admin/content/${e.key}`, label: e.label })),
