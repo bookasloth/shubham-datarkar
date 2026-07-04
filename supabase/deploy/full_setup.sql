@@ -18,7 +18,7 @@ create extension if not exists pgcrypto;
 -- =====================================================================
 -- Table: supports
 -- One row per support attempt. Created 'pending' by the session route,
--- flipped to 'paid'/'failed' by the Zoho webhook. Service-role writes only.
+-- flipped to 'paid'/'failed' by the confirm route. Service-role writes only.
 -- =====================================================================
 create table if not exists public.supports (
   id              uuid primary key default gen_random_uuid(),
@@ -44,8 +44,8 @@ create table if not exists public.supports (
   -- lifecycle
   status          text not null default 'pending'
                     check (status in ('pending', 'paid', 'failed')),
-  zoho_session_id text,
-  zoho_payment_id text,
+  razorpay_order_id text,
+  razorpay_payment_id text,
 
   constraint supports_message_len check (message is null or char_length(message) <= 250),
   constraint supports_has_units   check (coffee_units > 0 or toffee_units > 0)
@@ -59,8 +59,8 @@ create index if not exists supports_paid_created_idx
   on public.supports (created_at desc) where status = 'paid';
 create index if not exists supports_paid_email_idx
   on public.supports (email) where status = 'paid';
-create unique index if not exists supports_zoho_session_idx
-  on public.supports (zoho_session_id) where zoho_session_id is not null;
+create unique index if not exists supports_rzp_order_idx
+  on public.supports (razorpay_order_id) where razorpay_order_id is not null;
 
 -- =====================================================================
 -- RLS: lock the base table. No anon/authenticated policies => no access.
@@ -361,74 +361,6 @@ create policy supports_admin_read on public.supports
   for select
   to authenticated
   using (public.is_admin());
-
-
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
--- FILE: supabase/migrations/20260616000001_zoho_integration.sql
--- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
--- Zoho Payments integration: encrypted credential storage + status metadata.
--- Secrets stored encrypted in Supabase Vault (secret 'zoho_payments'), reached
--- only via service-role RPCs. public.zoho_integration holds non-secret status.
--- Target: your OWN Supabase project. Run manually.
-
-create extension if not exists supabase_vault with schema vault cascade;
-
-create table if not exists public.zoho_integration (
-  id                smallint primary key default 1,
-  mode              text not null default 'sandbox' check (mode in ('sandbox', 'live')),
-  configured        boolean not null default false,
-  last_test_at      timestamptz,
-  last_test_ok      boolean,
-  last_test_message text,
-  updated_at        timestamptz not null default now(),
-  constraint zoho_integration_singleton check (id = 1)
-);
-
-insert into public.zoho_integration (id) values (1) on conflict (id) do nothing;
-
-alter table public.zoho_integration enable row level security;
-
-drop policy if exists "zoho_integration_authenticated_read" on public.zoho_integration;
-create policy "zoho_integration_authenticated_read"
-  on public.zoho_integration
-  for select
-  to authenticated
-  using (true);
-
-create or replace function public.set_zoho_secret(p_payload jsonb)
-returns void
-language plpgsql
-security definer
-set search_path = public, vault
-as $$
-declare
-  v_id uuid;
-begin
-  select id into v_id from vault.secrets where name = 'zoho_payments';
-  if v_id is null then
-    perform vault.create_secret(p_payload::text, 'zoho_payments', 'Zoho Payments credentials (JSON)');
-  else
-    perform vault.update_secret(v_id, p_payload::text);
-  end if;
-end;
-$$;
-
-create or replace function public.get_zoho_secret()
-returns jsonb
-language sql
-security definer
-set search_path = public, vault
-as $$
-  select decrypted_secret::jsonb
-  from vault.decrypted_secrets
-  where name = 'zoho_payments'
-  limit 1;
-$$;
-
-revoke all on function public.set_zoho_secret(jsonb) from public, anon, authenticated;
-revoke all on function public.get_zoho_secret() from public, anon, authenticated;
-grant execute on function public.set_zoho_secret(jsonb) to service_role;
-grant execute on function public.get_zoho_secret() to service_role;
 
 
 -- >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>

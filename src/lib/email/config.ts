@@ -23,7 +23,7 @@ export const EMAIL_FIELDS: {
   secret: boolean;
   help: string;
 }[] = [
-  { key: "host", label: "SMTP Host", secret: false, help: "e.g. smtp.zoho.in, smtp.gmail.com." },
+  { key: "host", label: "SMTP Host", secret: false, help: "e.g. smtp.gmail.com, smtp.office365.com." },
   { key: "port", label: "Port", secret: false, help: "465 for SSL/TLS, 587 for STARTTLS." },
   { key: "user", label: "Username", secret: false, help: "Usually your full email address." },
   { key: "pass", label: "Password", secret: true, help: "SMTP password or app-specific password." },
