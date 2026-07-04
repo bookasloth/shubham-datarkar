@@ -4,8 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import type { KitCredentials, KitFieldKey } from "./config";
 
 /**
- * Kit credential storage. Mirrors the Zoho integration: the API key + form id
- * live encrypted in Supabase Vault (secret 'kit_email'), reached only through
+ * Kit credential storage. Mirrors the Email (SMTP) integration: the API key +
+ * form id live encrypted in Supabase Vault (secret 'kit_email'), reached only through
  * the service-role RPCs (set_kit_secret / get_kit_secret). The
  * public.kit_integration row holds non-secret status. Secret values never
  * leave the server.

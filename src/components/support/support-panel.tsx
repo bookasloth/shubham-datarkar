@@ -11,7 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { ITEMS, FEE_PCT, formatMoney } from "@/lib/support/config";
 import { computeAmount } from "@/lib/support/amount";
-import { openZohoCheckout } from "@/lib/support/checkout";
+import { openRazorpayCheckout } from "@/lib/support/checkout";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MSG_MAX = 250;
@@ -47,7 +47,7 @@ export function SupportPanel() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/support/session", {
+      const res = await fetch("/api/support/order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -71,37 +71,61 @@ export function SupportPanel() {
         return;
       }
 
-      const outcome = await openZohoCheckout({
-        paymentsSessionId: data.paymentsSessionId,
-        accountId: data.accountId,
-        apiKey: data.apiKey,
+      const outcome = await openRazorpayCheckout({
+        orderId: data.orderId,
+        keyId: data.keyId,
         amount: data.amount,
         currency: data.currency,
-        symbol: data.symbol,
         email,
         name: name || undefined,
       });
 
       if (outcome.status === "paid") {
-        toast({
-          title: "Thank you!",
-          description: `Your ${formatMoney(amount.base)} support means a lot.`,
-          variant: "success",
+        const confirm = await fetch("/api/support/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: outcome.orderId,
+            razorpay_payment_id: outcome.paymentId,
+            razorpay_signature: outcome.signature,
+          }),
         });
-        setCoffeeQty(coffee.defaultQty);
-        setToffeeQty(toffee.defaultQty);
-        setMessage("");
+        const confirmData = await confirm.json().catch(() => ({}));
+        if (confirm.ok && confirmData?.ok) {
+          toast({
+            title: "Thank you!",
+            description: `Your ${formatMoney(amount.base)} support means a lot.`,
+            variant: "success",
+          });
+          setCoffeeQty(coffee.defaultQty);
+          setToffeeQty(toffee.defaultQty);
+          setMessage("");
+        } else {
+          toast({
+            title: "Couldn't verify payment",
+            description: "If you were charged, email me and I'll sort it out.",
+            variant: "danger",
+          });
+        }
+      } else if (outcome.status === "failed") {
+        // Best-effort: move the row off pending. Fire-and-forget.
+        void fetch("/api/support/confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_order_id: outcome.orderId,
+            failed: true,
+            paymentId: outcome.paymentId,
+          }),
+        });
+        toast({ title: "Payment failed", description: "No worries — try again when ready.", variant: "danger" });
       } else if (outcome.status === "cancelled") {
         toast({
           title: "Payment cancelled",
           description: "No charge was made — your details are still here.",
         });
       } else {
-        toast({
-          title: "Payment failed",
-          description: outcome.message,
-          variant: "danger",
-        });
+        toast({ title: "Payment failed", description: outcome.message, variant: "danger" });
       }
     } catch {
       toast({

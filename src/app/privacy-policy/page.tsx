@@ -40,7 +40,7 @@ const BLOCKS: LegalBlock[] = [
     list: [
       "Supabase — database and authentication.",
       "Kit (ConvertKit) — newsletter delivery.",
-      "Zoho Payments — payment processing.",
+      "Razorpay — payment processing.",
       "Vercel — hosting and performance analytics.",
     ],
   },

@@ -5,7 +5,7 @@ Production deploys run on **Vercel** (auto-deploy on push to `main`) against
 BAS project. Custom domain: shubhamdatarkar.com.
 
 Run through this checklist on first deploy and whenever a step's inputs change
-(new migration, new env var, Zoho credential rotation).
+(new migration, new env var, Razorpay key rotation).
 
 ---
 
@@ -32,6 +32,8 @@ repo `bookasloth/shubham-datarkar` to hand to it.
    Variables, scope **Production** (§1):
    - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`,
      `SUPABASE_SERVICE_ROLE_KEY` — copy from Supabase → Settings → API.
+   - `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET` — Razorpay Dashboard →
+     Settings → API Keys (start with the **test** keys).
    - `COMMENTER_TOKEN_SECRET`, `COMMENTER_OTP_PEPPER` — generate **fresh**
      production values: `openssl rand -base64 48` (run twice, distinct).
      Do **not** reuse the local-dev values.
@@ -44,22 +46,21 @@ repo `bookasloth/shubham-datarkar` to hand to it.
 7. [ ] **Enable Speed Insights** once (§3).
 8. [ ] **Configure integrations** in `/admin/integrations` (sign in at `/login`
    first):
-   - Zoho Payments — **sandbox** first (§4), then **Test Connect**.
-   - Register the Zoho **webhook** (§4 step 5):
-     `https://shubhamdatarkar.com/api/support/webhook`, events
-     `payment.succeeded` + `payment.failed`.
+   - Payments (§4) — confirm `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` are set
+     (test keys) and run a test payment end-to-end.
    - Kit / newsletter (§7) — Save + Test Connect.
    - Email / SMTP (§8) — Save + Test Connect.
 9. [ ] **Smoke-test** on production (§6 + below):
-   - Support payment in **sandbox** → row flips `pending`→`paid` in
+   - Support payment in **test mode** → row flips `pending`→`paid` in
      `/admin/payments`, supporter shows on `/support/supporters`.
    - Newsletter signup → appears in Kit.
    - Contact form → row in `/admin/contacts` + notification email + auto-reply.
    - `/admin/updates` → create a text/image/video post → it appears on
      `/support/updates` and its `/support/updates/{code}` page resolves.
-10. [ ] **Go live for payments**: once the sandbox flow is green end-to-end,
-    flip Zoho **Live mode** on, swap in live credentials + a `ZohoPay.*` refresh
-    token, Save, Test Connect, and repoint the webhook (§4 step 6).
+10. [ ] **Go live for payments**: once the test-mode flow is green end-to-end,
+    set `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` (live) in Vercel; no webhook
+    to register — Checkout returns a signature the `/api/support/confirm`
+    route verifies.
 11. [ ] **SEO go-live** (§9): confirm `/sitemap.xml` + `/robots.txt` serve the new
     site, submit the sitemap in Google Search Console, import to Bing, and
     spot-check a blog post in the Rich Results Test.
@@ -104,7 +105,9 @@ in `.env.local` for local dev). All belong to your own Supabase project.
 |---|---|---|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Supabase → Settings → API → Project URL | Public (shipped to browser). |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Supabase → Settings → API → `anon` public key | Public. RLS-restricted. |
-| `SUPABASE_SERVICE_ROLE_KEY` | yes | Supabase → Settings → API → `service_role` key | **Secret. Server-only.** Bypasses RLS; reads/writes the Vault-backed Zoho credentials and the `supports` table. Never expose to the client. |
+| `SUPABASE_SERVICE_ROLE_KEY` | yes | Supabase → Settings → API → `service_role` key | **Secret. Server-only.** Bypasses RLS; reads/writes the `supports` table. Never expose to the client. |
+| `RAZORPAY_KEY_ID` | yes | Razorpay Dashboard → Settings → API Keys | Public (shipped to browser; used to open Checkout). |
+| `RAZORPAY_KEY_SECRET` | yes | Razorpay Dashboard → Settings → API Keys | **Secret. Server-only.** Used to create orders and verify the Checkout signature. |
 | `ADMIN_EMAIL` | optional | — | If set, only this email may access `/admin`. If unset, any authenticated Supabase user passes. |
 | `COMMENTER_TOKEN_SECRET` | yes (for comments) | generate: `openssl rand -base64 48` | **Secret. Server-only.** HMAC key that signs the `sd_commenter` verified-commenter cookie. Rotating it invalidates every existing commenter session (forces re-verify). |
 | `COMMENTER_OTP_PEPPER` | yes (for comments) | generate: `openssl rand -base64 48` (a **different** value) | **Secret. Server-only.** Pepper mixed into the email-verification OTP hash at rest. Rotating it invalidates any in-flight OTP codes. |
@@ -116,9 +119,9 @@ in `.env.local` for local dev). All belong to your own Supabase project.
 > `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`),
 > use a distinct value for each, and never commit them.
 
-> Zoho Payments credentials are **not** environment variables — they are stored
-> encrypted in Supabase Vault and managed through `/admin/integrations`
-> (see step 4).
+> Razorpay keys are plain env vars (§1 above), not Vault-stored — only Kit and
+> SMTP credentials are managed through `/admin/integrations` and encrypted in
+> Supabase Vault.
 
 ---
 
@@ -131,9 +134,9 @@ idempotent (`if not exists` / `or replace`), so re-running is safe.
 2. Paste the entire contents of [`supabase/deploy/full_setup.sql`](supabase/deploy/full_setup.sql) and **Run**.
 
 This creates: `supports` + public views, admin auth helpers, `posts`,
-`subscribers`, `content`, and the **Zoho integration** (Vault extension,
-`zoho_integration` metadata table, and the `set_zoho_secret` / `get_zoho_secret`
-service-role RPCs).
+`subscribers`, `content`, and the **Vault-backed Kit/Email integrations**
+(Vault extension plus the `set_kit_secret`/`get_kit_secret` and
+`set_email_secret`/`get_email_secret` service-role RPCs).
 
 For incremental changes, apply only the new migration file(s) under
 `supabase/migrations/` instead of the whole bundle.
@@ -171,12 +174,11 @@ before the comment flow ships.
 
 ```sql
 select exists (select 1 from pg_extension where extname = 'supabase_vault') as vault_installed;
-select id, mode, configured from public.zoho_integration;            -- expect 1 row: id=1, sandbox, false
 select p.proname,
        has_function_privilege('service_role', p.oid, 'execute')  as service_role_can,
        has_function_privilege('authenticated', p.oid, 'execute') as authenticated_can
 from pg_proc p join pg_namespace n on n.oid = p.pronamespace
-where n.nspname = 'public' and p.proname in ('set_zoho_secret','get_zoho_secret');
+where n.nspname = 'public' and p.proname in ('set_kit_secret','get_kit_secret');
 -- expect both functions: service_role_can=true, authenticated_can=false
 ```
 
@@ -199,60 +201,54 @@ until enabled).
 
 ---
 
-## 4. Configure Zoho Payments (post-deploy, in the admin)
+## 4. Payments (Razorpay)
 
-Credentials are entered through the UI, not env vars. Start in **sandbox**.
+Credentials are plain environment variables (§1) — `RAZORPAY_KEY_ID` +
+`RAZORPAY_KEY_SECRET` from Razorpay Dashboard → Settings → API Keys. No
+`/admin/integrations` panel for payments, and no webhook to register.
 
-1. Sign in to `/login`, go to **`/admin/integrations`**.
-2. Leave **Live mode** off (sandbox). Fill in:
+The flow: `/api/support/order` creates a Razorpay order server-side, the
+client opens Razorpay Checkout with that order, and Checkout returns a
+signed payload (`razorpay_order_id`, `razorpay_payment_id`,
+`razorpay_signature`) that `/api/support/confirm` verifies server-side
+against `RAZORPAY_KEY_SECRET` before flipping the `supports` row to `paid`.
 
-   | Field | Where to find it |
-   |---|---|
-   | Account ID | Zoho Payments → Settings → Developer Space |
-   | API Key | Zoho Payments → Settings → Developer Space → API Keys |
-   | OAuth Client ID | Zoho API Console (api-console.zoho.in) → your Self Client app |
-   | OAuth Client Secret | same Self Client app |
-   | OAuth Refresh Token | exchange a grant token once (scope `ZohoPaySandbox.*` for sandbox, `ZohoPay.*` for live) |
-   | Webhook Secret | Zoho Payments → Settings → Webhooks → signing secret |
-
-3. **Save credentials** (secrets are encrypted into Vault; blank fields keep the
-   existing value on later edits).
-4. Click **Test Connect** — it exchanges the refresh token for an access token.
-   Green = credentials valid. No money moves.
-5. **Register the webhook** in Zoho Payments → Settings → Webhooks:
-   - URL: `https://shubhamdatarkar.com/api/support/webhook`
-   - Events: `payment.succeeded`, `payment.failed`
-   - Copy the signing secret into the **Webhook Secret** field in the admin and Save.
-6. To go live later: flip **Live mode** on, replace the credentials with live
-   values (and a `ZohoPay.*`-scoped refresh token), Save, Test Connect again, and
-   point the webhook at the live events.
+1. Set `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET` (**test** keys first) in
+   Vercel (§1) and `.env.local` for local dev.
+2. Test with a real small payment on `/support`, then confirm the row in
+   **/admin/payments** flips to `paid` and the supporter appears on
+   `/support/supporters`.
+3. Test a refund from the Razorpay Dashboard and confirm it reflects there
+   (refunds don't currently write back to `supports`).
+4. To go live: swap in the **live** `RAZORPAY_KEY_ID` + `RAZORPAY_KEY_SECRET`
+   in Vercel. Nothing else changes — same routes, no webhook to repoint.
 
 ---
 
-## 6. Smoke-test the payment flow (sandbox)
+## 6. Smoke-test the payment flow (test mode)
 
 The full payment write path is built:
 
-- `src/app/api/support/session/route.ts` — validates + recomputes the amount
-  server-side, inserts a pending `supports` row, mints a Zoho token, creates a
-  payment session.
-- `src/lib/support/checkout.ts` + `support-panel.tsx` — open the Zoho checkout
-  widget with the returned session.
-- `src/app/api/support/webhook/route.ts` — verifies the HMAC signature and flips
-  the row to `paid`/`failed`.
+- `src/app/api/support/order/route.ts` — validates + recomputes the amount
+  server-side, inserts a pending `supports` row, creates a Razorpay order.
+- `src/lib/support/checkout.ts` + `support-panel.tsx` — open Razorpay Checkout
+  with the returned order.
+- `src/app/api/support/confirm/route.ts` — verifies the Checkout signature and
+  flips the row to `paid`/`failed`.
 
-After credentials + webhook are configured (steps 4–5), test on production in
-**sandbox** mode:
+After `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` (test keys) are set (§4), test on
+production in **test mode**:
 
 1. Go to `/support`, pick a coffee/toffee, enter an email, submit.
-2. The Zoho sandbox widget opens — complete a sandbox payment.
+2. The Razorpay Checkout widget opens — complete a payment with a Razorpay test
+   card.
 3. Confirm the row in **/admin/payments** flips from `pending` to `paid`
-   (the webhook does this; allow a few seconds).
+   (the confirm route does this immediately after Checkout succeeds).
 4. Confirm the supporter appears on `/support/supporters`.
 
-If the row stays `pending`, the webhook isn't reaching the server — re-check the
-webhook URL + signing secret. Only flip to live mode once the sandbox flow is
-green end-to-end.
+If the row stays `pending`, the client never called `/api/support/confirm` (or
+the signature check failed) — check the browser console / server logs. Only
+switch to live keys once the test-mode flow is green end-to-end.
 
 ---
 
@@ -282,8 +278,8 @@ you + an auto-reply to the sender. Email is fail-safe and no-ops until set up.
 1. In **`/admin/integrations` → Email (SMTP)**, set the SSL/TLS toggle (on = 465,
    off = 587) and fill in: SMTP host, port, username, password, from name,
    from email, and the notify email (where submissions are sent to you).
-   - Common: Zoho Mail `smtp.zoho.in` 465; Gmail `smtp.gmail.com` 465 with an
-     app password. The from email must be allowed by the SMTP host.
+   - Common: Gmail `smtp.gmail.com` 465 with an app password; Outlook/Microsoft 365
+     `smtp.office365.com` 587. The from email must be allowed by the SMTP host.
 2. **Save** (encrypted into Vault), then **Test Connect** — verifies the SMTP
    login without sending. Green = good.
 3. Verify end-to-end: submit `/contact`, confirm the row in **/admin/contacts**

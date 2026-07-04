@@ -1,14 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { ITEMS, FEE_PCT, CURRENCY } from "@/lib/support/config";
-import { getZohoCredentials } from "@/lib/zoho/store";
-import { fetchAccessToken } from "@/lib/zoho/oauth";
-import { createPaymentSession } from "@/lib/zoho/session";
-import {
-  insertPendingSupport,
-  attachSession,
-  markSupportStatus,
-} from "@/lib/support/server";
+import { createOrder, razorpayKeyId } from "@/lib/razorpay/client";
+import { insertPendingSupport, attachOrder, markSupportStatus } from "@/lib/support/server";
 
 export const dynamic = "force-dynamic";
 
@@ -18,8 +12,8 @@ const MAX_UNITS = 1000;
 
 /**
  * Start a support payment: validate + recompute the amount server-side (never
- * trust the client), insert a pending row, mint a Zoho access token, create a
- * payment session, and hand the client what the checkout widget needs.
+ * trust the client), insert a pending row, create a Razorpay order, and hand the
+ * client what Checkout needs. The confirm route is the source of truth for paid.
  */
 export async function POST(request: Request) {
   let body: Record<string, unknown>;
@@ -48,58 +42,35 @@ export async function POST(request: Request) {
   const fee = coversFee ? Math.round(base * FEE_PCT) : 0;
   const total = base + fee;
 
-  const creds = await getZohoCredentials();
-  if (!creds) {
-    return NextResponse.json({ error: "Payments are not configured yet." }, { status: 503 });
-  }
-
   // 1. Pending row.
   const inserted = await insertPendingSupport({
-    name,
-    email,
-    message,
-    coffeeUnits,
-    toffeeUnits,
-    currency: CURRENCY.code,
-    baseAmount: base,
-    feeAmount: fee,
-    totalAmount: total,
-    coversFee,
-    anonymous,
+    name, email, message, coffeeUnits, toffeeUnits,
+    currency: CURRENCY.code, baseAmount: base, feeAmount: fee, totalAmount: total,
+    coversFee, anonymous,
   });
   if ("error" in inserted) {
     return NextResponse.json({ error: "Could not record support." }, { status: 500 });
   }
   const supportId = inserted.id;
 
-  // 2. Access token.
-  const token = await fetchAccessToken(creds);
-  if (!token.ok) {
-    await markSupportStatus({ supportId, status: "failed" });
-    return NextResponse.json({ error: "Payment gateway authentication failed." }, { status: 502 });
-  }
-
-  // 3. Payment session.
-  const session = await createPaymentSession(creds, token.token, {
-    amount: total,
+  // 2. Razorpay order (amount in paise).
+  const order = await createOrder({
+    amountPaise: Math.round(total * 100),
     currency: CURRENCY.code,
-    description: `Support: ${coffeeUnits} coffee, ${toffeeUnits} toffee`,
-    referenceNumber: supportId,
+    receipt: supportId,
+    notes: { support_id: supportId },
   });
-  if (!session.ok) {
+  if (!order.ok) {
     await markSupportStatus({ supportId, status: "failed" });
-    return NextResponse.json({ error: session.error }, { status: 502 });
+    return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 502 });
   }
 
-  await attachSession(supportId, session.sessionId);
+  await attachOrder(supportId, order.id);
 
   return NextResponse.json({
     supportId,
-    paymentsSessionId: session.sessionId,
-    accessKey: session.accessKey,
-    accountId: creds.accountId,
-    apiKey: creds.apiKey,
-    mode: creds.mode,
+    orderId: order.id,
+    keyId: razorpayKeyId(),
     amount: total,
     currency: CURRENCY.code,
     symbol: CURRENCY.symbol,
