@@ -81,7 +81,9 @@ export async function openRazorpayCheckout(s: CheckoutSession): Promise<Checkout
     const rzp = new window.Razorpay!({
       key: s.keyId,
       order_id: s.orderId,
-      amount: Math.round(s.amount * 100),
+      // amount is not set here: Razorpay derives the charge from the server-created
+      // order (order_id), so passing it client-side would only imply the client
+      // sets the price. Kept off deliberately.
       currency: s.currency,
       name: "Shubham Datarkar",
       description: "Support",
