@@ -84,10 +84,10 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
   );
 
   const tileColor = (t?: Tile) =>
-    t === "correct" ? "bg-green-500 text-white border-green-500"
-      : t === "present" ? "bg-yellow-500 text-white border-yellow-500"
-      : t === "absent" ? "bg-neutral-400 text-white border-neutral-400"
-      : "border-neutral-300";
+    t === "correct" ? "bg-green-600 text-white border-green-600 dark:bg-green-500 dark:border-green-500"
+      : t === "present" ? "bg-yellow-500 text-white border-yellow-500 dark:bg-yellow-400 dark:border-yellow-400 dark:text-black"
+      : t === "absent" ? "bg-muted-foreground/60 text-white border-muted-foreground/60"
+      : "border-border";
 
   function share() {
     const head = `shubhamdatarkar.com/games · Alfazy #${puzzleNumber} ${status === "won" ? `${guesses.length}/6` : "X/6"}`;
@@ -97,7 +97,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <h1 className="text-xl font-bold">Alfazy #{puzzleNumber}{isArchive && " (archive)"}</h1>
+      <h1 className="font-display text-xl font-bold">Alfazy #{puzzleNumber}{isArchive && " (archive)"}</h1>
 
       {/* grid */}
       <div className="grid grid-rows-6 gap-1.5">
@@ -108,7 +108,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
               {Array.from({ length: ALFAZY.length }).map((_, c) => (
                 <div
                   key={c}
-                  className={`flex h-12 w-12 items-center justify-center rounded border-2 text-xl font-bold uppercase ${r < guesses.length ? tileColor(rows[r][c]) : "border-neutral-300"}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-btn border-2 text-xl font-bold uppercase ${r < guesses.length ? tileColor(rows[r][c]) : "border-border"}`}
                 >
                   {g[c] ?? ""}
                 </div>
@@ -118,14 +118,14 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
         })}
       </div>
 
-      {toast && <div className="rounded bg-black px-3 py-1 text-sm text-white">{toast}</div>}
+      {toast && <div className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">{toast}</div>}
 
       {status !== "playing" ? (
         <div className="flex flex-col items-center gap-2">
           <p className="font-semibold">
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.toUpperCase()}`}
           </p>
-          <button onClick={share} className="rounded-full bg-black px-5 py-2 text-sm font-semibold text-white">
+          <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
             Share
           </button>
         </div>
@@ -149,12 +149,12 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
 
 function KeyBtn({ label, onClick, state, wide }: { label: string; onClick: () => void; state?: Tile; wide?: boolean }) {
   const bg =
-    state === "correct" ? "bg-green-500 text-white"
-      : state === "present" ? "bg-yellow-500 text-white"
-      : state === "absent" ? "bg-neutral-400 text-white"
-      : "bg-neutral-200";
+    state === "correct" ? "bg-green-600 text-white dark:bg-green-500"
+      : state === "present" ? "bg-yellow-500 text-white dark:bg-yellow-400 dark:text-black"
+      : state === "absent" ? "bg-muted-foreground/60 text-white"
+      : "bg-secondary text-secondary-foreground";
   return (
-    <button onClick={onClick} className={`h-12 rounded font-semibold uppercase ${bg} ${wide ? "px-3" : "w-8"}`}>
+    <button onClick={onClick} className={`h-12 rounded-btn font-semibold uppercase transition-ui ${bg} ${wide ? "px-3" : "w-8"}`}>
       {label}
     </button>
   );
