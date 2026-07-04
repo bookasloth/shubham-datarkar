@@ -1,52 +1,104 @@
 import Link from "next/link";
 import { getAllPostsAdmin } from "@/lib/blog/queries";
-import { countEntities } from "@/lib/content/queries";
 import { getSubscribers } from "@/lib/subscribers/queries";
-import { getPaymentStats } from "@/lib/payments/queries";
+import { countEntities } from "@/lib/content/queries";
+import { getPaymentStats, getRecentSupports } from "@/lib/payments/queries";
+import { getContacts } from "@/lib/contact/queries";
 import { ENTITY_LIST } from "@/lib/content/registry";
+import { formatDate } from "@/lib/utils";
+import { AdminButton, StatusBadge } from "@/components/admin";
+import { KPIWidget, RecentCard, postStatusCounts } from "@/components/admin/widgets";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDashboardPage() {
-  const posts = await getAllPostsAdmin();
-  const published = posts.filter((p) => p.status === "published").length;
-  const drafts = posts.filter((p) => p.status === "draft").length;
-  const scheduled = posts.filter((p) => p.status === "scheduled").length;
+const inr = (n: number) =>
+  new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
-  const entityCounts = await Promise.all(
-    ENTITY_LIST.map(async (e) => ({ def: e, count: await countEntities(e.table) })),
-  );
-  const subscribers = await getSubscribers();
-  const payments = await getPaymentStats();
+const postTone = (s: string) =>
+  s === "published" ? "success" : s === "scheduled" ? "info" : "neutral";
+const supportTone = (s: string) =>
+  s === "paid" ? "success" : s === "failed" ? "danger" : "warning";
+
+export default async function AdminDashboardPage() {
+  // One parallel batch; each array is reused for both its count and its recent list.
+  const [posts, subscribers, payments, recentSupports, contacts, entityCounts] = await Promise.all([
+    getAllPostsAdmin(),
+    getSubscribers(),
+    getPaymentStats(),
+    getRecentSupports(5),
+    getContacts(1000), // no count() helper; 1000 >> real contact volume, so length is accurate
+    Promise.all(ENTITY_LIST.map(async (e) => ({ def: e, count: await countEntities(e.table) }))),
+  ]);
+
+  const { published, drafts, scheduled } = postStatusCounts(posts);
+  const recentPosts = [...posts]
+    .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+    .slice(0, 5);
+  const recentSubs = subscribers.slice(0, 5);
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-
-      <h2 className="mt-8 text-xs font-medium uppercase tracking-wide text-muted-foreground">Posts</h2>
-      <div className="mt-3 grid grid-cols-3 gap-4">
-        <Stat label="Published" value={published} href="/admin/posts" />
-        <Stat label="Drafts" value={drafts} href="/admin/posts" />
-        <Stat label="Scheduled" value={scheduled} href="/admin/posts" />
+    <div className="flex flex-col gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold tracking-tight text-admin-text">Dashboard</h1>
+        <div className="flex gap-2">
+          <AdminButton asChild size="sm"><Link href="/admin/posts/new">New post</Link></AdminButton>
+          <AdminButton asChild size="sm" variant="secondary"><Link href="/admin/updates/new">New update</Link></AdminButton>
+        </div>
       </div>
 
-      <h2 className="mt-8 text-xs font-medium uppercase tracking-wide text-muted-foreground">Content</h2>
-      <div className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3">
+      {/* KPIs */}
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+        <KPIWidget label="Published" value={published} href="/admin/posts" />
+        <KPIWidget label="Drafts" value={drafts} href="/admin/posts" />
+        <KPIWidget label="Scheduled" value={scheduled} href="/admin/posts" />
+        <KPIWidget label="Subscribers" value={subscribers.length} href="/admin/subscribers" />
+        <KPIWidget label="Contacts" value={contacts.length} href="/admin/contacts" />
+        <KPIWidget label="Paid supports" value={payments.paidCount} href="/admin/payments" />
+        <KPIWidget label="Total raised" value={inr(payments.raised)} href="/admin/payments" />
+        <KPIWidget label="This month" value={inr(payments.thisMonth)} hint="Paid this calendar month" href="/admin/payments" />
+      </div>
+
+      {/* Content entity counts */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         {entityCounts.map(({ def, count }) => (
-          <Stat key={def.key} label={def.label} value={count} href={`/admin/content/${def.key}`} />
+          <KPIWidget key={def.key} label={def.label} value={count} href={`/admin/content/${def.key}`} />
         ))}
-        <Stat label="Subscribers" value={subscribers.length} href="/admin/subscribers" />
-        <Stat label="Paid supports" value={payments.paidCount} href="/admin/payments" />
+      </div>
+
+      {/* Recent activity */}
+      <div className="grid gap-4 lg:grid-cols-3">
+        <RecentCard title="Recent posts" viewAllHref="/admin/posts" isEmpty={recentPosts.length === 0}>
+          {recentPosts.map((p) => (
+            <li key={p.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <Link href="/admin/posts" className="min-w-0 flex-1 truncate text-sm text-admin-text hover:text-admin-accent">
+                {p.title}
+              </Link>
+              <StatusBadge tone={postTone(p.status)}>{p.status}</StatusBadge>
+            </li>
+          ))}
+        </RecentCard>
+
+        <RecentCard title="Recent subscribers" viewAllHref="/admin/subscribers" isEmpty={recentSubs.length === 0}>
+          {recentSubs.map((s) => (
+            <li key={s.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <span className="min-w-0 flex-1 truncate text-sm text-admin-text">{s.email}</span>
+              <span className="shrink-0 text-xs text-admin-text-muted">{formatDate(s.createdAt)}</span>
+            </li>
+          ))}
+        </RecentCard>
+
+        <RecentCard title="Recent supports" viewAllHref="/admin/payments" isEmpty={recentSupports.length === 0}>
+          {recentSupports.map((t) => (
+            <li key={t.id} className="flex items-center justify-between gap-3 px-4 py-2.5">
+              <span className="min-w-0 flex-1 truncate text-sm text-admin-text">{t.name || t.email}</span>
+              <span className="flex shrink-0 items-center gap-2">
+                <span className="text-xs text-admin-text-muted">{inr(t.total)}</span>
+                <StatusBadge tone={supportTone(t.status)}>{t.status}</StatusBadge>
+              </span>
+            </li>
+          ))}
+        </RecentCard>
       </div>
     </div>
-  );
-}
-
-function Stat({ label, value, href }: { label: string; value: number; href: string }) {
-  return (
-    <Link href={href} className="rounded-card border border-border p-4 hover:bg-accent">
-      <div className="text-2xl font-bold">{value}</div>
-      <div className="text-xs uppercase text-muted-foreground">{label}</div>
-    </Link>
   );
 }
