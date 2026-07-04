@@ -6,7 +6,7 @@ const allHrefs = ADMIN_NAV.flatMap((g) => g.items.map((i) => i.href));
 describe("ADMIN_NAV", () => {
   it("covers every legacy admin route", () => {
     for (const href of [
-      "/admin", "/admin/posts", "/admin/updates", "/admin/links",
+      "/admin", "/admin/posts", "/admin/updates", "/admin/photos", "/admin/links",
       "/admin/content/case-studies", "/admin/content/projects", "/admin/content/products",
       "/admin/content/services", "/admin/content/testimonials",
       "/admin/subscribers", "/admin/contacts", "/admin/payments", "/admin/affiliate", "/admin/integrations",
