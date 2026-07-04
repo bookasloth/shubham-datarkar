@@ -1,17 +1,15 @@
 import { isToday } from "@/lib/daily";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { requireGameUser } from "@/lib/games/session";
+import { notFound } from "next/navigation";
 import HitAndBlowBoard from "@/components/games/HitAndBlowBoard";
 
 export default async function HitAndBlowArchive({ params }: { params: Promise<{ puzzle: string }> }) {
   const { puzzle } = await params;
   const n = Number(puzzle);
-  if (!Number.isInteger(n)) redirect("/games/hit-and-blow");
+  if (!Number.isInteger(n) || n < 0) notFound();
 
   if (!isToday(n)) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) redirect(`/games/login?next=/games/hit-and-blow/${n}`);
+    await requireGameUser(`/games/hit-and-blow/${n}`);
   }
   return <HitAndBlowBoard puzzleNumber={n} isArchive={!isToday(n)} />;
 }

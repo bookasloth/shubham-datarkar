@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { HIT_AND_BLOW, secretFor, scoreGuess, isWin, isValidGuess, shareSummary } from "@/lib/games/hit-and-blow";
+import { submitResult } from "@/lib/games/submit-result";
+import { useGameAuth } from "@/components/games/use-game-auth";
 
 type Row = { guess: string; hits: number; blows: number };
 type Saved = { history: Row[]; status: "playing" | "won" | "lost" };
@@ -14,6 +17,8 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
   const [current, setCurrent] = useState("");
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
+  const { user } = useGameAuth();
+  const submitted = useRef(false);
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
@@ -28,6 +33,22 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
     if (history.length || status !== "playing")
       localStorage.setItem(storageKey, JSON.stringify({ history, status }));
   }, [history, status, storageKey]);
+
+  // submit result once per finished game, only when authed
+  useEffect(() => {
+    if (isArchive) return; // never persist replays of past puzzles (would corrupt streaks)
+    if (status === "playing") return;
+    if (!user) return;
+    if (submitted.current) return;
+    submitted.current = true;
+    void submitResult({
+      game: "hit_and_blow",
+      puzzleNumber,
+      status,
+      guesses: history.map((r) => r.guess),
+      timeMs: null,
+    });
+  }, [isArchive, status, user, history, puzzleNumber]);
 
   function flash(m: string) {
     setToast(m);
@@ -84,6 +105,14 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
           <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
             Share
           </button>
+          {!user && (
+            <p className="text-sm text-muted-foreground">
+              <Link href="/games/login?next=/games/hit-and-blow" className="underline underline-offset-4 hover:text-foreground">
+                Log in
+              </Link>{" "}
+              to save your streak.
+            </p>
+          )}
         </div>
       ) : (
         <div className="flex gap-2">
