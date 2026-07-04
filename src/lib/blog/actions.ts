@@ -11,6 +11,14 @@ import type { ContentBlock } from "@/lib/data/types";
 
 type PostFields = ReturnType<typeof fields>;
 
+/** Revalidate every public ISR page that renders posts, so edits go live now. */
+function revalidateBlog(): void {
+  revalidatePath("/"); // home shows featured posts
+  revalidateBlog();
+  revalidatePath("/blog/[category]", "page");
+  revalidatePath("/blog/[category]/[slug]", "page");
+}
+
 /** Ping IndexNow for a post that is published AND already live (not scheduled). */
 async function notifyIfLive(p: PostFields): Promise<void> {
   if (p.status !== "published" || !p.published_at) return;
@@ -66,7 +74,7 @@ export async function createPost(formData: FormData): Promise<void> {
   const data = fields(formData);
   const { error } = await supabase.from("posts").insert(data);
   if (error) throw new Error(error.message);
-  revalidatePath("/blog");
+  revalidateBlog();
   await notifyIfLive(data);
   redirect("/admin/posts");
 }
@@ -77,7 +85,7 @@ export async function updatePost(id: string, formData: FormData): Promise<void> 
   const data = fields(formData);
   const { error } = await supabase.from("posts").update(data).eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/blog");
+  revalidateBlog();
   await notifyIfLive(data);
   redirect("/admin/posts");
 }
@@ -87,6 +95,6 @@ export async function deletePost(id: string): Promise<void> {
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.from("posts").delete().eq("id", id);
   if (error) throw new Error(error.message);
-  revalidatePath("/blog");
+  revalidateBlog();
   redirect("/admin/posts");
 }
