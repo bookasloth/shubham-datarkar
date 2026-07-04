@@ -9,3 +9,4 @@ export type { SearchInputProps } from "./ui/search-input";
 export { AdminEmptyState } from "./feedback/empty-state";
 export { AdminLoadingState } from "./feedback/loading-state";
 export { AdminErrorState } from "./feedback/error-state";
+export { PageHeader } from "./ui/page-header";
