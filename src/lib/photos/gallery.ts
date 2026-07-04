@@ -4,8 +4,6 @@
  * both server and client code.
  */
 
-import type { Photo } from "@/lib/photos/types";
-
 /**
  * Formats a photo's ISO `createdAt` into a short, human month-year label
  * (e.g. "July 2026"). Returns an empty string for missing/invalid input so
@@ -51,22 +49,4 @@ export function nextOffset(loadedCount: number): number {
 export function wrapIndex(index: number, count: number): number {
   if (count <= 0) return 0;
   return ((index % count) + count) % count;
-}
-
-/**
- * Predicate: does a photo match the active tag? A null/empty active tag means
- * "All" and matches everything. Matching is exact against the photo's tags.
- */
-export function matchesTag(photo: Pick<Photo, "tags">, activeTag: string | null): boolean {
-  if (!activeTag) return true;
-  return (photo.tags ?? []).includes(activeTag);
-}
-
-/**
- * Filters a list of photos by the active tag (see `matchesTag`).
- * Returns the same reference semantics as `Array.prototype.filter`.
- */
-export function filterByTag<T extends Pick<Photo, "tags">>(photos: T[], activeTag: string | null): T[] {
-  if (!activeTag) return photos;
-  return photos.filter((p) => matchesTag(p, activeTag));
 }

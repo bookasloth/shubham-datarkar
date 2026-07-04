@@ -96,6 +96,7 @@ describe("likes store", () => {
       // No storage to persist to; it must not throw. Returns the intended
       // next state (true) so a component optimistic-updates gracefully.
       expect(() => toggleLike("a")).not.toThrow();
+      expect(toggleLike("a")).toBe(true);
     });
   });
 });

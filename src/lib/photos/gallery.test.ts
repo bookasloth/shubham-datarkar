@@ -4,8 +4,6 @@ import {
   formatPhotoDate,
   computeHasMore,
   nextOffset,
-  matchesTag,
-  filterByTag,
   wrapIndex,
 } from "./gallery";
 
@@ -88,42 +86,5 @@ describe("wrapIndex", () => {
     expect(wrapIndex(0, 1)).toBe(0);
     expect(wrapIndex(1, 1)).toBe(0);
     expect(wrapIndex(-1, 1)).toBe(0);
-  });
-});
-
-describe("matchesTag", () => {
-  it("matches everything when active tag is null/empty", () => {
-    expect(matchesTag({ tags: ["a"] }, null)).toBe(true);
-    expect(matchesTag({ tags: [] }, "")).toBe(true);
-  });
-
-  it("matches only when the tag is present", () => {
-    expect(matchesTag({ tags: ["nature", "sunset"] }, "sunset")).toBe(true);
-    expect(matchesTag({ tags: ["nature"] }, "sunset")).toBe(false);
-  });
-
-  it("handles missing/undefined tags safely", () => {
-    expect(matchesTag({ tags: undefined as unknown as string[] }, "sunset")).toBe(false);
-  });
-});
-
-describe("filterByTag", () => {
-  const photos = [
-    { id: "1", tags: ["nature"] },
-    { id: "2", tags: ["city", "nature"] },
-    { id: "3", tags: ["city"] },
-  ];
-
-  it("returns all when no active tag", () => {
-    expect(filterByTag(photos, null)).toHaveLength(3);
-  });
-
-  it("filters to photos carrying the tag", () => {
-    const result = filterByTag(photos, "nature");
-    expect(result.map((p) => p.id)).toEqual(["1", "2"]);
-  });
-
-  it("returns empty when nothing matches", () => {
-    expect(filterByTag(photos, "space")).toEqual([]);
   });
 });

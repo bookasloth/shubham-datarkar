@@ -73,68 +73,14 @@ export async function getPublishedPhotos({
   }
 }
 
-/** Count of published photos, optionally filtered by tag. */
-export async function getPublishedPhotosCount(tag?: string): Promise<number> {
-  try {
-    let query = supabaseAnon()
-      .from("photos")
-      .select("id", { count: "exact", head: true })
-      .eq("published", true);
-
-    if (tag) {
-      query = query.contains("tags", [tag]);
-    }
-
-    const { count, error } = await query;
-    if (error) throw error;
-    return count ?? 0;
-  } catch (e) {
-    warn("getPublishedPhotosCount", e);
-    return 0;
-  }
-}
-
-/** Admin: all photos (incl. unpublished), ordered by sort_order asc then created_at desc. */
-export async function getAllPhotos(): Promise<Photo[]> {
-  try {
-    const supabase = await supabaseAuthServer();
-    const { data, error } = await supabase
-      .from("photos")
-      .select(PHOTO_COLS)
-      .order("sort_order", { ascending: true })
-      .order("created_at", { ascending: false });
-    if (error) throw error;
-    return ((data as DbRow[]) ?? []).map(mapRow);
-  } catch (e) {
-    warn("getAllPhotos", e);
-    return [];
-  }
-}
-
-/** Admin: one photo by id, or null. */
-export async function getPhotoById(id: string): Promise<Photo | null> {
-  try {
-    const supabase = await supabaseAuthServer();
-    const { data, error } = await supabase
-      .from("photos")
-      .select(PHOTO_COLS)
-      .eq("id", id)
-      .maybeSingle();
-    if (error) throw error;
-    return data ? mapRow(data as DbRow) : null;
-  } catch (e) {
-    warn("getPhotoById", e);
-    return null;
-  }
-}
-
 /**
- * Admin: all photos, error-surfacing variant of {@link getAllPhotos}.
+ * Admin: all photos, error-surfacing variant of the (removed) `getAllPhotos`.
  *
- * Task 1 carryover: `getAllPhotos()` swallows DB/auth failures into `[]`,
- * indistinguishable from a genuinely empty gallery. The admin list must not
- * render "no photos" when the real cause is a failed fetch, so this variant
- * lets the error propagate for the page to catch and show an error state.
+ * Task 1 carryover: a plain `getAllPhotos()` would swallow DB/auth failures
+ * into `[]`, indistinguishable from a genuinely empty gallery. The admin list
+ * must not render "no photos" when the real cause is a failed fetch, so this
+ * variant lets the error propagate for the page to catch and show an error
+ * state.
  */
 export async function getAllPhotosAdmin(): Promise<Photo[]> {
   const supabase = await supabaseAuthServer();
@@ -148,7 +94,7 @@ export async function getAllPhotosAdmin(): Promise<Photo[]> {
 }
 
 /**
- * Admin: one photo by id, error-surfacing variant of {@link getPhotoById}.
+ * Admin: one photo by id, error-surfacing variant of a plain by-id lookup.
  * Returns `null` ONLY for a genuine not-found; a DB/auth failure throws so the
  * edit page can distinguish "no such photo" from "fetch failed".
  */
