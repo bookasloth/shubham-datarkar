@@ -61,6 +61,10 @@ export async function POST(request: Request) {
     notes: { support_id: supportId },
   });
   if (!order.ok) {
+    console.warn(
+      `[support] Razorpay order failed (keyId=${process.env.RAZORPAY_KEY_ID ?? "MISSING"}):`,
+      order.error,
+    );
     await markSupportStatus({ supportId, status: "failed" });
     return NextResponse.json({ error: "Could not start the payment. Please try again." }, { status: 502 });
   }
