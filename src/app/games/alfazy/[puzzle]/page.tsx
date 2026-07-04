@@ -1,17 +1,15 @@
 import { isToday } from "@/lib/daily";
-import { createClient } from "@/lib/supabase/server";
-import { redirect } from "next/navigation";
+import { requireGameUser } from "@/lib/games/session";
+import { notFound } from "next/navigation";
 import AlfazyBoard from "@/components/games/AlfazyBoard";
 
 export default async function AlfazyArchive({ params }: { params: Promise<{ puzzle: string }> }) {
   const { puzzle } = await params;
   const n = Number(puzzle);
-  if (!Number.isInteger(n)) redirect("/games/alfazy");
+  if (!Number.isInteger(n) || n < 0) notFound();
 
   if (!isToday(n)) {
-    const supabase = await createClient();
-    const { data } = await supabase.auth.getUser();
-    if (!data.user) redirect(`/games/login?next=/games/alfazy/${n}`);
+    await requireGameUser(`/games/alfazy/${n}`);
   }
   return <AlfazyBoard puzzleNumber={n} isArchive={!isToday(n)} />;
 }
