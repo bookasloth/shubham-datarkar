@@ -128,6 +128,41 @@ export async function getPhotoById(id: string): Promise<Photo | null> {
   }
 }
 
+/**
+ * Admin: all photos, error-surfacing variant of {@link getAllPhotos}.
+ *
+ * Task 1 carryover: `getAllPhotos()` swallows DB/auth failures into `[]`,
+ * indistinguishable from a genuinely empty gallery. The admin list must not
+ * render "no photos" when the real cause is a failed fetch, so this variant
+ * lets the error propagate for the page to catch and show an error state.
+ */
+export async function getAllPhotosAdmin(): Promise<Photo[]> {
+  const supabase = await supabaseAuthServer();
+  const { data, error } = await supabase
+    .from("photos")
+    .select(PHOTO_COLS)
+    .order("sort_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data as DbRow[]) ?? []).map(mapRow);
+}
+
+/**
+ * Admin: one photo by id, error-surfacing variant of {@link getPhotoById}.
+ * Returns `null` ONLY for a genuine not-found; a DB/auth failure throws so the
+ * edit page can distinguish "no such photo" from "fetch failed".
+ */
+export async function getPhotoByIdAdmin(id: string): Promise<Photo | null> {
+  const supabase = await supabaseAuthServer();
+  const { data, error } = await supabase
+    .from("photos")
+    .select(PHOTO_COLS)
+    .eq("id", id)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapRow(data as DbRow) : null;
+}
+
 /** Distinct tags across published photos. */
 export async function getDistinctTags(): Promise<string[]> {
   try {
