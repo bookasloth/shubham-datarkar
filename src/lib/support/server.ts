@@ -4,8 +4,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 
 /**
  * Server-only writes to the `supports` table (service-role, RLS bypass).
- * A support is created `pending` by the session route and flipped to
- * `paid`/`failed` by the Zoho webhook.
+ * A support is created `pending` by the order route and flipped to
+ * `paid`/`failed` by the confirm route after Razorpay signature verification.
  */
 
 export type PendingInput = {
@@ -48,12 +48,12 @@ export async function insertPendingSupport(
   return { id: String(data.id) };
 }
 
-export async function attachSession(id: string, sessionId: string): Promise<void> {
+export async function attachOrder(id: string, orderId: string): Promise<void> {
   const { error } = await supabaseAdmin()
     .from("supports")
-    .update({ zoho_session_id: sessionId })
+    .update({ razorpay_order_id: orderId })
     .eq("id", id);
-  if (error) console.warn("[support] attachSession failed:", error.message);
+  if (error) console.warn("[support] attachOrder failed:", error.message);
 }
 
 export type SupportRow = { id: string; name: string | null; anonymous: boolean };
@@ -66,20 +66,20 @@ export type SupportRow = { id: string; name: string | null; anonymous: boolean }
  * fields so the caller can build that post without a second query.
  */
 export async function markSupportStatus(opts: {
-  sessionId?: string | null;
+  orderId?: string | null;
   supportId?: string | null;
   status: "paid" | "failed";
   paymentId?: string | null;
 }): Promise<{ updated: boolean; support?: SupportRow }> {
   const patch: Record<string, unknown> = { status: opts.status };
-  if (opts.paymentId) patch.zoho_payment_id = opts.paymentId;
+  if (opts.paymentId) patch.razorpay_payment_id = opts.paymentId;
 
   let q = supabaseAdmin().from("supports").update(patch);
-  if (opts.sessionId) q = q.eq("zoho_session_id", opts.sessionId);
+  if (opts.orderId) q = q.eq("razorpay_order_id", opts.orderId);
   else if (opts.supportId) q = q.eq("id", opts.supportId);
   else return { updated: false };
 
-  // Idempotency guard: skip rows already at the target status (webhook re-delivery).
+  // Idempotency guard: skip rows already at the target status.
   q = q.neq("status", opts.status);
 
   const { data, error } = await q.select("id, name, anonymous");
