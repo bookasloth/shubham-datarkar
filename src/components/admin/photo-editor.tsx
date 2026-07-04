@@ -53,11 +53,21 @@ export function PhotoEditor({
 
         <CldUploadWidget
           uploadPreset={UPLOAD_PRESET}
+          // Restrict to local-file upload. Other sources (Google Drive, Unsplash,
+          // etc.) load extra iframe content that a fresh/free Cloudinary account
+          // may not have provisioned, which surfaces as a "server error" in the
+          // widget even though the upload itself succeeds.
+          options={{ sources: ["local"], multiple: false, maxFiles: 1 }}
           onSuccess={(result) => {
             const info = result?.info;
             if (info && typeof info === "object" && "public_id" in info) {
               setPublicId(String(info.public_id));
             }
+          }}
+          onError={(error) => {
+            // Don't let a widget-side error bubble up as an unhandled failure;
+            // the upload may still succeed. Log for diagnosis instead.
+            console.error("[photos] Cloudinary upload widget error:", error);
           }}
         >
           {({ open }) => (
