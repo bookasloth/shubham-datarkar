@@ -1,7 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import Link from "next/link";
 import { ALFAZY, answerFor, scoreGuess, isWin, isValidGuess, shareGrid, type Tile } from "@/lib/games/alfazy";
+import { submitResult } from "@/lib/games/submit-result";
+import { useGameAuth } from "@/components/games/use-game-auth";
 
 const KEYS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
@@ -15,6 +18,8 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
   const [current, setCurrent] = useState("");
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
+  const { user } = useGameAuth();
+  const submitted = useRef(false);
 
   // load saved state
   useEffect(() => {
@@ -31,6 +36,21 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
     if (guesses.length || status !== "playing")
       localStorage.setItem(storageKey, JSON.stringify({ guesses, status }));
   }, [guesses, status, storageKey]);
+
+  // submit result once per finished game, only when authed
+  useEffect(() => {
+    if (status === "playing") return;
+    if (!user) return;
+    if (submitted.current) return;
+    submitted.current = true;
+    void submitResult({
+      game: "alfazy",
+      puzzleNumber,
+      status,
+      guesses,
+      timeMs: null,
+    });
+  }, [status, user, guesses, puzzleNumber]);
 
   const rows: Tile[][] = guesses.map((g) => scoreGuess(g, answer));
 
@@ -128,6 +148,14 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
           <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
             Share
           </button>
+          {!user && (
+            <p className="text-sm text-muted-foreground">
+              <Link href="/games/login?next=/games/alfazy" className="underline underline-offset-4 hover:text-foreground">
+                Log in
+              </Link>{" "}
+              to save your streak.
+            </p>
+          )}
         </div>
       ) : (
         /* on-screen keyboard */
