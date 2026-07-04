@@ -1,21 +1,24 @@
 import Link from "next/link";
 import { Check, Image as ImageIcon } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 import { initialsOf } from "@/lib/support/config";
 import { supportProfile } from "@/lib/data/support-content";
 import type { SupportUpdate } from "@/lib/support/update-code";
 
-function authorName(u: SupportUpdate): string {
+/** The supporter being thanked (real name or anonymous alias), for the chip. */
+function supporterName(u: SupportUpdate): string | null {
   if (u.type === "thankyou" && u.author) {
     return "name" in u.author ? u.author.name : u.author.alias;
   }
-  return supportProfile.name;
+  return null;
 }
 
 /** A single update in the feed. Links to its own page. Variants: text/image/video/thankyou. */
 export function UpdateCard({ update }: { update: SupportUpdate }) {
-  const name = authorName(update);
+  // Every post — including the auto thank-you — is authored by Shubham.
+  const name = supportProfile.name;
+  const supporter = supporterName(update);
   const media = update.media as Record<string, string>;
 
   return (
@@ -25,6 +28,7 @@ export function UpdateCard({ update }: { update: SupportUpdate }) {
     >
       <header className="flex items-center gap-3">
         <Avatar className="size-9 rounded-full">
+          <AvatarImage src={supportProfile.photo} alt={name} />
           <AvatarFallback className="rounded-full bg-foreground text-xs font-bold text-background">
             {initialsOf(name)}
           </AvatarFallback>
@@ -67,7 +71,7 @@ export function UpdateCard({ update }: { update: SupportUpdate }) {
 
       {update.type === "thankyou" && (
         <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-          <Check className="size-3" strokeWidth={3} /> New supporter
+          <Check className="size-3" strokeWidth={3} /> New supporter{supporter ? `: ${supporter}` : ""}
         </span>
       )}
     </Link>
