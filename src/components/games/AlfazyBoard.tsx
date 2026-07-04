@@ -18,6 +18,7 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
   const [current, setCurrent] = useState("");
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
+  const [shakeCount, setShakeCount] = useState(0);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -57,8 +58,8 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
 
   function submit() {
     if (status !== "playing") return;
-    if (current.length !== ALFAZY.length) return flash("Not enough letters");
-    if (!isValidGuess(current)) return flash("Letters only");
+    if (current.length !== ALFAZY.length) { setShakeCount((n) => n + 1); return flash("Not enough letters"); }
+    if (!isValidGuess(current)) { setShakeCount((n) => n + 1); return flash("Letters only"); }
     const next = [...guesses, current];
     const tiles = scoreGuess(current, answer);
     setGuesses(next);
@@ -124,12 +125,18 @@ export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber:
       <div className="grid grid-rows-6 gap-1.5">
         {Array.from({ length: ALFAZY.maxGuesses }).map((_, r) => {
           const g = r < guesses.length ? guesses[r] : r === guesses.length ? current : "";
+          const isInput = r === guesses.length;
+          const isNewest = r === guesses.length - 1;
           return (
-            <div key={r} className="grid grid-cols-5 gap-1.5">
+            <div
+              key={isInput ? `input-${shakeCount}` : `row-${r}`}
+              className={`grid grid-cols-5 gap-1.5${isInput && shakeCount ? " animate-shake" : ""}`}
+            >
               {Array.from({ length: ALFAZY.length }).map((_, c) => (
                 <div
                   key={c}
-                  className={`flex h-12 w-12 items-center justify-center rounded-btn border-2 text-xl font-bold uppercase ${r < guesses.length ? tileColor(rows[r][c]) : "border-border"}`}
+                  className={`flex h-12 w-12 items-center justify-center rounded-btn border-2 text-xl font-bold uppercase ${r < guesses.length ? tileColor(rows[r][c]) : "border-border"}${r < guesses.length && isNewest ? " animate-tile-flip" : ""}`}
+                  style={r < guesses.length && isNewest ? { animationDelay: `${c * 0.08}s` } : undefined}
                 >
                   {g[c] ?? ""}
                 </div>
