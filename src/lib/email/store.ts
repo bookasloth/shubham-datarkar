@@ -28,13 +28,40 @@ const CRED_KEYS: EmailFieldKey[] = [
   "toEmail",
 ];
 
+/**
+ * Fallback SMTP credentials from env vars. Lets email send before (or without)
+ * anything saved via /admin/integrations — the DB-stored secret always wins.
+ * Returns null unless host + user + pass are all present. `secure` defaults from
+ * the port (465 → implicit TLS) but SMTP_SECURE can override it.
+ */
+function credentialsFromEnv(): EmailCredentials | null {
+  const e = process.env;
+  const host = e.SMTP_HOST?.trim();
+  const user = e.SMTP_USER?.trim();
+  const pass = e.SMTP_PASS?.trim();
+  if (!host || !user || !pass) return null;
+
+  const port = e.SMTP_PORT?.trim() || "465";
+  const secure = e.SMTP_SECURE?.trim() || (port === "465" ? "true" : "false");
+  return {
+    host,
+    port,
+    secure,
+    user,
+    pass,
+    fromName: e.SMTP_FROM_NAME?.trim() || "",
+    fromEmail: e.SMTP_FROM_EMAIL?.trim() || user,
+    toEmail: e.SMTP_TO_EMAIL?.trim() || user,
+  };
+}
+
 export async function getEmailCredentials(): Promise<EmailCredentials | null> {
   const { data, error } = await supabaseAdmin().rpc("get_email_secret");
   if (error) {
     console.warn("[email] get_email_secret failed:", error.message);
-    return null;
+    return credentialsFromEnv();
   }
-  if (!data) return null;
+  if (!data) return credentialsFromEnv();
   return data as EmailCredentials;
 }
 

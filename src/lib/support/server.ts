@@ -56,7 +56,7 @@ export async function attachOrder(id: string, orderId: string): Promise<void> {
   if (error) console.warn("[support] attachOrder failed:", error.message);
 }
 
-export type SupportRow = { id: string; name: string | null; anonymous: boolean };
+export type SupportRow = { id: string; name: string | null; anonymous: boolean; totalAmount: number };
 
 /**
  * Flip a support row to paid/failed, matched by session id (preferred) or row id.
@@ -82,15 +82,22 @@ export async function markSupportStatus(opts: {
   // Idempotency guard: skip rows already at the target status.
   q = q.neq("status", opts.status);
 
-  const { data, error } = await q.select("id, name, anonymous");
+  const { data, error } = await q.select("id, name, anonymous, total_amount");
   if (error) {
     console.warn("[support] markSupportStatus failed:", error.message);
     return { updated: false };
   }
-  const row = data?.[0] as { id: string; name: string | null; anonymous: boolean } | undefined;
+  const row = data?.[0] as
+    | { id: string; name: string | null; anonymous: boolean; total_amount: number | null }
+    | undefined;
   if (!row) return { updated: false };
   return {
     updated: true,
-    support: { id: String(row.id), name: row.name, anonymous: !!row.anonymous },
+    support: {
+      id: String(row.id),
+      name: row.name,
+      anonymous: !!row.anonymous,
+      totalAmount: Number(row.total_amount ?? 0),
+    },
   };
 }

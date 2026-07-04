@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Check, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatDate } from "@/lib/utils";
 import { initialsOf } from "@/lib/support/config";
@@ -43,16 +43,20 @@ export function UpdateCard({ update }: { update: SupportUpdate }) {
         <p className="mt-4 whitespace-pre-wrap text-sm leading-relaxed text-foreground/90">{update.body}</p>
       )}
 
+      {update.type === "thankyou" && supporter && (
+        <p className="mt-4 text-sm font-medium">Thank you, {supporter}.</p>
+      )}
+
       {(update.type === "image" || update.type === "thankyou") && media.url && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={media.url}
           alt=""
-          className="mt-4 w-full rounded-img border border-border object-cover"
+          className="mt-3 aspect-[2/1] w-full rounded-img border border-border object-cover"
         />
       )}
       {(update.type === "image" || update.type === "thankyou") && !media.url && (
-        <div className="mt-4 flex aspect-[16/9] items-center justify-center rounded-img border border-border bg-muted/50">
+        <div className="mt-3 flex aspect-[2/1] items-center justify-center rounded-img border border-border bg-muted/50">
           <ImageIcon className="size-8 text-muted-foreground" />
         </div>
       )}
@@ -69,11 +73,6 @@ export function UpdateCard({ update }: { update: SupportUpdate }) {
         </div>
       )}
 
-      {update.type === "thankyou" && (
-        <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">
-          <Check className="size-3" strokeWidth={3} /> New supporter{supporter ? `: ${supporter}` : ""}
-        </span>
-      )}
     </Link>
   );
 }
