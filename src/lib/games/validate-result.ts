@@ -28,6 +28,11 @@ export function validateResult(input: SubmitInput): { valid: boolean } {
   }
 
   const secret = secretFor(puzzleNumber);
+  // No earlier guess may already be a win (would be an extra guess after winning).
+  const wonEarlier = guesses
+    .slice(0, -1)
+    .some((g) => scoreHitAndBlow(g, secret).hits === HIT_AND_BLOW.length);
+  if (wonEarlier) return { valid: false };
   const last = scoreHitAndBlow(guesses[guesses.length - 1], secret);
   const won = last.hits === HIT_AND_BLOW.length; // hit-and-blow scoreGuess returns { hits, blows }
   return { valid: status === "won" ? won : !won };
