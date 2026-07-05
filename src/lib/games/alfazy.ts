@@ -1,4 +1,5 @@
 import { ANSWER_LIST } from "./word-list";
+import { VALID_GUESSES } from "./valid-guesses";
 
 export const ALFAZY = { length: 5, maxGuesses: 6 } as const;
 
@@ -32,8 +33,16 @@ export function scoreGuess(guess: string, answer: string): Tile[] {
 
 export const isWin = (tiles: Tile[]) => tiles.every((t) => t === "correct");
 
-/** v1 validation is lenient: any 5 a–z letters. Plug a dictionary later (see word-list.ts). */
-export const isValidGuess = (guess: string) => /^[a-z]{5}$/.test(guess.toLowerCase());
+/**
+ * A guess is valid when it is a 5-letter word in the standard allowed-guess
+ * dictionary. Answers are unioned in as a safety net so any future answer stays
+ * guessable even if it is not in the dictionary (all current answers already are).
+ */
+export const isValidGuess = (guess: string) => {
+  const g = guess.toLowerCase();
+  if (!/^[a-z]{5}$/.test(g)) return false;
+  return VALID_GUESSES.has(g) || ANSWER_LIST.includes(g);
+};
 
 /** Spoiler-free emoji grid for sharing. */
 export function shareGrid(rows: Tile[][]): string {
