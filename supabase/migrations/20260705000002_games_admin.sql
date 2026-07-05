@@ -2,13 +2,15 @@
 -- =============================================================
 --  /admin/games — admin-only moderation RPCs.
 --  security definer + explicit admin guard (email from JWT).
---  Set the admin email once:  select set_config('app.admin_email', '<email>', false);
---  is NOT persistent — instead we hardcode via a helper that reads the same
---  ADMIN_EMAIL the app uses. Simplest portable check: compare to a fixed value.
+--  is_games_admin() gates every admin RPC below: each one calls it and
+--  raises (or returns empty) unless the caller's JWT email matches the
+--  hardcoded literal in this function. There is no runtime configuration
+--  (no set_config, no env lookup inside SQL) — the email is baked into
+--  this function body at migration time.
 -- =============================================================
 
 -- Helper: is the caller the site admin?
--- Replace the literal below with the site's admin email (matches ADMIN_EMAIL env).
+-- !!! EDIT THE EMAIL BELOW before running, or every admin RPC returns empty / raises. !!!
 create or replace function public.is_games_admin()
 returns boolean language sql stable security definer set search_path = public as $$
   select coalesce(auth.jwt() ->> 'email', '') = 'REPLACE_WITH_ADMIN_EMAIL';
@@ -59,8 +61,7 @@ returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_games_admin() then raise exception 'not authorized'; end if;
   update public.streaks
-    set current_streak = 0, max_streak = 0, last_solved_puzzle = null,
-        total_played = 0, total_won = 0
+    set current_streak = 0, last_solved_puzzle = null
     where user_id = p_user and game = p_game;
 end; $$;
 
@@ -72,6 +73,8 @@ begin
     raise exception 'username too short';
   end if;
   update public.profiles set username = trim(p_username) where id = p_user;
+exception
+  when unique_violation then raise exception 'username already taken';
 end; $$;
 
 grant execute on function public.admin_list_players    to authenticated;

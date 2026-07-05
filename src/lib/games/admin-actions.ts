@@ -5,12 +5,12 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
 import type { GameKey } from "@/lib/games/registry";
 
-export async function deleteResult(resultId: string): Promise<void> {
+export async function deleteResult(userId: string, resultId: string): Promise<void> {
   await requireAdmin();
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.rpc("admin_delete_result", { p_result: resultId });
   if (error) throw new Error(error.message);
-  revalidatePath("/admin/games");
+  revalidatePath(`/admin/games/players/${userId}`);
 }
 
 export async function resetStreak(userId: string, game: GameKey): Promise<void> {

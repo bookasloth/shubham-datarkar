@@ -88,7 +88,7 @@ export default async function AdminGamesPlayerPage({
                     <td className="px-3 py-2 text-muted-foreground">{r.status}</td>
                     <td className="px-3 py-2 text-muted-foreground">{r.guesses}</td>
                     <td className="px-3 py-2 text-right">
-                      <form action={deleteResult.bind(null, r.id)}>
+                      <form action={deleteResult.bind(null, id, r.id)}>
                         <Button size="sm" variant="outline" type="submit">Delete</Button>
                       </form>
                     </td>
