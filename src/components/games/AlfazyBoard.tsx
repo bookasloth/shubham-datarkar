@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ALFAZY, answerFor, scoreGuess, isWin, isValidGuess, shareGrid, type Tile } from "@/lib/games/alfazy";
+import { ALFAZY, scoreGuess, isWin, isValidGuess, shareGrid, type Tile } from "@/lib/games/alfazy";
 import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 
@@ -10,8 +10,15 @@ const KEYS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
 type Saved = { guesses: string[]; status: "playing" | "won" | "lost" };
 
-export default function AlfazyBoard({ puzzleNumber, isArchive }: { puzzleNumber: number; isArchive: boolean }) {
-  const answer = useMemo(() => answerFor(puzzleNumber), [puzzleNumber]);
+export default function AlfazyBoard({
+  puzzleNumber,
+  isArchive,
+  answer,
+}: {
+  puzzleNumber: number;
+  isArchive: boolean;
+  answer: string;
+}) {
   const storageKey = `alfazy:${puzzleNumber}`;
 
   const [guesses, setGuesses] = useState<string[]>([]);
