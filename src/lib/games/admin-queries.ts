@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 import { puzzleNumberFor } from "@/lib/daily";
 
@@ -26,10 +27,11 @@ export type StreakRow = {
   maxStreak: number;
 };
 
-/** Per-game totals for the dashboard cards. Throws on DB/auth failure so the
- *  page renders an explicit error state (never a misleading "0"). */
+/** Per-game totals for the dashboard cards. Uses service-role client to bypass RLS,
+ *  so counts are global (not scoped to the admin user). Throws on DB/auth failure so
+ *  the page renders an explicit error state (never a misleading "0"). */
 export async function getGameStats(): Promise<GameStat[]> {
-  const supabase = await supabaseAuthServer();
+  const supabase = supabaseAdmin();
   const today = puzzleNumberFor();
 
   const stats = await Promise.all(
