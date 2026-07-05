@@ -46,6 +46,7 @@ export async function upsertAlfazyWord(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("admin_upsert_alfazy_puzzle", {
     p_puzzle: puzzleNumber,
     p_word: check.word,
+    p_today: puzzleNumberFor(),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/admin/games/words");
