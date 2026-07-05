@@ -98,3 +98,91 @@ export async function getStreakBoard(game: GameKey): Promise<StreakRow[]> {
     maxStreak: r.max_streak,
   }));
 }
+
+export type PlayerRow = {
+  id: string;
+  username: string;
+  createdAt: string;
+  totalPlayed: number;
+  totalWon: number;
+};
+
+export type PlayerResult = {
+  id: string;
+  game: GameKey;
+  puzzleNumber: number;
+  puzzleDate: string;
+  status: string;
+  guesses: number;
+};
+
+export type PlayerStreak = {
+  game: GameKey;
+  currentStreak: number;
+  maxStreak: number;
+  totalPlayed: number;
+  totalWon: number;
+};
+
+/** All players for the admin roster. Wraps the admin_list_players RPC. */
+export async function getPlayersAdmin(): Promise<PlayerRow[]> {
+  const supabase = await supabaseAuthServer();
+  const { data, error } = await supabase.rpc("admin_list_players");
+  if (error) throw new Error(error.message);
+  return (
+    (data as { id: string; username: string; created_at: string; total_played: number; total_won: number }[]) ?? []
+  ).map((r) => ({
+    id: r.id,
+    username: r.username,
+    createdAt: r.created_at,
+    totalPlayed: r.total_played,
+    totalWon: r.total_won,
+  }));
+}
+
+/** One player's full result history + per-game streaks for the admin detail page. */
+export async function getPlayerDetailAdmin(
+  id: string,
+): Promise<{ results: PlayerResult[]; streaks: PlayerStreak[] }> {
+  const supabase = await supabaseAuthServer();
+  const [results, streaks] = await Promise.all([
+    supabase.rpc("admin_player_results", { p_user: id }),
+    supabase.rpc("admin_player_streaks", { p_user: id }),
+  ]);
+  if (results.error) throw new Error(results.error.message);
+  if (streaks.error) throw new Error(streaks.error.message);
+  return {
+    results: (
+      (results.data as {
+        id: string;
+        game: GameKey;
+        puzzle_number: number;
+        puzzle_date: string;
+        status: string;
+        guesses: number;
+      }[]) ?? []
+    ).map((r) => ({
+      id: r.id,
+      game: r.game,
+      puzzleNumber: r.puzzle_number,
+      puzzleDate: r.puzzle_date,
+      status: r.status,
+      guesses: r.guesses,
+    })),
+    streaks: (
+      (streaks.data as {
+        game: GameKey;
+        current_streak: number;
+        max_streak: number;
+        total_played: number;
+        total_won: number;
+      }[]) ?? []
+    ).map((s) => ({
+      game: s.game,
+      currentStreak: s.current_streak,
+      maxStreak: s.max_streak,
+      totalPlayed: s.total_played,
+      totalWon: s.total_won,
+    })),
+  };
+}
