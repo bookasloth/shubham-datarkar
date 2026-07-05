@@ -48,16 +48,20 @@ export async function getGameStats(): Promise<GameStat[]> {
         .eq("status", "won");
       if (wins.error) throw new Error(wins.error.message);
 
-      const players = await supabase
-        .from("streaks")
-        .select("user_id", { count: "exact", head: true })
+      const playerRows = await supabase
+        .from("game_results")
+        .select("user_id")
         .eq("game", g.key);
-      if (players.error) throw new Error(players.error.message);
+      if (playerRows.error) throw new Error(playerRows.error.message);
+      // Distinct players deduped in-memory since PostgREST lacks count(distinct)
+      const players = new Set(
+        ((playerRows.data as { user_id: string }[]) ?? []).map((r) => r.user_id),
+      ).size;
 
       return {
         key: g.key,
         name: g.name,
-        players: players.count ?? 0,
+        players,
         plays: plays.count ?? 0,
         wins: wins.count ?? 0,
         todayPuzzle: today,
