@@ -47,3 +47,23 @@ describe("getSitemapPaths", () => {
     expect(paths).toContain("/blog");
   });
 });
+
+describe("sitemap auto-discovery", () => {
+  it("discoverPages includes all pages that should be in sitemap", async () => {
+    const pages = await discoverPages();
+    const publicRoutes = pages
+      .filter((p) => !p.isPrivate && !p.route.includes("["))
+      .map((p) => p.route);
+    // Key pages must be present
+    expect(publicRoutes).toContain("/");
+    expect(publicRoutes).toContain("/about");
+    expect(publicRoutes).toContain("/blog");
+    expect(publicRoutes).toContain("/services");
+    expect(publicRoutes).toContain("/contact");
+    expect(publicRoutes).toContain("/faq");
+    // Games and other newer pages auto-discovered
+    expect(publicRoutes).toContain("/games");
+    expect(publicRoutes).toContain("/photos");
+    expect(publicRoutes).toContain("/link");
+  });
+});
