@@ -14859,4 +14859,7 @@ zymes
 zymic
 `;
 
-export const VALID_GUESSES: ReadonlySet<string> = new Set(RAW.split("\n"));
+// Split on \r?\n so a CRLF checkout (Windows autocrlf) doesn't leave "\r" on each word.
+export const VALID_GUESSES: ReadonlySet<string> = new Set(
+  RAW.split(/\r?\n/).filter(Boolean),
+);
