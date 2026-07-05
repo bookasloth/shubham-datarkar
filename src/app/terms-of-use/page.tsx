@@ -32,7 +32,7 @@ const BLOCKS: LegalBlock[] = [
     heading: "Services and payments",
     list: [
       "Client engagements are governed by separate written agreements; nothing on this site is a binding offer.",
-      "Support contributions are processed by Zoho Payments and are voluntary; they're generally non-refundable unless required by law.",
+      "Support contributions are processed by Razorpay and are voluntary; they're generally non-refundable unless required by law.",
       "Free tools and resources are provided as-is, with no guarantee of availability.",
     ],
   },

@@ -11,6 +11,8 @@ import { site, socials } from "@/lib/site";
 export const supportProfile = {
   name: site.name,
   role: site.role,
+  /** Shubham's portrait — used by the profile sidebar and the auto thank-you feed post. */
+  photo: "https://company-assets.bookasloth.in/images/sd/website/profile.webp",
   bio: "Founder, marketer, and copywriter from Nagpur. I build brands, ads, and software — and write about all of it. Your coffees and toffees keep the free tools, writing, and experiments coming.",
   location: site.location,
   isVerified: true,

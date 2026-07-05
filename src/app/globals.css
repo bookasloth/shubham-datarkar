@@ -133,6 +133,22 @@
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
 
+  /* Admin scope colors (only used under [data-admin]) */
+  --color-admin-bg: var(--admin-bg);
+  --color-admin-surface: var(--admin-surface);
+  --color-admin-surface-hover: var(--admin-surface-hover);
+  --color-admin-border: var(--admin-border);
+  --color-admin-border-hover: var(--admin-border-hover);
+  --color-admin-border-active: var(--admin-border-active);
+  --color-admin-text: var(--admin-text);
+  --color-admin-text-muted: var(--admin-text-muted);
+  --color-admin-accent: var(--admin-accent);
+  --color-admin-accent-fg: var(--admin-accent-fg);
+  --color-admin-success: var(--admin-success);
+  --color-admin-warning: var(--admin-warning);
+  --color-admin-danger: var(--admin-danger);
+  --color-admin-info: var(--admin-info);
+
   --radius-btn: var(--radius-btn);
   --radius-input: var(--radius-input);
   --radius-card: var(--radius-card);
@@ -266,6 +282,22 @@
     );
     background-size: 22px 22px;
   }
+
+  /* Games — Alfazy tile reveal + invalid-guess shake (reduced-motion safe via the global rule). */
+  @keyframes alfazy-flip {
+    0% { transform: rotateX(0); }
+    50% { transform: rotateX(90deg); }
+    100% { transform: rotateX(0); }
+  }
+  .animate-tile-flip { animation: alfazy-flip 0.5s var(--ease-out-quint) both; }
+
+  @keyframes alfazy-shake {
+    10%, 90% { transform: translateX(-1px); }
+    20%, 80% { transform: translateX(2px); }
+    30%, 50%, 70% { transform: translateX(-4px); }
+    40%, 60% { transform: translateX(4px); }
+  }
+  .animate-shake { animation: alfazy-shake 0.4s both; }
 }
 
 /* ================================================================== */
@@ -355,4 +387,39 @@
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
   }
+}
+
+/* ================================================================== */
+/*  ADMIN SCOPE — internal tool. Layers on base tokens; overrides only  */
+/*  the accent + interaction borders. #FE5100 is admin-only and never   */
+/*  applies outside [data-admin]. Dark inherits via base tokens.        */
+/* ================================================================== */
+[data-admin] {
+  /* Surfaces — reuse base so light/dark come for free */
+  --admin-bg: var(--background);
+  --admin-surface: var(--card);
+  --admin-surface-hover: var(--muted);
+
+  /* Text */
+  --admin-text: var(--foreground);
+  --admin-text-muted: var(--muted-foreground);
+
+  /* Borders — default gray; hover/active become accent */
+  --admin-border: var(--border);
+  --admin-accent: #fe5100;
+  --admin-accent-fg: #ffffff;
+  --admin-border-hover: var(--admin-accent);
+  --admin-border-active: var(--admin-accent);
+
+  /* Status — reuse desaturated base functional tones */
+  --admin-success: var(--success);
+  --admin-warning: var(--warning);
+  --admin-danger: var(--danger);
+  --admin-info: #3b6ea5;
+}
+
+.dark [data-admin] {
+  /* Accent holds on dark (orange reads on black + white). Only override
+     info to a lighter tone for AA on dark surfaces. */
+  --admin-info: #6ea8dc;
 }

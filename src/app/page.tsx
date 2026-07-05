@@ -40,13 +40,23 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function HomePage() {
-  const allCaseStudies = await getPublishedEntities<CaseStudy>("case_studies");
+  // Fire all three reads in parallel — they're independent, so serial awaits
+  // just stack their latencies onto TTFB.
+  const [allCaseStudies, testimonials, allPosts] = await Promise.all([
+    getPublishedEntities<CaseStudy>("case_studies"),
+    getPublishedEntities<Testimonial>("testimonials"),
+    getPublishedPosts(),
+  ]);
   const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
-  const testimonials = await getPublishedEntities<Testimonial>("testimonials");
-  const featuredPosts = (await getPublishedPosts()).filter((p) => p.featured).slice(0, 3);
+  // Writing rail: lead with one featured post, then fill with the most recent —
+  // 3 total. allPosts is newest-first, so the recent slice is just the top rows
+  // minus whatever's already featured. Falls back to 3 recent if none featured.
+  const featuredPost = allPosts.find((p) => p.featured);
+  const recentPosts = allPosts.filter((p) => p.slug !== featuredPost?.slug).slice(0, featuredPost ? 2 : 3);
+  const homePosts = featuredPost ? [featuredPost, ...recentPosts] : recentPosts;
   return (
     <>
       <JsonLd data={organizationSchema()} />
@@ -170,7 +180,7 @@ export default async function HomePage() {
             </div>
           </div>
           <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
-            {featuredPosts.map((p) => (
+            {homePosts.map((p) => (
               <StaggerItem key={p.slug}>
                 <PostCard post={p} />
               </StaggerItem>

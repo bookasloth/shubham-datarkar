@@ -1,27 +1,33 @@
+// src/lib/support/checkout.ts
 /**
- * Client-side Zoho Payments checkout widget. Loads the Zoho script once, opens
- * the widget for a created payment session, and reports the outcome. The DB
- * row is the source of truth (flipped by the webhook); a "paid" outcome here
- * just drives the optimistic thank-you.
+ * Client-side Razorpay Checkout. Loads checkout.js once, opens the modal for a
+ * created order, and reports the outcome. The confirm route (server) is the
+ * source of truth — a "paid" outcome here carries the fields it must verify.
  */
 
-type ZPaymentsInstance = {
-  requestPaymentMethod: (opts: Record<string, unknown>) => Promise<{ payment_id?: string }>;
-  close: () => Promise<void>;
+type RazorpaySuccess = {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+};
+
+type RazorpayInstance = {
+  open: () => void;
+  on: (event: string, cb: (resp: unknown) => void) => void;
 };
 
 declare global {
   interface Window {
-    ZPayments?: new (config: Record<string, unknown>) => ZPaymentsInstance;
+    Razorpay?: new (options: Record<string, unknown>) => RazorpayInstance;
   }
 }
 
-const SCRIPT_SRC = "https://static.zohocdn.com/zpay/zpay-js/v1/zpayments.js";
+const SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 let scriptPromise: Promise<void> | null = null;
 
 function loadScript(): Promise<void> {
   if (typeof window === "undefined") return Promise.reject(new Error("No window."));
-  if (window.ZPayments) return Promise.resolve();
+  if (window.Razorpay) return Promise.resolve();
   if (scriptPromise) return scriptPromise;
 
   scriptPromise = new Promise<void>((resolve, reject) => {
@@ -31,7 +37,7 @@ function loadScript(): Promise<void> {
     s.onload = () => resolve();
     s.onerror = () => {
       scriptPromise = null;
-      reject(new Error("Failed to load the Zoho checkout script."));
+      reject(new Error("Failed to load the Razorpay checkout script."));
     };
     document.head.appendChild(s);
   });
@@ -39,57 +45,69 @@ function loadScript(): Promise<void> {
 }
 
 export type CheckoutSession = {
-  paymentsSessionId: string;
-  accountId: string;
-  apiKey: string;
-  amount: number;
+  orderId: string;
+  keyId: string;
+  amount: number; // rupees
   currency: string;
-  symbol: string;
   email: string;
   name?: string;
 };
 
 export type CheckoutOutcome =
-  | { status: "paid"; paymentId?: string }
+  | { status: "paid"; orderId: string; paymentId: string; signature: string }
+  | { status: "failed"; orderId: string; paymentId?: string }
   | { status: "cancelled" }
   | { status: "error"; message: string };
 
-export async function openZohoCheckout(s: CheckoutSession): Promise<CheckoutOutcome> {
+export async function openRazorpayCheckout(s: CheckoutSession): Promise<CheckoutOutcome> {
   try {
     await loadScript();
   } catch (e) {
     return { status: "error", message: (e as Error).message };
   }
-  if (!window.ZPayments) {
-    return { status: "error", message: "Zoho checkout is unavailable right now." };
+  if (!window.Razorpay) {
+    return { status: "error", message: "Razorpay checkout is unavailable right now." };
   }
 
-  const instance = new window.ZPayments({
-    account_id: s.accountId,
-    domain: "IN",
-    otherOptions: { api_key: s.apiKey },
-  });
+  return new Promise<CheckoutOutcome>((resolve) => {
+    let settled = false;
+    const done = (o: CheckoutOutcome) => {
+      if (!settled) {
+        settled = true;
+        resolve(o);
+      }
+    };
 
-  try {
-    const res = await instance.requestPaymentMethod({
-      amount: String(s.amount),
-      currency_code: s.currency,
-      payments_session_id: s.paymentsSessionId,
-      currency_symbol: s.symbol,
-      business: "Shubham Datarkar",
+    const rzp = new window.Razorpay!({
+      key: s.keyId,
+      order_id: s.orderId,
+      // amount is not set here: Razorpay derives the charge from the server-created
+      // order (order_id), so passing it client-side would only imply the client
+      // sets the price. Kept off deliberately.
+      currency: s.currency,
+      name: "Shubham Datarkar",
       description: "Support",
-      address: { name: s.name ?? "", email: s.email },
+      prefill: { name: s.name ?? "", email: s.email },
+      theme: { color: "#ff4800" },
+      handler: (resp: unknown) => {
+        const r = resp as RazorpaySuccess;
+        done({
+          status: "paid",
+          orderId: r.razorpay_order_id,
+          paymentId: r.razorpay_payment_id,
+          signature: r.razorpay_signature,
+        });
+      },
+      modal: {
+        ondismiss: () => done({ status: "cancelled" }),
+      },
     });
-    return { status: "paid", paymentId: res?.payment_id };
-  } catch (err) {
-    const e = err as { code?: string; message?: string };
-    if (e?.code === "widget_closed") return { status: "cancelled" };
-    return { status: "error", message: e?.message ? String(e.message) : "Payment failed." };
-  } finally {
-    try {
-      await instance.close();
-    } catch {
-      /* widget already closed */
-    }
-  }
+
+    rzp.on("payment.failed", (resp: unknown) => {
+      const r = (resp as { error?: { metadata?: { payment_id?: string } } })?.error;
+      done({ status: "failed", orderId: s.orderId, paymentId: r?.metadata?.payment_id });
+    });
+
+    rzp.open();
+  });
 }

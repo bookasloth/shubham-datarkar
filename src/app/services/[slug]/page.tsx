@@ -5,7 +5,7 @@ import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema, serviceSchema } from "@/lib/seo";
 import type { Service } from "@/lib/data/types";
-import { getPublishedEntityBySlug } from "@/lib/content/queries";
+import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { faqs } from "@/lib/data/site-content";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -18,7 +18,13 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { Icon } from "@/lib/icons";
 import { cn } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
+
+// Prerender every published service at build so first visit is CDN-instant.
+export async function generateStaticParams() {
+  const services = await getPublishedEntities<Service>("services");
+  return services.map((s) => ({ slug: s.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

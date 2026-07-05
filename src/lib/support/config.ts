@@ -46,7 +46,8 @@ export type Tier = {
 export const TIERS: readonly Tier[] = [
   { key: "pillars", label: "Pillars", min: 2500, icon: "crown", blurb: "The people holding the roof up." },
   { key: "guardians", label: "Guardians", min: 1000, icon: "shield", blurb: "Steady, generous, always around." },
-  { key: "torchbearers", label: "Torchbearers", min: 100, icon: "flame", blurb: "Lighting the way early." },
+  // Floor of 1 so every paid supporter lands here — anyone who's given anything is a Torchbearer.
+  { key: "torchbearers", label: "Torchbearers", min: 1, icon: "flame", blurb: "Lighting the way early." },
 ];
 
 /** Format an integer rupee amount: 125 -> "₹125". No decimals for whole amounts. */

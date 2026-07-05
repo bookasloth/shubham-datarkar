@@ -23,7 +23,7 @@ const how = [
   { step: "Compound", detail: "Instrument it, hand it over, and let it run without me." },
 ];
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function ServicesPage() {
   const services = await getPublishedEntities<Service>("services");

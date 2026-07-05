@@ -14,7 +14,13 @@ import { PostFooter } from "@/components/blog/post-footer";
 import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate, readingTime } from "@/lib/utils";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
+
+// Prerender every published article at build so first visit is CDN-instant.
+export async function generateStaticParams() {
+  const posts = await getPublishedPosts();
+  return posts.map((p) => ({ category: p.category, slug: p.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ category: string; slug: string }> }) {
   const { category, slug } = await params;

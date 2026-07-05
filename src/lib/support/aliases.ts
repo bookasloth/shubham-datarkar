@@ -7,14 +7,16 @@ import { randomInt } from "node:crypto";
 import type { UpdateAuthor } from "./update-code";
 
 export const SUPPORTER_ALIASES = [
-  "Legend",
-  "Hero",
-  "Rockstar",
-  "Thala",
-  "Champion",
-  "Maverick",
-  "Trailblazer",
-  "Captain",
+  "Random Hero",
+  "Beautiful Stranger",
+  "Kind Soul",
+  "Secret Legend",
+  "Mystery Champion",
+  "Quiet Rockstar",
+  "Generous Stranger",
+  "Hidden Gem",
+  "Unnamed Hero",
+  "Anonymous Maverick",
 ] as const;
 
 /** A random anonymous alias for supporters who hid (or didn't share) their name. */
