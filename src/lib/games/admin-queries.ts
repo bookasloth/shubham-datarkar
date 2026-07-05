@@ -186,3 +186,18 @@ export async function getPlayerDetailAdmin(
     })),
   };
 }
+
+export type AlfazyWordRow = { puzzleNumber: number; word: string; editable: boolean };
+
+/** Upcoming Alfazy puzzle words for the admin editor. Wraps the admin_list_alfazy_puzzles RPC. */
+export async function getUpcomingAlfazyWords(): Promise<AlfazyWordRow[]> {
+  const supabase = await supabaseAuthServer();
+  const today = puzzleNumberFor();
+  const { data, error } = await supabase.rpc("admin_list_alfazy_puzzles", { p_from: today });
+  if (error) throw new Error(error.message);
+  return ((data as { puzzle_number: number; word: string }[]) ?? []).map((r) => ({
+    puzzleNumber: r.puzzle_number,
+    word: r.word,
+    editable: r.puzzle_number > today,
+  }));
+}

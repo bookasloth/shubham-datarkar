@@ -33,12 +33,20 @@ export default async function AdminGamesPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Games</h1>
-        <a
-          href="/admin/games/players"
-          className="rounded-btn border border-border px-3 py-1.5 text-sm hover:bg-accent"
-        >
-          Players
-        </a>
+        <div className="flex items-center gap-2">
+          <a
+            href="/admin/games/players"
+            className="rounded-btn border border-border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Players
+          </a>
+          <a
+            href="/admin/games/words"
+            className="rounded-btn border border-border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Words
+          </a>
+        </div>
       </div>
 
       {loadError ? (
