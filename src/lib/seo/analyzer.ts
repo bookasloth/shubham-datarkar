@@ -21,14 +21,14 @@ function detectMetadataSource(source: string): MetadataSource {
 
 function extractBuildMetadataArg(source: string, key: string): string | null {
   const pattern = new RegExp(`${key}\\s*:\\s*["'\`]([^"'\`]+)["'\`]`);
-  const buildCall = source.match(/buildMetadata\s*\(\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\s*\)/s);
+  const buildCall = source.match(/buildMetadata\s*\(\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\s*\)/);
   if (!buildCall) return null;
   const match = buildCall[1].match(pattern);
   return match?.[1] ?? null;
 }
 
 function extractStaticMetadataField(source: string, key: string): string | null {
-  const metadataBlock = source.match(/export\s+const\s+metadata[^=]*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/s);
+  const metadataBlock = source.match(/export\s+const\s+metadata[^=]*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/);
   if (!metadataBlock) return null;
   const pattern = new RegExp(`${key}\\s*:\\s*["'\`]([^"'\`]+)["'\`]`);
   const match = metadataBlock[1].match(pattern);
