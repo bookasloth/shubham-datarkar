@@ -23,16 +23,23 @@ language sql security definer set search_path = public as $$
   limit 200;
 $$;
 
-create or replace function public.admin_upsert_alfazy_puzzle(p_puzzle int, p_word text)
+create or replace function public.admin_upsert_alfazy_puzzle(p_puzzle int, p_word text, p_today int)
 returns void language plpgsql security definer set search_path = public as $$
 begin
   if not public.is_games_admin() then raise exception 'not authorized'; end if;
+  -- Freeze the past + today at the DB boundary (not only in the app action):
+  -- rewriting a played answer would corrupt stored game_results + share grids.
+  -- The app passes its own puzzleNumberFor() as p_today.
+  if p_puzzle <= p_today then raise exception 'cannot edit a past or current puzzle'; end if;
   if p_word !~ '^[a-z]{5}$' then raise exception 'word must be 5 lowercase letters'; end if;
   insert into public.alfazy_puzzles (puzzle_number, word, updated_at)
   values (p_puzzle, p_word, now())
   on conflict (puzzle_number) do update set word = excluded.word, updated_at = now();
 end; $$;
 
+-- Deleting a row is safe for ANY puzzle only because wordForPuzzle falls back to
+-- answerFor(n) and the seed used exactly answerFor(n): deleting a past row restores
+-- the identical answer. This safety depends on seed == answerFor parity.
 create or replace function public.admin_delete_alfazy_puzzle(p_puzzle int)
 returns void language plpgsql security definer set search_path = public as $$
 begin
