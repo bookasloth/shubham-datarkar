@@ -18,7 +18,6 @@ export type BoardRow = {
   username: string;
   guesses: number;
   timeMs: number | null;
-  status: string;
 };
 
 export type StreakRow = {
@@ -77,11 +76,10 @@ export async function getDailyBoard(game: GameKey, puzzle: number): Promise<Boar
     p_puzzle: puzzle,
   });
   if (error) throw new Error(error.message);
-  return ((data as { username: string; guesses: number; time_ms: number | null; status: string }[]) ?? []).map((r) => ({
+  return ((data as { username: string; guesses: number; time_ms: number | null }[]) ?? []).map((r) => ({
     username: r.username,
     guesses: r.guesses,
     timeMs: r.time_ms,
-    status: r.status,
   }));
 }
 
