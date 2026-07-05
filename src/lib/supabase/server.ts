@@ -11,8 +11,9 @@ import { cookies } from "next/headers";
  * Two clients, two privilege levels:
  *  - `supabaseAnon()`  — anon key, for reading the public views in Server
  *    Components / route handlers. Subject to RLS (sees only the views).
- *  - `supabaseAdmin()` — service-role key, BYPASSES RLS. Use ONLY in API
- *    routes to insert/update rows. Never return raw rows from this client to the client side.
+ *  - `supabaseAdmin()` — service-role key, BYPASSES RLS. Use for server-only
+ *    operations: writes, or aggregate reads where RLS-scoped results would be wrong.
+ *    Never return raw rows from this client to the client side.
  */
 
 function env(name: string): string {
@@ -39,7 +40,7 @@ export function supabaseAnon(): SupabaseClient {
   return anonClient;
 }
 
-/** Service-role server client — RLS bypass. Server-only, writes only. */
+/** Service-role server client — RLS bypass. Server-only; for writes or aggregate reads. */
 export function supabaseAdmin(): SupabaseClient {
   if (adminClient) return adminClient;
   adminClient = createSupabaseClient(
