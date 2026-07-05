@@ -21,9 +21,10 @@ describe("discoverPages", () => {
   it("includes expanded dynamic routes", async () => {
     const pages = await discoverPages();
     const routes = pages.map((p) => p.route);
-    // At least one blog post should be enumerated
-    const blogPosts = routes.filter((r) => /^\/blog\/[^[].+\/[^[].+$/.test(r));
-    expect(blogPosts.length).toBeGreaterThan(0);
+    // Blog posts now come from the DB (unavailable offline), so assert against a
+    // statically-sourced dynamic route instead — at least one service enumerated.
+    const serviceRoutes = routes.filter((r) => /^\/services\/[^[]+$/.test(r));
+    expect(serviceRoutes.length).toBeGreaterThan(0);
   });
 
   it("flags admin pages as private", async () => {

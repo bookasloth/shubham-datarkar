@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import type { PageEntry } from "./types";
 import { PRIVATE_PREFIXES } from "./constants";
-import { posts, blogCategories } from "@/lib/data/posts";
+import { blogCategories } from "@/lib/data/posts";
 import { caseStudies } from "@/lib/data/case-studies";
 import { services } from "@/lib/data/services";
 import { tools } from "@/lib/data/tools";
@@ -69,11 +69,9 @@ type DynamicExpansion = {
   expand: () => { route: string }[];
 };
 
+// Blog posts live in the DB, so their expansion is injected at call time
+// (see discoverPages) rather than sourced from a static array here.
 const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
-  {
-    pattern: /^\/blog\/\[category\]\/\[slug\]$/,
-    expand: () => posts.map((p) => ({ route: `/blog/${p.category}/${p.slug}` })),
-  },
   {
     pattern: /^\/blog\/\[category\]$/,
     expand: () => blogCategories.map((c) => ({ route: `/blog/${c.slug}` })),
@@ -103,7 +101,9 @@ const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
  * function evaluated in a Next.js server context, not reliably importable
  * from a plain Node/Vitest script on this Windows machine).
  */
-export function getSitemapPaths(): string[] {
+export function getSitemapPaths(
+  blogPosts: { category: string; slug: string }[] = [],
+): string[] {
   const paths = new Set<string>();
 
   for (const p of SITEMAP_STATIC_PATHS) {
@@ -112,7 +112,7 @@ export function getSitemapPaths(): string[] {
   for (const c of blogCategories) {
     paths.add(`/blog/${c.slug}`);
   }
-  for (const p of posts) {
+  for (const p of blogPosts) {
     paths.add(`/blog/${p.category}/${p.slug}`);
   }
   for (const c of caseStudies) {
@@ -131,9 +131,19 @@ export function getSitemapPaths(): string[] {
   return Array.from(paths);
 }
 
-export async function discoverPages(): Promise<PageEntry[]> {
+export async function discoverPages(
+  blogPosts: { category: string; slug: string }[] = [],
+): Promise<PageEntry[]> {
   const pageFiles = findPageFiles(APP_DIR);
-  const sitemapPaths = new Set(getSitemapPaths());
+  const sitemapPaths = new Set(getSitemapPaths(blogPosts));
+  // Inject the DB-sourced blog-post expansion alongside the static ones.
+  const expansions: DynamicExpansion[] = [
+    ...DYNAMIC_EXPANSIONS,
+    {
+      pattern: /^\/blog\/\[category\]\/\[slug\]$/,
+      expand: () => blogPosts.map((p) => ({ route: `/blog/${p.category}/${p.slug}` })),
+    },
+  ];
   const pages: PageEntry[] = [];
 
   for (const filePath of pageFiles) {
@@ -142,7 +152,7 @@ export async function discoverPages(): Promise<PageEntry[]> {
     const relFilePath = path.relative(process.cwd(), filePath).replace(/\\/g, "/");
 
     if (hasDynamicSegment) {
-      const expansion = DYNAMIC_EXPANSIONS.find((e) => e.pattern.test(route));
+      const expansion = expansions.find((e) => e.pattern.test(route));
       if (expansion) {
         for (const expanded of expansion.expand()) {
           pages.push({

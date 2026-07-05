@@ -45,7 +45,8 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   const sameCat = await getPublishedPostsByCategory(post.category);
   // Read Next: same-category posts first, then top up from the rest, up to 4.
   const sameCatRelated = sameCat.filter((p) => p.slug !== post.slug);
-  const others = (await getPublishedPosts()).filter(
+  const allPublished = await getPublishedPosts();
+  const others = allPublished.filter(
     (p) => p.slug !== post.slug && !sameCatRelated.some((s) => s.slug === p.slug),
   );
   const relatedPosts = [...sameCatRelated, ...others].slice(0, 4);
@@ -111,7 +112,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
       <Section>
         <Container size="prose">
           <article>
-            <ArticleBody blocks={post.body} affiliateDomains={affiliateDomains} />
+            <ArticleBody blocks={post.body} affiliateDomains={affiliateDomains} relatedPosts={allPublished} />
           </article>
         </Container>
       </Section>

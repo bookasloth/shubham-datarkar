@@ -4,6 +4,7 @@ import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SearchClient } from "@/components/search/search-client";
+import { getPublishedPosts } from "@/lib/blog/queries";
 
 export const metadata = buildMetadata({
   title: "Search",
@@ -12,7 +13,8 @@ export const metadata = buildMetadata({
   noIndex: true,
 });
 
-export default function SearchPage() {
+export default async function SearchPage() {
+  const articles = await getPublishedPosts();
   return (
     <>
       <PageHero
@@ -24,7 +26,7 @@ export default function SearchPage() {
       <Section>
         <Container size="narrow">
           <Suspense fallback={<Skeleton className="h-12 w-full" />}>
-            <SearchClient />
+            <SearchClient articles={articles} />
           </Suspense>
         </Container>
       </Section>

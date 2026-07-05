@@ -1,4 +1,9 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
+
+// audit.ts pulls blog posts from the DB (a server-only module). Stub it so the
+// unit test runs offline; page discovery still covers all static routes.
+vi.mock("@/lib/blog/queries", () => ({ getPublishedPosts: async () => [] }));
+
 import { runFullAudit, auditSinglePage } from "./audit";
 
 describe("runFullAudit", () => {

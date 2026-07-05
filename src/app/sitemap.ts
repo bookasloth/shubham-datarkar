@@ -1,12 +1,13 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
+import { getPublishedPosts } from "@/lib/blog/queries";
 import { discoverPages } from "@/lib/seo/discovery";
-import { posts } from "@/lib/data/posts";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
   const now = new Date();
-  const pages = await discoverPages();
+  const posts = await getPublishedPosts();
+  const pages = await discoverPages(posts);
 
   const postDateMap = new Map(posts.map((p) => [`/blog/${p.category}/${p.slug}`, new Date(p.date)]));
 

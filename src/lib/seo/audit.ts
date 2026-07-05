@@ -2,6 +2,7 @@ import type { AuditResult, AuditSummary, PageAuditEntry, ScoreColor } from "./ty
 import { discoverPages } from "./discovery";
 import { analyzePage } from "./analyzer";
 import { scorePage } from "./scoring";
+import { getPublishedPosts } from "@/lib/blog/queries";
 
 function buildSummary(pages: PageAuditEntry[]): AuditSummary {
   const publicPages = pages.filter((p) => !p.entry.isPrivate);
@@ -56,7 +57,7 @@ function buildSummary(pages: PageAuditEntry[]): AuditSummary {
 }
 
 export async function runFullAudit(): Promise<AuditResult> {
-  const entries = await discoverPages();
+  const entries = await discoverPages(await getPublishedPosts());
   const pages: PageAuditEntry[] = [];
 
   for (const entry of entries) {
@@ -69,7 +70,7 @@ export async function runFullAudit(): Promise<AuditResult> {
 }
 
 export async function auditSinglePage(route: string): Promise<PageAuditEntry | null> {
-  const entries = await discoverPages();
+  const entries = await discoverPages(await getPublishedPosts());
   const entry = entries.find((e) => e.route === route);
   if (!entry) return null;
   const analysis = await analyzePage(entry);

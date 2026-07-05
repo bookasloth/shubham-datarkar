@@ -1,5 +1,5 @@
 import * as React from "react";
-import type { ContentBlock, ListItem, RichText as RichTextValue } from "@/lib/data/types";
+import type { ContentBlock, ListItem, Post, RichText as RichTextValue } from "@/lib/data/types";
 import { slugify } from "@/lib/utils";
 
 import { RichText } from "@/components/content/rich-text";
@@ -43,7 +43,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { PricingTable, type Plan } from "@/components/ui/pricing-table";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { PostCard } from "@/components/cards/post-card";
-import { getPost } from "@/lib/data/posts";
 import { ChevronDown } from "lucide-react";
 
 const pricingPlans: Plan[] = [
@@ -123,7 +122,7 @@ function OrderedList({ items }: { items: ListItem[] }) {
   );
 }
 
-function Block({ block }: { block: ContentBlock }) {
+function Block({ block, relatedPosts }: { block: ContentBlock; relatedPosts?: Map<string, Post> }) {
   switch (block.type) {
     /* — Typography — */
     case "h2":
@@ -341,7 +340,7 @@ function Block({ block }: { block: ContentBlock }) {
     case "expertInsight":
       return <ExpertInsight name={block.name} role={block.role} quote={block.quote} />;
     case "relatedCard": {
-      const rel = getPost(block.slug);
+      const rel = relatedPosts?.get(block.slug);
       if (!rel) return null;
       return (
         <div className="not-prose">
@@ -362,13 +361,22 @@ function Block({ block }: { block: ContentBlock }) {
   }
 }
 
-export function ArticleBody({ blocks, affiliateDomains }: { blocks: ContentBlock[]; affiliateDomains?: string[] }) {
+export function ArticleBody({
+  blocks,
+  affiliateDomains,
+  relatedPosts,
+}: {
+  blocks: ContentBlock[];
+  affiliateDomains?: string[];
+  relatedPosts?: Post[];
+}) {
+  const relatedMap = new Map((relatedPosts ?? []).map((p) => [p.slug, p]));
   return (
     <AffiliateProvider domains={affiliateDomains}>
       <TooltipProvider delayDuration={150}>
         <div className="flex flex-col gap-7">
           {blocks.map((block, i) => (
-            <Block key={i} block={block} />
+            <Block key={i} block={block} relatedPosts={relatedMap} />
           ))}
         </div>
       </TooltipProvider>
