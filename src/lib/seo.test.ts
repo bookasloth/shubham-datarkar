@@ -91,7 +91,7 @@ describe("productSchema", () => {
     about: "A booking platform.",
     category: "Scheduling SaaS",
     status: "Beta",
-    url: "https://bookasloth.in",
+    url: "https://bookasloth.com",
   };
 
   it("is a Product with brand + category, and keeps the live URL", () => {
@@ -99,7 +99,7 @@ describe("productSchema", () => {
     expect(s["@type"]).toBe("Product");
     expect((s.brand as { name?: string }).name).toBe("Book A Sloth");
     expect(s.category).toBe("Scheduling SaaS");
-    expect(s.url).toBe("https://bookasloth.in");
+    expect(s.url).toBe("https://bookasloth.com");
   });
 
   it("omits url when the product has none", () => {

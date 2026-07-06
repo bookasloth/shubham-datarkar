@@ -20,7 +20,7 @@ export const portfolio: PortfolioGroup[] = [
       { name: "Rajmudra Media", tag: "Media Agency", description: "Built their agency site to display work and attract clients." },
       { name: "DRU Foundation", tag: "Non-profit", description: "Gave a women-empowerment mission a strong digital presence for support and donations." },
       { name: "Gayatri School", tag: "Education", description: "A site to share admissions, updates, and community initiatives." },
-      { name: "NNAWCA", tag: "Community", description: "A social hub for alumni to stay engaged.", url: "https://nnawca.org" },
+      { name: "NNAWCA", tag: "Community", description: "A social hub for alumni to stay engaged.", url: "https://www.nnawca.org" },
       { name: "Dhawade Vadewale", tag: "Restaurant", description: "A site to showcase authentic Maharashtrian menus and drive online orders." },
     ],
   },
@@ -30,7 +30,7 @@ export const portfolio: PortfolioGroup[] = [
     count: "8+",
     blurb: "App Box — software products shipped end to end.",
     items: [
-      { name: "Book A Sloth", tag: "Scheduling", description: "A booking tool and plugin to help small businesses manage appointments.", url: "https://bookasloth.in" },
+      { name: "Book A Sloth", tag: "Scheduling", description: "A booking tool and plugin to help small businesses manage appointments.", url: "https://bookasloth.com" },
       { name: "Roast Me Now", tag: "Entertainment", description: "Turns a single input into witty roasts for entertainment." },
       { name: "Rank Snap", tag: "SEO", description: "An SEO audit tool that generates instant reports from a URL." },
       { name: "Ad Scribe", tag: "AI Copy", description: "An AI copywriter for high-converting ad headlines and CTAs." },

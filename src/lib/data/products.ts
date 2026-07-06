@@ -12,7 +12,7 @@ export const products: Product[] = [
     tagline: "Easy scheduling. Easier life.",
     category: "Scheduling SaaS",
     status: "Beta",
-    url: "https://bookasloth.in",
+    url: "https://bookasloth.com",
     about:
       "Book A Sloth is a modern appointment booking and scheduling platform built around the idea that time should feel organized, not stressful. Inspired by the calm and deliberate nature of a sloth, it helps businesses, professionals, and service providers manage bookings, collect payments, send reminders, and eliminate scheduling chaos. In a world obsessed with speed, Book A Sloth stands for reliability, certainty, and thoughtful time management — every appointment happens effortlessly, for customers and businesses alike.",
   },

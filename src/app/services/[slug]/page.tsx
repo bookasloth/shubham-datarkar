@@ -80,7 +80,8 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 <div className="flex size-12 items-center justify-center rounded-card bg-muted text-foreground">
                   <Icon name={service.icon} className="size-6" />
                 </div>
-                <p className="mt-5 text-[17px] leading-8 text-foreground/90">{service.description}</p>
+                <h2 className="mt-5 text-xl font-semibold tracking-tight">{service.name}</h2>
+                <p className="mt-2 text-[17px] leading-8 text-foreground/90">{service.description}</p>
               </Reveal>
 
               <div>
