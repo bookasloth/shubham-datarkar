@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { puzzleNumberFor } from "@/lib/daily";
 import AlfazyBoard from "@/components/games/AlfazyBoard";
+import AlfazyThemeProvider from "@/components/games/AlfazyThemeProvider";
 import { wordForPuzzle } from "@/lib/games/alfazy-puzzles";
 
 export const metadata: Metadata = {
@@ -9,7 +10,12 @@ export const metadata: Metadata = {
 };
 
 export default async function AlfazyToday() {
-  const p = puzzleNumberFor();
+  const now = Date.now();
+  const p = puzzleNumberFor(now);
   const answer = await wordForPuzzle(p);
-  return <AlfazyBoard puzzleNumber={p} isArchive={false} answer={answer} />;
+  return (
+    <AlfazyThemeProvider now={now}>
+      <AlfazyBoard puzzleNumber={p} isArchive={false} answer={answer} />
+    </AlfazyThemeProvider>
+  );
 }
