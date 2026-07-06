@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
+import { getPhotoPublicUrl } from "@/lib/photos/photo-url";
 import { getAllPhotosAdmin } from "@/lib/photos/queries";
 import { Button } from "@/components/ui/button";
 import type { Photo } from "@/lib/photos/types";
@@ -43,13 +44,11 @@ export default async function AdminPhotosPage() {
               className="group overflow-hidden rounded-card border border-border hover:bg-accent"
             >
               <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-                <CldImage
-                  src={p.cloudinaryPublicId}
+                <Image
+                  src={getPhotoPublicUrl(p.storagePath)}
                   alt={p.title}
                   fill
                   sizes="(max-width: 640px) 50vw, 33vw"
-                  crop="fill"
-                  gravity="auto"
                   className="object-cover"
                 />
               </div>

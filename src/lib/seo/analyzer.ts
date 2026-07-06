@@ -67,7 +67,7 @@ function estimateWordCount(source: string): number {
 }
 
 function countMissingAlt(source: string): number {
-  const imgTags = source.match(/<(?:img|Image|CldImage)\s[^>]*>/g) || [];
+  const imgTags = source.match(/<(?:img|Image)\s[^>]*>/g) || [];
   return imgTags.filter((tag) => !/alt\s*=/.test(tag)).length;
 }
 
@@ -120,7 +120,7 @@ export async function analyzePage(entry: PageEntry): Promise<PageAnalysis> {
     readingTime: Math.max(1, Math.round(wordCount / 200)),
     internalLinks: countPattern(source, /href=["']\/[^"']*/g),
     externalLinks: countPattern(source, /href=["']https?:\/\//g),
-    imageCount: countPattern(source, /<(?:img|Image|CldImage)[\s>]/gi),
+    imageCount: countPattern(source, /<(?:img|Image)[\s>]/gi),
     missingAltCount: countMissingAlt(source),
   };
 }

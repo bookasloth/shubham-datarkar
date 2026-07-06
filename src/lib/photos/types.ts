@@ -1,6 +1,6 @@
 export type Photo = {
   id: string;
-  cloudinaryPublicId: string;
+  storagePath: string;
   title: string;
   description: string | null;
   tags: string[];

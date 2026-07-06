@@ -1,21 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { CldImage, CldUploadWidget } from "next-cloudinary";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export type EditorPhoto = {
-  cloudinaryPublicId: string;
+  storagePath: string;
+  imageUrl: string;
   title: string;
   description: string | null;
   tags: string[];
   sortOrder: number;
   published: boolean;
 };
-
-const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 export function PhotoEditor({
   action,
@@ -24,25 +23,45 @@ export function PhotoEditor({
   action: (formData: FormData) => void | Promise<void>;
   photo?: EditorPhoto;
 }) {
-  const [publicId, setPublicId] = React.useState(photo?.cloudinaryPublicId ?? "");
+  const [preview, setPreview] = React.useState<string | null>(null);
+  const [fileName, setFileName] = React.useState<string>("");
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (preview) URL.revokeObjectURL(preview);
+      setPreview(URL.createObjectURL(file));
+      setFileName(file.name);
+    }
+  };
+
+  React.useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
+
+  const displayUrl = preview ?? photo?.imageUrl ?? null;
 
   return (
     <form action={action} className="grid max-w-3xl gap-5">
+      {/* When editing without a new file, carry forward the existing storage_path */}
+      {photo && !preview && (
+        <input type="hidden" name="storage_path" value={photo.storagePath} />
+      )}
+
       <div className="grid gap-1.5">
         <Label>Image</Label>
-        {/* Hidden field carries the uploaded Cloudinary public_id to the action. */}
-        <input type="hidden" name="cloudinary_public_id" value={publicId} required />
 
-        {publicId ? (
+        {displayUrl ? (
           <div className="relative aspect-[4/3] w-full max-w-sm overflow-hidden rounded-card border border-border bg-muted">
-            <CldImage
-              src={publicId}
+            <Image
+              src={displayUrl}
               alt="Selected photo preview"
               fill
               sizes="384px"
-              crop="fill"
-              gravity="auto"
               className="object-cover"
+              unoptimized={!!preview}
             />
           </div>
         ) : (
@@ -51,36 +70,23 @@ export function PhotoEditor({
           </div>
         )}
 
-        <CldUploadWidget
-          uploadPreset={UPLOAD_PRESET}
-          // Restrict to local-file upload. Other sources (Google Drive, Unsplash,
-          // etc.) load extra iframe content that a fresh/free Cloudinary account
-          // may not have provisioned, which surfaces as a "server error" in the
-          // widget even though the upload itself succeeds.
-          options={{ sources: ["local"], multiple: false, maxFiles: 1 }}
-          onSuccess={(result) => {
-            const info = result?.info;
-            if (info && typeof info === "object" && "public_id" in info) {
-              setPublicId(String(info.public_id));
-            }
-          }}
-          onError={(error) => {
-            // Don't let a widget-side error bubble up as an unhandled failure;
-            // the upload may still succeed. Log for diagnosis instead.
-            console.error("[photos] Cloudinary upload widget error:", error);
-          }}
-        >
-          {({ open }) => (
-            <div className="flex items-center gap-2">
-              <Button type="button" variant="outline" size="sm" onClick={() => open()}>
-                {publicId ? "Replace image" : "Upload image"}
-              </Button>
-              {publicId ? (
-                <span className="truncate text-xs text-muted-foreground">{publicId}</span>
-              ) : null}
-            </div>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="outline" size="sm" asChild>
+            <label className="cursor-pointer">
+              {photo ? "Replace image" : "Upload image"}
+              <input
+                type="file"
+                name="file"
+                accept="image/jpeg,image/png,image/webp,image/avif"
+                className="sr-only"
+                onChange={handleFileChange}
+              />
+            </label>
+          </Button>
+          {fileName && (
+            <span className="truncate text-xs text-muted-foreground">{fileName}</span>
           )}
-        </CldUploadWidget>
+        </div>
       </div>
 
       <div className="grid gap-1.5">

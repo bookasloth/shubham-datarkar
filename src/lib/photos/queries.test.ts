@@ -8,7 +8,7 @@ describe("mapRow", () => {
   it("maps a full db row (snake_case) to a Photo (camelCase)", () => {
     const row = {
       id: "11111111-1111-1111-1111-111111111111",
-      cloudinary_public_id: "gallery/sunset",
+      storage_path: "1720000000-abc123.jpg",
       title: "Sunset",
       description: "A sunset over the hills",
       tags: ["nature", "sunset"],
@@ -20,7 +20,7 @@ describe("mapRow", () => {
 
     expect(mapRow(row)).toEqual({
       id: "11111111-1111-1111-1111-111111111111",
-      cloudinaryPublicId: "gallery/sunset",
+      storagePath: "1720000000-abc123.jpg",
       title: "Sunset",
       description: "A sunset over the hills",
       tags: ["nature", "sunset"],
@@ -34,7 +34,7 @@ describe("mapRow", () => {
   it("defaults null description to null and null tags to an empty array", () => {
     const row = {
       id: "22222222-2222-2222-2222-222222222222",
-      cloudinary_public_id: "gallery/mountain",
+      storage_path: "1720000000-def456.png",
       title: "Mountain",
       description: null,
       tags: null,
