@@ -2,7 +2,8 @@
 
 import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
+import { getPhotoPublicUrl } from "@/lib/photos/photo-url";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Photo } from "@/lib/photos/types";
 import { formatPhotoDate, wrapIndex } from "@/lib/photos/gallery";
@@ -134,9 +135,9 @@ export function PhotoLightbox({
                   </button>
                 )}
 
-                <CldImage
+                <Image
                   key={photo.id}
-                  src={photo.cloudinaryPublicId}
+                  src={getPhotoPublicUrl(photo.storagePath)}
                   alt={photo.title}
                   width={1600}
                   height={1200}
@@ -188,13 +189,11 @@ export function PhotoLightbox({
                                 : "border-border opacity-60 hover:opacity-100",
                             )}
                           >
-                            <CldImage
-                              src={p.cloudinaryPublicId}
+                            <Image
+                              src={getPhotoPublicUrl(p.storagePath)}
                               alt={p.title}
                               width={80}
                               height={56}
-                              crop="fill"
-                              gravity="auto"
                               className="h-full w-full object-cover"
                             />
                           </button>

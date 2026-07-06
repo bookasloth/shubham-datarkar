@@ -1,6 +1,7 @@
 "use client";
 
-import { CldImage } from "next-cloudinary";
+import Image from "next/image";
+import { getPhotoPublicUrl } from "@/lib/photos/photo-url";
 import type { Photo } from "@/lib/photos/types";
 import { formatPhotoDate } from "@/lib/photos/gallery";
 import { cn } from "@/lib/utils";
@@ -40,13 +41,11 @@ export function PhotoCard({
       )}
     >
       <div className="relative aspect-[4/3] w-full overflow-hidden">
-        <CldImage
-          src={photo.cloudinaryPublicId}
+        <Image
+          src={getPhotoPublicUrl(photo.storagePath)}
           alt={photo.title}
           fill
           sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          crop="fill"
-          gravity="auto"
           className="object-cover transition-transform duration-[--dur-slow] ease-[--ease-out-quint] group-hover:scale-[1.02]"
         />
         {/* Scrim: only as dark as it needs to be to seat the caption. */}

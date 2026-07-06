@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { getPhotoPublicUrl } from "@/lib/photos/photo-url";
 import { getPhotoByIdAdmin } from "@/lib/photos/queries";
 import { updatePhoto, deletePhoto } from "@/lib/photos/actions";
 import { PhotoEditor } from "@/components/admin/photo-editor";
@@ -51,7 +52,8 @@ export default async function EditPhotoPage({ params }: { params: Promise<{ id: 
       <PhotoEditor
         action={update}
         photo={{
-          cloudinaryPublicId: photo.cloudinaryPublicId,
+          storagePath: photo.storagePath,
+          imageUrl: getPhotoPublicUrl(photo.storagePath),
           title: photo.title,
           description: photo.description,
           tags: photo.tags,
