@@ -6,7 +6,7 @@
 
 /** A row shaped for insert/update into the `photos` table (snake_case). */
 export type PhotoRow = {
-  cloudinary_public_id: string;
+  storage_path: string;
   title: string;
   description: string | null;
   tags: string[];
@@ -45,7 +45,7 @@ export function parseSortOrder(raw: unknown): number {
 export function photoRowFromFormData(formData: FormData): PhotoRow {
   const description = String(formData.get("description") ?? "").trim();
   return {
-    cloudinary_public_id: String(formData.get("cloudinary_public_id") ?? "").trim(),
+    storage_path: String(formData.get("storage_path") ?? "").trim(),
     title: String(formData.get("title") ?? "").trim(),
     description: description || null,
     tags: parseTags(formData.get("tags")),

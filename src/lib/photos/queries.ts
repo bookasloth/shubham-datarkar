@@ -6,7 +6,7 @@ import type { Photo } from "@/lib/photos/types";
 
 type DbRow = {
   id: string;
-  cloudinary_public_id: string;
+  storage_path: string;
   title: string;
   description: string | null;
   tags: string[] | null;
@@ -17,13 +17,13 @@ type DbRow = {
 };
 
 const PHOTO_COLS =
-  "id,cloudinary_public_id,title,description,tags,sort_order,published,created_at,updated_at";
+  "id,storage_path,title,description,tags,sort_order,published,created_at,updated_at";
 
 /** Maps a DB row (snake_case) to the shared `Photo` type (camelCase). */
 export function mapRow(row: DbRow): Photo {
   return {
     id: row.id,
-    cloudinaryPublicId: row.cloudinary_public_id,
+    storagePath: row.storage_path,
     title: row.title,
     description: row.description ?? null,
     tags: row.tags ?? [],
