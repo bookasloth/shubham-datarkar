@@ -29,10 +29,17 @@ export function PhotoEditor({
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (preview) URL.revokeObjectURL(preview);
       setPreview(URL.createObjectURL(file));
       setFileName(file.name);
     }
   };
+
+  React.useEffect(() => {
+    return () => {
+      if (preview) URL.revokeObjectURL(preview);
+    };
+  }, [preview]);
 
   const displayUrl = preview ?? photo?.imageUrl ?? null;
 
