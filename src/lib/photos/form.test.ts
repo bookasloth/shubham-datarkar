@@ -49,7 +49,7 @@ describe("photoRowFromFormData", () => {
   it("maps a full form to a row", () => {
     const row = photoRowFromFormData(
       fd({
-        cloudinary_public_id: "gallery/abc123",
+        storage_path: "1720000000-abc123.jpg",
         title: "Sunset",
         description: "  A warm dusk  ",
         tags: "sky, warm, sky",
@@ -58,7 +58,7 @@ describe("photoRowFromFormData", () => {
       }),
     );
     expect(row).toEqual({
-      cloudinary_public_id: "gallery/abc123",
+      storage_path: "1720000000-abc123.jpg",
       title: "Sunset",
       description: "A warm dusk",
       tags: ["sky", "warm"],
@@ -69,7 +69,7 @@ describe("photoRowFromFormData", () => {
 
   it("blank description becomes null and missing checkbox is false", () => {
     const row = photoRowFromFormData(
-      fd({ cloudinary_public_id: "x", title: "T", description: "   ", tags: "", sort_order: "" }),
+      fd({ storage_path: "x.jpg", title: "T", description: "   ", tags: "", sort_order: "" }),
     );
     expect(row.description).toBeNull();
     expect(row.published).toBe(false);
