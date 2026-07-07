@@ -9,10 +9,13 @@ import {
   getResourceBySlug,
   getTagsForResource,
 } from "@/lib/resources/queries";
+import { getMyProgress, isBookmarked } from "@/lib/members/member-queries";
 import { ResourceGrid } from "@/components/members/resource-grid";
 import { ResourceContent } from "@/components/members/resource-content";
 import { Paywall } from "@/components/members/paywall";
 import { ShareButton } from "@/components/members/share-button";
+import { BookmarkButton } from "@/components/members/bookmark-button";
+import { ProgressTracker } from "@/components/members/progress-tracker";
 import { TypeIcon } from "@/components/members/type-icons";
 import Link from "next/link";
 
@@ -32,10 +35,12 @@ export default async function ResourcePage({
   if (resource.visibility === "hidden" && role !== "admin") notFound();
 
   const allowed = canAccess(resource.visibility, role);
-  const [tags, related, next] = await Promise.all([
+  const [tags, related, next, bookmarked, progress] = await Promise.all([
     getTagsForResource(resource.id),
     getRelatedResources(resource, 3),
     getNextResource(resource),
+    user ? isBookmarked(resource.id) : Promise.resolve(false),
+    user ? getMyProgress(resource.id) : Promise.resolve(0),
   ]);
   await trackView(resource.id, user?.id);
 
@@ -82,7 +87,12 @@ export default async function ResourcePage({
             </span>
           ) : null}
           <span className="ml-auto flex items-center gap-2">
-            {/* Bookmark button mounts here in the member-features phase. */}
+            <BookmarkButton
+              resourceId={resource.id}
+              initialBookmarked={bookmarked}
+              signedIn={!!user}
+              returnPath={`/members/resources/${resource.slug}`}
+            />
             <ShareButton title={resource.title} />
           </span>
         </div>
@@ -104,6 +114,9 @@ export default async function ResourcePage({
 
       {/* Content or paywall */}
       <div className="py-8">
+        {allowed && user && (
+          <ProgressTracker resourceId={resource.id} initialProgress={progress} />
+        )}
         {allowed ? (
           <ResourceContent resource={resource} />
         ) : (

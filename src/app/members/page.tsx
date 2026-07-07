@@ -1,20 +1,45 @@
 import Link from "next/link";
-import { BookOpen, Bookmark, Compass, Wrench } from "lucide-react";
+import { ArrowRight, Search } from "lucide-react";
 import { requireMember } from "@/lib/members/session";
-import { EmptyState } from "@/components/ui/empty-state";
+import {
+  getContinueReading,
+  getRecentlyViewed,
+} from "@/lib/members/member-queries";
+import { listCategories, listResources } from "@/lib/resources/queries";
+import { canAccess } from "@/lib/members/access";
+import { ResourceCard } from "@/components/members/resource-card";
+import { ResourceGrid } from "@/components/members/resource-grid";
 
 export const metadata = { title: "Dashboard" };
 
-const QUICK_LINKS = [
-  { href: "/members/explore", label: "Explore", desc: "Browse every resource", icon: Compass },
-  { href: "/members/latest", label: "Latest", desc: "Newest additions", icon: BookOpen },
-  { href: "/members/bookmarks", label: "Bookmarks", desc: "Your saved library", icon: Bookmark },
-  { href: "/members/tools", label: "Tools", desc: "Interactive utilities", icon: Wrench },
-];
+function SectionHeading({ title, href }: { title: string; href?: string }) {
+  return (
+    <div className="flex items-center justify-between">
+      <h2 className="font-display text-lg font-semibold">{title}</h2>
+      {href && (
+        <Link
+          href={href}
+          className="inline-flex items-center gap-1 text-xs text-muted-foreground transition-ui hover:text-foreground"
+        >
+          View all <ArrowRight className="size-3" />
+        </Link>
+      )}
+    </div>
+  );
+}
 
 export default async function MembersDashboard() {
-  const { user } = await requireMember("/members");
+  const { user, role } = await requireMember("/members");
   const name = user!.email?.split("@")[0] ?? "there";
+
+  const [featured, continueReading, recent, latest, trending, categories] = await Promise.all([
+    listResources({ featured: true, limit: 3 }),
+    getContinueReading(3),
+    getRecentlyViewed(3),
+    listResources({ sort: "newest", limit: 6 }),
+    listResources({ sort: "popular", limit: 3 }),
+    listCategories(),
+  ]);
 
   return (
     <div className="mx-auto max-w-5xl space-y-10">
@@ -25,38 +50,104 @@ export default async function MembersDashboard() {
         <p className="mt-1 text-sm text-muted-foreground">
           Your marketing workspace. Something new every week.
         </p>
+        <form action="/members/explore" method="get" className="mt-4 max-w-md sm:hidden">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <input
+              name="q"
+              type="search"
+              placeholder="Search resources"
+              className="w-full rounded-input border border-input bg-background py-2 pl-9 pr-3 text-sm outline-none transition-ui focus:border-brand"
+            />
+          </div>
+        </form>
       </header>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {QUICK_LINKS.map((q) => (
-          <Link
-            key={q.href}
-            href={q.href}
-            className="group rounded-card border border-border bg-card p-4 shadow-xs transition-ui hover:border-foreground/30"
-          >
-            <q.icon className="size-5 text-muted-foreground transition-ui group-hover:text-foreground" />
-            <div className="mt-3 text-sm font-semibold">{q.label}</div>
-            <div className="mt-0.5 text-xs text-muted-foreground">{q.desc}</div>
-          </Link>
-        ))}
-      </section>
+      {featured.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeading title="Featured" href="/members/explore" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {featured.map((r) => (
+              <ResourceCard key={r.id} resource={r} locked={!canAccess(r.visibility, role)} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Populated in the resources + member-features phases. */}
+      {continueReading.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeading title="Continue reading" />
+          <div className="space-y-2">
+            {continueReading.map((r) => (
+              <Link
+                key={r.id}
+                href={`/members/resources/${r.slug}`}
+                className="group flex items-center gap-4 rounded-card border border-border bg-card px-4 py-3 transition-ui hover:border-foreground/30"
+              >
+                <div className="min-w-0 flex-1">
+                  <div className="truncate text-sm font-medium group-hover:underline group-hover:underline-offset-4">
+                    {r.title}
+                  </div>
+                  <div className="mt-1.5 h-1 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className="h-full rounded-full bg-foreground"
+                      style={{ width: `${Math.round(r.progress * 100)}%` }}
+                    />
+                  </div>
+                </div>
+                <span className="text-xs text-muted-foreground">
+                  {Math.round(r.progress * 100)}%
+                </span>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {recent.length > 0 && continueReading.length === 0 && (
+        <section className="space-y-3">
+          <SectionHeading title="Recently viewed" />
+          <ResourceGrid resources={recent} role={role} />
+        </section>
+      )}
+
       <section className="space-y-3">
-        <h2 className="font-display text-lg font-semibold">Featured</h2>
-        <EmptyState
-          title="Nothing featured yet"
-          description="Featured resources will appear here as they are published."
+        <SectionHeading title="Recently added" href="/members/latest" />
+        <ResourceGrid
+          resources={latest}
+          role={role}
+          emptyTitle="Nothing here yet"
+          emptyDescription="New resources land every week."
         />
       </section>
 
-      <section className="space-y-3">
-        <h2 className="font-display text-lg font-semibold">Continue reading</h2>
-        <EmptyState
-          title="No reading in progress"
-          description="Open any resource and your progress will be saved automatically."
-        />
-      </section>
+      {categories.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeading title="Categories" />
+          <div className="flex flex-wrap gap-2">
+            {categories.map((c) => (
+              <Link
+                key={c.id}
+                href={`/members/explore?category=${c.slug}`}
+                className="rounded-btn border border-border px-3 py-1.5 text-xs transition-ui hover:bg-accent"
+              >
+                {c.name}
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {trending.length > 0 && (
+        <section className="space-y-3">
+          <SectionHeading title="Trending" href="/members/explore?sort=popular" />
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {trending.map((r) => (
+              <ResourceCard key={r.id} resource={r} locked={!canAccess(r.visibility, role)} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
   );
 }
