@@ -44,6 +44,9 @@ function loadScript(): Promise<void> {
   return scriptPromise;
 }
 
+/** Shared loader for other Razorpay surfaces (e.g. member subscriptions). */
+export const loadRazorpayScript = loadScript;
+
 export type CheckoutSession = {
   orderId: string;
   keyId: string;
