@@ -55,9 +55,23 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  // Members: bounce logged-in users away from the members login page.
+  if (path === "/members/login" && user) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/members";
+    url.search = "";
+    return NextResponse.redirect(url);
+  }
+
   return response;
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/login", "/games/login", "/games/profile/:path*"],
+  matcher: [
+    "/admin/:path*",
+    "/login",
+    "/games/login",
+    "/games/profile/:path*",
+    "/members/:path*",
+  ],
 };
