@@ -1,4 +1,6 @@
 import { Suspense } from "react";
+import Link from "next/link";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 import { getMemberContext } from "@/lib/members/session";
 import { trackSearch } from "@/lib/members/tracking";
 import {
@@ -18,7 +20,20 @@ type Params = {
   category?: string;
   difficulty?: string;
   sort?: string;
+  page?: string;
 };
+
+const PAGE_SIZE = 24;
+
+function pageHref(sp: Params, page: number): string {
+  const params = new URLSearchParams();
+  for (const key of ["q", "type", "category", "difficulty", "sort"] as const) {
+    if (sp[key]) params.set(key, sp[key]!);
+  }
+  if (page > 1) params.set("page", String(page));
+  const qs = params.toString();
+  return `/members/explore${qs ? `?${qs}` : ""}`;
+}
 
 export default async function ExplorePage({
   searchParams,
@@ -33,6 +48,7 @@ export default async function ExplorePage({
   ]);
 
   const q = sp.q?.trim();
+  const page = Math.max(1, Number(sp.page) || 1);
   let resources;
   if (q) {
     resources = await searchResources(q);
@@ -46,9 +62,11 @@ export default async function ExplorePage({
       categoryId,
       difficulty: sp.difficulty,
       sort: sp.sort === "popular" ? "popular" : "newest",
-      limit: 48,
+      limit: PAGE_SIZE,
+      offset: (page - 1) * PAGE_SIZE,
     });
   }
+  const hasNext = !q && resources.length === PAGE_SIZE;
 
   return (
     <div className="mx-auto max-w-6xl space-y-6">
@@ -68,6 +86,29 @@ export default async function ExplorePage({
       </Suspense>
 
       <ResourceGrid resources={resources} role={role} />
+
+      {(page > 1 || hasNext) && (
+        <nav className="flex items-center justify-between pt-2">
+          {page > 1 ? (
+            <Link
+              href={pageHref(sp, page - 1)}
+              className="inline-flex items-center gap-1.5 rounded-btn border border-border px-3 py-1.5 text-xs transition-ui hover:bg-accent"
+            >
+              <ArrowLeft className="size-3.5" /> Newer
+            </Link>
+          ) : (
+            <span />
+          )}
+          {hasNext && (
+            <Link
+              href={pageHref(sp, page + 1)}
+              className="inline-flex items-center gap-1.5 rounded-btn border border-border px-3 py-1.5 text-xs transition-ui hover:bg-accent"
+            >
+              Older <ArrowRight className="size-3.5" />
+            </Link>
+          )}
+        </nav>
+      )}
     </div>
   );
 }

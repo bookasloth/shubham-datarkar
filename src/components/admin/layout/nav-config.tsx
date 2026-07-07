@@ -1,7 +1,7 @@
 import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
   Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Image as ImageIcon, Gamepad2, Search,
-  Library, Tags, MessageSquarePlus, UserRound, Bell, type LucideIcon,
+  Library, Tags, MessageSquarePlus, UserRound, Bell, BarChart3, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
@@ -38,6 +38,8 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Resources", href: "/admin/resources", icon: Library },
       { label: "Taxonomy", href: "/admin/resources/taxonomy", icon: Tags },
+      { label: "Tools", href: "/admin/resources/tools", icon: Wrench },
+      { label: "Analytics", href: "/admin/members/analytics", icon: BarChart3 },
       { label: "Requests", href: "/admin/requests", icon: MessageSquarePlus },
       { label: "Members", href: "/admin/members", icon: UserRound },
       { label: "Plans", href: "/admin/plans", icon: CreditCard },

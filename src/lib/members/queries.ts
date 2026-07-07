@@ -8,6 +8,48 @@ export type Announcement = {
   href: string | null;
 };
 
+export type MemberTool = {
+  id: string;
+  slug: string;
+  name: string;
+  description: string | null;
+  icon: string | null;
+  component: string;
+  sort: number;
+};
+
+/** Live tools for the members tools directory. Never throws. */
+export async function listLiveTools(): Promise<MemberTool[]> {
+  try {
+    const { data, error } = await supabaseAnon()
+      .from("member_tools")
+      .select("id,slug,name,description,icon,component,sort")
+      .eq("status", "live")
+      .order("sort");
+    if (error) throw error;
+    return (data ?? []) as MemberTool[];
+  } catch (e) {
+    console.warn("[members] tools fetch failed", e);
+    return [];
+  }
+}
+
+export async function getToolBySlug(slug: string): Promise<MemberTool | null> {
+  try {
+    const { data, error } = await supabaseAnon()
+      .from("member_tools")
+      .select("id,slug,name,description,icon,component,sort")
+      .eq("status", "live")
+      .eq("slug", slug)
+      .maybeSingle();
+    if (error) throw error;
+    return (data as MemberTool | null) ?? null;
+  } catch (e) {
+    console.warn("[members] tool fetch failed", e);
+    return null;
+  }
+}
+
 /** Latest active announcement inside its window, or null. Never throws. */
 export async function getActiveAnnouncement(): Promise<Announcement | null> {
   try {
