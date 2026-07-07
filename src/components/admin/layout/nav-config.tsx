@@ -40,6 +40,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Taxonomy", href: "/admin/resources/taxonomy", icon: Tags },
       { label: "Requests", href: "/admin/requests", icon: MessageSquarePlus },
       { label: "Members", href: "/admin/members", icon: UserRound },
+      { label: "Plans", href: "/admin/plans", icon: CreditCard },
       { label: "Announcements", href: "/admin/announcements", icon: Bell },
     ],
   },
