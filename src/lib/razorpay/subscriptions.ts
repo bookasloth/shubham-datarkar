@@ -6,6 +6,7 @@ import "server-only";
  */
 
 const SUBSCRIPTIONS_URL = "https://api.razorpay.com/v1/subscriptions";
+const PLANS_URL = "https://api.razorpay.com/v1/plans";
 
 function basicAuth(): string {
   const id = process.env.RAZORPAY_KEY_ID;
@@ -15,6 +16,52 @@ function basicAuth(): string {
 }
 
 type RazorpayError = { error?: { description?: string } };
+
+export type CreatePlanResult =
+  | { ok: true; id: string }
+  | { ok: false; error: string };
+
+/**
+ * Create a Razorpay plan (so the admin never has to open the Razorpay
+ * dashboard). Razorpay plans are immutable once created: set the final price
+ * before calling this. Returns the `plan_...` id to store on membership_plans.
+ */
+export async function createPlan(input: {
+  interval: "monthly" | "yearly";
+  name: string;
+  amountPaise: number;
+  description?: string;
+}): Promise<CreatePlanResult> {
+  let res: Response;
+  try {
+    res = await fetch(PLANS_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${basicAuth()}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        period: input.interval, // Razorpay accepts 'monthly' | 'yearly'
+        interval: 1,
+        item: {
+          name: input.name,
+          amount: input.amountPaise,
+          currency: "INR",
+          ...(input.description ? { description: input.description } : {}),
+        },
+      }),
+      cache: "no-store",
+    });
+  } catch (e) {
+    return { ok: false, error: `Network error reaching Razorpay: ${(e as Error).message}` };
+  }
+
+  const json = (await res.json().catch(() => ({}))) as { id?: string } & RazorpayError;
+  if (!res.ok || !json.id) {
+    return { ok: false, error: json.error?.description || `Razorpay returned HTTP ${res.status}.` };
+  }
+  return { ok: true, id: String(json.id) };
+}
 
 export type CreateSubscriptionResult =
   | { ok: true; id: string }

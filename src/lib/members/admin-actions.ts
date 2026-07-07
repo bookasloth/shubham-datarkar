@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
+import { createPlan } from "@/lib/razorpay/subscriptions";
 
 /* ---- announcements ---- */
 
@@ -98,6 +99,68 @@ export async function savePlan(formData: FormData): Promise<void> {
   const { error } = await supabase
     .from("membership_plans")
     .upsert(row, { onConflict: "key" });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/plans");
+}
+
+/**
+ * Create the plan in Razorpay (via their Plans API) and link + activate it —
+ * so the admin never opens the Razorpay dashboard. Razorpay plans are
+ * immutable, so this uses the amount/name/interval currently in the form.
+ * Guarded: if a razorpay_plan_id is already linked, it only saves edits +
+ * activates (no duplicate Razorpay plan).
+ */
+export async function createRazorpayPlan(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const key = String(formData.get("key") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const amount = Math.round(Number(formData.get("amount") ?? 0));
+  const interval = String(formData.get("interval") ?? "monthly");
+  const description = String(formData.get("description") ?? "").trim();
+  if (!key || !name) throw new Error("Key and name are required.");
+  if (!Number.isFinite(amount) || amount < 100) throw new Error("Amount (paise) must be at least 100.");
+  if (!["monthly", "yearly"].includes(interval)) throw new Error("Bad interval.");
+
+  const supabase = await supabaseAuthServer();
+
+  const { data: existing } = await supabase
+    .from("membership_plans")
+    .select("razorpay_plan_id")
+    .eq("key", key)
+    .maybeSingle();
+
+  // Already has a Razorpay plan → don't create a second one; just save + activate.
+  if (existing?.razorpay_plan_id) {
+    const { error } = await supabase
+      .from("membership_plans")
+      .update({ name, amount, description: description || null, active: true })
+      .eq("key", key);
+    if (error) throw new Error(error.message);
+    revalidatePath("/admin/plans");
+    return;
+  }
+
+  const created = await createPlan({
+    interval: interval as "monthly" | "yearly",
+    name,
+    amountPaise: amount,
+    description: description || undefined,
+  });
+  if (!created.ok) throw new Error(created.error);
+
+  const { error } = await supabase.from("membership_plans").upsert(
+    {
+      key,
+      name,
+      description: description || null,
+      amount,
+      interval,
+      razorpay_plan_id: created.id,
+      active: true,
+      sort: Number(formData.get("sort") ?? 0) || 0,
+    },
+    { onConflict: "key" },
+  );
   if (error) throw new Error(error.message);
   revalidatePath("/admin/plans");
 }

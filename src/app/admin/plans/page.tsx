@@ -1,6 +1,6 @@
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
-import { savePlan } from "@/lib/members/admin-actions";
-import { PageHeader } from "@/components/admin";
+import { createRazorpayPlan, savePlan } from "@/lib/members/admin-actions";
+import { PageHeader, StatusBadge } from "@/components/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,6 +19,7 @@ type PlanRow = {
 };
 
 const CELL = "h-8 rounded-btn border border-border bg-background px-2 text-sm";
+const rupees = (paise: number) => `₹${Math.round(paise / 100).toLocaleString("en-IN")}`;
 
 export default async function PlansAdminPage() {
   const supabase = await supabaseAuthServer();
@@ -32,7 +33,7 @@ export default async function PlansAdminPage() {
     <div className="space-y-6">
       <PageHeader
         title="Membership plans"
-        description="Create matching plans in the Razorpay dashboard, paste their plan ids here, then activate. Amounts are in paise."
+        description="Set the price, then click Create in Razorpay — it creates the plan on Razorpay (same account as your other payments) and activates it. No Razorpay dashboard needed. Amounts are in paise (₹299 = 29900)."
       />
 
       <div className="space-y-3">
@@ -40,48 +41,75 @@ export default async function PlansAdminPage() {
           <form
             key={p.id}
             action={savePlan}
-            className="grid gap-2 rounded-card border border-border bg-card p-4 sm:grid-cols-[8rem_10rem_7rem_6rem_1fr_auto_auto]"
+            className="flex flex-wrap items-center gap-2 rounded-card border border-border bg-card p-4"
           >
             <input type="hidden" name="key" value={p.key} />
-            <div className="self-center font-mono text-xs text-muted-foreground">{p.key}</div>
-            <input name="name" defaultValue={p.name} className={CELL} />
-            <input name="amount" type="number" defaultValue={p.amount} className={CELL} title="Paise" />
-            <select name="interval" defaultValue={p.interval} className={CELL}>
+            <input type="hidden" name="sort" value={p.sort} />
+            <input type="hidden" name="description" value={p.description ?? ""} />
+
+            <span className="w-28 font-mono text-xs text-muted-foreground">{p.key}</span>
+            <input name="name" defaultValue={p.name} className={`${CELL} w-40`} />
+            <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <input
+                name="amount"
+                type="number"
+                defaultValue={p.amount}
+                className={`${CELL} w-24`}
+                title="Paise"
+              />
+              paise ({rupees(p.amount)})
+            </label>
+            <select name="interval" defaultValue={p.interval} className={`${CELL} w-24`}>
               <option value="monthly">monthly</option>
               <option value="yearly">yearly</option>
             </select>
             <input
               name="razorpay_plan_id"
               defaultValue={p.razorpay_plan_id ?? ""}
-              placeholder="plan_XXXXXXXX (from Razorpay)"
-              className={`${CELL} font-mono`}
+              placeholder="plan_… (auto-filled)"
+              className={`${CELL} w-52 font-mono`}
             />
-            <label className="flex items-center gap-1.5 self-center text-xs">
+            <label className="flex items-center gap-1.5 text-xs">
               <input type="checkbox" name="active" defaultChecked={p.active} /> Active
             </label>
-            <Button type="submit" variant="outline" size="sm">Save</Button>
-            <input type="hidden" name="sort" value={p.sort} />
-            <input type="hidden" name="description" value={p.description ?? ""} />
+
+            <div className="ml-auto flex items-center gap-2">
+              {p.razorpay_plan_id ? (
+                <StatusBadge tone={p.active ? "success" : "neutral"}>
+                  {p.active ? "live" : "linked"}
+                </StatusBadge>
+              ) : (
+                <StatusBadge tone="warning">not on Razorpay</StatusBadge>
+              )}
+              <Button type="submit" variant="outline" size="sm">
+                Save
+              </Button>
+              <Button type="submit" formAction={createRazorpayPlan} size="sm">
+                {p.razorpay_plan_id ? "Re-activate" : "Create in Razorpay"}
+              </Button>
+            </div>
           </form>
         ))}
 
+        {/* Add a brand-new plan (rare — the two premium plans are seeded). */}
         <form
           action={savePlan}
-          className="grid gap-2 rounded-card border border-dashed border-border p-4 sm:grid-cols-[8rem_10rem_7rem_6rem_1fr_auto_auto]"
+          className="flex flex-wrap items-center gap-2 rounded-card border border-dashed border-border p-4"
         >
-          <Input name="key" placeholder="plan-key" className="h-8" required />
-          <Input name="name" placeholder="Name" className="h-8" required />
-          <input name="amount" type="number" placeholder="Paise" className={CELL} required />
-          <select name="interval" defaultValue="monthly" className={CELL}>
+          <Input name="key" placeholder="plan-key" className="h-8 w-28" required />
+          <Input name="name" placeholder="Name" className="h-8 w-40" required />
+          <input name="amount" type="number" placeholder="Paise" className={`${CELL} w-24`} required />
+          <select name="interval" defaultValue="monthly" className={`${CELL} w-24`}>
             <option value="monthly">monthly</option>
             <option value="yearly">yearly</option>
           </select>
-          <input name="razorpay_plan_id" placeholder="plan_XXXXXXXX" className={`${CELL} font-mono`} />
-          <label className="flex items-center gap-1.5 self-center text-xs">
+          <label className="flex items-center gap-1.5 text-xs">
             <input type="checkbox" name="active" /> Active
           </label>
-          <Button type="submit" size="sm">Add</Button>
           <input type="hidden" name="sort" value={plans.length + 1} />
+          <Button type="submit" size="sm" className="ml-auto">
+            Add draft
+          </Button>
         </form>
       </div>
     </div>
