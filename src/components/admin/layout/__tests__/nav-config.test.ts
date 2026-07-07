@@ -17,7 +17,7 @@ describe("ADMIN_NAV", () => {
 
   it("groups under the real-route headings", () => {
     expect(ADMIN_NAV.map((g) => g.heading)).toEqual([
-      "Overview", "Content", "Audience", "Commerce", "Distribution", "SEO",
+      "Overview", "Content", "Members", "Audience", "Commerce", "Distribution", "SEO",
     ]);
   });
 });
