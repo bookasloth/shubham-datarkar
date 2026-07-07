@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { ArrowRight, Download, ExternalLink } from "lucide-react";
+import { ArrowRight, ExternalLink } from "lucide-react";
 import type { Resource } from "@/lib/resources/types";
 import { ArticleBody } from "@/components/content/article-body";
+import { DownloadCard } from "./download-card";
 import { PromptView } from "./prompt-view";
 import { WorkflowView } from "./workflow-view";
 
@@ -65,37 +66,6 @@ function VideoEmbed({ url }: { url: string }) {
   );
 }
 
-/** Download UI lands with the member-features phase; show version info until then. */
-function DownloadInfo({ resource }: { resource: Resource }) {
-  const { version, changelog } = resource.meta;
-  return (
-    <div className="rounded-card border border-border bg-card p-5">
-      <div className="flex items-center gap-3">
-        <div className="flex size-10 items-center justify-center rounded-card bg-muted">
-          <Download className="size-5 text-muted-foreground" />
-        </div>
-        <div>
-          <div className="text-sm font-semibold">
-            {version ? `Version ${version}` : "Downloadable file"}
-          </div>
-          <div className="text-xs text-muted-foreground">
-            {resource.download_count} download{resource.download_count === 1 ? "" : "s"}
-          </div>
-        </div>
-      </div>
-      {changelog && changelog.length > 0 && (
-        <ul className="mt-4 space-y-1.5 border-t border-border pt-3 text-xs text-muted-foreground">
-          {changelog.map((c) => (
-            <li key={c.version}>
-              <span className="font-medium text-foreground">{c.version}</span> ({c.date}) — {c.note}
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
-  );
-}
-
 export function ResourceContent({ resource }: { resource: Resource }) {
   switch (resource.type) {
     case "prompt":
@@ -130,7 +100,11 @@ export function ResourceContent({ resource }: { resource: Resource }) {
       return (
         <div className="space-y-8">
           <Blocks resource={resource} />
-          <DownloadInfo resource={resource} />
+          <DownloadCard
+            resourceId={resource.id}
+            meta={resource.meta}
+            downloadCount={resource.download_count}
+          />
         </div>
       );
     case "tool":

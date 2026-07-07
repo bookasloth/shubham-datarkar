@@ -164,6 +164,29 @@ export async function searchResources(q: string, limit = 30): Promise<ResourceCa
   }
 }
 
+/** Cards for an explicit id set (bookmarks, progress, downloads), input order preserved. */
+export async function listResourcesByIds(ids: string[]): Promise<ResourceCard[]> {
+  if (!ids.length) return [];
+  try {
+    const { data, error } = await supabaseAdmin()
+      .from("resources")
+      .select(CARD_COLS)
+      .in("id", ids)
+      .eq("status", "published");
+    if (error) throw error;
+    const byId = new Map(
+      ((data ?? []) as unknown as CardRow[]).map((r) => [r.id, toCard(r)]),
+    );
+    return ids.flatMap((id) => {
+      const card = byId.get(id);
+      return card ? [card] : [];
+    });
+  } catch (e) {
+    console.warn("[resources] byIds failed", e);
+    return [];
+  }
+}
+
 export async function listCategories(): Promise<Category[]> {
   try {
     const { data, error } = await supabaseAdmin()
