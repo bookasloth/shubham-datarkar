@@ -37,6 +37,41 @@ export async function deleteAnnouncement(formData: FormData): Promise<void> {
   revalidatePath("/admin/announcements");
 }
 
+/* ---- member tools ---- */
+
+export async function saveTool(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const slug = String(formData.get("slug") ?? "").trim();
+  const name = String(formData.get("name") ?? "").trim();
+  const component = String(formData.get("component") ?? "").trim();
+  const status = String(formData.get("status") ?? "draft");
+  if (!slug || !name || !component) throw new Error("Slug, name, and component are required.");
+  if (!["draft", "live", "archived"].includes(status)) throw new Error("Bad status.");
+
+  const row = {
+    slug,
+    name,
+    component,
+    description: String(formData.get("description") ?? "").trim() || null,
+    status,
+    sort: Number(formData.get("sort") ?? 0) || 0,
+  };
+  const supabase = await supabaseAuthServer();
+  const { error } = await supabase.from("member_tools").upsert(row, { onConflict: "slug" });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/resources/tools");
+}
+
+export async function deleteTool(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const id = String(formData.get("id") ?? "").trim();
+  if (!id) return;
+  const supabase = await supabaseAuthServer();
+  const { error } = await supabase.from("member_tools").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/resources/tools");
+}
+
 /* ---- membership plans ---- */
 
 export async function savePlan(formData: FormData): Promise<void> {
