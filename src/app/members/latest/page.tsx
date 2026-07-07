@@ -1,0 +1,30 @@
+import { getMemberContext } from "@/lib/members/session";
+import { listResources } from "@/lib/resources/queries";
+import { ResourceGrid } from "@/components/members/resource-grid";
+
+export const metadata = { title: "Latest" };
+
+export default async function LatestPage() {
+  const [{ role }, resources] = await Promise.all([
+    getMemberContext(),
+    listResources({ sort: "newest", limit: 30 }),
+  ]);
+
+  return (
+    <div className="mx-auto max-w-6xl space-y-6">
+      <header>
+        <h1 className="font-display text-2xl font-bold tracking-tight">Latest</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          The newest resources, most recent first.
+        </p>
+      </header>
+
+      <ResourceGrid
+        resources={resources}
+        role={role}
+        emptyTitle="Nothing here yet"
+        emptyDescription="New resources land every week. Check back soon."
+      />
+    </div>
+  );
+}
