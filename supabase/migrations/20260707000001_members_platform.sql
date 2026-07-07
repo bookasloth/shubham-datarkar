@@ -1,6 +1,25 @@
 -- Members platform: resources, taxonomy, membership, member features.
 -- Everything is a Resource. Type-specific data lives in meta jsonb.
 
+-- ============ guard: park any pre-existing ad-hoc resources table ============
+-- Prod had an unrelated `resources` table (no `search` column, not created by
+-- any migration, unused by app code). `create table if not exists` would skip
+-- ours and the search index would then fail with 42703. Rename it aside —
+-- nothing is dropped; inspect/remove `resources_legacy` manually later.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.tables
+    where table_schema = 'public' and table_name = 'resources'
+  ) and not exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'resources'
+      and column_name = 'search'
+  ) then
+    alter table public.resources rename to resources_legacy;
+  end if;
+end $$;
+
 -- ============ taxonomy ============
 create table if not exists public.resource_types (
   key text primary key,
@@ -77,6 +96,7 @@ create index if not exists resources_list_idx on public.resources (status, visib
 create index if not exists resources_type_idx on public.resources (type);
 create index if not exists resources_category_idx on public.resources (category_id);
 
+drop trigger if exists resources_touch on public.resources;
 create trigger resources_touch before update on public.resources
   for each row execute function public.touch_updated_at();
 
@@ -115,6 +135,7 @@ create table if not exists public.memberships (
   updated_at timestamptz not null default now()
 );
 
+drop trigger if exists memberships_touch on public.memberships;
 create trigger memberships_touch before update on public.memberships
   for each row execute function public.touch_updated_at();
 
