@@ -1,0 +1,18 @@
+import { redirect } from "next/navigation";
+import { getMemberContext } from "@/lib/members/session";
+import { safeMembersNext } from "@/lib/members/safe-next";
+import MembersAuthForm from "@/components/members/auth-form";
+
+export default async function MembersLoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next } = await searchParams;
+  const safeNext = safeMembersNext(next ?? null);
+
+  const { user } = await getMemberContext();
+  if (user) redirect(safeNext);
+
+  return <MembersAuthForm next={safeNext} />;
+}

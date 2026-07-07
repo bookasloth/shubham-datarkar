@@ -486,3 +486,12 @@
      info to a lighter tone for AA on dark surfaces. */
   --admin-info: #6ea8dc;
 }
+
+/* ================================================================== */
+/*  MEMBERS SCOPE — member workspace. Monochrome base; the #FE5100      */
+/*  accent flows through the existing --brand token (focus, selection,  */
+/*  hover borders) and never applies outside [data-members].            */
+/* ================================================================== */
+[data-members] {
+  --brand: #fe5100;
+}
