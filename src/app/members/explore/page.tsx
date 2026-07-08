@@ -41,7 +41,7 @@ export default async function ExplorePage({
   searchParams: Promise<Params>;
 }) {
   const sp = await searchParams;
-  const [{ role, user }, types, categories] = await Promise.all([
+  const [{ capabilities, user }, types, categories] = await Promise.all([
     getMemberContext(),
     listTypes(),
     listCategories(),
@@ -85,7 +85,7 @@ export default async function ExplorePage({
         <FilterBar types={types} categories={categories} />
       </Suspense>
 
-      <ResourceGrid resources={resources} role={role} />
+      <ResourceGrid resources={resources} capabilities={capabilities} />
 
       {(page > 1 || hasNext) && (
         <nav className="flex items-center justify-between pt-2">

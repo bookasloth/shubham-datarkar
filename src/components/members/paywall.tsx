@@ -1,18 +1,15 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
-import type { Visibility } from "@/lib/members/access";
 
 export function Paywall({
-  visibility,
   excerpt,
   returnPath,
+  signedIn,
 }: {
-  visibility: Visibility;
   excerpt: string | null;
   returnPath: string;
+  signedIn: boolean;
 }) {
-  const premium = visibility === "premium";
-
   return (
     <div className="space-y-6">
       {excerpt && (
@@ -26,28 +23,24 @@ export function Paywall({
         <div className="flex size-12 items-center justify-center rounded-card bg-muted">
           <Lock className="size-6 text-muted-foreground" />
         </div>
-        <h2 className="mt-4 font-display text-lg font-semibold">
-          {premium ? "This is a premium resource" : "This is a member resource"}
-        </h2>
+        <h2 className="mt-4 font-display text-lg font-semibold">This is a Member resource</h2>
         <p className="mt-1.5 max-w-sm text-sm text-muted-foreground">
-          {premium
-            ? "Upgrade to premium to unlock this and every other premium resource."
-            : "Create a free account to read this and every other member resource."}
+          Become a Member to unlock this and the complete library.
         </p>
         <div className="mt-6 flex items-center gap-3">
-          {premium ? (
+          {signedIn ? (
             <Link
               href="/members/upgrade"
               className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
             >
-              Go premium
+              Become a Member
             </Link>
           ) : (
             <Link
               href={`/members/login?next=${encodeURIComponent(returnPath)}`}
               className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
             >
-              Sign in free
+              Sign in
             </Link>
           )}
           <Link

@@ -13,11 +13,18 @@ import type {
  * The resources table is RLS-locked (admin policies only), so member-facing
  * reads go through the service-role client with app-level gating: list
  * surfaces expose metadata columns only; content/meta are gated by
- * canAccess() at the page level before rendering.
+ * can(capabilities, required_capability) at the page level before rendering.
  */
 
 const CARD_COLS =
-  "id,slug,title,description,type,difficulty,visibility,cover_image,featured,reading_time,published_at,category:resource_categories(name,slug)";
+  "id,slug,title,description,type,difficulty,required_capability,cover_image,featured,reading_time,published_at,category:resource_categories(name,slug)";
+
+/** Admin-only resources are hidden from every member-facing list. */
+function visibleCards(rows: CardRow[]): ResourceCard[] {
+  return rows
+    .filter((r) => r.required_capability !== "admin_only")
+    .map(toCard);
+}
 
 type CardRow = Omit<ResourceCard, "category"> & {
   category: { name: string; slug: string } | { name: string; slug: string }[] | null;
@@ -43,8 +50,7 @@ export async function listResources(f: ListFilters = {}): Promise<ResourceCard[]
     let query = supabaseAdmin()
       .from("resources")
       .select(CARD_COLS)
-      .eq("status", "published")
-      .neq("visibility", "hidden");
+      .eq("status", "published");
 
     if (f.type) query = query.eq("type", f.type);
     if (f.categoryId) query = query.eq("category_id", f.categoryId);
@@ -61,7 +67,7 @@ export async function listResources(f: ListFilters = {}): Promise<ResourceCard[]
 
     const { data, error } = await query;
     if (error) throw error;
-    return ((data ?? []) as unknown as CardRow[]).map(toCard);
+    return visibleCards((data ?? []) as unknown as CardRow[]);
   } catch (e) {
     console.warn("[resources] list failed", e);
     return [];
@@ -107,14 +113,13 @@ export async function getRelatedResources(
       .from("resources")
       .select(CARD_COLS)
       .eq("status", "published")
-      .neq("visibility", "hidden")
       .neq("id", resource.id)
       .order("published_at", { ascending: false, nullsFirst: false })
       .limit(limit);
     if (resource.category_id) query = query.eq("category_id", resource.category_id);
     const { data, error } = await query;
     if (error) throw error;
-    return ((data ?? []) as unknown as CardRow[]).map(toCard);
+    return visibleCards((data ?? []) as unknown as CardRow[]);
   } catch (e) {
     console.warn("[resources] related failed", e);
     return [];
@@ -130,14 +135,12 @@ export async function getNextResource(
       .from("resources")
       .select(CARD_COLS)
       .eq("status", "published")
-      .neq("visibility", "hidden")
       .neq("id", resource.id)
       .lt("published_at", resource.published_at)
       .order("published_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(5);
     if (error) throw error;
-    return data ? toCard(data as unknown as CardRow) : null;
+    return visibleCards((data ?? []) as unknown as CardRow[])[0] ?? null;
   } catch (e) {
     console.warn("[resources] next failed", e);
     return null;

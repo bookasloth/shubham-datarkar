@@ -6,9 +6,8 @@ import {
   getRecentlyViewed,
 } from "@/lib/members/member-queries";
 import { listCategories, listResources } from "@/lib/resources/queries";
-import { canAccess } from "@/lib/members/access";
 import { ResourceCard } from "@/components/members/resource-card";
-import { ResourceGrid } from "@/components/members/resource-grid";
+import { ResourceGrid, isLocked } from "@/components/members/resource-grid";
 
 export const metadata = { title: "Dashboard" };
 
@@ -29,7 +28,7 @@ function SectionHeading({ title, href }: { title: string; href?: string }) {
 }
 
 export default async function MembersDashboard() {
-  const { user, role } = await requireMember("/members");
+  const { user, capabilities } = await requireMember("/members");
   const name = user!.email?.split("@")[0] ?? "there";
 
   const [featured, continueReading, recent, latest, trending, categories] = await Promise.all([
@@ -68,7 +67,7 @@ export default async function MembersDashboard() {
           <SectionHeading title="Featured" href="/members/explore" />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {featured.map((r) => (
-              <ResourceCard key={r.id} resource={r} locked={!canAccess(r.visibility, role)} />
+              <ResourceCard key={r.id} resource={r} locked={isLocked(r, capabilities)} />
             ))}
           </div>
         </section>
@@ -107,7 +106,7 @@ export default async function MembersDashboard() {
       {recent.length > 0 && continueReading.length === 0 && (
         <section className="space-y-3">
           <SectionHeading title="Recently viewed" />
-          <ResourceGrid resources={recent} role={role} />
+          <ResourceGrid resources={recent} capabilities={capabilities} />
         </section>
       )}
 
@@ -115,7 +114,7 @@ export default async function MembersDashboard() {
         <SectionHeading title="Recently added" href="/members/latest" />
         <ResourceGrid
           resources={latest}
-          role={role}
+          capabilities={capabilities}
           emptyTitle="Nothing here yet"
           emptyDescription="New resources land every week."
         />
@@ -143,7 +142,7 @@ export default async function MembersDashboard() {
           <SectionHeading title="Trending" href="/members/explore?sort=popular" />
           <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             {trending.map((r) => (
-              <ResourceCard key={r.id} resource={r} locked={!canAccess(r.visibility, role)} />
+              <ResourceCard key={r.id} resource={r} locked={isLocked(r, capabilities)} />
             ))}
           </div>
         </section>

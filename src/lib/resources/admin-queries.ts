@@ -9,7 +9,7 @@ export type AdminResourceRow = {
   slug: string;
   title: string;
   type: string;
-  visibility: string;
+  required_capability: string | null;
   status: string;
   featured: boolean;
   view_count: number;
@@ -22,7 +22,7 @@ export async function getAllResourcesAdmin(): Promise<AdminResourceRow[]> {
   const { data, error } = await supabase
     .from("resources")
     .select(
-      "id,slug,title,type,visibility,status,featured,view_count,updated_at,category:resource_categories(name)",
+      "id,slug,title,type,required_capability,status,featured,view_count,updated_at,category:resource_categories(name)",
     )
     .order("updated_at", { ascending: false });
   if (error) {

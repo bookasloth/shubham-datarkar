@@ -1,7 +1,7 @@
 "use server";
 
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { canAccess } from "./access";
+import { can, type Capability } from "@/lib/members/capabilities";
 import { getMemberContext } from "./session";
 import type { Resource } from "@/lib/resources/types";
 
@@ -9,25 +9,23 @@ export type DownloadUrlResult = { url?: string; error?: string };
 
 /** Mint a short-lived signed URL for a download resource after a server-side access check. */
 export async function getDownloadUrl(resourceId: string): Promise<DownloadUrlResult> {
-  const { role, user } = await getMemberContext();
+  const { role, user, capabilities } = await getMemberContext();
 
   const db = supabaseAdmin();
   const { data, error } = await db
     .from("resources")
-    .select("id,status,visibility,meta")
+    .select("id,status,required_capability,meta")
     .eq("id", resourceId)
     .maybeSingle();
   if (error || !data) return { error: "Resource not found." };
 
-  const resource = data as Pick<Resource, "id" | "status" | "visibility" | "meta">;
+  const resource = data as Pick<Resource, "id" | "status" | "required_capability" | "meta">;
   if (resource.status !== "published" && role !== "admin") return { error: "Resource not found." };
-  if (!canAccess(resource.visibility, role)) {
-    return {
-      error:
-        resource.visibility === "premium"
-          ? "Upgrade to premium to download this file."
-          : "Sign in to download this file.",
-    };
+  const allowed =
+    !resource.required_capability ||
+    can(capabilities, resource.required_capability as Capability);
+  if (!allowed) {
+    return { error: "Become a Member to download this file." };
   }
 
   const filePath = resource.meta.filePath;

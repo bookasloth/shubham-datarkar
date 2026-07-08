@@ -1,5 +1,4 @@
 import type { ContentBlock } from "@/lib/data/types";
-import type { Visibility } from "@/lib/members/access";
 
 export type Difficulty = "beginner" | "intermediate" | "advanced";
 
@@ -29,7 +28,8 @@ export type ResourceCard = {
   type: string;
   category: { name: string; slug: string } | null;
   difficulty: Difficulty | null;
-  visibility: Visibility;
+  /** Capability required to open this resource; null = public. "admin_only" = hidden. */
+  required_capability: string | null;
   cover_image: string | null;
   featured: boolean;
   reading_time: number | null;

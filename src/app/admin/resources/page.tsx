@@ -29,7 +29,12 @@ export default async function AdminResourcesPage() {
           title: r.title,
           type: r.type,
           category: r.category?.name ?? "",
-          visibility: r.visibility,
+          access:
+            r.required_capability === "admin_only"
+              ? "Hidden"
+              : r.required_capability
+                ? "Member"
+                : "Public",
           status: r.status,
           featured: r.featured,
           views: r.view_count,

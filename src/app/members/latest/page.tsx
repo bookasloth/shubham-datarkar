@@ -5,7 +5,7 @@ import { ResourceGrid } from "@/components/members/resource-grid";
 export const metadata = { title: "Latest" };
 
 export default async function LatestPage() {
-  const [{ role }, resources] = await Promise.all([
+  const [{ capabilities }, resources] = await Promise.all([
     getMemberContext(),
     listResources({ sort: "newest", limit: 30 }),
   ]);
@@ -21,7 +21,7 @@ export default async function LatestPage() {
 
       <ResourceGrid
         resources={resources}
-        role={role}
+        capabilities={capabilities}
         emptyTitle="Nothing here yet"
         emptyDescription="New resources land every week. Check back soon."
       />
