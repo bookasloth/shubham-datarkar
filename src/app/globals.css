@@ -113,16 +113,12 @@
   --card: #050505;
   --popover: #050505;
   color-scheme: dark;
-  /* Diya (oil lamp) cursor; hotspot at the flame tip so the glow centers on it. */
-  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='31' rx='12' ry='4' fill='%23a8641e'/%3E%3Cpath d='M8 30 Q20 22 32 30 Q20 35 8 30Z' fill='%23c8802a'/%3E%3Cpath d='M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z' fill='%23ffb020'/%3E%3Cpath d='M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z' fill='%23fff2b0'/%3E%3C/svg%3E") 20 6, auto;
 }
-.torch a,
-.torch button,
-.torch [role="button"],
-.torch input,
-.torch textarea,
-.torch select {
-  cursor: inherit;
+/* Hide the native cursor everywhere in torch — the diya element in
+   <TorchOverlay> is the cursor. (SVG data-URI cursors don't render in Chrome.) */
+.torch,
+.torch * {
+  cursor: none !important;
 }
 
 /* ================================================================== */
