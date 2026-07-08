@@ -19,7 +19,7 @@ export type EditorResource = {
   category_id: string | null;
   difficulty: string | null;
   status: string;
-  visibility: string;
+  required_capability: string | null;
   content: ContentBlock[];
   meta: ResourceMeta;
   featured: boolean;
@@ -215,12 +215,15 @@ export function ResourceEditor({
       </div>
 
       <div className="grid grid-cols-3 gap-4">
-        <Field label="Visibility" htmlFor="visibility">
-          <select id="visibility" name="visibility" defaultValue={resource?.visibility ?? "free"} className={SELECT_CLASSES}>
-            <option value="free">Free</option>
-            <option value="members">Members</option>
-            <option value="premium">Premium</option>
-            <option value="hidden">Hidden</option>
+        <Field label="Access level" htmlFor="access_level">
+          <select
+            id="access_level"
+            name="access_level"
+            defaultValue={resource?.required_capability ? "member" : "public"}
+            className={SELECT_CLASSES}
+          >
+            <option value="public">Public — anyone</option>
+            <option value="member">Member — requires membership</option>
           </select>
         </Field>
         <Field label="Status" htmlFor="status">

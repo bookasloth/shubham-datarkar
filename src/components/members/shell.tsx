@@ -8,7 +8,7 @@ import { signOut } from "@/lib/members/auth-actions";
 import { MEMBERS_NAV, isMembersNavActive } from "./nav-config";
 import { AnnouncementBanner } from "./announcement-banner";
 import type { Announcement } from "@/lib/members/queries";
-import type { MemberRole } from "@/lib/members/access";
+import type { MemberRole } from "@/lib/members/session";
 import {
   Sheet,
   SheetBody,

@@ -57,7 +57,7 @@ export function ResourceCard({
           {locked && (
             <span className="ml-auto inline-flex items-center gap-1 text-foreground">
               <Lock className="size-3" />
-              {resource.visibility === "premium" ? "Premium" : "Members"}
+              Member
             </span>
           )}
         </div>

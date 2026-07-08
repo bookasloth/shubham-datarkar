@@ -5,7 +5,7 @@ import { ResourceGrid } from "@/components/members/resource-grid";
 export const metadata = { title: "Downloads" };
 
 export default async function DownloadsPage() {
-  const { role, user } = await requireMember("/members/downloads");
+  const { capabilities, user } = await requireMember("/members/downloads");
   const resources = await getMyDownloads(user!.id);
 
   return (
@@ -19,7 +19,7 @@ export default async function DownloadsPage() {
 
       <ResourceGrid
         resources={resources}
-        role={role}
+        capabilities={capabilities}
         emptyTitle="No downloads yet"
         emptyDescription="Download any file resource and it will be listed here."
       />

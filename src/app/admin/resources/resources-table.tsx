@@ -10,7 +10,7 @@ type Row = {
   title: string;
   type: string;
   category: string;
-  visibility: string;
+  access: string; // "Public" | "Member" | "Hidden"
   status: string;
   featured: boolean;
   views: number;
@@ -18,7 +18,7 @@ type Row = {
 };
 
 const statusTone = (s: string) => (s === "published" ? "success" : s === "archived" ? "warning" : "neutral");
-const visibilityTone = (v: string) => (v === "premium" ? "info" : v === "hidden" ? "warning" : "neutral");
+const accessTone = (a: string) => (a === "Member" ? "info" : a === "Hidden" ? "warning" : "neutral");
 
 const columns: Column<Row>[] = [
   {
@@ -35,10 +35,10 @@ const columns: Column<Row>[] = [
   { key: "type", header: "Type", sortValue: (r) => r.type, cell: (r) => r.type },
   { key: "category", header: "Category", sortValue: (r) => r.category, cell: (r) => r.category, hideable: true },
   {
-    key: "visibility",
-    header: "Visibility",
-    sortValue: (r) => r.visibility,
-    cell: (r) => <StatusBadge tone={visibilityTone(r.visibility)}>{r.visibility}</StatusBadge>,
+    key: "access",
+    header: "Access",
+    sortValue: (r) => r.access,
+    cell: (r) => <StatusBadge tone={accessTone(r.access)}>{r.access}</StatusBadge>,
   },
   {
     key: "status",
@@ -56,7 +56,7 @@ export function ResourcesTable({ rows }: { rows: Row[] }) {
       rows={rows}
       columns={columns}
       getRowId={(r) => r.id}
-      searchable={(r) => `${r.title} ${r.type} ${r.category} ${r.status} ${r.visibility}`}
+      searchable={(r) => `${r.title} ${r.type} ${r.category} ${r.status} ${r.access}`}
       searchPlaceholder="Search resources…"
       initialSort={{ key: "updated", dir: "desc" }}
       emptyTitle="No resources yet"

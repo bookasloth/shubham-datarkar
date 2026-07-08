@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { ArrowRight, Clock } from "lucide-react";
 import { getMemberContext } from "@/lib/members/session";
-import { canAccess } from "@/lib/members/access";
+import { can, type Capability } from "@/lib/members/capabilities";
 import { trackView } from "@/lib/members/tracking";
 import {
   getNextResource,
@@ -25,16 +25,19 @@ export default async function ResourcePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const [{ role, user }, resource] = await Promise.all([
+  const [ctx, resource] = await Promise.all([
     getMemberContext(),
     getResourceBySlug(slug),
   ]);
+  const { role, user, capabilities } = ctx;
 
   if (!resource) notFound();
   if (resource.status !== "published" && role !== "admin") notFound();
-  if (resource.visibility === "hidden" && role !== "admin") notFound();
+  if (resource.required_capability === "admin_only" && role !== "admin") notFound();
 
-  const allowed = canAccess(resource.visibility, role);
+  const allowed =
+    !resource.required_capability ||
+    can(capabilities, resource.required_capability as Capability);
   const [tags, related, next, bookmarked, progress] = await Promise.all([
     getTagsForResource(resource.id),
     getRelatedResources(resource, 3),
@@ -121,9 +124,9 @@ export default async function ResourcePage({
           <ResourceContent resource={resource} />
         ) : (
           <Paywall
-            visibility={resource.visibility}
             excerpt={resource.excerpt ?? resource.description}
             returnPath={`/members/resources/${resource.slug}`}
+            signedIn={!!user}
           />
         )}
       </div>
@@ -133,7 +136,7 @@ export default async function ResourcePage({
         <section className="border-t border-border pt-8">
           <h2 className="font-display text-lg font-semibold">Related resources</h2>
           <div className="mt-4">
-            <ResourceGrid resources={related} role={role} />
+            <ResourceGrid resources={related} capabilities={capabilities} />
           </div>
         </section>
       )}

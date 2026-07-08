@@ -5,7 +5,7 @@ import { ResourceGrid } from "@/components/members/resource-grid";
 export const metadata = { title: "Bookmarks" };
 
 export default async function BookmarksPage() {
-  const { role } = await requireMember("/members/bookmarks");
+  const { capabilities } = await requireMember("/members/bookmarks");
   const resources = await getBookmarkedResources();
 
   return (
@@ -19,7 +19,7 @@ export default async function BookmarksPage() {
 
       <ResourceGrid
         resources={resources}
-        role={role}
+        capabilities={capabilities}
         emptyTitle="No bookmarks yet"
         emptyDescription="Tap the bookmark button on any resource to save it here."
       />

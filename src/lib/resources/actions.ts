@@ -8,6 +8,7 @@ import { countWords } from "@/lib/blog/words";
 import { slugify } from "@/lib/utils";
 import type { ContentBlock } from "@/lib/data/types";
 import type { ResourceMeta } from "./types";
+import { requiredCapabilityForType } from "@/lib/members/capabilities";
 
 /*
  * Members pages render dynamically (cookie session), so no revalidatePath is
@@ -82,6 +83,10 @@ function fields(formData: FormData) {
     published_at = publishAtRaw ? new Date(publishAtRaw).toISOString() : new Date().toISOString();
   }
 
+  // Access level: "member" → the type's capability; anything else → public (null).
+  const required_capability =
+    str(formData, "access_level") === "member" ? requiredCapabilityForType(type) : null;
+
   return {
     slug: str(formData, "slug") || slugify(str(formData, "title")),
     title: str(formData, "title"),
@@ -92,7 +97,7 @@ function fields(formData: FormData) {
     category_id: str(formData, "category_id") || null,
     difficulty: str(formData, "difficulty") || null,
     status,
-    visibility: str(formData, "visibility") || "free",
+    required_capability,
     content,
     meta: parseMeta(type, formData),
     featured: formData.get("featured") === "on",
