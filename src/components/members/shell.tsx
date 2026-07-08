@@ -111,7 +111,7 @@ export function MembersShell({ user, role, announcement, children }: ShellProps)
                 href="/members/upgrade"
                 className="rounded-btn bg-foreground px-3 py-1.5 text-xs font-medium text-background transition-ui hover:opacity-85"
               >
-                Go premium
+                Become a Member
               </Link>
             )}
             {user ? (

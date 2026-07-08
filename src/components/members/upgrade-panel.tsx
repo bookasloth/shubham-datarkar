@@ -8,7 +8,7 @@ import type { MembershipPlan } from "@/lib/members/membership-server";
 import { cn } from "@/lib/utils";
 
 const PERKS = [
-  "Every premium resource, unlocked",
+  "Every Member resource, unlocked",
   "All downloads and future updates",
   "Priority on member requests",
   "New drops every week",
@@ -74,7 +74,7 @@ export function UpgradePanel({
           }),
         });
         if (confirm.ok) {
-          setMessage("Welcome to premium. Redirecting…");
+          setMessage("Welcome, Member. Redirecting…");
           router.push("/members/account");
           router.refresh();
         } else {
@@ -94,7 +94,7 @@ export function UpgradePanel({
   if (!plans.length) {
     return (
       <p className="text-sm text-muted-foreground">
-        Premium plans are not open yet. Check back soon.
+        Membership is not open yet. Check back soon.
       </p>
     );
   }
@@ -136,7 +136,7 @@ export function UpgradePanel({
               disabled={busy !== null}
               className="mt-6 rounded-btn bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-ui hover:opacity-85 disabled:opacity-50"
             >
-              {busy === p.key ? "Opening checkout…" : `Go premium ${p.interval}`}
+              {busy === p.key ? "Opening checkout…" : `Become a Member — ${p.interval}`}
             </button>
           </div>
         ))}
