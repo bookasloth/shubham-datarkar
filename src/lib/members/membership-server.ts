@@ -16,12 +16,14 @@ export type MembershipPlan = {
 
 const GRACE_MS = 3 * 24 * 60 * 60 * 1000; // renewal-retry grace
 
+/** Purchasable (paid) plans only — excludes the Free baseline row (amount 0). */
 export async function getActivePlans(): Promise<MembershipPlan[]> {
   try {
     const { data, error } = await supabaseAnon()
       .from("membership_plans")
       .select("id,key,name,description,amount,interval,razorpay_plan_id,active,sort")
       .eq("active", true)
+      .gt("amount", 0)
       .order("sort");
     if (error) throw error;
     return (data ?? []) as MembershipPlan[];

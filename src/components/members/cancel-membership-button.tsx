@@ -13,7 +13,7 @@ export function CancelMembershipButton() {
     <form
       action={formAction}
       onSubmit={(e) => {
-        if (!confirm("Cancel your premium membership? Access continues until the period ends.")) {
+        if (!confirm("Cancel your membership? Access continues until the period ends.")) {
           e.preventDefault();
         }
       }}
