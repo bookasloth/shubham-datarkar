@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------ */
 /*  Dark mode = class strategy (driven by next-themes), not media query */
 /* ------------------------------------------------------------------ */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *, .torch, .torch *));
 
 /* ================================================================== */
 /*  DESIGN TOKENS — Pure monochrome. Black / white / gray only.       */
@@ -67,7 +67,8 @@
   --dur-slow: 300ms;
 }
 
-.dark {
+.dark,
+.torch {
   --background: #0a0a0a;
   --foreground: #fafafa;
   --card: #101012;
@@ -101,6 +102,27 @@
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+}
+
+/* ================================================================== */
+/*  TORCH — "extra dark". Pure black + diya cursor. The <TorchOverlay> */
+/*  paints a radial flame-glow that follows the cursor.               */
+/* ================================================================== */
+.torch {
+  --background: #000000;
+  --card: #050505;
+  --popover: #050505;
+  color-scheme: dark;
+  /* Diya (oil lamp) cursor; hotspot at the flame tip so the glow centers on it. */
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cellipse cx='20' cy='31' rx='12' ry='4' fill='%23a8641e'/%3E%3Cpath d='M8 30 Q20 22 32 30 Q20 35 8 30Z' fill='%23c8802a'/%3E%3Cpath d='M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z' fill='%23ffb020'/%3E%3Cpath d='M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z' fill='%23fff2b0'/%3E%3C/svg%3E") 20 6, auto;
+}
+.torch a,
+.torch button,
+.torch [role="button"],
+.torch input,
+.torch textarea,
+.torch select {
+  cursor: inherit;
 }
 
 /* ================================================================== */

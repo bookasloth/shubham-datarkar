@@ -9,6 +9,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
 import { CommandMenu } from "@/components/layout/command-menu";
 import { ChromeGate } from "@/components/layout/chrome-gate";
+import { TorchOverlay } from "@/components/layout/torch-overlay";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -73,6 +74,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeProvider>
+          <TorchOverlay />
           <ToastProvider>
             {/* Accessibility: skip directly to main content */}
             <a
