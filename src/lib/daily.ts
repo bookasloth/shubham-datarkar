@@ -28,6 +28,16 @@ export function isToday(puzzleNumber: number, now: number = Date.now()): boolean
   return puzzleNumber === puzzleNumberFor(now);
 }
 
+/** Was this the puzzle exactly one day before today's? */
+export function isYesterday(puzzleNumber: number, now: number = Date.now()): boolean {
+  return puzzleNumber === puzzleNumberFor(now) - 1;
+}
+
+/** Free window: the live puzzle and the one before it. Older puzzles need view_archive. */
+export function isTodayOrYesterday(puzzleNumber: number, now: number = Date.now()): boolean {
+  return isToday(puzzleNumber, now) || isYesterday(puzzleNumber, now);
+}
+
 /** mulberry32 — deterministic PRNG, identical output on server and client. */
 export function seededRng(seed: number): () => number {
   let s = seed >>> 0;
