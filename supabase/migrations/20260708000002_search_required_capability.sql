@@ -1,5 +1,8 @@
 -- Point the search RPC at required_capability instead of visibility.
-create or replace function public.search_resources(q text, lim int default 20)
+-- Return-type changed (column swap), so drop before recreate.
+drop function if exists public.search_resources(text, integer);
+
+create function public.search_resources(q text, lim int default 20)
 returns table (
   id uuid, slug text, title text, description text, type text,
   category_id uuid, difficulty text, required_capability text, cover_image text,
