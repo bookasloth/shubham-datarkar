@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { subscribe } from "@/lib/subscribers/actions";
+import { CreateAccountCTA } from "@/components/members/create-account-cta";
 
 type Status = "idle" | "loading" | "success" | "error";
 
@@ -42,15 +43,15 @@ export function NewsletterForm({
 
   if (status === "success") {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 rounded-input border border-success/30 bg-success/8 px-4 py-3 text-sm",
-          className,
-        )}
-        role="status"
-      >
-        <Check className="size-4 text-success" />
-        <span>Subscribed. One signal every Tuesday — no noise.</span>
+      <div className={className}>
+        <div
+          className="flex items-center gap-2 rounded-input border border-success/30 bg-success/8 px-4 py-3 text-sm"
+          role="status"
+        >
+          <Check className="size-4 text-success" />
+          <span>Subscribed. One signal every Tuesday — no noise.</span>
+        </div>
+        <CreateAccountCTA message="Manage your subscription from a free account." />
       </div>
     );
   }

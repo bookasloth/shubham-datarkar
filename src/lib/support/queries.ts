@@ -1,6 +1,6 @@
 import "server-only";
 
-import { supabaseAnon } from "@/lib/supabase/server";
+import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
 
 /**
  * Live support reads, served from the email-free public views
@@ -100,4 +100,33 @@ export async function getSupportStats(): Promise<SupportStats> {
     warn("getSupportStats", e);
     return EMPTY_STATS;
   }
+}
+
+export type MyDonation = {
+  id: string;
+  total: number;
+  coffees: number;
+  toffees: number;
+  createdAt: string;
+  message: string | null;
+};
+
+/** A signed-in person's own paid supports, by email (service-role; base table is locked). */
+export async function getMyDonations(email: string): Promise<MyDonation[]> {
+  const e = email.trim().toLowerCase();
+  const { data, error } = await supabaseAdmin()
+    .from("supports")
+    .select("id,total_amount,coffee_units,toffee_units,created_at,message")
+    .eq("email", e)
+    .eq("status", "paid")
+    .order("created_at", { ascending: false });
+  if (error || !data) return [];
+  return data.map((r) => ({
+    id: String(r.id),
+    total: Number(r.total_amount ?? 0),
+    coffees: Number(r.coffee_units ?? 0),
+    toffees: Number(r.toffee_units ?? 0),
+    createdAt: String(r.created_at),
+    message: (r.message as string | null) ?? null,
+  }));
 }
