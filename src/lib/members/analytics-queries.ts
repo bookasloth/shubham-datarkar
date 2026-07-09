@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 export type MemberStats = {
   accounts: number;
   activePremium: number;
+  giftedMembers: number;
   publishedResources: number;
   viewsLast30d: number;
   downloadsLast30d: number;
@@ -17,13 +18,21 @@ export async function getMemberStats(): Promise<MemberStats> {
   const db = supabaseAdmin();
   const since = new Date(Date.now() - DAYS_30).toISOString();
 
-  const [profiles, premium, resources, views, downloads, requests] = await Promise.all([
+  const nowIso = new Date().toISOString();
+  const [profiles, premium, gifted, resources, views, downloads, requests] = await Promise.all([
     db.from("profiles").select("id", { count: "exact", head: true }),
     db
       .from("memberships")
       .select("id", { count: "exact", head: true })
       .eq("status", "active")
-      .gt("current_period_end", new Date().toISOString()),
+      .eq("source", "paid")
+      .gt("current_period_end", nowIso),
+    db
+      .from("memberships")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "active")
+      .eq("source", "gift")
+      .gt("current_period_end", nowIso),
     db
       .from("resources")
       .select("id", { count: "exact", head: true })
@@ -47,6 +56,7 @@ export async function getMemberStats(): Promise<MemberStats> {
   return {
     accounts: profiles.count ?? 0,
     activePremium: premium.count ?? 0,
+    giftedMembers: gifted.count ?? 0,
     publishedResources: resources.count ?? 0,
     viewsLast30d: views.count ?? 0,
     downloadsLast30d: downloads.count ?? 0,

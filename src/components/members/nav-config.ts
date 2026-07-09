@@ -4,6 +4,7 @@ import {
   Clock,
   Compass,
   Download,
+  Gamepad2,
   LayoutDashboard,
   MessageSquarePlus,
   UserRound,
@@ -26,6 +27,7 @@ export const MEMBERS_NAV: MembersNavItem[] = [
   { label: "Downloads", href: "/members/downloads", icon: Download },
   { label: "Requests", href: "/members/requests", icon: MessageSquarePlus },
   { label: "Tools", href: "/members/tools", icon: Wrench },
+  { label: "Games", href: "/games", icon: Gamepad2 },
   { label: "Account", href: "/members/account", icon: UserRound, mobile: true },
 ];
 
