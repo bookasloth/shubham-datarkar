@@ -14,4 +14,12 @@ export const toolStack: ToolStackItem[] = [
   { name: "Meta Ads", note: "Paid acquisition capability" },
   { name: "HubSpot", note: "Pipeline thinking" },
   { name: "Mailchimp", note: "Lifecycle marketing" },
+  { name: "Next.js", note: "App framework" },
+  { name: "React", note: "UI layer" },
+  { name: "Node.js", note: "Server runtime" },
+  { name: "TypeScript", note: "Type-safe code" },
+  { name: "Tailwind CSS", note: "Design system" },
+  { name: "Supabase", note: "Postgres & auth" },
+  { name: "MongoDB", note: "Document storage" },
+  { name: "Vercel", note: "Deployment & edge" },
 ];
