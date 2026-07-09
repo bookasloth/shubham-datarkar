@@ -57,7 +57,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
 
   function submit() {
     if (status !== "playing") return;
-    if (!isValidGuess(current)) return flash(`${HIT_AND_BLOW.length} unique digits`);
+    if (!isValidGuess(current)) return flash(`${HIT_AND_BLOW.length} unique digits, no leading 0`);
     const { hits, blows } = scoreGuess(current, secret);
     const next = [...history, { guess: current, hits, blows }];
     setHistory(next);
@@ -80,7 +80,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
     <div className="flex flex-col items-center gap-4">
       <h1 className="font-display text-xl font-bold">Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</h1>
       <p className="text-sm text-muted-foreground">
-        {HIT_AND_BLOW.length} unique digits · {HIT_AND_BLOW.maxGuesses} tries · 🎯 right spot · 💨 wrong spot
+        {HIT_AND_BLOW.length} unique digits, no leading 0 · {HIT_AND_BLOW.maxGuesses} tries · 🎯 right spot · 💨 wrong spot
       </p>
 
       <div className="w-full max-w-xs space-y-1.5">
