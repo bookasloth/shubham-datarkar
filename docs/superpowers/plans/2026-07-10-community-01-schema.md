@@ -470,7 +470,7 @@ Expected: table list = 6, profile columns = 5, functions include `community_badg
 
 - [ ] **Step 3: Functional check — counter triggers work**
 
-Have the user run this in the SQL editor (uses the admin's own auth user id; rolls back so it leaves no data):
+Have the user run this in the SQL editor (uses any existing profile id; deletes its own test row at the end — the vote cascades). Asserts are NOT swallowed, so a broken trigger surfaces as a hard error:
 
 ```sql
 do $$
@@ -485,12 +485,11 @@ begin
   update public.community_votes set value = -1 where post_id = pid and user_id = uid;
   assert (select up_count   from public.community_posts where id = pid) = 0, 'up_count should be 0';
   assert (select down_count from public.community_posts where id = pid) = 1, 'down_count should be 1';
-  raise exception 'rollback self-test';  -- abort so nothing persists
-exception when others then
-  raise notice 'counter self-test passed (rolled back)';
+  delete from public.community_posts where id = pid;  -- cleanup (cascades the vote)
+  raise notice 'counter self-test PASSED';
 end $$;
 ```
-Expected: notice `counter self-test passed (rolled back)`. If an `assert` fails, the counter trigger is wrong — fix Task 4 and re-apply.
+Expected: notice `counter self-test PASSED`. A failed `assert` aborts the block with its message (test row left behind for inspection) — that means the counter trigger is wrong; fix Task 4 and re-apply.
 
 - [ ] **Step 4: Update project memory**
 
