@@ -80,6 +80,38 @@ export async function activateMembership(
   return !!data?.length;
 }
 
+/** Far-future period end for lifetime gifts (active until manually revoked). */
+const GIFT_LIFETIME_END = "2999-12-31T00:00:00.000Z";
+
+/**
+ * Grant a lifetime gift membership on a plan. Not a paid member: source='gift',
+ * no Razorpay subscription. Capabilities follow the plan via plan_capabilities.
+ */
+export async function giftMembership(userId: string, planKey: string): Promise<void> {
+  const { error } = await supabaseAdmin().from("memberships").upsert(
+    {
+      user_id: userId,
+      plan_key: planKey,
+      status: "active",
+      source: "gift",
+      razorpay_subscription_id: null,
+      current_period_end: GIFT_LIFETIME_END,
+    },
+    { onConflict: "user_id" },
+  );
+  if (error) throw new Error(error.message);
+}
+
+/** Remove a gift membership. Guarded to source='gift' so paid rows are never touched. */
+export async function revokeGift(userId: string): Promise<void> {
+  const { error } = await supabaseAdmin()
+    .from("memberships")
+    .delete()
+    .eq("user_id", userId)
+    .eq("source", "gift");
+  if (error) throw new Error(error.message);
+}
+
 /** Webhook-driven state sync, idempotent by subscription id. */
 export async function syncMembershipFromWebhook(
   subscriptionId: string,
