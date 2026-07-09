@@ -3,7 +3,7 @@
 /* ------------------------------------------------------------------ */
 /*  Dark mode = class strategy (driven by next-themes), not media query */
 /* ------------------------------------------------------------------ */
-@custom-variant dark (&:where(.dark, .dark *));
+@custom-variant dark (&:where(.dark, .dark *, .torch, .torch *));
 
 /* ================================================================== */
 /*  DESIGN TOKENS — Pure monochrome. Black / white / gray only.       */
@@ -67,7 +67,8 @@
   --dur-slow: 300ms;
 }
 
-.dark {
+.dark,
+.torch {
   --background: #0a0a0a;
   --foreground: #fafafa;
   --card: #101012;
@@ -101,6 +102,23 @@
   --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.5), 0 1px 2px -1px rgb(0 0 0 / 0.5);
   --shadow-md: 0 4px 12px -2px rgb(0 0 0 / 0.55), 0 2px 6px -2px rgb(0 0 0 / 0.45);
   --shadow-lg: 0 12px 32px -8px rgb(0 0 0 / 0.6), 0 4px 12px -4px rgb(0 0 0 / 0.45);
+}
+
+/* ================================================================== */
+/*  TORCH — "extra dark". Pure black + diya cursor. The <TorchOverlay> */
+/*  paints a radial flame-glow that follows the cursor.               */
+/* ================================================================== */
+.torch {
+  --background: #000000;
+  --card: #050505;
+  --popover: #050505;
+  color-scheme: dark;
+}
+/* Hide the native cursor everywhere in torch — the diya element in
+   <TorchOverlay> is the cursor. (SVG data-URI cursors don't render in Chrome.) */
+.torch,
+.torch * {
+  cursor: none !important;
 }
 
 /* ================================================================== */
