@@ -47,6 +47,7 @@
   --warning-foreground: #ffffff;
   --danger: #b23b30;
   --danger-foreground: #ffffff;
+  --gold: #d4af37; /* community founder badge tick */
 
   /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
   --radius-btn: 4px;
@@ -150,6 +151,7 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-gold: var(--gold);
 
   /* Admin scope colors (only used under [data-admin]) */
   --color-admin-bg: var(--admin-bg);

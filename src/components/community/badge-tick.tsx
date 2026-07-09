@@ -6,8 +6,8 @@ export function BadgeTick({ badge }: { badge: Badge }) {
   return (
     <span
       className={cn(
-        "group/tick inline-flex size-4 items-center justify-center rounded-full transition-ui",
-        badge === "gold" && "text-[#d4af37]",
+        "inline-flex size-4 items-center justify-center rounded-full transition-ui",
+        badge === "gold" && "text-gold",
         badge === "orange" && "text-brand",
         badge === "grey" &&
           "text-muted-foreground hover:bg-brand hover:text-brand-foreground",

@@ -1,19 +1,20 @@
 import "server-only";
 import { supabaseAnon } from "@/lib/supabase/server";
+import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import type { AdSlot, FeedPost, FeedSort, FeedWindow } from "./types";
 
 export async function listFeed(opts: {
   sort: FeedSort;
   window: FeedWindow;
-  viewerId: string | null;
   limit?: number;
   offset?: number;
 }): Promise<FeedPost[]> {
-  const sb = supabaseAnon();
+  // Call as the request user (cookie-scoped): the RPC derives the viewer from
+  // auth.uid(), so vote/bookmark state can't be spoofed for another user.
+  const sb = await supabaseAuthServer();
   const { data, error } = await sb.rpc("community_feed", {
     p_sort: opts.sort,
     p_window: opts.window,
-    p_viewer: opts.viewerId,
     p_limit: opts.limit ?? 20,
     p_offset: opts.offset ?? 0,
   });

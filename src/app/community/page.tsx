@@ -20,7 +20,7 @@ export default async function CommunityPage({
     : "all";
 
   const { user } = await getMemberContext();
-  const posts = await listFeed({ sort, window, viewerId: user?.id ?? null, limit: 30 });
+  const posts = await listFeed({ sort, window, limit: 30 });
 
   return (
     <div>

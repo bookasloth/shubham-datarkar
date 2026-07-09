@@ -4,14 +4,14 @@
 -- Depends on 20260710000001_community_schema.sql.
 -- =====================================================================
 
--- ponytail: security definer so community_badge (reads auth.users/supports)
--- works and hidden filtering is centralized. p_viewer only drives the
--- viewer's OWN vote/bookmark join, so the server MUST pass the authenticated
--- user's id (never a client-supplied one).
+-- Viewer identity comes from auth.uid() (the request JWT), NOT a parameter —
+-- a caller cannot spoof another user's vote/bookmark state. Security definer is
+-- required so community_badge (reads auth.users/supports) works and hidden /
+-- banned / demoted filtering is centralized; auth.uid() still reflects the
+-- calling user's JWT inside a definer function.
 create or replace function public.community_feed(
   p_sort   text default 'new',
   p_window text default 'all',
-  p_viewer uuid default null,
   p_limit  int  default 20,
   p_offset int  default 0
 )
@@ -26,16 +26,18 @@ language sql stable security definer set search_path = public as $$
   with base as (
     select p.*,
            (p.up_count - p.down_count)                                as score,
-           (p.up_count + p.down_count)                                as n,
            (p.down_count > p.up_count and (p.up_count + p.down_count) >= 5) as is_controversial
     from public.community_posts p
+    join public.profiles pr0 on pr0.id = p.user_id
     where p.parent_id is null   -- feed shows root posts + reblogs, not replies
       and not p.hidden
+      and not pr0.banned        -- banned author's posts drop out of the feed
   ),
   filtered as (
     select * from base
-    where (case when p_sort = 'controversial' then is_controversial
-                else (not is_controversial and not demoted) end)
+    where not demoted           -- admin-buried posts never surface, in any sort
+      and (case when p_sort = 'controversial' then is_controversial
+                else not is_controversial end)
       and (case
              when p_sort = 'top' and p_window <> 'all'
                then created_at >= now() - (case p_window
@@ -55,8 +57,8 @@ language sql stable security definer set search_path = public as $$
          (b.post_id is not null) as viewer_bookmarked
   from filtered f
   join public.profiles pr on pr.id = f.user_id
-  left join public.community_votes     v on v.post_id = f.id and v.user_id = p_viewer
-  left join public.community_bookmarks b on b.post_id = f.id and b.user_id = p_viewer
+  left join public.community_votes     v on v.post_id = f.id and v.user_id = auth.uid()
+  left join public.community_bookmarks b on b.post_id = f.id and b.user_id = auth.uid()
   order by
     case when p_sort = 'new' then extract(epoch from f.created_at) end desc nulls last,
     case when p_sort = 'top' then f.score end desc nulls last,
@@ -71,4 +73,4 @@ language sql stable security definer set search_path = public as $$
   limit greatest(p_limit, 0) offset greatest(p_offset, 0);
 $$;
 
-grant execute on function public.community_feed(text, text, uuid, int, int) to anon, authenticated;
+grant execute on function public.community_feed(text, text, int, int) to anon, authenticated;

@@ -1,4 +1,5 @@
-import { avatarColor, getInitials } from "@/lib/utils";
+import { avatarColor } from "@/lib/utils";
+import { initialsOf } from "@/lib/support/config";
 
 export function CommunityAvatar({ name, size = 40 }: { name: string; size?: number }) {
   return (
@@ -7,7 +8,7 @@ export function CommunityAvatar({ name, size = 40 }: { name: string; size?: numb
       style={{ width: size, height: size, background: avatarColor(name), fontSize: size * 0.4 }}
       aria-hidden
     >
-      {getInitials(name)}
+      {initialsOf(name)}
     </span>
   );
 }

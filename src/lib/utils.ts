@@ -39,14 +39,6 @@ export function slugify(input: string) {
     .replace(/-+/g, "-");
 }
 
-/** Up to two uppercase initials from a name; "?" when empty. */
-export function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0]!.charAt(0).toUpperCase();
-  return (parts[0]!.charAt(0) + parts[parts.length - 1]!.charAt(0)).toUpperCase();
-}
-
 /** Deterministic HSL background for an initials avatar, derived from a seed. */
 export function avatarColor(seed: string): string {
   let h = 0;
@@ -68,17 +60,4 @@ export function timeAgo(input: string | Date): string {
   const w = Math.floor(d / 7);
   if (w < 5) return `${w}w`;
   return formatDate(input);
-}
-
-/** Extract an 11-char YouTube video id from a watch/short URL, else null. */
-export function parseYouTubeId(url: string): string | null {
-  try {
-    const u = new URL(url);
-    let id = "";
-    if (u.hostname === "youtu.be") id = u.pathname.slice(1);
-    else if (u.hostname.endsWith("youtube.com")) id = u.searchParams.get("v") ?? "";
-    return /^[A-Za-z0-9_-]{11}$/.test(id) ? id : null;
-  } catch {
-    return null;
-  }
 }

@@ -241,9 +241,9 @@ Tell the user: "Run `supabase/migrations/20260710000003_community_feed.sql` in y
 
 ```sql
 -- returns rows without error (empty feed is fine on a fresh table)
-select id, username, badge, score from public.community_feed('new','all',null,5,0);
-select id, score from public.community_feed('hot','all',null,5,0);
-select id from public.community_feed('controversial','all',null,5,0);
+select id, username, badge, score from public.community_feed('new','all',5,0);
+select id, score from public.community_feed('hot','all',5,0);
+select id from public.community_feed('controversial','all',5,0);
 ```
 Expected: three queries succeed (0+ rows). Any error = fix the RPC and re-apply.
 
