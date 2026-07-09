@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { PhotoFormState } from "@/lib/photos/actions";
 
 export type EditorPhoto = {
   storagePath: string;
@@ -20,9 +21,10 @@ export function PhotoEditor({
   action,
   photo,
 }: {
-  action: (formData: FormData) => void | Promise<void>;
+  action: (state: PhotoFormState, formData: FormData) => Promise<PhotoFormState>;
   photo?: EditorPhoto;
 }) {
+  const [state, formAction] = React.useActionState(action, {});
   const [preview, setPreview] = React.useState<string | null>(null);
   const [fileName, setFileName] = React.useState<string>("");
 
@@ -44,10 +46,16 @@ export function PhotoEditor({
   const displayUrl = preview ?? photo?.imageUrl ?? null;
 
   return (
-    <form action={action} className="grid max-w-3xl gap-5">
+    <form action={formAction} className="grid max-w-3xl gap-5">
       {/* When editing without a new file, carry forward the existing storage_path */}
       {photo && !preview && (
         <input type="hidden" name="storage_path" value={photo.storagePath} />
+      )}
+
+      {state?.error && (
+        <div className="rounded-card border border-danger/40 bg-danger/5 p-3 text-sm text-danger">
+          {state.error}
+        </div>
       )}
 
       <div className="grid gap-1.5">
