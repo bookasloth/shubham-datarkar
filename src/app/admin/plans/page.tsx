@@ -95,7 +95,7 @@ export default async function PlansAdminPage() {
                     )}
                     <Button type="submit" variant="outline" size="sm">Save</Button>
                     <Button type="submit" formAction={createRazorpayPlan} size="sm">
-                      {p.razorpay_plan_id ? "Re-activate" : "Create in Razorpay"}
+                      {p.razorpay_plan_id ? "Recreate at current price" : "Create in Razorpay"}
                     </Button>
                   </div>
                 </form>

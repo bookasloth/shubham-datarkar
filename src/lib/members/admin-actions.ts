@@ -104,11 +104,14 @@ export async function savePlan(formData: FormData): Promise<void> {
 }
 
 /**
- * Create the plan in Razorpay (via their Plans API) and link + activate it —
- * so the admin never opens the Razorpay dashboard. Razorpay plans are
- * immutable, so this uses the amount/name/interval currently in the form.
- * Guarded: if a razorpay_plan_id is already linked, it only saves edits +
- * activates (no duplicate Razorpay plan).
+ * Create a Razorpay plan at the CURRENT form amount and (re)link + activate it —
+ * so the admin never opens the Razorpay dashboard.
+ *
+ * Razorpay plans are immutable: a plan's price can never change. So repricing =
+ * a brand-new plan. This always creates a fresh Razorpay plan and repoints the
+ * row at it; any previously-linked plan is left untouched (existing subscribers
+ * keep billing on it — a live subscription's price can't be changed anyway).
+ * Only NEW checkouts use the new plan/price.
  */
 export async function createRazorpayPlan(formData: FormData): Promise<void> {
   await requireAdmin();
@@ -122,23 +125,6 @@ export async function createRazorpayPlan(formData: FormData): Promise<void> {
   if (!["monthly", "yearly"].includes(interval)) throw new Error("Bad interval.");
 
   const supabase = await supabaseAuthServer();
-
-  const { data: existing } = await supabase
-    .from("membership_plans")
-    .select("razorpay_plan_id")
-    .eq("key", key)
-    .maybeSingle();
-
-  // Already has a Razorpay plan → don't create a second one; just save + activate.
-  if (existing?.razorpay_plan_id) {
-    const { error } = await supabase
-      .from("membership_plans")
-      .update({ name, amount, description: description || null, active: true })
-      .eq("key", key);
-    if (error) throw new Error(error.message);
-    revalidatePath("/admin/plans");
-    return;
-  }
 
   const created = await createPlan({
     interval: interval as "monthly" | "yearly",
