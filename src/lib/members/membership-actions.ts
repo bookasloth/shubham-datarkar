@@ -6,6 +6,9 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { cancelSubscription } from "@/lib/razorpay/subscriptions";
 import { giftMembership, revokeGift } from "@/lib/members/membership-server";
+import { getEmailCredentials } from "@/lib/email/store";
+import { sendEmail } from "@/lib/email/smtp";
+import { renderEmail } from "@/lib/email/template";
 
 export type CancelState = { error?: string; ok?: boolean } | undefined;
 
@@ -52,25 +55,71 @@ async function findUserIdByEmail(email: string): Promise<string | null> {
   return data?.users.find((u) => u.email?.toLowerCase() === target)?.id ?? null;
 }
 
-/** Grant a lifetime gift membership on a plan, by email. Admin only. */
-export async function giftMembershipByEmail(formData: FormData): Promise<void> {
+export type GiftState = { ok: boolean; message: string } | undefined;
+
+/**
+ * Grant a lifetime gift membership on a plan, by email. Admin only.
+ * Returns a state (not throws) so the form can show inline success/error.
+ */
+export async function giftMembershipByEmail(
+  _prev: GiftState,
+  formData: FormData,
+): Promise<GiftState> {
   await requireAdmin();
   const email = String(formData.get("email") ?? "").trim();
   const planKey = String(formData.get("plan_key") ?? "").trim();
-  if (!email || !planKey) throw new Error("Email and plan are required.");
+  if (!email || !planKey) return { ok: false, message: "Email and plan are required." };
 
   const { data: plan } = await supabaseAdmin()
     .from("membership_plans")
-    .select("key")
+    .select("key,name")
     .eq("key", planKey)
     .maybeSingle();
-  if (!plan) throw new Error(`Unknown plan: ${planKey}`);
+  if (!plan) return { ok: false, message: `Unknown plan: ${planKey}` };
 
   const userId = await findUserIdByEmail(email);
-  if (!userId) throw new Error(`No account for ${email}. They must sign in once first.`);
+  if (!userId) {
+    return { ok: false, message: `No account for ${email}. They must sign in once first.` };
+  }
 
-  await giftMembership(userId, planKey);
+  try {
+    await giftMembership(userId, planKey);
+  } catch (e) {
+    return { ok: false, message: `Could not gift: ${(e as Error).message}` };
+  }
+
+  const emailed = await sendGiftEmail(email, plan.name);
   revalidatePath("/admin/members");
+  return {
+    ok: true,
+    message: `Gifted ${plan.name} to ${email}.${emailed ? " Congratulations email sent." : " (Email not sent — check SMTP settings.)"}`,
+  };
+}
+
+/** Branded "you've been gifted a membership" email. Fail-safe; no-ops without SMTP. */
+async function sendGiftEmail(email: string, planName: string): Promise<boolean> {
+  try {
+    const creds = await getEmailCredentials();
+    if (!creds) return false;
+    const res = await sendEmail(creds, {
+      to: email,
+      subject: `You've been gifted ${planName}`,
+      text: `Congratulations! You've been gifted ${planName} — lifetime access to all premium member resources. Sign in at https://shubhamdatarkar.com/members to start.`,
+      html: renderEmail({
+        preheader: `You've been gifted ${planName} — lifetime premium access.`,
+        headerTagline: "A gift for you",
+        title: "Congratulations — you've been gifted premium.",
+        bodyHtml:
+          `<p style="margin:0 0 18px;font-size:14px;color:#2d2d2d;line-height:1.7">You've been gifted <strong>${planName}</strong> — lifetime access to every premium resource, template, download, and tool in the members library.</p>` +
+          `<p style="margin:0 0 22px;font-size:14px;color:#2d2d2d;line-height:1.7">Sign in with this email to unlock it. Nothing to pay, now or ever.</p>`,
+        cta: { label: "Open Members", href: "https://shubhamdatarkar.com/members" },
+      }),
+    });
+    return res.ok;
+  } catch (e) {
+    console.warn("[members] gift email threw:", (e as Error).message);
+    return false;
+  }
 }
 
 /** Revoke a gift membership by user id. Admin only. Never touches paid rows. */
