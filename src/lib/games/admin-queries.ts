@@ -4,6 +4,7 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 import { puzzleNumberFor } from "@/lib/daily";
+import { answerFor as integraAnswerFor } from "@/lib/games/integra";
 
 export type GameStat = {
   key: GameKey;
@@ -185,6 +186,39 @@ export async function getPlayerDetailAdmin(
       totalWon: s.total_won,
     })),
   };
+}
+
+export type IntegraEquationRow = {
+  puzzleNumber: number;
+  equation: string;
+  editable: boolean;
+  overridden: boolean;
+};
+
+/** Upcoming Integra puzzles for the admin editor. Unlike Alfazy, integra_puzzles is
+ *  not seeded — the effective equation is the DB override if present, else the
+ *  frozen code list (answerFor). Synthesizes the next `days` puzzles so the admin
+ *  has rows to edit even with an empty override table. */
+export async function getUpcomingIntegraEquations(days = 30): Promise<IntegraEquationRow[]> {
+  const supabase = await supabaseAuthServer();
+  const today = puzzleNumberFor();
+  const { data, error } = await supabase.rpc("admin_list_integra_puzzles", { p_from: today });
+  if (error) throw new Error(error.message);
+  const overrides = new Map<number, string>();
+  for (const r of (data as { puzzle_number: number; equation: string }[]) ?? []) {
+    overrides.set(r.puzzle_number, r.equation);
+  }
+  const rows: IntegraEquationRow[] = [];
+  for (let n = today; n <= today + days; n++) {
+    const ov = overrides.get(n);
+    rows.push({
+      puzzleNumber: n,
+      equation: ov ?? integraAnswerFor(n),
+      editable: n > today,
+      overridden: ov !== undefined,
+    });
+  }
+  return rows;
 }
 
 export type AlfazyWordRow = { puzzleNumber: number; word: string; editable: boolean };

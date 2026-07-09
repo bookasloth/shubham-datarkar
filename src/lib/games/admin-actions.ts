@@ -5,6 +5,7 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
 import type { GameKey } from "@/lib/games/registry";
 import { parseAlfazyWordForm, validateAlfazyWord } from "@/lib/games/alfazy-word-form";
+import { parseIntegraEquationForm, validateIntegraEquation } from "@/lib/games/integra-equation-form";
 import { puzzleNumberFor } from "@/lib/daily";
 
 export async function deleteResult(userId: string, resultId: string): Promise<void> {
@@ -50,4 +51,24 @@ export async function upsertAlfazyWord(formData: FormData): Promise<void> {
   });
   if (error) throw new Error(error.message);
   revalidatePath("/admin/games/words");
+}
+
+export async function upsertIntegraEquation(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const { puzzleNumber, equation } = parseIntegraEquationForm(formData);
+  // Guard: never rewrite a past/current puzzle — that would change a played answer.
+  if (!Number.isFinite(puzzleNumber) || puzzleNumber <= puzzleNumberFor()) {
+    throw new Error("Can only edit future puzzles.");
+  }
+  const check = validateIntegraEquation(equation);
+  if (!check.ok) throw new Error(check.error);
+
+  const supabase = await supabaseAuthServer();
+  const { error } = await supabase.rpc("admin_upsert_integra_puzzle", {
+    p_puzzle: puzzleNumber,
+    p_equation: check.equation,
+    p_today: puzzleNumberFor(),
+  });
+  if (error) throw new Error(error.message);
+  revalidatePath("/admin/games/integra-equations");
 }

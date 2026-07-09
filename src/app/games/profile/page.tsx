@@ -2,7 +2,7 @@ import { requireGameUser } from "@/lib/games/session";
 import { getMyStats, getMyRecent, getMyUsername } from "@/lib/games/profile-queries";
 import UsernameForm from "@/components/games/UsernameForm";
 
-const NAMES: Record<string, string> = { alfazy: "Alfazy", hit_and_blow: "Hit and Blow" };
+const NAMES: Record<string, string> = { alfazy: "Alfazy", hit_and_blow: "Hit and Blow", integra: "Integra" };
 
 export default async function ProfilePage() {
   await requireGameUser("/games/profile");

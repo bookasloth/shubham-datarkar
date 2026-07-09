@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Lock } from "lucide-react";
 
 /** Native in-game wall for archive puzzles the viewer can't open yet. No emoji (project rule). */
-export function ArchiveUpsell({ game }: { game: "alfazy" | "hit-and-blow" }) {
+export function ArchiveUpsell({ game }: { game: "alfazy" | "hit-and-blow" | "integra" }) {
   return (
     <div className="mx-auto mt-10 max-w-sm rounded-card border border-border bg-card p-6 text-center">
       <div className="mx-auto flex size-12 items-center justify-center rounded-card bg-muted">

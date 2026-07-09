@@ -28,7 +28,8 @@ export default async function LeaderboardPage({
   searchParams: Promise<{ game?: string; board?: string }>;
 }) {
   const sp = await searchParams;
-  const game: GameKey = sp.game === "hit_and_blow" ? "hit_and_blow" : "alfazy";
+  // Registry-driven: any valid game key is accepted, otherwise default to the first.
+  const game: GameKey = GAMES.some((g) => g.key === sp.game) ? (sp.game as GameKey) : "alfazy";
   const board: Board = (BOARDS as readonly string[]).includes(sp.board ?? "")
     ? (sp.board as Board)
     : "daily";

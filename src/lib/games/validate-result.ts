@@ -1,6 +1,11 @@
 import { isToday } from "@/lib/daily";
 import { ALFAZY, answerFor, isValidGuess as isValidAlfazy } from "@/lib/games/alfazy";
 import {
+  INTEGRA,
+  answerFor as integraAnswerFor,
+  isValidGuess as isValidIntegra,
+} from "@/lib/games/integra";
+import {
   HIT_AND_BLOW,
   secretFor,
   scoreGuess as scoreHitAndBlow,
@@ -8,7 +13,7 @@ import {
 } from "@/lib/games/hit-and-blow";
 
 export type SubmitInput = {
-  game: "alfazy" | "hit_and_blow";
+  game: "alfazy" | "hit_and_blow" | "integra";
   puzzleNumber: number;
   status: "won" | "lost";
   guesses: string[];
@@ -31,18 +36,22 @@ export function validateResult(input: SubmitInput): { valid: boolean } {
 
   if (guesses.length === 0) return { valid: false };
 
-  const max = game === "alfazy" ? ALFAZY.maxGuesses : HIT_AND_BLOW.maxGuesses;
+  const max =
+    game === "alfazy" ? ALFAZY.maxGuesses : game === "integra" ? INTEGRA.maxGuesses : HIT_AND_BLOW.maxGuesses;
   if (guesses.length > max) return { valid: false };
 
   // Every guess must be a legal move for the game.
-  const isValidGuess = game === "alfazy" ? isValidAlfazy : isValidHitAndBlow;
+  const isValidGuess =
+    game === "alfazy" ? isValidAlfazy : game === "integra" ? isValidIntegra : isValidHitAndBlow;
   if (!guesses.every((g) => isValidGuess(g))) return { valid: false };
 
   // A loss is only legitimate after all guesses are exhausted.
   if (status === "lost" && guesses.length !== max) return { valid: false };
 
-  if (game === "alfazy") {
-    const answer = answerFor(puzzleNumber);
+  // Alfazy and Integra are both exact-string-match games; the answer is the frozen
+  // code value (not the DB override — same parity limitation as Alfazy).
+  if (game === "alfazy" || game === "integra") {
+    const answer = game === "alfazy" ? answerFor(puzzleNumber) : integraAnswerFor(puzzleNumber);
     const won = guesses[guesses.length - 1] === answer;
     // No earlier guess may already equal the answer (that would be an extra guess after a win).
     const wonEarlier = guesses.slice(0, -1).some((g) => g === answer);
