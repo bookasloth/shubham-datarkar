@@ -24,7 +24,7 @@
 ## File Structure
 
 **Create:**
-- `supabase/migrations/20260710000001_people_rpcs.sql` — the two RPCs.
+- `supabase/migrations/20260710000002_people_rpcs.sql` — the two RPCs.
 - `src/lib/people/queries.ts` — `getPeople()`, `getPersonTimeline()`, types, `planLabel()` helper.
 - `src/lib/people/queries.test.ts` — unit tests for `normalizeEmail` + `planLabel`.
 - `src/app/admin/people/page.tsx` — People list (server).
@@ -48,7 +48,7 @@
 ## Task 1: People RPCs migration
 
 **Files:**
-- Create: `supabase/migrations/20260710000001_people_rpcs.sql`
+- Create: `supabase/migrations/20260710000002_people_rpcs.sql`
 
 **Interfaces:**
 - Produces (SQL, callable via PostgREST `.rpc()`):
@@ -57,7 +57,7 @@
 
 - [ ] **Step 1: Write the migration**
 
-Create `supabase/migrations/20260710000001_people_rpcs.sql`:
+Create `supabase/migrations/20260710000002_people_rpcs.sql`:
 
 ```sql
 -- Unified People: aggregate every email across contacts, subscribers, supports,
@@ -222,12 +222,12 @@ Expected: distinct email count matches `select count(distinct lower(trim(email))
 
 - [ ] **Step 3: Hand the SQL to the user**
 
-Tell the user: "Run `supabase/migrations/20260710000001_people_rpcs.sql` in your project's SQL editor, then the Step-2 logic check." Do not apply it via any tool.
+Tell the user: "Run `supabase/migrations/20260710000002_people_rpcs.sql` in your project's SQL editor, then the Step-2 logic check." Do not apply it via any tool.
 
 - [ ] **Step 4: Commit**
 
 ```bash
-git add supabase/migrations/20260710000001_people_rpcs.sql
+git add supabase/migrations/20260710000002_people_rpcs.sql
 git commit -m "feat(identity): get_people + get_person_timeline admin RPCs"
 ```
 
@@ -944,7 +944,7 @@ git commit -m "feat(identity): free-tier newsletter prefs + donation history on 
 
 - [ ] **Step 1: Apply the migration**
 
-Confirm the user has run `supabase/migrations/20260710000001_people_rpcs.sql` in their project's SQL editor (Task 1). If not, prompt them and wait.
+Confirm the user has run `supabase/migrations/20260710000002_people_rpcs.sql` in their project's SQL editor (Task 1). If not, prompt them and wait.
 
 - [ ] **Step 2: Turn on email confirmation**
 
@@ -969,7 +969,7 @@ Expected: build succeeds.
 
 ```bash
 git push -u origin feat/unified-identity-people
-gh pr create --title "feat(identity): unified People identity + tiers" --body "Implements docs/superpowers/specs/2026-07-09-unified-identity-people-design.md and docs/superpowers/plans/2026-07-10-unified-identity-people.md. Pending manual: run migration 20260710000001, Supabase Confirm-email ON. No deploy."
+gh pr create --title "feat(identity): unified People identity + tiers" --body "Implements docs/superpowers/specs/2026-07-09-unified-identity-people-design.md and docs/superpowers/plans/2026-07-10-unified-identity-people.md. Pending manual: run migration 20260710000002, Supabase Confirm-email ON. No deploy."
 ```
 
 Leave deploy to the user's explicit instruction.
