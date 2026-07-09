@@ -12,14 +12,20 @@ function revalidatePhotos(): void {
   revalidatePath("/admin/photos");
 }
 
-export async function createPhoto(formData: FormData): Promise<void> {
+/** Form state for the photo editor. `error` set → shown on the form; success redirects. */
+export type PhotoFormState = { error?: string };
+
+export async function createPhoto(
+  _prev: PhotoFormState,
+  formData: FormData,
+): Promise<PhotoFormState> {
   await requireAdmin();
 
   const file = formData.get("file") as File | null;
-  if (!file || file.size === 0) throw new Error("No image file provided");
+  if (!file || file.size === 0) return { error: "No image file provided" };
 
   const result = await uploadPhoto(file);
-  if (!result.ok) throw new Error(result.error);
+  if (!result.ok) return { error: result.error };
 
   formData.set("storage_path", result.path);
 
@@ -28,14 +34,18 @@ export async function createPhoto(formData: FormData): Promise<void> {
   const { error } = await supabase.from("photos").insert(row);
   if (error) {
     await deleteStoragePhoto(result.path);
-    throw new Error(error.message);
+    return { error: error.message };
   }
 
   revalidatePhotos();
   redirect("/admin/photos");
 }
 
-export async function updatePhoto(id: string, formData: FormData): Promise<void> {
+export async function updatePhoto(
+  id: string,
+  _prev: PhotoFormState,
+  formData: FormData,
+): Promise<PhotoFormState> {
   await requireAdmin();
   const supabase = await supabaseAuthServer();
 
@@ -43,7 +53,7 @@ export async function updatePhoto(id: string, formData: FormData): Promise<void>
   let oldPath: string | undefined;
   if (file && file.size > 0) {
     const result = await uploadPhoto(file);
-    if (!result.ok) throw new Error(result.error);
+    if (!result.ok) return { error: result.error };
     formData.set("storage_path", result.path);
 
     const { data } = await supabase
@@ -56,7 +66,7 @@ export async function updatePhoto(id: string, formData: FormData): Promise<void>
 
   const row = photoRowFromFormData(formData);
   const { error } = await supabase.from("photos").update(row).eq("id", id);
-  if (error) throw new Error(error.message);
+  if (error) return { error: error.message };
 
   if (oldPath) await deleteStoragePhoto(oldPath);
 
