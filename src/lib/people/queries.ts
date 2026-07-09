@@ -1,41 +1,10 @@
 import "server-only";
 
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { normalizeEmail } from "./types";
+import type { Person, TimelineEntry } from "./types";
 
-export type Person = {
-  email: string;
-  displayName: string;
-  userId: string | null;
-  verified: boolean;
-  contacted: boolean;
-  contactCount: number;
-  subscribed: boolean;
-  donated: boolean;
-  donationTotal: number;
-  isGamer: boolean;
-  planKey: string | null;
-  membershipStatus: string | null;
-  firstSeen: string | null;
-  lastSeen: string | null;
-};
-
-export type TimelineEntry = {
-  kind: string;
-  occurredAt: string | null;
-  title: string;
-  detail: string | null;
-};
-
-export function normalizeEmail(raw: string): string {
-  return raw.trim().toLowerCase();
-}
-
-/** Admin badge: active membership → Premium; any verified account → Free; lead → —. */
-export function planLabel(p: Pick<Person, "userId" | "planKey" | "membershipStatus">): "Premium" | "Free" | "—" {
-  if (p.membershipStatus === "active" && p.planKey) return "Premium";
-  if (p.userId) return "Free";
-  return "—";
-}
+export type { Person, TimelineEntry } from "./types";
 
 /** Every distinct person across contacts, subscribers, supports, and accounts. */
 export async function getPeople(): Promise<Person[]> {

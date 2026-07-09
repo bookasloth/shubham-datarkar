@@ -4,7 +4,7 @@ import Link from "next/link";
 import { DataTable, type Column } from "@/components/admin/data";
 import { StatusBadge } from "@/components/admin";
 import { formatDate } from "@/lib/utils";
-import { planLabel, type Person } from "@/lib/people/queries";
+import { planLabel, type Person } from "@/lib/people/types";
 
 function Yes({ on, label }: { on: boolean; label: string }) {
   return on ? <StatusBadge tone="success">{label}</StatusBadge> : <span className="text-admin-text-muted">—</span>;
