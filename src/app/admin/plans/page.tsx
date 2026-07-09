@@ -45,7 +45,7 @@ export default async function PlansAdminPage() {
     <div className="space-y-6">
       <PageHeader
         title="Membership plans"
-        description="Set the price, then click Create in Razorpay — it creates the plan on Razorpay (same account as your other payments) and activates it. No Razorpay dashboard needed. Amounts are in paise (₹299 = 29900)."
+        description="Set the price, then click Create in Razorpay — it creates the plan on Razorpay (same account as your other payments) and activates it. No Razorpay dashboard needed. Amounts are in paise (₹99 = 9900)."
       />
 
       <div className="space-y-3">

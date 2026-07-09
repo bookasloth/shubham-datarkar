@@ -120,8 +120,8 @@ create table if not exists public.membership_plans (
 );
 
 insert into public.membership_plans (key, name, description, amount, interval, sort) values
-  ('premium-monthly','Premium Monthly','Full access to everything, billed monthly', 29900, 'monthly', 1),
-  ('premium-yearly','Premium Yearly','Full access to everything, billed yearly', 299900, 'yearly', 2)
+  ('premium-monthly','Premium Monthly','Full access to everything, billed monthly', 9900, 'monthly', 1),
+  ('premium-yearly','Premium Yearly','Full access to everything, billed yearly', 99900, 'yearly', 2)
 on conflict (key) do nothing;
 
 create table if not exists public.memberships (
