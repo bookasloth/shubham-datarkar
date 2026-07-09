@@ -107,10 +107,11 @@ export async function saveEmailCredentials(
   const { error: secErr } = await admin.rpc("set_email_secret", { p_payload: creds });
   if (secErr) return { ok: false, error: secErr.message };
 
+  // Upsert (not update): if the id=1 row was never seeded, a plain update matches
+  // 0 rows silently and `configured` never flips true — leaving Test Connect disabled.
   const { error: metaErr } = await admin
     .from("email_integration")
-    .update({ configured: true, updated_at: new Date().toISOString() })
-    .eq("id", 1);
+    .upsert({ id: 1, configured: true, updated_at: new Date().toISOString() }, { onConflict: "id" });
   if (metaErr) return { ok: false, error: metaErr.message };
 
   return { ok: true };
