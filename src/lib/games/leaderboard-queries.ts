@@ -2,7 +2,7 @@ import "server-only";
 
 import { supabaseAnon } from "@/lib/supabase/server";
 
-export type GameKey = "alfazy" | "hit_and_blow";
+export type GameKey = "alfazy" | "hit_and_blow" | "integra";
 export type DailyRow = { username: string; guesses: number; time_ms: number | null; status: string };
 export type PeriodRow = { username: string; solved: number; total_guesses: number };
 export type StreakRow = { username: string; current_streak: number; max_streak: number };

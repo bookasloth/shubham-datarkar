@@ -46,6 +46,12 @@ export default async function AdminGamesPage() {
           >
             Words
           </a>
+          <a
+            href="/admin/games/integra-equations"
+            className="rounded-btn border border-border px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Equations
+          </a>
         </div>
       </div>
 

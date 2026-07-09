@@ -12,7 +12,7 @@ export function ArchiveGrid({
   now,
 }: {
   entries: ArchiveEntry[];
-  game: "alfazy" | "hit-and-blow";
+  game: "alfazy" | "hit-and-blow" | "integra";
   canViewArchive: boolean;
   now: number;
 }) {

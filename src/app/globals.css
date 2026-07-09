@@ -379,6 +379,42 @@
     background: var(--alfazy-absent-base);
     color: var(--alfazy-absent-text, #fff);
   }
+
+  /* ---- Integra (daily math) — static accessible palette, no per-day theming ---- */
+  /* Game-native colours (green/purple/black), the one allowed exception to the
+     monochrome chrome. Dark-mode variants below; colourblind shapes as overlay. */
+  .integra-tile {
+    position: relative;
+    transition: background-color 0.25s, border-color 0.25s, box-shadow 0.25s;
+    --integra-correct: #16a34a;
+    --integra-present: #7c3aed;
+    --integra-absent: #52525b;
+  }
+  .integra-key { --integra-correct: #16a34a; --integra-present: #7c3aed; --integra-absent: #52525b; }
+  :is(.dark) .integra-tile, :is(.dark) .integra-key {
+    --integra-correct: #22c55e;
+    --integra-present: #8b5cf6;
+    --integra-absent: #3f3f46;
+  }
+  .integra-tile--correct { background: var(--integra-correct); border-color: var(--integra-correct); color: #fff; }
+  .integra-tile--present { background: var(--integra-present); border-color: var(--integra-present); color: #fff; }
+  .integra-tile--absent  { background: var(--integra-absent);  border-color: var(--integra-absent);  color: #fff; }
+  .integra-key--correct { background: var(--integra-correct); color: #fff; }
+  .integra-key--present { background: var(--integra-present); color: #fff; }
+  .integra-key--absent  { background: var(--integra-absent);  color: #fff; }
+
+  /* Colourblind shape overlay (toggled by .integra-cb on the board wrapper) */
+  .integra-tile__icon { position: absolute; top: 2px; right: 3px; font-size: 0.55rem; opacity: 0.75; line-height: 1; }
+  .integra-cb .integra-tile--correct .integra-tile__icon::after { content: "\25C6"; } /* ◆ */
+  .integra-cb .integra-tile--present .integra-tile__icon::after { content: "\25CF"; } /* ● */
+  .integra-cb .integra-tile--absent  .integra-tile__icon::after { content: "\2715"; } /* ✕ */
+
+  @keyframes integra-bounce {
+    0%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+    60% { transform: translateY(-3px); }
+  }
+  .animate-bounce-win { animation: integra-bounce 0.6s var(--ease-out-quint) both; }
 }
 
 /* ================================================================== */
