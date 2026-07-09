@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { EMAIL_FIELDS, type EmailCredentials } from "./config";
 import {
@@ -37,6 +38,9 @@ export async function saveEmailCredentials(
   const res = await persistCredentials(creds);
   if (!res.ok) return { ok: false, message: `Save failed: ${res.error}` };
 
+  // Refresh the page so `status.configured` updates and Test Connect enables
+  // without a manual reload.
+  revalidatePath("/admin/integrations");
   return { ok: true, message: "Saved. Run Test Connect to verify the SMTP login." };
 }
 
