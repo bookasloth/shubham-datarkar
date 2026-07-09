@@ -1,6 +1,7 @@
 import "server-only";
 
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 export type Subscriber = {
   id: string;
@@ -33,4 +34,15 @@ export async function getSubscribers(): Promise<Subscriber[]> {
     console.warn("[subscribers] getSubscribers failed; returning empty:", (e as Error)?.message ?? e);
     return [];
   }
+}
+
+/** Current newsletter status for an email (service-role; email base table is admin-only). */
+export async function getSubscriptionStatus(email: string): Promise<"active" | "unsubscribed" | null> {
+  const e = email.trim().toLowerCase();
+  const { data } = await supabaseAdmin()
+    .from("subscribers")
+    .select("status")
+    .eq("email", e)
+    .maybeSingle();
+  return (data?.status as "active" | "unsubscribed" | undefined) ?? null;
 }
