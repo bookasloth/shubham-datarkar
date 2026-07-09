@@ -64,7 +64,6 @@ describe("sitemap auto-discovery", () => {
     expect(publicRoutes).toContain("/faq");
     // Games and other newer pages auto-discovered
     expect(publicRoutes).toContain("/games");
-    expect(publicRoutes).toContain("/photos");
     expect(publicRoutes).toContain("/link");
   });
 });

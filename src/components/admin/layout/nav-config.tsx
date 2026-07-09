@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
-  Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Image as ImageIcon, Gamepad2, Search,
+  Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Gamepad2, Search,
   Library, Tags, MessageSquarePlus, UserRound, Bell, BarChart3, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
@@ -29,7 +29,6 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Posts", href: "/admin/posts", icon: FileText },
       { label: "Updates", href: "/admin/updates", icon: Megaphone },
-      { label: "Photos", href: "/admin/photos", icon: ImageIcon },
       ...contentEntityItems,
     ],
   },
