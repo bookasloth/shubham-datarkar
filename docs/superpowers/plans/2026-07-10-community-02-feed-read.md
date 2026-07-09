@@ -14,7 +14,7 @@
 - **Style:** monochrome + no-emoji. Brand accent = `--brand` (`#ff4800` at top level) via `text-brand`/`bg-brand`/`border-brand` — never hardcode the hex. Radii `rounded-btn` (4px) / `rounded-input` (8px) / `rounded-card` (12px). Headings `font-display`. Custom transition utility `transition-ui`.
 - **Supabase clients:** `supabaseAnon()` for anon public reads; `supabaseAuthServer()` when the viewer may be logged in (RLS as user); `supabaseAdmin()` only for RLS-bypassing needs. All from `src/lib/supabase/*`, `import "server-only"`.
 - **Session:** `getMemberContext()` from `src/lib/members/session.ts` (cached) tells us `user` (null if anon). Do NOT `requireMember` — the feed is public.
-- **Manual SQL:** the feed RPC ships as a new migration `20260710000002_community_feed.sql`, applied MANUALLY by the user (per project workflow). Plan 1's `20260710000001_community_schema.sql` is already live.
+- **Manual SQL:** the feed RPC ships as a new migration `20260710000003_community_feed.sql`, applied MANUALLY by the user (per project workflow). Plan 1's `20260710000001_community_schema.sql` is already live.
 - **Server-action / mutation conventions** apply in later plans; Plan 2 is read-only except the RPC.
 - **No new dependencies.** Everything needed is installed.
 - **Test runner:** `vitest`. Pure functions get unit tests; UI is verified via the preview server.
@@ -141,7 +141,7 @@ git commit -m "feat(community): initials, avatar color, timeAgo, youtube-id util
 ### Task 2: Feed ranking RPC (`community_feed`) migration
 
 **Files:**
-- Create: `supabase/migrations/20260710000002_community_feed.sql`
+- Create: `supabase/migrations/20260710000003_community_feed.sql`
 
 **Interfaces:**
 - Produces: `public.community_feed(p_sort text, p_window text, p_viewer uuid, p_limit int, p_offset int)` returning one row per root post with author + badge + counts + the viewer's own vote/bookmark state. Consumed by `listFeed` (Task 3).
@@ -149,7 +149,7 @@ git commit -m "feat(community): initials, avatar color, timeAgo, youtube-id util
 
 - [ ] **Step 1: Write the migration**
 
-Create `supabase/migrations/20260710000002_community_feed.sql`:
+Create `supabase/migrations/20260710000003_community_feed.sql`:
 
 ```sql
 -- =====================================================================
@@ -231,13 +231,13 @@ grant execute on function public.community_feed(text, text, uuid, int, int) to a
 - [ ] **Step 2: Commit the migration file**
 
 ```bash
-git add supabase/migrations/20260710000002_community_feed.sql
+git add supabase/migrations/20260710000003_community_feed.sql
 git commit -m "feat(community): community_feed ranking RPC (new/hot/top/controversial)"
 ```
 
 - [ ] **Step 3: Hand to user for manual apply + verify**
 
-Tell the user: "Run `supabase/migrations/20260710000002_community_feed.sql` in your Supabase SQL editor." Then verify with:
+Tell the user: "Run `supabase/migrations/20260710000003_community_feed.sql` in your Supabase SQL editor." Then verify with:
 
 ```sql
 -- returns rows without error (empty feed is fine on a fresh table)
