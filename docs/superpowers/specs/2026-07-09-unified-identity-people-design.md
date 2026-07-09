@@ -6,21 +6,22 @@
 ## Core principle
 
 One human = one verified account = one profile. Contact submissions, newsletter
-signups, games played, and membership are **actions** that attach to a profile —
-never separate user types.
+signups, games played, support donations, and membership are **actions** that
+attach to a profile — never separate user types.
 
 ```
-Anonymous visitor ──(contact / newsletter / browse, no account, frictionless)
+Anonymous visitor ──(contact / newsletter / support donation / browse, no account, frictionless)
         │
         ▼
-Creates + verifies account  ──►  Free profile
-        │                          ├─ contact history
-        ▼                          ├─ newsletter status
-Premium (same account,             ├─ game progress
-higher plan; monthly/yearly        ├─ bookmarks / free downloads
-= billing cadence only)            ├─ comments / community
-                                   ├─ membership record
-                                   └─ future products
+Creates + verifies account ──► Free profile
+        │                         ├─ contact history
+        ▼                         ├─ newsletter status
+Premium (same account,            ├─ game progress
+higher plan; monthly/yearly       ├─ donation history
+= billing cadence only)           ├─ bookmarks / free downloads
+                                  ├─ comments / community
+                                  ├─ membership record
+                                  └─ future products
 ```
 
 There is no "contactor", "subscriber", "gamer", or "member" user type. Those are
@@ -28,21 +29,26 @@ badges/behaviors on one identity.
 
 ## Current state (why this is mostly a linking + view problem)
 
-Two storage models exist today, not four:
+Two storage models exist today, not five:
 
-| Behavior   | Table                                   | Real account? | Verified email? |
-| ---------- | --------------------------------------- | ------------- | --------------- |
-| Contact    | `public.contacts` (name/email/message)  | no            | never           |
-| Newsletter | `public.subscribers` (email/status)     | no            | never           |
-| Games      | `auth.users` + `public.profiles`        | yes           | yes             |
-| Membership | `auth.users` + `public.memberships`     | yes           | yes             |
+| Behavior          | Table                                        | Real account? | Verified email? |
+| ----------------- | -------------------------------------------- | ------------- | --------------- |
+| Contact           | `public.contacts` (name/email/message)       | no            | never           |
+| Newsletter        | `public.subscribers` (email/status)          | no            | never           |
+| Support donations | `public.supports` (email/amount/status)      | no            | never           |
+| Games             | `auth.users` + `public.profiles`             | yes           | yes             |
+| Membership        | `auth.users` + `public.memberships`          | yes           | yes             |
 
 Games and membership are **already one identity** — both are `auth.users`, keyed
 by the same `user_id`. A gamer who buys membership is the same row. That half is
 done.
 
-Contacts and subscribers are **email rows in log tables** — no password, no
-login, never verify. They are the only two behaviors outside the identity system.
+Contacts, subscribers, and support donations are **email rows in log tables**.
+They do not require an account, password, or email verification. They are
+behaviors outside the identity system until that email later becomes a verified
+account. (`supports` is RLS-locked and service-role write; its `anonymous` flag
+hides the name in *public* views only — the email is always stored, so linking
+works even for anonymous donations.)
 
 Tiers already exist in the capability system (`20260708000001_capabilities.sql`,
 `20260707000001_members_platform.sql`): a `'free'` plan row (amount 0, active),
@@ -52,17 +58,19 @@ tiers. **No tier or pricing change in this project.**
 
 ## Decisions
 
-1. **Link by email, live.** `auth.users.email` already matches `contacts.email`
-   and `subscribers.email`. Linking = a join on `lower(email)`. No merge table,
+1. **Link by email, live.** `auth.users.email` already matches `contacts.email`,
+   `subscribers.email`, and `supports.email`. Linking = a join on `lower(email)`.
+   No merge table,
    no backfill, no trigger, no new foreign key. The People view and per-person
    timeline query every table by email at read time. Nothing to keep in sync.
    > `// ponytail: link by email-join; add a nullable user_id FK + backfill only
    > if an email change ever breaks a link (see Future work).`
 
-2. **No verification at contact/newsletter entry points.** These are the
-   highest-converting funnels. Contact form stores the message immediately;
-   newsletter stores the subscription immediately. No account, no confirm step.
-   When that email later becomes a verified account, its history attaches
+2. **No verification at contact / newsletter / donation entry points.** These
+   are the highest-converting funnels. Contact form stores the message
+   immediately; newsletter stores the subscription immediately; a support
+   donation stores the (paid) `supports` row immediately. No account, no confirm
+   step. When that email later becomes a verified account, its history attaches
    automatically via the email join.
 
 3. **Verification IS required at account creation.** A profile = a verified
@@ -78,14 +86,15 @@ tiers. **No tier or pricing change in this project.**
 ### 1. `get_people()` — admin RPC
 
 Security-definer, admin-gated (raises for non-admin). Returns one row per
-distinct `lower(email)` across `contacts ∪ subscribers ∪ auth.users`, with
-supports search + pagination.
+distinct `lower(email)` across `contacts ∪ subscribers ∪ supports ∪ auth.users`,
+with search + pagination.
 
 Returned shape (illustrative — exact SQL in the plan):
 
 ```
 email, display_name, user_id, verified,
 contacted, contact_count, subscribed,
+donated, donation_total,
 is_gamer, plan_key, membership_status,
 first_seen, last_seen
 ```
@@ -94,6 +103,9 @@ Badge semantics (important — avoid false positives):
 
 - **contacted** = has any `contacts` row for the email.
 - **subscribed** = has an `active` `subscribers` row for the email.
+- **donated** = has at least one `paid` `supports` row for the email;
+  `donation_total` = sum of `total_amount` over paid rows. (`anonymous` affects
+  public display only, not this admin aggregate.)
 - **is_gamer** = has at least one `game_results` row (NOT merely "has a
   `profiles` row" — `handle_new_user` creates a profile for *every* signup, so a
   profile alone does not mean they played).
@@ -111,18 +123,19 @@ has done:
 
 - contact messages (`contacts`) — timestamp, project_type, message
 - newsletter events (`subscribers`) — subscribed/unsubscribed + timestamp
+- support donations (`supports`) — amount, payment status, timestamp
 - game results (`game_results` via the account) — game, status, timestamp
 - membership (`memberships`) — plan, status, timestamp
 
 Each row normalized to `{ kind, occurred_at, title, detail }`. Downloads,
-bookmarks, purchases, and activity join in later as those event sources mature
-(see Future work) — v1 covers the four behaviors above.
+bookmarks, purchases, and other activity sources join in later as the platform
+grows (see Future work) — v1 covers the five behaviors above.
 
 ### 3. `/admin/people` page
 
-New admin route. Badge table (Name/email · Contact · Newsletter · Games ·
-Membership) with search + pagination, backed by `get_people()`. Clicking a row
-opens the person's timeline (`get_person_timeline`).
+New admin route. Badge table (Name/email · Contact · Newsletter · Donation ·
+Games · Membership) with search + pagination, backed by `get_people()`. Clicking
+a row opens the person's timeline (`get_person_timeline`).
 
 Nav: add **People** to the `Audience` group in
 `src/components/admin/layout/nav-config.tsx`. Keep the existing
@@ -136,6 +149,8 @@ On success, invite the email-only visitor to create a verified account:
 - Contact form success → "Create your free account to track this" CTA.
   (`src/lib/contact/actions.ts` success path → contact form section UI.)
 - Newsletter success → same CTA. (`src/components/sections/newsletter-form.tsx`.)
+- Support page success → "Create your free account to keep track of your
+  contributions" CTA. (Support success path → support section UI.)
 
 Copy links to the members signup/login flow (`/members/login`). No auto-account,
 no auto-subscribe — an explicit nudge only.
@@ -143,8 +158,8 @@ no auto-subscribe — an explicit nudge only.
 ### 5. Free-tier surfaces
 
 Free = verified account with no active premium membership. Free must be able to
-log in and reach: dashboard, game progress, bookmarks, free downloads, newsletter
-preferences, comments/community, member profile.
+log in and reach: dashboard, game progress, donation history, bookmarks, free
+downloads, newsletter preferences, comments/community, member profile.
 
 Most already exist under `/members` (dashboard, bookmarks, downloads, account,
 tools). This project's concrete work:
@@ -187,6 +202,10 @@ internally; execute revoked from `anon`.
   with `contact_count`.
 - **Unverified account** → with Confirm-email ON, an unconfirmed signup has
   `email_confirmed_at is null`; show as `verified=false`. It is still one person.
+- **Anonymous donation** → the `supports.anonymous` flag only hides the name in
+  public views; the email is still stored. So anonymous donations stay
+  frictionless and attach to the person's profile automatically when an account
+  is later created with the same email.
 - **Unsubscribed** → `subscribed=false` but the person and their history remain.
 - **Email-only person (no account)** → appears in People with `user_id=null`,
   `verified=false`, plan none. Valid — a lead, not yet a profile.
@@ -203,11 +222,12 @@ internally; execute revoked from `anon`.
 
 ## Testing
 
-- `get_people()`: seed contacts+subscribers+auth users with overlapping and
-  distinct emails → assert one row per distinct email, correct badges,
+- `get_people()`: seed contacts+subscribers+supports+auth users with overlapping
+  and distinct emails → assert one row per distinct email, correct badges,
+  `donated` true only for `paid` supports with correct `donation_total`,
   `is_gamer` false when a profile exists but no `game_results`, admin gate
   rejects non-admin.
-- `get_person_timeline()`: email with rows in all four sources → assert merged,
+- `get_person_timeline()`: email with rows in all five sources → assert merged,
   descending, correctly typed; admin gate.
 - `/admin/people`: renders badges, search filters, row click loads timeline.
 - Free access guard: a verified free account reaches `/members` dashboard;
