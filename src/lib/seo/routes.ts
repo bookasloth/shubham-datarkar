@@ -9,8 +9,16 @@
 
 export type PageType = "pillar" | "hub" | "utility" | "app";
 
-/** Subtrees that are entirely application UI. */
-const APP_PREFIXES = [
+/**
+ * Subtrees that are entirely application UI, and that robots.txt disallows.
+ *
+ * Only these. App routes under public subtrees (`/games/login`,
+ * `/members/account`) must stay crawlable: Googlebot cannot read a `noindex`
+ * tag on a URL it is forbidden to fetch, so disallowing them would leave them
+ * eligible for URL-only indexing from inbound links. They carry `noIndex`
+ * metadata instead.
+ */
+export const ROBOTS_DISALLOW_PREFIXES = [
   "/admin",
   "/dashboard",
   "/login",
@@ -18,7 +26,7 @@ const APP_PREFIXES = [
   "/profile",
   "/success",
   "/search",
-];
+] as const;
 
 /** Application routes sitting under an otherwise-public subtree. */
 const APP_ROUTES = new Set([
@@ -69,7 +77,7 @@ const PILLAR_PATTERNS = [
 ];
 
 export function pageTypeOf(route: string): PageType {
-  if (APP_PREFIXES.some((p) => route === p || route.startsWith(`${p}/`))) return "app";
+  if (ROBOTS_DISALLOW_PREFIXES.some((p) => route === p || route.startsWith(`${p}/`))) return "app";
   if (APP_ROUTES.has(route)) return "app";
   if (APP_PATTERNS.some((re) => re.test(route))) return "app";
   if (UTILITY_ROUTES.has(route)) return "utility";

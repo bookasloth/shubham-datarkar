@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { pageTypeOf, isPrivate, isIndexable } from "./routes";
+import { pageTypeOf, isPrivate, isIndexable, ROBOTS_DISALLOW_PREFIXES } from "./routes";
 
 describe("pageTypeOf", () => {
   it("classifies the marketing pillars", () => {
@@ -112,6 +112,29 @@ describe("isIndexable", () => {
   it("includes real public routes", () => {
     for (const route of ["/", "/about", "/blog", "/blog/seo", "/services/seo", "/games", "/link", "/privacy-policy"]) {
       expect(isIndexable(route)).toBe(true);
+    }
+  });
+});
+
+describe("ROBOTS_DISALLOW_PREFIXES", () => {
+  it("contains only server-private subtrees, not app routes under public ones", () => {
+    expect([...ROBOTS_DISALLOW_PREFIXES].sort()).toEqual(
+      ["/admin", "/dashboard", "/login", "/profile", "/search", "/settings", "/success"].sort(),
+    );
+  });
+
+  it("every disallowed prefix classifies as app", () => {
+    for (const p of ROBOTS_DISALLOW_PREFIXES) {
+      expect(pageTypeOf(p)).toBe("app");
+    }
+  });
+
+  it("does NOT disallow app routes that must stay crawlable to be seen as noindex", () => {
+    // Googlebot cannot read a `noindex` tag on a URL it is forbidden to fetch.
+    // These are linked from public nav, so they must be crawlable AND noindexed.
+    for (const route of ["/games/login", "/members/account", "/community/compose", "/unsubscribe"]) {
+      expect(pageTypeOf(route)).toBe("app");
+      expect(ROBOTS_DISALLOW_PREFIXES.some((p) => route.startsWith(p))).toBe(false);
     }
   });
 });
