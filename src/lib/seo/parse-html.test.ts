@@ -71,4 +71,21 @@ describe("parseHtml — head", () => {
   it("reports no og image when the tag is absent", () => {
     expect(parseHtml(page("")).ogImageSource).toBe("none");
   });
+
+  it("keeps an apostrophe inside a double-quoted content attribute", () => {
+    const r = parseHtml(page(`<meta name="description" content="Let's talk about SEO">`));
+    expect(r.description).toBe("Let's talk about SEO");
+    expect(r.descriptionLength).toBe(20);
+  });
+
+  it("keeps a double quote inside a single-quoted content attribute", () => {
+    const r = parseHtml(page(`<meta name="description" content='She said "hi" loudly'>`));
+    expect(r.description).toBe('She said "hi" loudly');
+  });
+
+  it("reads a robots directive containing an apostrophe-free list", () => {
+    const r = parseHtml(page(`<meta name="robots" content="noindex, nofollow">`));
+    expect(r.robotsIndex).toBe(false);
+    expect(r.robotsFollow).toBe(false);
+  });
 });

@@ -31,7 +31,7 @@ function headOf(html: string): string {
 function metaContent(head: string, attr: "name" | "property", key: string): string | null {
   const tag = head.match(new RegExp(`<meta[^>]*${attr}=["']${key}["'][^>]*>`, "i"))?.[0];
   if (!tag) return null;
-  const content = tag.match(/content=["']([^"']*)["']/i)?.[1];
+  const content = tag.match(/content=(["'])([\s\S]*?)\1/i)?.[2];
   return content === undefined ? null : decodeEntities(content);
 }
 
