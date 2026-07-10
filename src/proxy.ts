@@ -29,6 +29,20 @@ export async function proxy(request: NextRequest) {
     },
   );
 
+  /**
+   * getUser() can rotate the refresh token, and setAll() writes the new cookies
+   * onto `response`. A bare NextResponse.redirect() would drop them, so the
+   * browser would keep replaying the old token until the session dies. Every
+   * redirect below must go through here.
+   */
+  const redirectWithCookies = (url: URL) => {
+    const redirect = NextResponse.redirect(url);
+    for (const cookie of response.cookies.getAll()) {
+      redirect.cookies.set(cookie);
+    }
+    return redirect;
+  };
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -38,7 +52,7 @@ export async function proxy(request: NextRequest) {
   if (path.startsWith("/admin") && !user) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // No /login -> /admin bounce. requireAdmin() also gates on ADMIN_EMAIL, so a
@@ -50,7 +64,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/games";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   // Members: bounce logged-in users away from the members login page.
@@ -58,7 +72,7 @@ export async function proxy(request: NextRequest) {
     const url = request.nextUrl.clone();
     url.pathname = "/members";
     url.search = "";
-    return NextResponse.redirect(url);
+    return redirectWithCookies(url);
   }
 
   return response;
