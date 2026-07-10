@@ -53,6 +53,19 @@ function RecommendationCard({ check }: { check: CheckResult }) {
 
 export function PageDetail({ data }: { data: PageAuditEntry }) {
   const { entry, analysis, scores } = data;
+
+  if (!analysis || !scores) {
+    return (
+      <AdminCard>
+        <h2 className="text-sm font-medium text-admin-text">Could not fetch {entry.route}</h2>
+        <p className="mt-2 text-sm text-admin-text-muted">
+          The audit fetches each route&apos;s rendered HTML. This one did not respond — it may be an
+          unexpanded dynamic template, or the server may have been unreachable. Try Re-run audit.
+        </p>
+      </AdminCard>
+    );
+  }
+
   const failedChecks = scores.checks
     .filter((c) => !c.passed)
     .sort((a, b) => {
@@ -83,17 +96,24 @@ export function PageDetail({ data }: { data: PageAuditEntry }) {
           )}
         </MetadataRow>
         <MetadataRow label="Description">
-          {analysis.description ?? <span className="italic text-admin-text-muted">Not set (or dynamic)</span>}
+          {analysis.description ?? <span className="italic text-admin-text-muted">Not set</span>}
           {analysis.description && (
             <span className="ml-2 text-xs">
               <CharCount value={analysis.descriptionLength} min={120} max={160} />
             </span>
           )}
         </MetadataRow>
-        <MetadataRow label="Metadata Source">
-          <StatusBadge tone={analysis.metadataSource === "none" ? "danger" : "success"}>
-            {analysis.metadataSource}
-          </StatusBadge>
+        <MetadataRow label="Structured Data Health">
+          <span className="flex gap-2">
+            <StatusBadge tone={analysis.schemaParseErrors === 0 ? "success" : "danger"}>
+              {analysis.schemaParseErrors === 0
+                ? "All JSON-LD parsed"
+                : `${analysis.schemaParseErrors} malformed block(s)`}
+            </StatusBadge>
+            {!analysis.mainRegionFound && (
+              <StatusBadge tone="warning">No &lt;main&gt; — counts include chrome</StatusBadge>
+            )}
+          </span>
         </MetadataRow>
         <MetadataRow label="Canonical">
           <StatusBadge tone={analysis.hasCanonical ? "success" : "danger"}>
@@ -187,6 +207,10 @@ export function PageDetail({ data }: { data: PageAuditEntry }) {
                 <span className="ml-1 text-sm text-admin-danger">({analysis.missingAltCount} missing alt)</span>
               )}
             </p>
+          </div>
+          <div>
+            <p className="text-xs text-admin-text-muted">Lists & Tables</p>
+            <p className="text-lg font-bold text-admin-text">{analysis.listCount}</p>
           </div>
         </div>
       </AdminCard>

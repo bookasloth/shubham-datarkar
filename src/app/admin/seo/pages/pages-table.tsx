@@ -10,6 +10,7 @@ type Row = {
   id: string;
   route: string;
   title: string | null;
+  reachable: boolean;
   seoScore: number;
   geoScore: number;
   aeoScore: number;
@@ -26,19 +27,21 @@ function ScoreBadge({ score, color }: { score: number; color: "red" | "orange" |
 }
 
 function toRow(p: PageAuditEntry): Row {
+  const { analysis, scores } = p;
   return {
     id: p.entry.route,
     route: p.entry.route,
-    title: p.analysis.title,
-    seoScore: p.scores.seo.score,
-    geoScore: p.scores.geo.score,
-    aeoScore: p.scores.aeo.score,
-    seoColor: scoreColor(p.scores.seo.score),
-    geoColor: scoreColor(p.scores.geo.score),
-    aeoColor: scoreColor(p.scores.aeo.score),
-    schemas: p.analysis.schemas,
+    title: analysis?.title ?? null,
+    reachable: analysis !== null && scores !== null,
+    seoScore: scores?.seo.score ?? 0,
+    geoScore: scores?.geo.score ?? 0,
+    aeoScore: scores?.aeo.score ?? 0,
+    seoColor: scoreColor(scores?.seo.score ?? 0),
+    geoColor: scoreColor(scores?.geo.score ?? 0),
+    aeoColor: scoreColor(scores?.aeo.score ?? 0),
+    schemas: analysis?.schemas ?? [],
     inSitemap: p.entry.inSitemap,
-    issueCount: p.scores.checks.filter((c) => !c.passed).length,
+    issueCount: scores?.checks.filter((c) => !c.passed).length ?? 0,
   };
 }
 
@@ -68,20 +71,20 @@ const columns: Column<Row>[] = [
   {
     key: "seo",
     header: "SEO",
-    sortValue: (r) => r.seoScore,
-    cell: (r) => <ScoreBadge score={r.seoScore} color={r.seoColor} />,
+    sortValue: (r) => (r.reachable ? r.seoScore : -1),
+    cell: (r) => (r.reachable ? <ScoreBadge score={r.seoScore} color={r.seoColor} /> : <span className="text-admin-text-muted">—</span>),
   },
   {
     key: "geo",
     header: "GEO",
-    sortValue: (r) => r.geoScore,
-    cell: (r) => <ScoreBadge score={r.geoScore} color={r.geoColor} />,
+    sortValue: (r) => (r.reachable ? r.geoScore : -1),
+    cell: (r) => (r.reachable ? <ScoreBadge score={r.geoScore} color={r.geoColor} /> : <span className="text-admin-text-muted">—</span>),
   },
   {
     key: "aeo",
     header: "AEO",
-    sortValue: (r) => r.aeoScore,
-    cell: (r) => <ScoreBadge score={r.aeoScore} color={r.aeoColor} />,
+    sortValue: (r) => (r.reachable ? r.aeoScore : -1),
+    cell: (r) => (r.reachable ? <ScoreBadge score={r.aeoScore} color={r.aeoColor} /> : <span className="text-admin-text-muted">—</span>),
   },
   {
     key: "schema",
@@ -105,12 +108,15 @@ const columns: Column<Row>[] = [
   {
     key: "issues",
     header: "Issues",
-    sortValue: (r) => r.issueCount,
-    cell: (r) => (
-      <span className={r.issueCount > 0 ? "font-medium text-admin-text" : "text-admin-text-muted"}>
-        {r.issueCount}
-      </span>
-    ),
+    sortValue: (r) => (r.reachable ? r.issueCount : -1),
+    cell: (r) =>
+      r.reachable ? (
+        <span className={r.issueCount > 0 ? "font-medium text-admin-text" : "text-admin-text-muted"}>
+          {r.issueCount}
+        </span>
+      ) : (
+        <StatusBadge tone="warning">Could not fetch</StatusBadge>
+      ),
   },
 ];
 
