@@ -13,7 +13,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const postDateMap = new Map(posts.map((p) => [`/blog/${p.category}/${p.slug}`, new Date(p.date)]));
 
   const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies"];
-  const WEEKLY_PATHS = new Set(["/", "/blog"]);
+  const WEEKLY_PATHS = new Set(["/", "/me", "/blog"]);
 
   return pages
     .filter((p) => isIndexable(p.route))

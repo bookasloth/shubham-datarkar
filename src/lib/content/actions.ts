@@ -14,7 +14,8 @@ import { getEntity, type EntityKey } from "@/lib/content/registry";
 function revalidateEntity(key: EntityKey): void {
   switch (key) {
     case "case-studies":
-      revalidatePath("/"); // home shows featured case studies
+      revalidatePath("/"); // home shows two case studies, selected by slug
+      revalidatePath("/me");
       revalidatePath("/case-studies");
       revalidatePath("/case-studies/[slug]", "page");
       break;
@@ -23,11 +24,13 @@ function revalidateEntity(key: EntityKey): void {
       revalidatePath("/products/[slug]", "page");
       break;
     case "services":
+      revalidatePath("/"); // home shows three service cards with prices
       revalidatePath("/services");
       revalidatePath("/services/[slug]", "page");
       break;
     case "testimonials":
-      revalidatePath("/"); // home marquee
+      revalidatePath("/"); // home shows a static testimonial grid
+      revalidatePath("/me");
       revalidatePath("/testimonials");
       break;
     case "projects":
