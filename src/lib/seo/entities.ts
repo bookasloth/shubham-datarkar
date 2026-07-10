@@ -158,6 +158,10 @@ export function organizationNodes() {
         "@type": "Organization",
         "@id": ORG_IDS.bookASloth,
         name: "Book A Sloth",
+        // The only org with a public site today; a real url makes this node
+        // independently resolvable. The others honestly have none — omitted
+        // rather than fabricated.
+        url: "https://bookasloth.com",
         description: "Booking and scheduling SaaS. Shubham Datarkar is CMO.",
         employee: personRef,
         knowsAbout: ["Booking Software", "Scheduling", "Business Automation"],
