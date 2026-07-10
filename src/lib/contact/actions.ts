@@ -4,6 +4,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail } from "@/lib/email/template";
+import { toAttributionRow, type FirstTouch } from "@/lib/attribution";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -13,6 +14,7 @@ export type ContactInput = {
   projectType?: string;
   budget?: string;
   message: string;
+  attribution?: FirstTouch | null;
 };
 
 export type ContactResult = { ok: boolean; error?: string };
@@ -47,7 +49,7 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
   const admin = supabaseAdmin();
   const { data, error } = await admin
     .from("contacts")
-    .insert({ name, email, project_type: projectType, budget, message })
+    .insert({ name, email, project_type: projectType, budget, message, ...toAttributionRow(input.attribution) })
     .select("id")
     .single();
 
