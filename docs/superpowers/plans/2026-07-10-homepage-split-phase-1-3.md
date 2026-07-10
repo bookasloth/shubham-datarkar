@@ -17,6 +17,7 @@ Spec: `docs/superpowers/specs/2026-07-10-homepage-split-buyer-funnel-design.md`
 - **Concurrent sessions share this working tree.** Another Claude session is active and has added and deleted files under `src/lib/seo/` during this planning session. Re-run `git status` before every branch operation and never `git add -A`.
 - **Supabase migrations are never applied directly.** Write the migration file, then hand the SQL to the user to run manually.
 - **`next build` must be confirmed by its own exit code.** Piping masks failure. Run `npm run build; echo "exit=$?"`.
+- **`npm run lint` already exits 1 on `main`.** Baseline as of `479b918`: 21 problems, 15 of them errors, all in files this plan does not touch (`src/components/games/*`, `src/app/admin/*`, `src/components/link-page.tsx`, `src/lib/games/themes.test.ts`). Do not try to fix them and do not treat a red repo-wide lint as your failure. Gate on scoped lint instead: `npx eslint <the files you changed>; echo "exit=$?"` must print `exit=0`. Where a task below says `npm run lint; echo "exit=$?"` expecting `exit=0`, read it as scoped lint over that task's files.
 - **Client components must never import `server-only`.** It passes `tsc` and breaks the build on Vercel.
 - **No emojis anywhere.** Monochrome design system. Fonts are Jakarta + Poppins.
 - **Tests are `src/**/*.test.ts` under `environment: "node"`.** There is no DOM in the test environment and no `.tsx` test support. Component changes are verified by `npm run build` and browser DOM inspection, not unit tests. Do not add a DOM test runner.
