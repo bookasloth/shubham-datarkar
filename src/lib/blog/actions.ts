@@ -51,6 +51,17 @@ function fields(formData: FormData) {
   else if (status === "scheduled")
     published_at = publishAtRaw ? new Date(publishAtRaw).toISOString() : null;
 
+  // SEO copy is optional. Omit the columns entirely when all three are blank,
+  // so posts written before the blog_seo_fields migration is applied still save
+  // (a write to a missing column errors). Only a filled field touches them.
+  const seoTitle = String(formData.get("seo_title") ?? "").trim();
+  const ogTitle = String(formData.get("og_title") ?? "").trim();
+  const ogDescription = String(formData.get("og_description") ?? "").trim();
+  const seo: { seo_title?: string | null; og_title?: string | null; og_description?: string | null } =
+    seoTitle || ogTitle || ogDescription
+      ? { seo_title: seoTitle || null, og_title: ogTitle || null, og_description: ogDescription || null }
+      : {};
+
   return {
     slug: String(formData.get("slug") ?? "").trim(),
     title: String(formData.get("title") ?? "").trim(),
@@ -65,6 +76,7 @@ function fields(formData: FormData) {
     words: countWords(body),
     status,
     published_at,
+    ...seo,
   };
 }
 

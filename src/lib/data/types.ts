@@ -145,6 +145,12 @@ export type Post = {
   words: number;
   featured?: boolean;
   body: ContentBlock[];
+  /** Keyword <title> phrase; falls back to `title`. See SeoFields. */
+  seoTitle?: string;
+  /** Social-card headline; falls back to the branded full title. */
+  ogTitle?: string;
+  /** Social-card body; falls back to `excerpt`. */
+  ogDescription?: string;
 };
 
 export type Project = {

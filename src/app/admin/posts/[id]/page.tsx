@@ -36,6 +36,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
           status: post.status,
           publishedAt: post.publishedAt,
           body: post.body,
+          seoTitle: post.seoTitle,
+          ogTitle: post.ogTitle,
+          ogDescription: post.ogDescription,
         }}
       />
     </div>
