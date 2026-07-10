@@ -3,9 +3,17 @@ import { pageTypeOf, isPrivate, isIndexable, ROBOTS_DISALLOW_PREFIXES } from "./
 
 describe("pageTypeOf", () => {
   it("classifies the marketing pillars", () => {
-    for (const route of ["/", "/about", "/my-story", "/philosophy", "/speaking"]) {
+    for (const route of ["/", "/me", "/about", "/my-story", "/philosophy", "/speaking"]) {
       expect(pageTypeOf(route)).toBe("pillar");
     }
+  });
+
+  it("classifies /me as a pillar, not the hub fallback", () => {
+    // `/me` arrived with the homepage split (PR #110), after routes.ts existed.
+    // An unmapped route falls through to `hub` — the safe default, but the wrong
+    // one for a long-form founder story that should face the pillar checks.
+    expect(pageTypeOf("/me")).toBe("pillar");
+    expect(isIndexable("/me")).toBe(true);
   });
 
   it("classifies detail pages as pillars", () => {

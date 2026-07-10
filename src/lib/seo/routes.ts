@@ -68,7 +68,10 @@ const UTILITY_ROUTES = new Set([
   "/terms-of-use",
 ]);
 
-const PILLAR_ROUTES = new Set(["/", "/about", "/my-story", "/philosophy", "/speaking"]);
+// `/me` is the founder-story home, split out of `/` in PR #110. It is long-form
+// content, not an index page, so it faces the pillar checks (word count,
+// dedicated OG image) rather than falling through to the `hub` default.
+const PILLAR_ROUTES = new Set(["/", "/me", "/about", "/my-story", "/philosophy", "/speaking"]);
 
 const PILLAR_PATTERNS = [
   /^\/(?:services|products|case-studies)\/[^/]+$/,
