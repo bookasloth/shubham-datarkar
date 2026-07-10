@@ -1,7 +1,7 @@
-import type { RenderedAnalysis } from "./types";
+import type { PageAnalysis } from "./types";
 
 /**
- * Parses a route's rendered HTML into a `RenderedAnalysis`. Pure: no I/O.
+ * Parses a route's rendered HTML into a `PageAnalysis`. Pure: no I/O.
  *
  * Regex over rendered markup, deliberately. `jsdom` is a devDependency
  * weighing ~10MB and would have to move into `dependencies` to run inside the
@@ -46,7 +46,7 @@ function pathnameOf(url: string): string {
   }
 }
 
-function ogImageSourceOf(head: string): RenderedAnalysis["ogImageSource"] {
+function ogImageSourceOf(head: string): PageAnalysis["ogImageSource"] {
   const ogImage = metaContent(head, "property", "og:image");
   if (!ogImage) return "none";
   return pathnameOf(ogImage).startsWith("/opengraph-image") ? "root-fallback" : "dedicated";
@@ -119,7 +119,7 @@ function countWords(region: string): number {
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
-export function parseHtml(html: string): RenderedAnalysis {
+export function parseHtml(html: string): PageAnalysis {
   const head = headOf(html);
 
   const rawTitle = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i)?.[1];
