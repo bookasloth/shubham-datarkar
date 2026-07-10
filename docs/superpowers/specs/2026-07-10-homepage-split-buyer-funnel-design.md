@@ -94,9 +94,13 @@ The "Who is Shubham" strip is not optional. Brand searches for the name currentl
 
 Ship first so every later change is measurable from the hour it lands.
 
-- Migration: add `first_landing_page`, `referrer`, `utm_source`, `utm_medium`, `utm_campaign`, `pages_seen` to `contacts`.
-- A first-touch cookie set on first visit, read by `submitContact`.
+- Migration: add `first_landing_page`, `referrer`, `ai_source`, `utm_source`, `utm_medium`, `utm_campaign`, `pages_seen` to `contacts`.
+- First-touch captured client-side into `localStorage` on first load, read by the contact form and passed to `submitContact`. No middleware — the project has none, and adding one would sit in front of the auth-cookie rotation shipped in `ab33ca1`.
 - Surface the columns in `/admin/contacts`.
+
+`ai_source` is an addition beyond the original column list. `src/components/analytics/ai-referrer.tsx` already classifies ChatGPT, Perplexity, Gemini, Copilot, and Claude referrers, but only fires a fire-and-forget Vercel Analytics event — it is never tied to a lead. Persisting it means you can say "this retainer came from ChatGPT," which is the proof the AEO wedge sells on. The host map moves to `src/lib/attribution.ts` and `AiReferrer` imports it.
+
+Client-supplied attribution is untrusted input. It is length-clamped and type-checked server-side before insert.
 
 Written as a migration file and handed over as SQL to run manually, per the project's Supabase workflow. Never applied directly.
 
@@ -115,8 +119,9 @@ The buyer page. Mostly copy.
 Sub-changes:
 
 - `ServiceCard` renders `startingAt`. Price becomes visible everywhere services appear.
-- `CaseStudyCard` leads with its top `KpiRow`.
 - `CtaBand` gains `primaryHref` and `secondaryHref` props, defaulting to today's hardcoded values so existing call sites are unaffected.
+
+`CaseStudyCard` needs no change — it already leads with `heroMetric.value` at display size. The proof was never the problem; the marquee and the missing prices were.
 
 **Acceptance:** `/` no longer contains the phrase "startups that are just getting started". Price bands visible without clicking. Hero CTA points at `/contact` until Phase 4 lands, then switches to the audit tool.
 
