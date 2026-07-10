@@ -5,7 +5,8 @@ import { LinkPage } from "@/components/link-page";
 export const revalidate = 300;
 
 export const metadata: Metadata = {
-  title: "Shubham Datarkar | Links",
+  // No brand here: the root layout's title.template appends " — Shubham Datarkar".
+  title: "Links",
   description: "All my links in one place — projects, resources, social, and more.",
 };
 
