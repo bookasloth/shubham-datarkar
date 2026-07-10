@@ -66,7 +66,13 @@ export function buildSummary(pages: PageAuditEntry[]): AuditSummary {
 }
 
 export async function runFullAudit(): Promise<AuditResult> {
-  const entries = await discoverPages(await getPublishedPosts());
+  // Public pages only. /admin/* self-fetches are cookieless, so requireAdmin()
+  // redirects to /login and fetch follows it, parsing the login page as that
+  // route's analysis — junk that buildSummary and the page discard anyway.
+  // Dropping them here saves ~36 fetches and closes the /admin/seo/pages
+  // self-fetch recursion path (today only the auth redirect prevents it).
+  // buildSummary and the page still re-filter defensively.
+  const entries = (await discoverPages(await getPublishedPosts())).filter((e) => !e.isPrivate);
   const origin = await getOrigin();
 
   const pages = await mapWithConcurrency(entries, FETCH_CONCURRENCY, async (entry) => {

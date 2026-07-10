@@ -209,7 +209,7 @@ export async function getRenderedHtml(route: string): Promise<string | null>
 - **Origin** is derived from `headers()` (`x-forwarded-proto` + `host`). The audit page is already `export const dynamic = "force-dynamic"`, so request headers are available. Development therefore hits `http://localhost:3000` and production hits the deployed host, with no environment variable to drift out of sync.
 - **Concurrency is capped at 6.** A 60-way self-fetch fan-out against a single dev server wedges it. Requests are batched.
 - **Timeout of 10 seconds** per route via `AbortSignal.timeout`.
-- **Caching** via `fetch(url, { next: { revalidate: 3600, tags: ["seo-audit"] } })`. The audit page gains a "Re-run audit" button that calls `revalidateTag("seo-audit")`.
+- **Caching** wraps the parsed analysis (not the raw HTML) in `unstable_cache(fn, ["seo-page-analysis"], { tags: ["seo-audit"], revalidate: 3600 })`, keyed on origin + route. Fetch-level `next: { revalidate, tags }` would be inert here: the audit pages are `force-dynamic`, which re-fetches every request and leaves no tagged entry to invalidate. `unstable_cache` is not defeated by `force-dynamic`. The audit page gains a "Re-run audit" button whose server action calls `updateTag("seo-audit")`.
 - **Never throws.** Any non-2xx response, timeout, or network error returns `null`.
 
 ### 6.2 `src/lib/seo/parse-html.ts`
@@ -462,7 +462,7 @@ No target baseline is predicted here. The current numbers are wrong in both dire
 
 | Risk | Mitigation |
 | --- | --- |
-| Self-fetching 60 routes stalls the dev server | Concurrency capped at 6; 10 s timeout; results cached for an hour behind a `revalidateTag` button. |
+| Self-fetching 60 routes stalls the dev server | Concurrency capped at 6; 10 s timeout; parsed analyses cached for an hour via `unstable_cache` (tag `"seo-audit"`), invalidated by the "Re-run audit" button's `updateTag`. |
 | Regex HTML parsing is brittle against markup changes | Confined to one pure module with fixture tests. If it becomes a maintenance burden, `linkedom` is a ~200 KB drop-in — cheaper than `jsdom`, deferred until proven necessary. |
 | Indexing `/community/p/[id]` exposes user content to Google | Accepted knowingly (decision 3). Existing moderation tooling from the community feature governs it. |
 | Rewriting `schemas` from function names to `@type` values silently breaks `scoring.ts` predicates | All predicates changed in the same PR; `scoring.test.ts` asserts against `@type` strings. |

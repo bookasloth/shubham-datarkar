@@ -1,10 +1,9 @@
 import { headers } from "next/headers";
 
-/** Cache tag; the Re-run Audit action revalidates it. */
+/** Tag on the cached page analyses (see analyzer.ts); the Re-run Audit action invalidates it. */
 export const SEO_AUDIT_TAG = "seo-audit";
 
 const TIMEOUT_MS = 10_000;
-const REVALIDATE_SECONDS = 3600;
 
 /**
  * Origin of the running app, from request headers. The audit page is
@@ -20,15 +19,16 @@ export async function getOrigin(): Promise<string> {
 }
 
 /**
- * Rendered HTML for a route, or `null` if it could not be retrieved. Never
- * throws: a null result means "unknown", which the audit surfaces as
- * "Could not fetch" rather than scoring the page zero.
+ * Rendered HTML for a route, or `null` if it could not be retrieved. A plain,
+ * uncached fetch: the caller caches the small parsed analysis instead (see
+ * analyzer.ts), so caching hundreds of KB of HTML per route here would only
+ * bloat the data cache. Never throws: a null result means "unknown", which the
+ * audit surfaces as "Could not fetch" rather than scoring the page zero.
  */
 export async function getRenderedHtml(origin: string, route: string): Promise<string | null> {
   try {
     const res = await fetch(`${origin}${route}`, {
       signal: AbortSignal.timeout(TIMEOUT_MS),
-      next: { revalidate: REVALIDATE_SECONDS, tags: [SEO_AUDIT_TAG] },
     });
     if (!res.ok) return null;
     return await res.text();
