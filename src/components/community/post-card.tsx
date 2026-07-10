@@ -21,6 +21,11 @@ export function PostCard({
   const name = post.displayName || post.username;
   return (
     <article className="border-b border-border px-4 py-3">
+      {post.rebloggedBy && (
+        <p className="mb-1 pl-[52px] text-xs text-muted-foreground">
+          @{post.rebloggedBy} reblogged
+        </p>
+      )}
       <div className="flex gap-3">
         <CommunityAvatar name={name} size={40} />
         <div className="min-w-0 flex-1">

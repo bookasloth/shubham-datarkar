@@ -86,7 +86,12 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
   const { error: err } = existing
     ? await sb.from("community_posts").delete().eq("id", existing.id)
     : await sb.from("community_posts").insert({ user_id: user.id, type: "text", reblog_of: postId });
-  if (err) return { error: err.message };
+  if (err) {
+    // 23505 = the community_posts_reblog_once index: a concurrent click already
+    // reblogged this post. Treat as success — the end state is what was wanted.
+    if (err.code === "23505") return { ok: true };
+    return { error: err.message };
+  }
   revalidatePath("/community");
   return { ok: true };
 }

@@ -32,7 +32,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>
       ) : (
         replies.map((reply) => (
-          <PostCard key={reply.id} post={reply} viewerId={user?.id ?? null} />
+          <PostCard key={reply.rowId} post={reply} viewerId={user?.id ?? null} />
         ))
       )}
     </div>

@@ -6,7 +6,13 @@ export type PostType = "text" | "image" | "poll" | "youtube";
 export type PollData = { options: { i: number; label: string }[]; closes_at?: string };
 
 export type FeedPost = {
+  /** The feed row (a reblog row, or the post itself). Use as the React key —
+   *  `id` can repeat when a post and its reblog both surface. */
+  rowId: string;
+  /** The SOURCE post. Votes, replies and bookmarks all target this. */
   id: string;
+  /** Handle of the reblogger when this row is a reblog, else null. */
+  rebloggedBy: string | null;
   userId: string;
   username: string;
   displayName: string | null;
@@ -27,6 +33,7 @@ export type FeedPost = {
   createdAt: string;
   viewerVote: -1 | 0 | 1;
   viewerBookmarked: boolean;
+  viewerReblogged: boolean;
 };
 
 export type AdSlot = { slot: 1 | 2; imagePath: string | null; linkUrl: string | null };

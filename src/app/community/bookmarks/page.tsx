@@ -27,7 +27,7 @@ export default async function BookmarksPage() {
       ) : (
         posts.map((post) => (
           <PostCard
-            key={post.id}
+            key={post.rowId}
             post={post}
             pollResult={pollResults[post.id]}
             canVote={canPost}

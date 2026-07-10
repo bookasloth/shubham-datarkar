@@ -8,6 +8,8 @@ function mapRow(r: Record<string, unknown>): FeedPost {
   const poll = (r.poll as FeedPost["poll"]) ?? null;
   return {
     pollClosed: Boolean(poll?.closes_at && new Date(poll.closes_at).getTime() <= Date.now()),
+    rowId: (r.row_id as string) ?? (r.id as string),
+    rebloggedBy: (r.reblogged_by as string) ?? null,
     id: r.id as string,
     userId: r.user_id as string,
     username: r.username as string,
@@ -27,6 +29,7 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     createdAt: r.created_at as string,
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
+    viewerReblogged: Boolean(r.viewer_reblogged),
   };
 }
 

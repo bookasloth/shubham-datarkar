@@ -7,6 +7,12 @@
 -- One ad row per slot. Without this an upsert-by-slot duplicates rows.
 create unique index if not exists community_ads_slot_key on public.community_ads (slot);
 
+-- One reblog per (user, post). Without this a double-click races two rows in;
+-- toggleReblog's maybeSingle() then errors forever and reblog_count double-counts.
+create unique index if not exists community_posts_reblog_once
+  on public.community_posts (user_id, reblog_of)
+  where reblog_of is not null;
+
 -- profiles is self-write only, so banning needs an admin-gated definer RPC.
 create or replace function public.community_ban_user(
   p_user   uuid,

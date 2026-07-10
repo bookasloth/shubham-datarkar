@@ -59,7 +59,7 @@ export default async function CommunityPage({
         ) : (
           posts.map((post) => (
             <PostCard
-              key={post.id}
+              key={post.rowId}
               post={post}
               pollResult={pollResults[post.id]}
               canVote={canPost}
