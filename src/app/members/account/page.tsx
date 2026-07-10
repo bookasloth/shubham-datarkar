@@ -4,6 +4,9 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { signOut } from "@/lib/members/auth-actions";
 import { CancelMembershipButton } from "@/components/members/cancel-membership-button";
 import { Button } from "@/components/ui/button";
+import { getSubscriptionStatus } from "@/lib/subscribers/queries";
+import { getMyDonations } from "@/lib/support/queries";
+import { NewsletterPrefs } from "@/components/members/newsletter-prefs";
 
 export const metadata = { title: "Account" };
 
@@ -24,6 +27,11 @@ export default async function AccountPage() {
     .select("username")
     .eq("id", user!.id)
     .maybeSingle();
+
+  const [subStatus, donations] = await Promise.all([
+    getSubscriptionStatus(user!.email!),
+    getMyDonations(user!.email!),
+  ]);
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -91,6 +99,27 @@ export default async function AccountPage() {
               </Link>
             )}
           </div>
+        )}
+      </section>
+
+      <section className="rounded-card border border-border bg-card p-5">
+        <h2 className="text-sm font-semibold">Newsletter</h2>
+        <NewsletterPrefs initialActive={subStatus === "active"} />
+      </section>
+
+      <section className="rounded-card border border-border bg-card p-5">
+        <h2 className="text-sm font-semibold">Donations</h2>
+        {donations.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">No contributions yet.</p>
+        ) : (
+          <ul className="mt-3 space-y-2 text-sm">
+            {donations.map((d) => (
+              <li key={d.id} className="flex justify-between gap-4">
+                <span className="text-muted-foreground">{formatDay(d.createdAt)}</span>
+                <span className="tabular-nums">INR {d.total}</span>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
 

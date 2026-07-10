@@ -3,15 +3,40 @@ import { seededRng } from "../daily";
 // Classic rules. Knobs left as constants so you can spin variants later.
 export const HIT_AND_BLOW = { length: 4, maxGuesses: 9, uniqueDigits: true } as const;
 
-/** Deterministic secret for a puzzle number (seed mixed so it differs per game). */
-export function secretFor(puzzleNumber: number): string {
-  const rng = seededRng((puzzleNumber ^ 0x9e3779b9) >>> 0);
-  const digits = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  for (let i = digits.length - 1; i > 0; i--) {
+// Every 4-digit code with distinct digits and a non-zero first digit:
+// 9 (first: 1-9) * 9 * 8 * 7 = 4536.
+const CODE_SPACE = 4536;
+
+/** Build all 4536 valid codes, then shuffle once with a fixed seed so the daily
+ *  sequence is deterministic but not guessable from one day to the next. */
+function buildCodes(): string[] {
+  const codes: string[] = [];
+  for (let a = 1; a <= 9; a++)
+    for (let b = 0; b <= 9; b++) {
+      if (b === a) continue;
+      for (let c = 0; c <= 9; c++) {
+        if (c === a || c === b) continue;
+        for (let d = 0; d <= 9; d++) {
+          if (d === a || d === b || d === c) continue;
+          codes.push(`${a}${b}${c}${d}`);
+        }
+      }
+    }
+  // Deterministic Fisher-Yates — identical result on server and client.
+  const rng = seededRng(0x1234abcd);
+  for (let i = codes.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [digits[i], digits[j]] = [digits[j], digits[i]];
+    [codes[i], codes[j]] = [codes[j], codes[i]];
   }
-  return digits.slice(0, HIT_AND_BLOW.length).join(""); // leading zeros allowed
+  return codes;
+}
+
+// Built once at module load (~4536 strings, negligible).
+const CODES = buildCodes();
+
+/** Deterministic secret for a puzzle number. mod 4536 => no repeat for 4536 days. */
+export function secretFor(puzzleNumber: number): string {
+  return CODES[((puzzleNumber % CODE_SPACE) + CODE_SPACE) % CODE_SPACE];
 }
 
 /** 🎯 hit = right digit right spot · 💨 blow = right digit wrong spot. */
@@ -28,6 +53,7 @@ export const isWin = (hits: number) => hits === HIT_AND_BLOW.length;
 
 export function isValidGuess(guess: string): boolean {
   if (!new RegExp(`^\\d{${HIT_AND_BLOW.length}}$`).test(guess)) return false;
+  if (guess[0] === "0") return false; // secret never starts with 0 — keep input space identical
   if (HIT_AND_BLOW.uniqueDigits && new Set(guess).size !== guess.length) return false;
   return true;
 }

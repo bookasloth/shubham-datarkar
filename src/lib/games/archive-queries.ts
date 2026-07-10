@@ -14,7 +14,7 @@ export type ArchiveEntry = {
  * played flag. `game` is the game_key enum value used by game_results.
  */
 export async function listArchive(
-  game: "alfazy" | "hit_and_blow",
+  game: "alfazy" | "hit_and_blow" | "integra",
   now: number = Date.now(),
 ): Promise<ArchiveEntry[]> {
   const today = puzzleNumberFor(now);
