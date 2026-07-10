@@ -19,14 +19,21 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   return (
     <div>
       <h1 className="border-b border-border px-4 py-3 font-display text-lg font-bold">Post</h1>
-      <PostCard post={post} pollResult={pollResults[post.id]} canVote={canPost} />
+      <PostCard
+        post={post}
+        pollResult={pollResults[post.id]}
+        canVote={canPost}
+        viewerId={user?.id ?? null}
+      />
 
       {canPost && <ReplyBox postId={post.id} />}
 
       {replies.length === 0 ? (
         <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>
       ) : (
-        replies.map((reply) => <PostCard key={reply.id} post={reply} />)
+        replies.map((reply) => (
+          <PostCard key={reply.id} post={reply} viewerId={user?.id ?? null} />
+        ))
       )}
     </div>
   );

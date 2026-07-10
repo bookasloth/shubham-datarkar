@@ -91,6 +91,43 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
   return { ok: true };
 }
 
+/** Report a post. Deliberately does NOT require community_can_post — a banned
+ *  user must still be able to report abuse. */
+export async function reportPost(postId: string, reason: string): Promise<EngageResult> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return { error: "Sign in to report." };
+
+  const { error } = await sb.from("community_reports").insert({
+    post_id: postId,
+    reporter_id: user.id,
+    reason: reason.trim().slice(0, 300) || null,
+  });
+  if (error) return { error: error.message };
+  return { ok: true };
+}
+
+/** Delete your own post. The `.eq("user_id")` is belt-and-braces next to the
+ *  community_posts_delete RLS policy. Cascades remove replies/votes/bookmarks. */
+export async function deleteOwnPost(postId: string): Promise<EngageResult> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return { error: "Sign in first." };
+
+  const { error } = await sb
+    .from("community_posts")
+    .delete()
+    .eq("id", postId)
+    .eq("user_id", user.id);
+  if (error) return { error: error.message };
+  revalidatePath("/community");
+  return { ok: true };
+}
+
 export async function voteOnPoll(postId: string, optionIndex: number): Promise<EngageResult> {
   const { sb, user, error } = await gate();
   if (error || !user) return { error: error ?? "Sign in first." };

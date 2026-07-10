@@ -63,6 +63,7 @@ export default async function CommunityPage({
               post={post}
               pollResult={pollResults[post.id]}
               canVote={canPost}
+              viewerId={user?.id ?? null}
             />
           ))
         )}

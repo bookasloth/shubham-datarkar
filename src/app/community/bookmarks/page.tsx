@@ -26,7 +26,13 @@ export default async function BookmarksPage() {
         </p>
       ) : (
         posts.map((post) => (
-          <PostCard key={post.id} post={post} pollResult={pollResults[post.id]} canVote={canPost} />
+          <PostCard
+            key={post.id}
+            post={post}
+            pollResult={pollResults[post.id]}
+            canVote={canPost}
+            viewerId={user.id}
+          />
         ))
       )}
     </div>

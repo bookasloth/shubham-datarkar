@@ -5,15 +5,18 @@ import { BadgeTick } from "./badge-tick";
 import { CommunityAvatar } from "./community-avatar";
 import { EngagementBar } from "./engagement-bar";
 import { Poll } from "./poll";
+import { PostMenu } from "./post-menu";
 
 export function PostCard({
   post,
   pollResult,
   canVote = false,
+  viewerId = null,
 }: {
   post: FeedPost;
   pollResult?: PollResult;
   canVote?: boolean;
+  viewerId?: string | null;
 }) {
   const name = post.displayName || post.username;
   return (
@@ -26,6 +29,11 @@ export function PostCard({
             <BadgeTick badge={post.badge} />
             <span className="truncate text-muted-foreground">@{post.username}</span>
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
+            {viewerId && (
+              <span className="ml-auto">
+                <PostMenu postId={post.id} isOwner={viewerId === post.userId} />
+              </span>
+            )}
           </div>
 
           {post.body && (
