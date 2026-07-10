@@ -145,6 +145,10 @@ export type Post = {
   words: number;
   featured?: boolean;
   body: ContentBlock[];
+  // seoTitle/ogTitle/ogDescription: always undefined until migration
+  // 20260711000002 is applied AND PR 4 adds the columns to POST_COLS in
+  // src/lib/blog/queries.ts. The fields stay here now so the editor and
+  // generateMetadata wiring have a stable interface to fill in later.
   /** Keyword <title> phrase; falls back to `title`. See SeoFields. */
   seoTitle?: string;
   /** Social-card headline; falls back to the branded full title. */
