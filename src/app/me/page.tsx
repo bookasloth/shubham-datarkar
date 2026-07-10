@@ -28,7 +28,12 @@ import { PostCard } from "@/components/cards/post-card";
 import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { cn } from "@/lib/utils";
 
-export const metadata = buildMetadata({ path: "/me" });
+export const metadata = buildMetadata({
+  title: "Building in Public",
+  description:
+    "Platforms, essays, tools, and the work behind them — the personal home of Shubham Datarkar.",
+  path: "/me",
+});
 
 function ViewAll({ href, label }: { href: string; label: string }) {
   return (
