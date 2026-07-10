@@ -47,6 +47,7 @@
   --warning-foreground: #ffffff;
   --danger: #b23b30;
   --danger-foreground: #ffffff;
+  --gold: #d4af37; /* community founder badge tick */
 
   /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
   --radius-btn: 4px;
@@ -150,6 +151,7 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-gold: var(--gold);
 
   /* Admin scope colors (only used under [data-admin]) */
   --color-admin-bg: var(--admin-bg);
@@ -268,6 +270,25 @@
       transform, opacity;
     transition-timing-function: var(--ease-out-quint);
     transition-duration: var(--dur-base);
+  }
+
+  /* Community engagement click feedback: heart pops, rotten egg wobbles. */
+  @keyframes community-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  @keyframes community-wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-14deg); }
+    75% { transform: rotate(14deg); }
+  }
+  .animate-pop { animation: community-pop 320ms var(--ease-out-quint); }
+  .animate-wobble { animation: community-wobble 380ms var(--ease-out-quint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pop,
+    .animate-wobble { animation: none; }
   }
 
   /* Editorial reading column */

@@ -38,3 +38,26 @@ export function slugify(input: string) {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
+
+/** Deterministic HSL background for an initials avatar, derived from a seed. */
+export function avatarColor(seed: string): string {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 360;
+  return `hsl(${h} 45% 42%)`; // mid-saturation so white initials stay legible
+}
+
+/** Short relative time: "now", "5m", "3h", "2d", "4w", else a formatted date. */
+export function timeAgo(input: string | Date): string {
+  const then = new Date(input).getTime();
+  const s = Math.max(0, Math.floor((Date.now() - then) / 1000));
+  if (s < 45) return "now";
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h`;
+  const d = Math.floor(h / 24);
+  if (d < 7) return `${d}d`;
+  const w = Math.floor(d / 7);
+  if (w < 5) return `${w}w`;
+  return formatDate(input);
+}
