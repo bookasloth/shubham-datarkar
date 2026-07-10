@@ -8,6 +8,7 @@ const goodEntry: PageEntry = {
   isDynamic: false,
   isPrivate: false,
   inSitemap: true,
+  pageType: "pillar",
 };
 
 const goodAnalysis: PageAnalysis = {

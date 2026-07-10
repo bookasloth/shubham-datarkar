@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { discoverPages, getSitemapPaths } from "./discovery";
+import { discoverPages } from "./discovery";
 
 describe("discoverPages", () => {
   it("returns an array of PageEntry objects", async () => {
@@ -41,29 +41,38 @@ describe("discoverPages", () => {
   });
 });
 
-describe("getSitemapPaths", () => {
-  it("returns sitemap paths as strings", () => {
-    const paths = getSitemapPaths();
-    expect(paths).toContain("/about");
-    expect(paths).toContain("/blog");
-  });
-});
-
-describe("sitemap auto-discovery", () => {
-  it("discoverPages includes all pages that should be in sitemap", async () => {
+describe("sitemap membership", () => {
+  it("excludes auth and account routes that used to leak into the sitemap", async () => {
     const pages = await discoverPages();
-    const publicRoutes = pages
-      .filter((p) => !p.isPrivate && !p.route.includes("["))
-      .map((p) => p.route);
-    // Key pages must be present
-    expect(publicRoutes).toContain("/");
-    expect(publicRoutes).toContain("/about");
-    expect(publicRoutes).toContain("/blog");
-    expect(publicRoutes).toContain("/services");
-    expect(publicRoutes).toContain("/contact");
-    expect(publicRoutes).toContain("/faq");
-    // Games and other newer pages auto-discovered
-    expect(publicRoutes).toContain("/games");
-    expect(publicRoutes).toContain("/link");
+    const leaked = pages.filter((p) => p.inSitemap).map((p) => p.route);
+    for (const route of ["/games/login", "/members/login", "/members/account", "/community/compose", "/unsubscribe", "/subscriber-assets"]) {
+      expect(leaked).not.toContain(route);
+    }
+  });
+
+  it("keeps real public routes in the sitemap", async () => {
+    const pages = await discoverPages();
+    const indexed = pages.filter((p) => p.inSitemap).map((p) => p.route);
+    for (const route of ["/", "/about", "/blog", "/services", "/contact", "/faq", "/games", "/link"]) {
+      expect(indexed).toContain(route);
+    }
+  });
+
+  it("never puts an unexpanded dynamic template in the sitemap", async () => {
+    const pages = await discoverPages();
+    expect(pages.filter((p) => p.inSitemap && p.route.includes("["))).toEqual([]);
+  });
+
+  it("assigns every discovered page a pageType", async () => {
+    const pages = await discoverPages();
+    expect(pages.every((p) => ["pillar", "hub", "utility", "app"].includes(p.pageType))).toBe(true);
+  });
+
+  it("marks app routes private and non-indexable together", async () => {
+    const pages = await discoverPages();
+    for (const p of pages) {
+      expect(p.isPrivate).toBe(p.pageType === "app");
+      if (p.pageType === "app") expect(p.inSitemap).toBe(false);
+    }
   });
 });

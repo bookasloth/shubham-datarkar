@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import type { PageEntry } from "./types";
-import { PRIVATE_PREFIXES } from "./constants";
+import { isIndexable, isPrivate, pageTypeOf } from "./routes";
 import { blogCategories } from "@/lib/data/posts";
 import { caseStudies } from "@/lib/data/case-studies";
 import { services } from "@/lib/data/services";
@@ -9,38 +9,6 @@ import { tools } from "@/lib/data/tools";
 import { products } from "@/lib/data/products";
 
 const APP_DIR = path.join(process.cwd(), "src", "app");
-
-// Static paths as enumerated by src/app/sitemap.ts. Kept in sync manually —
-// see getSitemapPaths() below, which reconstructs the full sitemap path list
-// from the same data sources sitemap.ts uses (rather than importing/requiring
-// the sitemap module itself, which isn't reliably resolvable in this context).
-const SITEMAP_STATIC_PATHS = [
-  "",
-  "/about",
-  "/my-story",
-  "/now",
-  "/uses",
-  "/philosophy",
-  "/work",
-  "/components/page-2",
-  "/case-studies",
-  "/testimonials",
-  "/services",
-  "/speaking",
-  "/media-kit",
-  "/blog",
-  "/newsletter",
-  "/resources",
-  "/changelog",
-  "/roadmap",
-  "/products",
-  "/tools",
-  "/ai-experiments",
-  "/components",
-  "/contact",
-  "/book",
-  "/faq",
-];
 
 function findPageFiles(dir: string): string[] {
   const results: string[] = [];
@@ -94,48 +62,10 @@ const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
   },
 ];
 
-/**
- * Reconstructs the list of paths that src/app/sitemap.ts produces, from the
- * same data sources sitemap.ts consumes. This avoids importing/requiring the
- * sitemap module directly (its default export is a route-handler-shaped
- * function evaluated in a Next.js server context, not reliably importable
- * from a plain Node/Vitest script on this Windows machine).
- */
-export function getSitemapPaths(
-  blogPosts: { category: string; slug: string }[] = [],
-): string[] {
-  const paths = new Set<string>();
-
-  for (const p of SITEMAP_STATIC_PATHS) {
-    paths.add(p === "" ? "/" : p);
-  }
-  for (const c of blogCategories) {
-    paths.add(`/blog/${c.slug}`);
-  }
-  for (const p of blogPosts) {
-    paths.add(`/blog/${p.category}/${p.slug}`);
-  }
-  for (const c of caseStudies) {
-    paths.add(`/case-studies/${c.slug}`);
-  }
-  for (const s of services) {
-    paths.add(`/services/${s.slug}`);
-  }
-  for (const t of tools) {
-    paths.add(`/tools/${t.slug}`);
-  }
-  for (const p of products) {
-    paths.add(`/products/${p.slug}`);
-  }
-
-  return Array.from(paths);
-}
-
 export async function discoverPages(
   blogPosts: { category: string; slug: string }[] = [],
 ): Promise<PageEntry[]> {
   const pageFiles = findPageFiles(APP_DIR);
-  const sitemapPaths = new Set(getSitemapPaths(blogPosts));
   // Inject the DB-sourced blog-post expansion alongside the static ones.
   const expansions: DynamicExpansion[] = [
     ...DYNAMIC_EXPANSIONS,
@@ -159,8 +89,9 @@ export async function discoverPages(
             route: expanded.route,
             filePath: relFilePath,
             isDynamic: true,
-            isPrivate: PRIVATE_PREFIXES.some((p) => expanded.route.startsWith(p)),
-            inSitemap: sitemapPaths.has(expanded.route),
+            isPrivate: isPrivate(expanded.route),
+            inSitemap: isIndexable(expanded.route),
+            pageType: pageTypeOf(expanded.route),
           });
         }
       } else {
@@ -169,8 +100,9 @@ export async function discoverPages(
           route,
           filePath: relFilePath,
           isDynamic: true,
-          isPrivate: PRIVATE_PREFIXES.some((p) => route.startsWith(p)),
-          inSitemap: false,
+          isPrivate: isPrivate(route),
+          inSitemap: isIndexable(route),
+          pageType: pageTypeOf(route),
         });
       }
     } else {
@@ -178,8 +110,9 @@ export async function discoverPages(
         route,
         filePath: relFilePath,
         isDynamic: false,
-        isPrivate: PRIVATE_PREFIXES.some((p) => route.startsWith(p)),
-        inSitemap: sitemapPaths.has(route),
+        isPrivate: isPrivate(route),
+        inSitemap: isIndexable(route),
+        pageType: pageTypeOf(route),
       });
     }
   }

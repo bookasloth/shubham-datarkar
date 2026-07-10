@@ -1,9 +1,12 @@
+import type { PageType } from "./routes";
+
 export type PageEntry = {
   route: string;
   filePath: string;
   isDynamic: boolean;
   isPrivate: boolean;
   inSitemap: boolean;
+  pageType: PageType;
 };
 
 /**

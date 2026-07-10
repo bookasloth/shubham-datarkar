@@ -15,6 +15,7 @@ function makeEntry(route: string, overrides: Partial<PageEntry> = {}): PageEntry
     isDynamic: false,
     isPrivate: false,
     inSitemap: true,
+    pageType: "pillar",
     ...overrides,
   };
 }
