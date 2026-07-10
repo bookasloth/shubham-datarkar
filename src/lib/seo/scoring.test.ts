@@ -120,9 +120,13 @@ describe("profile-aware scoring", () => {
 
 describe("weighting", () => {
   it("costs more to fail a high-priority check than a low-priority one", () => {
-    // Both fixtures fail exactly ONE check, so the score difference is
-    // attributable to weight alone, not to the number of failures.
+    // Both fixtures fail the SAME NUMBER of checks — goodAnalysis already fails
+    // seo-og-image, and each adds exactly one more — so the score difference is
+    // attributable to the weight of the check that varies, not to how many failed.
     // hasCanonical -> seo-canonical (high, 3). hasTwitterCard -> seo-twitter (low, 1).
+    // The length assertion below pins that premise: if a future edit to
+    // goodAnalysis breaks it, this test fails loudly instead of silently
+    // going back to testing nothing.
     const missingCanonical = scorePage(goodEntry, { ...goodAnalysis, hasCanonical: false });
     const missingTwitter = scorePage(goodEntry, { ...goodAnalysis, hasTwitterCard: false });
 
@@ -133,7 +137,9 @@ describe("weighting", () => {
     expect(missingCanonical.seo.score).toBeLessThan(missingTwitter.seo.score);
   });
 
-  it("a high-priority failure costs exactly three times a low-priority one", () => {
+  it("a high-priority failure costs more than twice a low-priority one", () => {
+    // Not exactly 3x: the two penalties are rounded against the same denominator,
+    // so the observed ratio is 11:4 in score points, not 3:1.
     const baseline = scorePage(goodEntry, goodAnalysis).seo.score;
     const missingCanonical = scorePage(goodEntry, { ...goodAnalysis, hasCanonical: false }).seo.score;
     const missingTwitter = scorePage(goodEntry, { ...goodAnalysis, hasTwitterCard: false }).seo.score;
