@@ -52,6 +52,8 @@ export type CheckResult = {
   id: string;
   label: string;
   passed: boolean;
+  /** False when the check does not apply to this page's type. Neither pass nor fail. */
+  applicable: boolean;
   category: "seo" | "geo" | "aeo";
   priority: "high" | "medium" | "low";
 };
@@ -60,6 +62,8 @@ export type ScoreBreakdown = {
   score: number;
   passed: string[];
   failed: string[];
+  /** Checks that did not apply to this page type. Excluded from the denominator. */
+  skipped: string[];
 };
 
 export type PageScores = {

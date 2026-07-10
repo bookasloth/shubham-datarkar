@@ -1,15 +1,18 @@
 import { describe, it, expect } from "vitest";
 import { scorePage } from "./scoring";
 import type { PageEntry, PageAnalysis } from "./types";
+import type { PageType } from "./routes";
 
-const goodEntry: PageEntry = {
-  route: "/about",
-  filePath: "src/app/about/page.tsx",
+const entryOf = (route: string, pageType: PageType): PageEntry => ({
+  route,
+  filePath: "src/app/x/page.tsx",
   isDynamic: false,
   isPrivate: false,
   inSitemap: true,
-  pageType: "pillar",
-};
+  pageType,
+});
+
+const goodEntry = entryOf("/about", "pillar");
 
 const goodAnalysis: PageAnalysis = {
   title: "Founder, Marketer & Copywriter — Shubham Datarkar",
@@ -63,17 +66,98 @@ describe("scorePage", () => {
 
   it("tracks passed and failed check labels", () => {
     const scores = scorePage(goodEntry, goodAnalysis);
-    expect(scores.seo.passed.length + scores.seo.failed.length).toBe(12);
-    expect(scores.geo.passed.length + scores.geo.failed.length).toBe(10);
-    expect(scores.aeo.passed.length + scores.aeo.failed.length).toBe(8);
+    // Applicable checks only; geo-faq and aeo-faq are skipped on /about.
+    expect(scores.seo.passed.length + scores.seo.failed.length).toBe(13);
+    expect(scores.geo.passed.length + scores.geo.failed.length).toBe(9);
+    expect(scores.aeo.passed.length + scores.aeo.failed.length).toBe(7);
   });
 
   it("includes all checks with category and priority", () => {
     const scores = scorePage(goodEntry, goodAnalysis);
-    expect(scores.checks.length).toBe(30); // 12 + 10 + 8
+    expect(scores.checks.length).toBe(31); // 13 + 10 + 8 (incl. skipped)
     scores.checks.forEach((c) => {
       expect(["seo", "geo", "aeo"]).toContain(c.category);
       expect(["high", "medium", "low"]).toContain(c.priority);
     });
+  });
+});
+
+describe("profile-aware scoring", () => {
+  it("does not fail a utility page for lacking FAQ schema", () => {
+    const contact = entryOf("/contact", "utility");
+    const scores = scorePage(contact, goodAnalysis);
+    const faq = scores.checks.find((c) => c.id === "geo-faq")!;
+    expect(faq.applicable).toBe(false);
+    expect(faq.passed).toBe(false);
+    expect(scores.geo.failed).not.toContain("Has FAQ schema");
+    expect(scores.geo.skipped).toContain("Has FAQ schema");
+  });
+
+  it("does demand FAQ schema on /faq and on service pages", () => {
+    for (const route of ["/faq", "/services/seo"]) {
+      const type: PageType = route === "/faq" ? "hub" : "pillar";
+      const scores = scorePage(entryOf(route, type), goodAnalysis);
+      expect(scores.checks.find((c) => c.id === "geo-faq")!.applicable).toBe(true);
+    }
+  });
+
+  it("does not demand a 300-word body of a utility page", () => {
+    const scores = scorePage(entryOf("/link", "utility"), { ...goodAnalysis, wordCount: 12 });
+    expect(scores.checks.find((c) => c.id === "geo-word-count")!.applicable).toBe(false);
+  });
+
+  it("does not demand a breadcrumb of the homepage", () => {
+    const scores = scorePage(entryOf("/", "pillar"), goodAnalysis);
+    expect(scores.checks.find((c) => c.id === "seo-breadcrumb")!.applicable).toBe(false);
+    expect(scores.checks.find((c) => c.id === "geo-breadcrumbs")!.applicable).toBe(false);
+  });
+
+  it("demands a dedicated OG image of a pillar but not of a hub", () => {
+    expect(scorePage(entryOf("/about", "pillar"), goodAnalysis).checks.find((c) => c.id === "seo-og-image")!.applicable).toBe(true);
+    expect(scorePage(entryOf("/blog", "hub"), goodAnalysis).checks.find((c) => c.id === "seo-og-image")!.applicable).toBe(false);
+  });
+});
+
+describe("weighting", () => {
+  it("costs more to fail a high-priority check than a low-priority one", () => {
+    const missingTitle = scorePage(goodEntry, { ...goodAnalysis, title: null, titleLength: 0 });
+    const missingTwitter = scorePage(goodEntry, { ...goodAnalysis, hasTwitterCard: false });
+    expect(missingTitle.seo.score).toBeLessThan(missingTwitter.seo.score);
+  });
+
+  it("scores 100 when every applicable check passes", () => {
+    const perfect: PageAnalysis = {
+      ...goodAnalysis,
+      titleLength: 45,
+      descriptionLength: 140,
+      ogImageSource: "dedicated",
+      schemas: ["BreadcrumbList", "ProfilePage", "Person", "WebSite", "FAQPage", "Service"],
+      hasBreadcrumbs: true,
+      h1Count: 1,
+      h2Count: 3,
+      wordCount: 800,
+      internalLinks: 6,
+      listCount: 2,
+    };
+    const scores = scorePage(entryOf("/services/seo", "pillar"), perfect);
+    expect(scores.seo.score).toBe(100);
+    expect(scores.geo.score).toBe(100);
+    expect(scores.aeo.score).toBe(100);
+    expect(scores.overall).toBe(100);
+  });
+
+  it("a skipped check is neither passed nor failed", () => {
+    const scores = scorePage(entryOf("/contact", "utility"), goodAnalysis);
+    for (const b of [scores.seo, scores.geo, scores.aeo]) {
+      const overlap = b.skipped.filter((s) => b.passed.includes(s) || b.failed.includes(s));
+      expect(overlap).toEqual([]);
+    }
+  });
+
+  it("requires at least one H2 on every scored page", () => {
+    const noH2 = scorePage(goodEntry, { ...goodAnalysis, h2Count: 0 });
+    const check = noH2.checks.find((c) => c.id === "seo-h2-present")!;
+    expect(check.applicable).toBe(true);
+    expect(check.passed).toBe(false);
   });
 });
