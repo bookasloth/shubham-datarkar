@@ -3,7 +3,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 
 import { site } from "@/lib/site";
-import { buildMetadata, profilePageSchema } from "@/lib/seo";
+import { buildMetadata } from "@/lib/seo";
 import { platforms } from "@/lib/data/platforms";
 import type { CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
@@ -16,7 +16,6 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/lib/icons";
-import { JsonLd } from "@/components/seo/json-ld";
 import { Marquee } from "@/components/sections/marquee";
 import { ClientsMarquee } from "@/components/sections/clients-marquee";
 import { ToolStackGrid } from "@/components/sections/tool-stack-grid";
@@ -59,8 +58,6 @@ export default async function HomePage() {
   const homePosts = featuredPost ? [featuredPost, ...recentPosts] : recentPosts;
   return (
     <>
-      <JsonLd data={profilePageSchema()} />
-
       {/* 1 — Hero */}
       <Section bleed className="relative overflow-hidden border-b border-border">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />
