@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight, Check, X } from "lucide-react";
 
-import { buildMetadata, organizationSchema } from "@/lib/seo";
+import { buildMetadata } from "@/lib/seo";
 import type { Service, CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 
@@ -10,7 +10,6 @@ import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { JsonLd } from "@/components/seo/json-ld";
 import { ClientsMarquee } from "@/components/sections/clients-marquee";
 import { CtaBand } from "@/components/sections/cta-band";
 import { ServiceCard } from "@/components/cards/service-card";
@@ -84,8 +83,6 @@ export default async function HomePage() {
 
   return (
     <>
-      <JsonLd data={organizationSchema()} />
-
       {/* 1 — Hero */}
       <Section bleed className="relative overflow-hidden border-b border-border">
         <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />

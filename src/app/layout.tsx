@@ -3,7 +3,8 @@ import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 
 import { site } from "@/lib/site";
-import { buildMetadata, personSchema, websiteSchema } from "@/lib/seo";
+import { buildMetadata } from "@/lib/seo";
+import { siteGraph } from "@/lib/seo/entities";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
@@ -100,7 +101,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </ToastProvider>
         </ThemeProvider>
-        <JsonLd data={[personSchema(), websiteSchema()]} />
+        <JsonLd data={siteGraph()} />
         <SpeedInsights />
         <Analytics />
         <AiReferrer />

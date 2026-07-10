@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, companies } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, profilePageSchema } from "@/lib/seo";
+import { organizationNodes } from "@/lib/seo/entities";
 import { principles, stats } from "@/lib/data/site-content";
 import { experience } from "@/lib/data/experience";
 import { Container, Section } from "@/components/layout/container";
@@ -30,6 +31,7 @@ export default function AboutPage() {
     <>
       <JsonLd
         data={[
+          organizationNodes(),
           profilePageSchema(),
           breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }]),
         ]}

@@ -1,8 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
   articleSchema,
-  websiteSchema,
-  organizationSchema,
   buildMetadata,
   serviceSchema,
   productSchema,
@@ -37,23 +35,6 @@ describe("articleSchema", () => {
   it("uses a provided per-post image when passed", () => {
     const s = articleSchema({ ...base, image: `${site.url}/blog/seo/x/opengraph-image` });
     expect(s.image).toBe(`${site.url}/blog/seo/x/opengraph-image`);
-  });
-});
-
-describe("websiteSchema", () => {
-  it("is a WebSite with a SearchAction targeting /search?q=", () => {
-    const s = websiteSchema();
-    expect(s["@type"]).toBe("WebSite");
-    expect(s.url).toBe(site.url);
-    expect(JSON.stringify(s.potentialAction)).toContain(`${site.url}/search?q={search_term_string}`);
-  });
-});
-
-describe("organizationSchema", () => {
-  it("includes a logo URL on our domain", () => {
-    const s = organizationSchema();
-    expect(typeof s.logo).toBe("string");
-    expect(String(s.logo)).toContain(site.url);
   });
 });
 
@@ -101,10 +82,11 @@ describe("buildMetadata OG overrides", () => {
 });
 
 describe("serviceSchema", () => {
-  it("is a Service provided by the Person, with a priced Offer", () => {
+  it("is a Service provided by the Person (by @id), with a priced Offer", () => {
     const s = serviceSchema(makeService()) as Record<string, unknown>;
     expect(s["@type"]).toBe("Service");
-    expect((s.provider as { name?: string }).name).toBe(site.name);
+    // Provider references the canonical Person node, not an inlined duplicate.
+    expect(s.provider).toEqual({ "@id": `${site.url}/#person` });
     expect(s.url).toBe(`${site.url}/services/seo`);
     const offer = s.offers as { "@type"?: string; priceCurrency?: string; description?: string };
     expect(offer["@type"]).toBe("Offer");
@@ -154,7 +136,8 @@ describe("reviewSchema", () => {
     expect(r["@type"]).toBe("Review");
     expect(r.reviewBody).toBe("Rare clarity.");
     expect((r.author as { name?: string }).name).toBe("Sri");
-    expect((r.itemReviewed as { url?: string }).url).toBe(site.url);
+    // The review is about the canonical Person, referenced by @id.
+    expect(r.itemReviewed).toEqual({ "@id": `${site.url}/#person` });
     expect("reviewRating" in r).toBe(false);
   });
 });
