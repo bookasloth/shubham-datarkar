@@ -45,6 +45,14 @@ export async function listFeed(opts: {
   }));
 }
 
+/** True when the signed-in viewer may post (verified email, not banned). */
+export async function viewerCanPost(): Promise<boolean> {
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_can_post");
+  if (error) return false;
+  return Boolean(data);
+}
+
 export async function listAds(): Promise<AdSlot[]> {
   const sb = supabaseAnon();
   const { data, error } = await sb

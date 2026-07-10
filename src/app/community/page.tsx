@@ -1,9 +1,11 @@
+import Link from "next/link";
 import { getMemberContext } from "@/lib/members/session";
-import { listFeed } from "@/lib/community/queries";
+import { listFeed, viewerCanPost } from "@/lib/community/queries";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
 import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { MeterGate } from "@/components/community/meter-gate";
+import { Composer } from "@/components/community/composer";
 
 const SORTS = new Set<FeedSort>(["new", "hot", "top", "controversial"]);
 const WINDOWS = new Set<FeedWindow>(["all", "today", "week", "month", "year"]);
@@ -20,11 +22,32 @@ export default async function CommunityPage({
     : "all";
 
   const { user } = await getMemberContext();
-  const posts = await listFeed({ sort, window, limit: 30 });
+  const [canPost, posts] = await Promise.all([
+    user ? viewerCanPost() : Promise.resolve(false),
+    listFeed({ sort, window, limit: 30 }),
+  ]);
 
   return (
     <div>
       <SortMenu sort={sort} window={window} />
+
+      {canPost ? (
+        <Composer />
+      ) : (
+        <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
+          {user ? (
+            "Verify your email to post."
+          ) : (
+            <>
+              <Link href="/members/login?next=/community" className="text-brand hover:underline">
+                Sign in
+              </Link>{" "}
+              to join the conversation.
+            </>
+          )}
+        </p>
+      )}
+
       <MeterGate isLoggedIn={Boolean(user)}>
         {posts.length === 0 ? (
           <p className="px-4 py-16 text-center text-sm text-muted-foreground">
