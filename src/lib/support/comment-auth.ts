@@ -7,13 +7,13 @@ import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail } from "@/lib/email/template";
 import { signIdentity, verifyToken, hashOtp, type CommenterIdentity } from "./comment-auth-crypto";
+import { EMAIL_RE } from "@/lib/validation/email";
 
 const COOKIE = "sd_commenter";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 const OTP_TTL_MS = 10 * 60 * 1000; // 10 minutes
 const RESEND_COOLDOWN_MS = 60 * 1000; // 60s between sends
 const MAX_ATTEMPTS = 5;
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export type OtpState = { ok: boolean; message: string };
 

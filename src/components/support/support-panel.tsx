@@ -13,8 +13,8 @@ import { CreateAccountCTA } from "@/components/members/create-account-cta";
 import { ITEMS, FEE_PCT, formatMoney } from "@/lib/support/config";
 import { computeAmount } from "@/lib/support/amount";
 import { openRazorpayCheckout } from "@/lib/support/checkout";
+import { EMAIL_RE } from "@/lib/validation/email";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MSG_MAX = 250;
 const coffee = ITEMS.find((i) => i.key === "coffee")!;
 const toffee = ITEMS.find((i) => i.key === "toffee")!;

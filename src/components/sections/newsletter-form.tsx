@@ -8,10 +8,9 @@ import { useToast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { subscribe } from "@/lib/subscribers/actions";
 import { CreateAccountCTA } from "@/components/members/create-account-cta";
+import { EMAIL_RE } from "@/lib/validation/email";
 
 type Status = "idle" | "loading" | "success" | "error";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export function NewsletterForm({
   variant = "inline",
