@@ -11,7 +11,9 @@ import { ToolCard } from "@/components/cards/tool-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export function generateStaticParams() {
-  return tools.map((t) => ({ slug: t.slug }));
+  // kalamai has its own static route at /tools/kalamai — exclude it so the two
+  // don't both try to resolve the same path at build.
+  return tools.filter((t) => t.slug !== "kalamai").map((t) => ({ slug: t.slug }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {

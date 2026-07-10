@@ -84,5 +84,6 @@ export const config = {
     "/games/login",
     "/games/profile/:path*",
     "/members/:path*",
+    "/tools/kalamai/:path*",
   ],
 };

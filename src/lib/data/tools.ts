@@ -38,6 +38,14 @@ export const tools: Tool[] = [
     uses: 2800,
   },
   {
+    slug: "kalamai",
+    name: "KalamAI",
+    icon: "Sparkles",
+    category: "SEO",
+    description: "Keyword + location in, a data-backed SEO/AEO/GEO brief and a drafted article out. For Kalamwala community members.",
+    status: "Beta",
+  },
+  {
     slug: "headline-tester",
     name: "Headline Tester",
     icon: "Type",
