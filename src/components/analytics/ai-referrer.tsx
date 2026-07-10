@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { track } from "@vercel/analytics";
+import { AI_HOSTS } from "@/lib/attribution";
 
 /**
  * Fires a single `ai_referral` event when a visitor arrives from an AI answer
@@ -9,17 +10,6 @@ import { track } from "@vercel/analytics";
  * to see GEO/AEO traffic — AI surfaces are invisible in normal referrer reports
  * because most strip or proxy the referrer. Renders nothing.
  */
-const AI_HOSTS: Record<string, string> = {
-  "chat.openai.com": "ChatGPT",
-  "chatgpt.com": "ChatGPT",
-  "perplexity.ai": "Perplexity",
-  "www.perplexity.ai": "Perplexity",
-  "gemini.google.com": "Gemini",
-  "copilot.microsoft.com": "Copilot",
-  "www.bing.com": "Bing Copilot",
-  "claude.ai": "Claude",
-};
-
 export function AiReferrer() {
   useEffect(() => {
     const ref = document.referrer;

@@ -12,12 +12,18 @@ export function CtaBand({
   description = "Whether it's organic growth, performance, AI workflows, or a product you need built — start with a conversation.",
   primaryLabel = "Book a call",
   secondaryLabel = "Start a project",
+  primaryHref = site.bookingUrl,
+  secondaryHref = "/contact",
 }: {
   title?: string;
   description?: string;
   primaryLabel?: string;
   secondaryLabel?: string;
+  primaryHref?: string;
+  secondaryHref?: string;
 }) {
+  const primaryIsExternal = primaryHref.startsWith("http");
+
   return (
     <Section>
       <Container>
@@ -29,9 +35,8 @@ export function CtaBand({
               <p className="mx-auto mt-4 max-w-xl text-base text-background/70 md:text-lg">{description}</p>
               <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
                 <a
-                  href={site.bookingUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                  href={primaryHref}
+                  {...(primaryIsExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={cn(
                     buttonVariants({ size: "lg" }),
                     "w-full bg-background text-foreground hover:bg-background/90 sm:w-auto",
@@ -41,7 +46,7 @@ export function CtaBand({
                   {primaryLabel}
                 </a>
                 <Link
-                  href="/contact"
+                  href={secondaryHref}
                   className={cn(
                     buttonVariants({ variant: "outline", size: "lg" }),
                     "w-full border-background/25 bg-transparent text-background hover:bg-background/10 hover:text-background sm:w-auto",

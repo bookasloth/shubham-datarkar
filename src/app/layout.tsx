@@ -15,6 +15,7 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { AiReferrer } from "@/components/analytics/ai-referrer";
+import { AttributionProbe } from "@/components/analytics/attribution-probe";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -103,6 +104,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <SpeedInsights />
         <Analytics />
         <AiReferrer />
+        <AttributionProbe />
       </body>
     </html>
   );

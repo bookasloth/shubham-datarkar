@@ -1,31 +1,20 @@
 import Link from "next/link";
-import { ArrowRight, Check } from "lucide-react";
-import { BrandIcon } from "@/components/ui/brand-icon";
+import { ArrowRight, Check, X } from "lucide-react";
 
-import { site } from "@/lib/site";
 import { buildMetadata, organizationSchema } from "@/lib/seo";
-import { platforms } from "@/lib/data/platforms";
-import type { CaseStudy, Testimonial } from "@/lib/data/types";
+import type { Service, CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
-import { getPublishedPosts } from "@/lib/blog/queries";
-import { stats, capabilities } from "@/lib/data/site-content";
 
 import { Container, Section } from "@/components/layout/container";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Icon } from "@/lib/icons";
 import { JsonLd } from "@/components/seo/json-ld";
-import { Marquee } from "@/components/sections/marquee";
 import { ClientsMarquee } from "@/components/sections/clients-marquee";
-import { ToolStackGrid } from "@/components/sections/tool-stack-grid";
-import { StatGrid } from "@/components/sections/stat-grid";
-import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { CtaBand } from "@/components/sections/cta-band";
-import { PlatformCard } from "@/components/cards/platform-card";
+import { ServiceCard } from "@/components/cards/service-card";
 import { CaseStudyCard } from "@/components/cards/case-study-card";
-import { PostCard } from "@/components/cards/post-card";
 import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { cn } from "@/lib/utils";
 
@@ -40,23 +29,59 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
+// Services to feature, in this exact order. AEO/GEO (seo) leads. Selected by slug —
+// the DB order is by `sort`, so slicing the array would surface the wrong ones.
+const SERVICE_SLUGS = ["seo", "content", "advisory"];
+
+// Slug-preferred, not `featured`-filtered. The seed's featured flags include a
+// cost-per-install gaming case, which reads as incoherent under an AI-citation
+// headline. Occasion Cakes is search-visibility proof; Stone & Acres is
+// qualified-visit proof.
+const CASE_SLUGS = ["occasion-cakes-local-seo", "stone-and-acres-land-stories"];
+
+// Copied literally from src/app/services/page.tsx — a page module is not a data
+// module, so importing it across routes would be a defect.
+const how = [
+  { step: "Audit", detail: "Understand the business and find what's actually winnable." },
+  { step: "Design", detail: "Design the mechanism that will compound — not a campaign." },
+  { step: "Build", detail: "Ship it, hands-on, with quality gates at every step." },
+  { step: "Compound", detail: "Instrument it, hand it over, and let it run without me." },
+];
+
+const forYou = [
+  "0–10 Cr ARR SaaS, agencies, and growth-stage startups in India",
+  "You have a product and customers — visibility is the constraint",
+  "You want a system that compounds, not a campaign that spikes",
+];
+
+const notForYou = [
+  "Pre-revenue and pre-product",
+  "One-off campaigns or a single landing page",
+  "Anyone shopping on price alone",
+];
+
 export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
 export default async function HomePage() {
   // Fire all three reads in parallel — they're independent, so serial awaits
   // just stack their latencies onto TTFB.
-  const [allCaseStudies, testimonials, allPosts] = await Promise.all([
+  const [allServices, allCaseStudies, testimonials] = await Promise.all([
+    getPublishedEntities<Service>("services"),
     getPublishedEntities<CaseStudy>("case_studies"),
     getPublishedEntities<Testimonial>("testimonials"),
-    getPublishedPosts(),
   ]);
-  const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
-  // Writing rail: lead with one featured post, then fill with the most recent —
-  // 3 total. allPosts is newest-first, so the recent slice is just the top rows
-  // minus whatever's already featured. Falls back to 3 recent if none featured.
-  const featuredPost = allPosts.find((p) => p.featured);
-  const recentPosts = allPosts.filter((p) => p.slug !== featuredPost?.slug).slice(0, featuredPost ? 2 : 3);
-  const homePosts = featuredPost ? [featuredPost, ...recentPosts] : recentPosts;
+
+  const homeServices = SERVICE_SLUGS
+    .map((slug) => allServices.find((s) => s.slug === slug))
+    .filter((s): s is Service => Boolean(s));
+
+  const preferred = CASE_SLUGS
+    .map((slug) => allCaseStudies.find((c) => c.slug === slug))
+    .filter((c): c is CaseStudy => Boolean(c));
+  const homeCases = preferred.length === CASE_SLUGS.length
+    ? preferred
+    : allCaseStudies.filter((c) => c.featured).slice(0, 2);
+
   return (
     <>
       <JsonLd data={organizationSchema()} />
@@ -68,27 +93,22 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl text-center">
             <Reveal>
               <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
-                I build growth systems for startups that are just getting started.
+                Get your brand cited by AI.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                I&rsquo;m Shubham Datarkar — developer, digital strategist, storyteller &amp; builder. I focus on how
-                brands communicate clearly, convert intentionally, and build structures that compound over time. This
-                space documents my thinking, frameworks, tools, and lessons from building in public.
+                When a founder asks ChatGPT who to hire, you are either the answer or you are invisible. I make
+                0–10 Cr companies the answer — through AEO, GEO, and the SEO underneath it.
               </p>
             </Reveal>
-            <Reveal delay={0.15}>
-              <p className="mt-4 text-sm text-muted-foreground">If you value clarity over noise, we&rsquo;ll work well together.</p>
-            </Reveal>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }))}>
-                <BrandIcon name="CalendarCheck" />
-                Book a discovery call
-              </a>
-              <Link href="/work" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
-                See my work
+              <Link href="/contact" className={cn(buttonVariants({ size: "lg" }))}>
+                Start a conversation
                 <ArrowRight />
+              </Link>
+              <Link href="/case-studies" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+                See the work
               </Link>
             </div>
           </div>
@@ -105,145 +125,38 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 3 — Platforms & Products */}
+      {/* 3 — Who this is for / who this isn't for */}
       <Section>
         <Container>
           <SectionHeading
-            eyebrow="Platforms & products"
-            title="A few experiments that became companies"
-            description="The agencies, products, and platforms I'm building — each its own world, all part of the same operating philosophy."
+            eyebrow="Fit"
+            title="Who this is for — and who it isn't"
+            description="The work compounds for a specific kind of company. If that isn't you, better to know now than after a kickoff call."
           />
-          <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {platforms.map((p) => (
-              <StaggerItem key={p.name}>
-                <PlatformCard platform={p} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </Section>
-
-      {/* 4 — What I build */}
-      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
-        <Container>
-          <SectionHeading
-            eyebrow="What I do"
-            title="Clarity, conversion, and compounding structure"
-            description="Most marketers can't build. Most builders can't market. The work below is what happens when you refuse to choose."
-          />
-          <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {capabilities.map((c) => (
-              <StaggerItem key={c.title}>
-                <Card className="flex h-full flex-col p-6">
-                  <div className="flex size-11 items-center justify-center rounded-card bg-muted text-foreground">
-                    <Icon name={c.icon} />
-                  </div>
-                  <h3 className="mt-5 text-lg font-semibold tracking-tight">{c.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.text}</p>
-                </Card>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </Section>
-
-      {/* 5 — Selected work */}
-      <Section>
-        <Container>
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading
-              eyebrow="Cases"
-              title="Selected work"
-              description="A look at the systems behind the outcomes. Load more when depth matters."
-            />
-            <div className="hidden sm:block">
-              <ViewAll href="/case-studies" label="All cases" />
-            </div>
-          </div>
-          <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
-            {featuredCaseStudies.map((c) => (
-              <StaggerItem key={c.slug}>
-                <CaseStudyCard study={c} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </Section>
-
-      {/* 6 — Writing */}
-      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
-        <Container>
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading eyebrow="Essays & notes" title="Thinking, in public" />
-            <div className="hidden sm:block">
-              <ViewAll href="/blog" label="Read the blog" />
-            </div>
-          </div>
-          <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
-            {homePosts.map((p) => (
-              <StaggerItem key={p.slug}>
-                <PostCard post={p} />
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </Section>
-
-      {/* 7 — Tool stack */}
-      <Section>
-        <Container>
-          <SectionHeading
-            eyebrow="Stack"
-            title="Tools I build with"
-            description="The boring, deliberate toolkit behind the work — from analytics to acquisition to actual code."
-          />
-          <div className="mt-12">
-            <ToolStackGrid />
-          </div>
-        </Container>
-      </Section>
-
-      {/* 8 — Testimonials */}
-      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
-        <Container className="mb-10">
-          <SectionHeading eyebrow="Vouch for the cat" title="What it's like to work together" align="center" />
-        </Container>
-        <Marquee duration={48}>
-          {testimonials.map((t) => (
-            <TestimonialCard key={t.name} testimonial={t} className="w-[340px] shrink-0" />
-          ))}
-        </Marquee>
-      </Section>
-
-      {/* 9 — Booking */}
-      <Section>
-        <Container>
-          <div className="grid items-center gap-10 lg:grid-cols-2">
+          <div className="mt-12 grid gap-4 sm:grid-cols-2">
             <Reveal>
-              <div>
-                <SectionHeading
-                  eyebrow="Frictionless"
-                  title="Book a discovery call"
-                  description="No forms, no back-and-forth. Pick a slot and we'll talk through your growth, product, or positioning problem — and leave with a clear next step."
-                />
-                <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={cn(buttonVariants({ size: "lg" }), "mt-8")}>
-                  <BrandIcon name="CalendarCheck" />
-                  Open the calendar
-                </a>
-              </div>
-            </Reveal>
-            <Reveal delay={0.1}>
-              <Card className="p-6">
-                <ul className="flex flex-col gap-4">
-                  {[
-                    "A focused 30 minutes on your specific problem",
-                    "Straight answers — no pitch deck, no fluff",
-                    "At least one concrete, actionable next step",
-                    "Booked through Book A Sloth — instant confirmation",
-                  ].map((item) => (
-                    <li key={item} className="flex items-start gap-3 text-sm">
+              <Card className="flex h-full flex-col p-6 md:p-8">
+                <h3 className="text-lg font-semibold tracking-tight">This is for you if</h3>
+                <ul className="mt-5 flex flex-col gap-4">
+                  {forYou.map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm leading-relaxed">
                       <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
                         <Check className="size-3" />
+                      </span>
+                      <span>{item}</span>
+                    </li>
+                  ))}
+                </ul>
+              </Card>
+            </Reveal>
+            <Reveal delay={0.1}>
+              <Card className="flex h-full flex-col p-6 md:p-8">
+                <h3 className="text-lg font-semibold tracking-tight text-muted-foreground">This isn&rsquo;t for you if</h3>
+                <ul className="mt-5 flex flex-col gap-4">
+                  {notForYou.map((item) => (
+                    <li key={item} className="flex items-start gap-3 text-sm leading-relaxed text-muted-foreground">
+                      <span className="mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-full border border-border">
+                        <X className="size-3" />
                       </span>
                       <span>{item}</span>
                     </li>
@@ -255,28 +168,111 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 10 — Stats + newsletter */}
-      <Section bleed className="border-t border-border bg-card py-16 md:py-24">
+      {/* 4 — Services with prices */}
+      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
         <Container>
-          <StatGrid stats={stats} />
-          <Reveal className="mt-16">
-            <div className="mx-auto max-w-2xl rounded-card border border-border bg-background p-8 text-center md:p-12">
-              <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Join the Builders List</h2>
-              <p className="mx-auto mt-3 max-w-md text-muted-foreground">
-                Clear thinking for people building real things. Frameworks that compound — one email per fortnight.
-              </p>
-              <NewsletterForm variant="inline" className="mx-auto mt-6 max-w-md" />
-              <p className="mt-3 text-xs text-muted-foreground">
-                <Link href="/newsletter" className="underline-offset-4 hover:underline">
-                  See what&rsquo;s inside
-                </Link>
-              </p>
+          <div className="flex items-end justify-between gap-4">
+            <SectionHeading
+              eyebrow="Services"
+              title="Three ways to become the answer"
+              description="Productized engagements with clear outcomes and clear prices. No retainer mystery."
+            />
+            <div className="hidden sm:block">
+              <ViewAll href="/services" label="All services" />
             </div>
-          </Reveal>
+          </div>
+          <Stagger className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {homeServices.map((s) => (
+              <StaggerItem key={s.slug}>
+                <ServiceCard service={s} />
+              </StaggerItem>
+            ))}
+          </Stagger>
         </Container>
       </Section>
 
-      <CtaBand />
+      {/* 5 — Case studies */}
+      <Section>
+        <Container>
+          <div className="flex items-end justify-between gap-4">
+            <SectionHeading
+              eyebrow="Proof"
+              title="Numbers, not adjectives"
+              description="Two systems and what they moved. The full write-ups show the mechanism behind each result."
+            />
+            <div className="hidden sm:block">
+              <ViewAll href="/case-studies" label="All cases" />
+            </div>
+          </div>
+          <Stagger className="mt-12 grid gap-4 md:grid-cols-2">
+            {homeCases.map((c) => (
+              <StaggerItem key={c.slug}>
+                <CaseStudyCard study={c} />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </Section>
+
+      {/* 6 — How it works */}
+      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
+        <Container>
+          <SectionHeading eyebrow="How it works" title="The same operating system, every time" />
+          <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {how.map((h, i) => (
+              <StaggerItem key={h.step}>
+                <Card className="h-full p-6">
+                  <span className="font-display text-sm font-bold text-muted-foreground">
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <h3 className="mt-3 text-lg font-semibold">{h.step}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{h.detail}</p>
+                </Card>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </Section>
+
+      {/* 7 — Testimonials (static grid — proof must sit still) */}
+      <Section>
+        <Container>
+          <SectionHeading eyebrow="Vouch for the cat" title="What it's like to work together" align="center" />
+          <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
+            {testimonials.slice(0, 3).map((t) => (
+              <StaggerItem key={t.name}>
+                <TestimonialCard testimonial={t} className="h-full" />
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </Section>
+
+      {/* 8 — Who is Shubham */}
+      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
+        <Container>
+          <div className="mx-auto max-w-3xl text-center">
+            <SectionHeading eyebrow="Who's behind this" title="Shubham Datarkar" align="center" />
+            <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
+              I&rsquo;m Shubham Datarkar — developer, marketer, and the founder behind The Bogus Company, Book A
+              Sloth, and Timewheel Internet. I build the systems I write about, which is the only reason the advice
+              survives contact with reality.
+            </p>
+            <div className="mt-8 flex justify-center">
+              <Link href="/me" className={cn(buttonVariants({ variant: "outline" }))}>
+                More about me
+                <ArrowRight />
+              </Link>
+            </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* 9 — CTA band (defaults: booking calendar + /contact) */}
+      <CtaBand
+        title="Be the name AI recommends."
+        description="When your next customer asks an AI who to hire, the answer should be you. Let's build the visibility that gets you cited."
+      />
     </>
   );
 }
