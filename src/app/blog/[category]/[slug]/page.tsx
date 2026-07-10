@@ -26,10 +26,9 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { category, slug } = await params;
   const post = await getPublishedPost(slug);
   if (!post) return buildMetadata({ title: "Article", path: `/blog/${category}/${slug}` });
-  // post.seoTitle/ogTitle/ogDescription are unpopulated (always undefined)
-  // until migration 20260711000002 is applied and PR 4 selects the columns
-  // in src/lib/blog/queries.ts. Left wired up now — it's correct and free;
-  // the `?? post.title` / `?? undefined` fallbacks already cover the gap.
+  // queries.ts now selects seo_title/og_title/og_description (migration
+  // 20260711000002 is applied), so these are populated per-post when an author
+  // fills them in the editor; the `?? post.title` fallback covers empty ones.
   return buildMetadata({
     title: post.seoTitle ?? post.title,
     description: post.excerpt,

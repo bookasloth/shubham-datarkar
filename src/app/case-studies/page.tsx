@@ -9,8 +9,12 @@ import { CaseStudyCard } from "@/components/cards/case-study-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Case Studies",
-  description: "Real outcomes with real numbers — SEO, performance marketing, AI content, and brand repositioning case studies.",
+  title: "SEO & Growth Case Studies",
+  description:
+    "Real outcomes with real numbers — SEO, performance marketing, AI content, and brand repositioning case studies. The before, the after, the how.",
+  ogTitle: "Proof, not promises",
+  ogDescription:
+    "Every engagement is built to compound. The before, the after, and exactly how we got there — real numbers, no vanity metrics.",
   path: "/case-studies",
 });
 

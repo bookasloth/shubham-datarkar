@@ -3,6 +3,36 @@ import { getMemberContext } from "@/lib/members/session";
 import { getPost, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
+import { buildMetadata } from "@/lib/seo";
+
+/** First `max` chars of the post body, whitespace-collapsed, ellipsised. */
+function snippet(body: string | null, max: number): string {
+  const text = (body ?? "").replace(/\s+/g, " ").trim();
+  if (!text) return "";
+  return text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
+}
+
+/**
+ * OG/Twitter copy so shared post links get a real preview. `noIndex`: these are
+ * member posts, and whether Google should index community UGC is a moderation
+ * decision that has not been made — so previews yes, crawling no.
+ */
+export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  const post = await getPost(id);
+  if (!post) return buildMetadata({ title: "Community post", path: `/community/p/${id}`, noIndex: true });
+
+  const author = post.displayName ?? `@${post.username}`;
+  const body = snippet(post.body, 150);
+  return buildMetadata({
+    title: "Community post",
+    description: body || `A post by ${author} in the community.`,
+    ogTitle: `${author} in the community`,
+    ogDescription: body || `A post by ${author} in the community.`,
+    path: `/community/p/${post.id}`,
+    noIndex: true,
+  });
+}
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

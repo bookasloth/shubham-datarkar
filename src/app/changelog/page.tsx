@@ -8,8 +8,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Changelog",
-  description: "What's new on the site — shipped features, improvements, and fixes, in the open.",
+  title: "What's Shipped, in the Open",
+  description:
+    "Every feature, improvement, and fix shipped on this site — version by version, in the open. Consistency compounds; here's the proof.",
+  ogTitle: "Built in the open",
+  ogDescription:
+    "Consistency compounds. Everything shipped on this site, version by version — the receipts for building in public.",
   path: "/changelog",
 });
 

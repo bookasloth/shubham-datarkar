@@ -31,7 +31,10 @@ import { cn } from "@/lib/utils";
 export const metadata = buildMetadata({
   title: "Building in Public",
   description:
-    "Platforms, essays, tools, and the work behind them — the personal home of Shubham Datarkar.",
+    "Growth systems for startups just getting started — platforms, essays, tools, and the work behind them, documented while building in public.",
+  ogTitle: "Building in Public",
+  ogDescription:
+    "Developer, strategist, storyteller, builder. Growth systems for early startups — frameworks, tools, and lessons, documented in public.",
   path: "/me",
 });
 

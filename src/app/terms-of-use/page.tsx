@@ -4,8 +4,10 @@ import { Section } from "@/components/layout/container";
 import { LegalDoc, type LegalBlock } from "@/components/sections/legal-doc";
 
 export const metadata = buildMetadata({
-  title: "Terms of Use",
-  description: "The terms that govern your use of shubhamdatarkar.com.",
+  title: "Terms of Use & Conditions",
+  description: "The terms that govern your use of shubhamdatarkar.com — acceptable use, intellectual property, payments, disclaimers, and governing law.",
+  ogTitle: "Terms of Use — shubhamdatarkar.com",
+  ogDescription: "Acceptable use, intellectual property, payments, disclaimers, and governing law.",
   path: "/terms-of-use",
 });
 

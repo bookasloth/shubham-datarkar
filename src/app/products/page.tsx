@@ -9,8 +9,10 @@ import { ProductCard } from "@/components/cards/product-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Products",
+  title: "SaaS Products by Timewheel",
   description: "The Timewheel Internet product portfolio — scheduling, ticketing, communities, creator tools, messaging, and SEO. Each its own brand.",
+  ogTitle: "Software that compounds — the Timewheel portfolio",
+  ogDescription: "A family of focused SaaS products, each with its own brand. Built calm, fast, and free of bloat.",
   path: "/products",
 });
 

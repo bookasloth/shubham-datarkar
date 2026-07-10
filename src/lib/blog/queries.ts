@@ -28,13 +28,17 @@ type DbRow = {
   status: string;
   published_at: string | null;
   updated_at: string;
+  seo_title: string | null;
+  og_title: string | null;
+  og_description: string | null;
 };
 
-// Not selecting seo_title/og_title/og_description yet: this constant feeds
-// every blog query below, and those queries catch-and-return-empty on error.
-// The columns don't exist until migration 20260711000002 is applied — PR 4
-// adds them here (and back to toPost) once it has run.
-const POST_COLS = "slug,title,excerpt,category,tags,words,featured,body,published_at,updated_at";
+// The SEO columns land here now that migration 20260711000002 is applied. This
+// constant feeds every blog query, and each query catch-and-returns-empty on
+// error — so if the migration has NOT run in a given environment, selecting a
+// missing column blanks the blog. Keep migrate-then-deploy ordering.
+const POST_COLS =
+  "slug,title,excerpt,category,tags,words,featured,body,published_at,updated_at,seo_title,og_title,og_description";
 
 function toPost(r: DbRow): Post {
   return {
@@ -48,6 +52,10 @@ function toPost(r: DbRow): Post {
     words: Number(r.words ?? 0),
     featured: r.featured ?? false,
     body: (Array.isArray(r.body) ? r.body : []) as Post["body"],
+    // Nullable columns → undefined (not ""), so buildMetadata's `?? fallback` works.
+    seoTitle: r.seo_title ?? undefined,
+    ogTitle: r.og_title ?? undefined,
+    ogDescription: r.og_description ?? undefined,
   };
 }
 

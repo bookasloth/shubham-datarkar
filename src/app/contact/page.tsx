@@ -14,8 +14,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Contact",
-  description: "Start a project, book a call, or send a brief. Replies within one business day.",
+  title: "Start a Project or Say Hi",
+  description:
+    "Start a project, book a call, or send a brief. Tell me what you're working on — I read every message and reply within one business day.",
+  ogTitle: "Let's talk",
+  ogDescription:
+    "Growth, product, or AI — tell me what you're building. Every message read, every reply within one business day.",
   path: "/contact",
 });
 

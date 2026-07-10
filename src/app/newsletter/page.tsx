@@ -19,8 +19,10 @@ import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "The Builders List",
-  description: "Clear thinking for people building real things. Frameworks that compound — one email per fortnight. No trends, no noise, no recycled threads.",
+  title: "The Builders List Newsletter",
+  description: "A fortnightly newsletter on marketing systems, product thinking, and AI leverage. Frameworks that compound — no trends, no noise, no recycled threads.",
+  ogTitle: "The Builders List — frameworks that compound",
+  ogDescription: "No trends. No recycled threads. Just the working notes behind marketing systems that actually ship. One email per fortnight.",
   path: "/newsletter",
 });
 

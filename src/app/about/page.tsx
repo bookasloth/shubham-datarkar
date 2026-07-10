@@ -19,9 +19,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "About",
+  title: "Founder, Marketer & Copywriter",
   description:
-    "Shubham Datarkar — founder of three companies, operating at the intersection of marketing, product, and AI. The story, the principles, and the receipts.",
+    "The founder who writes the copy, runs the marketing, and builds the software — across a creative studio, a booking SaaS, and an internet company.",
+  ogTitle: "Marketer who builds. Builder who markets.",
+  ogDescription:
+    "Most marketers can't build. Most builders can't market. The leverage is being both — and wiring AI underneath. Three companies, one operator.",
   path: "/about",
   type: "profile",
 });

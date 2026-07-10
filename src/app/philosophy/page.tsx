@@ -6,8 +6,10 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 
 export const metadata = buildMetadata({
-  title: "Philosophy",
-  description: "The operating principles behind everything Shubham Datarkar builds — systems over hustle, compounding over campaigns.",
+  title: "Systems Over Hustle",
+  description: "The operating principles behind everything I build — systems over hustle, compounding over campaigns, decades of thinking shipped in weeks.",
+  ogTitle: "Systems over hustle",
+  ogDescription: "The operating principles behind everything I build. Simple to say, hard to hold when it's inconvenient.",
   path: "/philosophy",
 });
 

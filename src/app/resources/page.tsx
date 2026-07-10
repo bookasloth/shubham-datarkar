@@ -13,8 +13,10 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Resources",
-  description: "Frameworks, templates, checklists, and guides — the systems behind the work, free to use.",
+  title: "Frameworks & Templates",
+  description: "Frameworks, templates, checklists, and guides — the actual systems I use in production, packaged so you can use them too. Free, for an email.",
+  ogTitle: "The systems I use in production — yours free",
+  ogDescription: "Frameworks, templates, and checklists behind the work. Free, in exchange for an email.",
   path: "/resources",
 });
 

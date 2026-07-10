@@ -11,8 +11,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Book a Call",
-  description: "Pick a time and let's talk through your growth, product, or AI problem — and leave with a clear next step.",
+  title: "Book a Working Session",
+  description:
+    "Book a focused 30-minute working session on your growth, product, or AI problem. No forms, no pitch — just straight answers and a next step.",
+  ogTitle: "Book a working session",
+  ogDescription:
+    "30 focused minutes on your growth, product, or AI problem. No pitch deck, no fluff — you leave with a concrete next step.",
   path: "/book",
 });
 

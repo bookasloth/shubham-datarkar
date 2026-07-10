@@ -9,8 +9,10 @@ import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Roadmap",
-  description: "What's shipped, in progress, planned, and being explored — a public view of where this is going.",
+  title: "Public Product Roadmap",
+  description: "What's shipped, in progress, planned, and being explored — a public, transparent view of where the products and this site are heading.",
+  ogTitle: "Where this is going — the public roadmap",
+  ogDescription: "Shipped, in progress, planned, exploring. Transparency is a trust builder.",
   path: "/roadmap",
 });
 

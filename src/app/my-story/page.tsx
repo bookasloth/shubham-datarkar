@@ -6,8 +6,12 @@ import { Reveal } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "My Story",
-  description: "From childhood curiosity to software products — how Shubham Datarkar moved from services to systems. The one thread: leverage.",
+  title: "From Marketing to Software",
+  description:
+    "The founder story — nearly a decade from copywriting and SEO to software products. How Shubham Datarkar moved from services to systems.",
+  ogTitle: "I am interested in leverage.",
+  ogDescription:
+    "How ideas spread. How systems compound. How structure creates freedom. The long version — from childhood curiosity to software products.",
   path: "/my-story",
 });
 

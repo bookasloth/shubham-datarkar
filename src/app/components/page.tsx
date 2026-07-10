@@ -9,8 +9,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Components",
-  description: "The design system behind the site — 40+ monochrome components and composed blocks, all live.",
+  title: "Design System Components",
+  description:
+    "The internal design system behind this site — 40+ monochrome, accessible components and composed blocks, all live in a single gallery.",
+  ogTitle: "The component library",
+  ogDescription:
+    "40+ monochrome, accessible components and composed blocks — the design system behind the site, all live.",
   path: "/components",
 });
 

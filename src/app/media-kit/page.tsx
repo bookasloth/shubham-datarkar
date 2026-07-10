@@ -12,8 +12,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Media Kit",
-  description: "Bios, brand assets, and press contact for Shubham Datarkar (The Kalamwala).",
+  title: "Press & Media Kit",
+  description:
+    "Bios, brand assets, logos, headshots, and press contact for Shubham Datarkar, The Kalamwala. Everything press needs, copy-paste ready.",
+  ogTitle: "Everything press needs",
+  ogDescription:
+    "Copy-paste bios, logos, headshots, and a fast way to reach me. Attribution appreciated — assets on request.",
   path: "/media-kit",
 });
 

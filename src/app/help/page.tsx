@@ -5,8 +5,12 @@ import { Container, Section } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 
 export const metadata = buildMetadata({
-  title: "Help Center",
-  description: "Answers to common questions about the newsletter, working together, and support.",
+  title: "Help Center & Support",
+  description:
+    "Quick answers on the newsletter, working together, support, and privacy. Still stuck? Reach out — I read every message and reply fast.",
+  ogTitle: "How can I help?",
+  ogDescription:
+    "Quick answers to the things people ask most — newsletter, working together, support, and data. Still stuck? Reach out.",
   path: "/help",
 });
 
