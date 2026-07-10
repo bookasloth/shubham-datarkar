@@ -13,7 +13,10 @@ export function ServiceCard({ service }: { service: Service }) {
       <h3 className="mt-5 text-lg font-semibold tracking-tight">{service.name}</h3>
       <p className="mt-1 text-sm font-medium text-muted-foreground">{service.tagline}</p>
       <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{service.outcome}</p>
-      <span className="mt-5 inline-flex items-center gap-1 text-sm font-medium text-foreground">
+      <p className="mt-5 text-sm font-medium text-foreground">
+        From <span className="font-display font-bold">{service.startingAt}</span>
+      </p>
+      <span className="mt-3 inline-flex items-center gap-1 text-sm font-medium text-foreground">
         <Link href={`/services/${service.slug}`} className="after:absolute after:inset-0 focus-visible:outline-none">
           Explore service
         </Link>
