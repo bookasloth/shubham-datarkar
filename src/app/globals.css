@@ -272,6 +272,25 @@
     transition-duration: var(--dur-base);
   }
 
+  /* Community engagement click feedback: heart pops, rotten egg wobbles. */
+  @keyframes community-pop {
+    0% { transform: scale(1); }
+    40% { transform: scale(1.35); }
+    100% { transform: scale(1); }
+  }
+  @keyframes community-wobble {
+    0%, 100% { transform: rotate(0deg); }
+    25% { transform: rotate(-14deg); }
+    75% { transform: rotate(14deg); }
+  }
+  .animate-pop { animation: community-pop 320ms var(--ease-out-quint); }
+  .animate-wobble { animation: community-wobble 380ms var(--ease-out-quint); }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-pop,
+    .animate-wobble { animation: none; }
+  }
+
   /* Editorial reading column */
   .prose-column { max-width: var(--container-prose); }
 

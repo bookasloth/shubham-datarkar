@@ -3,26 +3,9 @@ import { supabaseAnon } from "@/lib/supabase/server";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import type { AdSlot, FeedPost, FeedSort, FeedWindow } from "./types";
 
-export async function listFeed(opts: {
-  sort: FeedSort;
-  window: FeedWindow;
-  limit?: number;
-  offset?: number;
-}): Promise<FeedPost[]> {
-  // Call as the request user (cookie-scoped): the RPC derives the viewer from
-  // auth.uid(), so vote/bookmark state can't be spoofed for another user.
-  const sb = await supabaseAuthServer();
-  const { data, error } = await sb.rpc("community_feed", {
-    p_sort: opts.sort,
-    p_window: opts.window,
-    p_limit: opts.limit ?? 20,
-    p_offset: opts.offset ?? 0,
-  });
-  if (error) {
-    console.warn("community_feed failed:", error.message);
-    return [];
-  }
-  return (data ?? []).map((r: Record<string, unknown>) => ({
+/** Every community_* RPC returns this row shape — map it in exactly one place. */
+function mapRow(r: Record<string, unknown>): FeedPost {
+  return {
     id: r.id as string,
     userId: r.user_id as string,
     username: r.username as string,
@@ -42,7 +25,54 @@ export async function listFeed(opts: {
     createdAt: r.created_at as string,
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
-  }));
+  };
+}
+
+export async function listFeed(opts: {
+  sort: FeedSort;
+  window: FeedWindow;
+  limit?: number;
+  offset?: number;
+  author?: string;
+  bookmarked?: boolean;
+}): Promise<FeedPost[]> {
+  // Call as the request user (cookie-scoped): the RPC derives the viewer from
+  // auth.uid(), so vote/bookmark state can't be spoofed for another user.
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_feed", {
+    p_sort: opts.sort,
+    p_window: opts.window,
+    p_limit: opts.limit ?? 20,
+    p_offset: opts.offset ?? 0,
+    p_author: opts.author ?? null,
+    p_bookmarked: opts.bookmarked ?? false,
+  });
+  if (error) {
+    console.warn("community_feed failed:", error.message);
+    return [];
+  }
+  return (data ?? []).map(mapRow);
+}
+
+export async function getPost(id: string): Promise<FeedPost | null> {
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_post", { p_id: id });
+  if (error || !data || data.length === 0) return null;
+  return mapRow(data[0]);
+}
+
+export async function listReplies(postId: string): Promise<FeedPost[]> {
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_replies", {
+    p_post: postId,
+    p_limit: 50,
+    p_offset: 0,
+  });
+  if (error) {
+    console.warn("community_replies failed:", error.message);
+    return [];
+  }
+  return (data ?? []).map(mapRow);
 }
 
 /** True when the signed-in viewer may post (verified email, not banned). */
@@ -51,6 +81,17 @@ export async function viewerCanPost(): Promise<boolean> {
   const { data, error } = await sb.rpc("community_can_post");
   if (error) return false;
   return Boolean(data);
+}
+
+/** The signed-in viewer's community handle, or null. */
+export async function viewerHandle(): Promise<string | null> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return null;
+  const { data } = await sb.from("profiles").select("username").eq("id", user.id).maybeSingle();
+  return data?.username ?? null;
 }
 
 export async function listAds(): Promise<AdSlot[]> {
