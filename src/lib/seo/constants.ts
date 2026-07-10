@@ -1,5 +1,3 @@
-export const PRIVATE_PREFIXES = ["/admin", "/dashboard", "/login", "/settings", "/profile", "/success", "/search"];
-
 export function scoreColor(score: number): "red" | "orange" | "yellow" | "green" {
   if (score >= 85) return "green";
   if (score >= 70) return "yellow";

@@ -1,9 +1,12 @@
+import type { PageType } from "./routes";
+
 export type PageEntry = {
   route: string;
   filePath: string;
   isDynamic: boolean;
   isPrivate: boolean;
   inSitemap: boolean;
+  pageType: PageType;
 };
 
 /**
@@ -49,6 +52,8 @@ export type CheckResult = {
   id: string;
   label: string;
   passed: boolean;
+  /** False when the check does not apply to this page's type. Neither pass nor fail. */
+  applicable: boolean;
   category: "seo" | "geo" | "aeo";
   priority: "high" | "medium" | "low";
 };
@@ -57,6 +62,8 @@ export type ScoreBreakdown = {
   score: number;
   passed: string[];
   failed: string[];
+  /** Checks that did not apply to this page type. Excluded from the denominator. */
+  skipped: string[];
 };
 
 export type PageScores = {
@@ -74,6 +81,13 @@ export type PageAuditEntry = {
   scores: PageScores | null;
 };
 
+export type IssueCount = {
+  id: string;
+  label: string;
+  category: "seo" | "geo" | "aeo";
+  count: number;
+};
+
 export type AuditSummary = {
   totalPages: number;
   indexedPages: number;
@@ -86,7 +100,7 @@ export type AuditSummary = {
   avgSeoScore: number;
   avgGeoScore: number;
   avgAeoScore: number;
-  issuesByType: { label: string; count: number }[];
+  issuesByType: IssueCount[];
   colorDistribution: Record<ScoreColor, number>;
 };
 

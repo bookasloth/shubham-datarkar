@@ -53,8 +53,11 @@ export function SeoDashboard({ summary }: { summary: AuditSummary }) {
           </h2>
           <div className="flex flex-col gap-2">
             {summary.issuesByType.slice(0, 10).map((issue) => (
-              <div key={issue.label} className="flex items-center justify-between text-sm">
-                <span className="text-admin-text">{issue.label}</span>
+              <div key={issue.id} className="flex items-center justify-between text-sm">
+                <span className="text-admin-text">
+                  {issue.label}
+                  <span className="ml-2 text-xs uppercase text-admin-text-muted">{issue.category}</span>
+                </span>
                 <StatusBadge tone="danger">{issue.count} pages</StatusBadge>
               </div>
             ))}

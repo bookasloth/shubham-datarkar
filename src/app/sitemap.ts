@@ -2,6 +2,7 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getPublishedPosts } from "@/lib/blog/queries";
 import { discoverPages } from "@/lib/seo/discovery";
+import { isIndexable } from "@/lib/seo/routes";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
@@ -15,7 +16,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const WEEKLY_PATHS = new Set(["/", "/blog"]);
 
   return pages
-    .filter((p) => !p.isPrivate && !p.route.includes("["))
+    .filter((p) => isIndexable(p.route))
     .map((p) => ({
       url: `${base}${p.route === "/" ? "" : p.route}`,
       lastModified: postDateMap.get(p.route) ?? now,

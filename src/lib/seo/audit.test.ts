@@ -15,6 +15,7 @@ function makeEntry(route: string, overrides: Partial<PageEntry> = {}): PageEntry
     isDynamic: false,
     isPrivate: false,
     inSitemap: true,
+    pageType: "pillar",
     ...overrides,
   };
 }
@@ -60,6 +61,11 @@ function makeScored(route: string, analysisOverrides: Partial<PageAnalysis> = {}
   const entry = makeEntry(route, entryOverrides);
   const analysis = makeAnalysis(analysisOverrides);
   return { entry, analysis, scores: scorePage(entry, analysis) };
+}
+
+/** A page scored with an explicit page type, using real scorePage output. */
+function makeScoredWithType(route: string, pageType: PageEntry["pageType"]): PageAuditEntry {
+  return makeScored(route, {}, { pageType });
 }
 
 describe("buildSummary", () => {
@@ -136,6 +142,47 @@ describe("buildSummary", () => {
     expect(summary.avgSeoScore).toBe(0);
     expect(summary.avgGeoScore).toBe(0);
     expect(summary.avgAeoScore).toBe(0);
+  });
+});
+
+describe("issuesByType", () => {
+  it("keys on check id, so no issue can exceed the page count", () => {
+    // The fixture must produce real failures, or the loop below iterates an empty
+    // array and asserts nothing. /services/* makes the FAQ checks applicable and
+    // the default analysis omits "FAQPage", so geo-faq and aeo-faq both fail on
+    // both pages. Under the old label key those two collapse into one row of 4
+    // across 2 pages — which is precisely the bug this test exists to catch.
+    const pages = [makeScored("/services/seo"), makeScored("/services/consulting")];
+    const summary = buildSummary(pages);
+
+    expect(summary.issuesByType.length).toBeGreaterThan(0);
+    for (const issue of summary.issuesByType) {
+      expect(issue.count).toBeLessThanOrEqual(summary.totalPages);
+    }
+  });
+
+  it("counts geo-faq and aeo-faq separately despite the shared label", () => {
+    // /services/* is one of the two routes hasVisibleFaq() recognizes, so the FAQ
+    // checks are applicable here. The default analysis schemas omit "FAQPage", so
+    // both geo-faq and aeo-faq fail — this is the only way to make the shared-label
+    // assertions below non-vacuous. With /a and /b (used elsewhere in this file),
+    // hasVisibleFaq() is false, both checks are skipped, and the "distinct ids"
+    // assertions over an empty array would pass trivially without testing anything.
+    const pages = [makeScored("/services/seo"), makeScored("/services/consulting")];
+    const summary = buildSummary(pages);
+    const faqIssues = summary.issuesByType.filter((i) => i.label === "Has FAQ schema");
+    expect(faqIssues.length).toBe(2);
+    // Either both categories failed it, or neither did — but they must be distinct rows.
+    const ids = faqIssues.map((i) => i.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every((id) => id === "geo-faq" || id === "aeo-faq")).toBe(true);
+  });
+
+  it("never reports a check that did not apply to the page", () => {
+    // A utility page skips geo-faq entirely; it must not appear as an issue.
+    const utility = makeScoredWithType("/contact", "utility");
+    const summary = buildSummary([utility]);
+    expect(summary.issuesByType.map((i) => i.id)).not.toContain("geo-faq");
   });
 });
 

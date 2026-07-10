@@ -41,7 +41,7 @@ function toRow(p: PageAuditEntry): Row {
     aeoColor: scoreColor(scores?.aeo.score ?? 0),
     schemas: analysis?.schemas ?? [],
     inSitemap: p.entry.inSitemap,
-    issueCount: scores?.checks.filter((c) => !c.passed).length ?? 0,
+    issueCount: scores?.checks.filter((c) => c.applicable && !c.passed).length ?? 0,
   };
 }
 
