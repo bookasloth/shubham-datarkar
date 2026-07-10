@@ -4,9 +4,10 @@ import { ITEMS, FEE_PCT, CURRENCY } from "@/lib/support/config";
 import { createOrder, razorpayKeyId } from "@/lib/razorpay/client";
 import { insertPendingSupport, attachOrder, markSupportStatus } from "@/lib/support/server";
 
+import { EMAIL_RE } from "@/lib/validation/email";
+
 export const dynamic = "force-dynamic";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const PRICE = Object.fromEntries(ITEMS.map((i) => [i.key, i.unitPrice])) as Record<string, number>;
 const MAX_UNITS = 1000;
 

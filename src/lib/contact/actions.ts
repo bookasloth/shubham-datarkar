@@ -5,8 +5,7 @@ import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail } from "@/lib/email/template";
 import { toAttributionRow, type FirstTouch } from "@/lib/attribution";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_RE } from "@/lib/validation/email";
 
 export type ContactInput = {
   name: string;

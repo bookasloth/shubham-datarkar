@@ -6,8 +6,7 @@ import { kitAddSubscriberToForm } from "@/lib/kit/client";
 import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail, EMAIL_BRAND } from "@/lib/email/template";
-
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { EMAIL_RE } from "@/lib/validation/email";
 
 /**
  * Fire-and-forget push to Kit. Never throws — a Kit outage must not fail a

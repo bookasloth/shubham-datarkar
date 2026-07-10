@@ -11,10 +11,10 @@ import { useToast } from "@/components/ui/toast";
 import { submitContact } from "@/lib/contact/actions";
 import { CreateAccountCTA } from "@/components/members/create-account-cta";
 import { readFirstTouch } from "@/components/analytics/attribution-probe";
+import { EMAIL_RE } from "@/lib/validation/email";
 
 const PROJECT_TYPES = ["Agency Work", "Consulting", "Speaking", "Partnership", "Other"];
 const BUDGETS = ["Under ₹1L / mo", "₹1L–3L / mo", "₹3L–6L / mo", "₹6L+ / mo", "Not sure yet"];
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 type Errors = Partial<Record<"name" | "email" | "projectType" | "message", string>>;
 
