@@ -1,11 +1,13 @@
 import "server-only";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
-import type { AdSlot, FeedPost, FeedSort, FeedWindow } from "./types";
+import type { AdSlot, FeedPost, FeedSort, FeedWindow, PollResult } from "./types";
 
 /** Every community_* RPC returns this row shape — map it in exactly one place. */
 function mapRow(r: Record<string, unknown>): FeedPost {
+  const poll = (r.poll as FeedPost["poll"]) ?? null;
   return {
+    pollClosed: Boolean(poll?.closes_at && new Date(poll.closes_at).getTime() <= Date.now()),
     id: r.id as string,
     userId: r.user_id as string,
     username: r.username as string,
@@ -15,7 +17,7 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     body: (r.body as string) ?? null,
     images: (r.images as string[]) ?? null,
     youtubeId: (r.youtube_id as string) ?? null,
-    poll: (r.poll as FeedPost["poll"]) ?? null,
+    poll,
     upCount: r.up_count as number,
     downCount: r.down_count as number,
     score: r.score as number,
@@ -73,6 +75,30 @@ export async function listReplies(postId: string): Promise<FeedPost[]> {
     return [];
   }
   return (data ?? []).map(mapRow);
+}
+
+/** Batched poll tallies: one round trip for every poll on a page. */
+export async function listPollResults(postIds: string[]): Promise<Record<string, PollResult>> {
+  if (postIds.length === 0) return {};
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_poll_results_many", { p_posts: postIds });
+  if (error) {
+    console.warn("community_poll_results_many failed:", error.message);
+    return {};
+  }
+  const out: Record<string, PollResult> = {};
+  for (const row of (data ?? []) as {
+    post_id: string;
+    option_index: number;
+    votes: number;
+    viewer_choice: boolean;
+  }[]) {
+    const entry = (out[row.post_id] ??= { counts: {}, viewerChoice: null, total: 0 });
+    entry.counts[row.option_index] = row.votes;
+    entry.total += row.votes;
+    if (row.viewer_choice) entry.viewerChoice = row.option_index;
+  }
+  return out;
 }
 
 /** True when the signed-in viewer may post (verified email, not banned). */

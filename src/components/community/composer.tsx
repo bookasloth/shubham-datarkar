@@ -1,5 +1,6 @@
 "use client";
 import { useActionState, useState } from "react";
+import { X } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -9,18 +10,25 @@ const TABS = [
   { key: "text", label: "Text" },
   { key: "image", label: "Image" },
   { key: "youtube", label: "YouTube" },
+  { key: "poll", label: "Poll" },
 ] as const;
 
 const MAX = 500;
+const MAX_OPTIONS = 4;
 
 export function Composer() {
   const [type, setType] = useState<(typeof TABS)[number]["key"]>("text");
   const [body, setBody] = useState("");
+  const [options, setOptions] = useState<string[]>(["", ""]);
   const [state, formAction, pending] = useActionState<CreatePostState, FormData>(
     createPost,
     undefined,
   );
   const over = body.length > MAX;
+
+  function setOption(i: number, value: string) {
+    setOptions(options.map((o, idx) => (idx === i ? value : o)));
+  }
 
   return (
     <form action={formAction} className="border-b border-border px-4 py-3">
@@ -70,6 +78,53 @@ export function Composer() {
           placeholder="https://youtube.com/watch?v=..."
           className="mt-2 w-full rounded-input border border-border bg-transparent px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
         />
+      )}
+
+      {type === "poll" && (
+        <div className="mt-2 space-y-2">
+          {options.map((o, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <input
+                type="text"
+                name="pollOptions"
+                value={o}
+                onChange={(e) => setOption(i, e.target.value)}
+                maxLength={80}
+                placeholder={`Option ${i + 1}`}
+                className="w-full rounded-input border border-border bg-transparent px-3 py-1.5 text-sm focus:border-brand focus:outline-none"
+              />
+              {options.length > 2 && (
+                <button
+                  type="button"
+                  aria-label={`Remove option ${i + 1}`}
+                  onClick={() => setOptions(options.filter((_, idx) => idx !== i))}
+                  className="rounded-btn p-1 text-muted-foreground transition-ui hover:bg-accent"
+                >
+                  <X className="size-4" />
+                </button>
+              )}
+            </div>
+          ))}
+
+          {options.length < MAX_OPTIONS && (
+            <button
+              type="button"
+              onClick={() => setOptions([...options, ""])}
+              className="rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent"
+            >
+              Add option
+            </button>
+          )}
+
+          <label className="block text-xs text-muted-foreground">
+            Closes (optional)
+            <input
+              type="datetime-local"
+              name="pollClosesAt"
+              className="mt-1 block w-full rounded-input border border-border bg-transparent px-3 py-1.5 text-sm text-foreground focus:border-brand focus:outline-none"
+            />
+          </label>
+        </div>
       )}
 
       <div className="mt-2 flex items-center justify-between">

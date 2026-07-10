@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
-import { listFeed, viewerHandle } from "@/lib/community/queries";
+import { listFeed, listPollResults, viewerCanPost, viewerHandle } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 
@@ -13,7 +13,13 @@ export default async function ProfilePage() {
   const handle = await viewerHandle();
   if (!handle) redirect("/community");
 
-  const posts = await listFeed({ sort: "new", window: "all", author: handle, limit: 50 });
+  const [canPost, posts] = await Promise.all([
+    viewerCanPost(),
+    listFeed({ sort: "new", window: "all", author: handle, limit: 50 }),
+  ]);
+  const pollResults = await listPollResults(
+    posts.filter((p) => p.type === "poll").map((p) => p.id),
+  );
 
   return (
     <div>
@@ -32,7 +38,9 @@ export default async function ProfilePage() {
           You haven&apos;t posted yet.
         </p>
       ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
+        posts.map((post) => (
+          <PostCard key={post.id} post={post} pollResult={pollResults[post.id]} canVote={canPost} />
+        ))
       )}
     </div>
   );

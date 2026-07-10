@@ -28,6 +28,8 @@ export async function createPost(
     body: String(formData.get("body") ?? ""),
     imageCount: files.length,
     youtubeUrl: String(formData.get("youtubeUrl") ?? ""),
+    pollOptions: formData.getAll("pollOptions").map((o) => String(o)),
+    pollClosesAt: String(formData.get("pollClosesAt") ?? ""),
   });
   if (!valid.ok) return { error: valid.error };
 
@@ -61,6 +63,7 @@ export async function createPost(
     body: valid.body,
     images: imageUrls,
     youtube_id: valid.youtubeId,
+    poll: valid.poll,
   });
   if (error) return { error: error.message };
 

@@ -91,6 +91,36 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
   return { ok: true };
 }
 
+export async function voteOnPoll(postId: string, optionIndex: number): Promise<EngageResult> {
+  const { sb, user, error } = await gate();
+  if (error || !user) return { error: error ?? "Sign in first." };
+
+  const { data: post } = await sb
+    .from("community_posts")
+    .select("type, poll")
+    .eq("id", postId)
+    .maybeSingle();
+  if (!post || post.type !== "poll" || !post.poll) return { error: "That isn't a poll." };
+
+  const poll = post.poll as { options: { i: number }[]; closes_at?: string };
+  if (poll.closes_at && new Date(poll.closes_at).getTime() <= Date.now()) {
+    return { error: "This poll has closed." };
+  }
+  if (!poll.options.some((o) => o.i === optionIndex)) return { error: "Unknown option." };
+
+  const { error: err } = await sb
+    .from("community_poll_votes")
+    .insert({ post_id: postId, user_id: user.id, option_index: optionIndex });
+  if (err) {
+    // 23505 = unique violation on (post_id, user_id): vote is once-only by design.
+    if (err.code === "23505") return { error: "You already voted." };
+    return { error: err.message };
+  }
+  revalidatePath("/community");
+  revalidatePath(`/community/p/${postId}`);
+  return { ok: true };
+}
+
 export async function createReply(postId: string, body: string): Promise<EngageResult> {
   const { sb, user, error } = await gate();
   if (error || !user) return { error: error ?? "Sign in first." };

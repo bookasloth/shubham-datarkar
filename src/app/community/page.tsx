@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getMemberContext } from "@/lib/members/session";
-import { listFeed, viewerCanPost } from "@/lib/community/queries";
+import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
 import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
@@ -26,6 +26,9 @@ export default async function CommunityPage({
     user ? viewerCanPost() : Promise.resolve(false),
     listFeed({ sort, window, limit: 30 }),
   ]);
+  const pollResults = await listPollResults(
+    posts.filter((p) => p.type === "poll").map((p) => p.id),
+  );
 
   return (
     <div>
@@ -54,7 +57,14 @@ export default async function CommunityPage({
             No posts yet. Be the first once posting opens.
           </p>
         ) : (
-          posts.map((post) => <PostCard key={post.id} post={post} />)
+          posts.map((post) => (
+            <PostCard
+              key={post.id}
+              post={post}
+              pollResult={pollResults[post.id]}
+              canVote={canPost}
+            />
+          ))
         )}
       </MeterGate>
     </div>

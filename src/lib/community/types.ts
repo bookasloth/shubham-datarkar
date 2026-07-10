@@ -16,6 +16,8 @@ export type FeedPost = {
   images: string[] | null;
   youtubeId: string | null;
   poll: PollData | null;
+  /** Resolved server-side from poll.closes_at — never recompute in a render. */
+  pollClosed: boolean;
   upCount: number;
   downCount: number;
   score: number;
@@ -28,3 +30,10 @@ export type FeedPost = {
 };
 
 export type AdSlot = { slot: 1 | 2; imagePath: string | null; linkUrl: string | null };
+
+/** Tally for one poll. `counts` is keyed by option index; missing = 0 votes. */
+export type PollResult = {
+  counts: Record<number, number>;
+  viewerChoice: number | null;
+  total: number;
+};

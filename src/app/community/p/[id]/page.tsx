@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
-import { getPost, listReplies, viewerCanPost } from "@/lib/community/queries";
+import { getPost, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
 
@@ -14,11 +14,12 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
     user ? viewerCanPost() : Promise.resolve(false),
     listReplies(id),
   ]);
+  const pollResults = await listPollResults(post.type === "poll" ? [post.id] : []);
 
   return (
     <div>
       <h1 className="border-b border-border px-4 py-3 font-display text-lg font-bold">Post</h1>
-      <PostCard post={post} />
+      <PostCard post={post} pollResult={pollResults[post.id]} canVote={canPost} />
 
       {canPost && <ReplyBox postId={post.id} />}
 

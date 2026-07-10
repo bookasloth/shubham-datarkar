@@ -1,11 +1,20 @@
 import Image from "next/image";
 import { cn, timeAgo } from "@/lib/utils";
-import type { FeedPost } from "@/lib/community/types";
+import type { FeedPost, PollResult } from "@/lib/community/types";
 import { BadgeTick } from "./badge-tick";
 import { CommunityAvatar } from "./community-avatar";
 import { EngagementBar } from "./engagement-bar";
+import { Poll } from "./poll";
 
-export function PostCard({ post }: { post: FeedPost }) {
+export function PostCard({
+  post,
+  pollResult,
+  canVote = false,
+}: {
+  post: FeedPost;
+  pollResult?: PollResult;
+  canVote?: boolean;
+}) {
   const name = post.displayName || post.username;
   return (
     <article className="border-b border-border px-4 py-3">
@@ -51,25 +60,13 @@ export function PostCard({ post }: { post: FeedPost }) {
             </div>
           ) : null}
 
-          {post.type === "poll" && post.poll ? <PollStatic post={post} /> : null}
+          {post.type === "poll" && post.poll ? (
+            <Poll post={post} result={pollResult} canVote={canVote} closed={post.pollClosed} />
+          ) : null}
 
           <EngagementBar post={post} />
         </div>
       </div>
     </article>
-  );
-}
-
-// Read-only poll render (voting lands in Plan 5). Shows options as static rows.
-function PollStatic({ post }: { post: FeedPost }) {
-  const opts = post.poll?.options ?? [];
-  return (
-    <div className="mt-2 space-y-1.5">
-      {opts.map((o) => (
-        <div key={o.i} className="rounded-input border border-border px-3 py-1.5 text-sm">
-          {o.label}
-        </div>
-      ))}
-    </div>
   );
 }

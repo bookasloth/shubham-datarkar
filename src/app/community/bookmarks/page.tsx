@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
-import { listFeed } from "@/lib/community/queries";
+import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 
 export const metadata = { title: "Bookmarks" };
@@ -9,7 +9,13 @@ export default async function BookmarksPage() {
   const { user } = await getMemberContext();
   if (!user) redirect("/members/login?next=/community/bookmarks");
 
-  const posts = await listFeed({ sort: "new", window: "all", bookmarked: true, limit: 50 });
+  const [canPost, posts] = await Promise.all([
+    viewerCanPost(),
+    listFeed({ sort: "new", window: "all", bookmarked: true, limit: 50 }),
+  ]);
+  const pollResults = await listPollResults(
+    posts.filter((p) => p.type === "poll").map((p) => p.id),
+  );
 
   return (
     <div>
@@ -19,7 +25,9 @@ export default async function BookmarksPage() {
           Nothing bookmarked yet.
         </p>
       ) : (
-        posts.map((post) => <PostCard key={post.id} post={post} />)
+        posts.map((post) => (
+          <PostCard key={post.id} post={post} pollResult={pollResults[post.id]} canVote={canPost} />
+        ))
       )}
     </div>
   );
