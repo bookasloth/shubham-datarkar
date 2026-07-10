@@ -33,6 +33,11 @@ const APP_ROUTES = new Set([
   "/games/login",
   "/games/profile",
   "/games/leaderboard",
+  // `/members` itself is the member dashboard: its page calls requireMember() and
+  // its layout already serves `robots: { index: false }`. Classifying it as a hub
+  // put an auth-gated, noindexed page into the sitemap — the same contradiction
+  // PR #109 removed everywhere else.
+  "/members",
   "/members/login",
   "/members/account",
   "/members/bookmarks",

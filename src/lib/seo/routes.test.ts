@@ -35,10 +35,19 @@ describe("pageTypeOf", () => {
     expect(pageTypeOf("/blog/seo/technical-seo-guide")).toBe("pillar");
   });
 
-  it("classifies game and member landings as hubs", () => {
-    for (const route of ["/games", "/games/alfazy", "/games/hit-and-blow", "/games/integra", "/members", "/community"]) {
+  it("classifies the public game and community landings as hubs", () => {
+    for (const route of ["/games", "/games/alfazy", "/games/hit-and-blow", "/games/integra", "/community"]) {
       expect(pageTypeOf(route)).toBe("hub");
     }
+  });
+
+  it("classifies /members as app, because it is auth-gated and already noindexed", () => {
+    // /members/page.tsx calls requireMember("/members") and members/layout.tsx sets
+    // `robots: { index: false }`. Treating it as an indexable hub put an auth-gated,
+    // noindexed page into the sitemap.
+    expect(pageTypeOf("/members")).toBe("app");
+    expect(isIndexable("/members")).toBe(false);
+    expect(isPrivate("/members")).toBe(true);
   });
 
   it("classifies utility pages", () => {
