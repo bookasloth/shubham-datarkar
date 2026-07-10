@@ -63,6 +63,11 @@ function makeScored(route: string, analysisOverrides: Partial<PageAnalysis> = {}
   return { entry, analysis, scores: scorePage(entry, analysis) };
 }
 
+/** A page scored with an explicit page type, using real scorePage output. */
+function makeScoredWithType(route: string, pageType: PageEntry["pageType"]): PageAuditEntry {
+  return makeScored(route, {}, { pageType });
+}
+
 describe("buildSummary", () => {
   it("counts only public pages, and unreachable pages fill the gap", () => {
     const pages: PageAuditEntry[] = [
@@ -137,6 +142,40 @@ describe("buildSummary", () => {
     expect(summary.avgSeoScore).toBe(0);
     expect(summary.avgGeoScore).toBe(0);
     expect(summary.avgAeoScore).toBe(0);
+  });
+});
+
+describe("issuesByType", () => {
+  it("keys on check id, so no issue can exceed the page count", () => {
+    const pages = [makeScored("/a"), makeScored("/b")];
+    const summary = buildSummary(pages);
+    for (const issue of summary.issuesByType) {
+      expect(issue.count).toBeLessThanOrEqual(summary.totalPages);
+    }
+  });
+
+  it("counts geo-faq and aeo-faq separately despite the shared label", () => {
+    // /services/* is one of the two routes hasVisibleFaq() recognizes, so the FAQ
+    // checks are applicable here. The default analysis schemas omit "FAQPage", so
+    // both geo-faq and aeo-faq fail — this is the only way to make the shared-label
+    // assertions below non-vacuous. With /a and /b (used elsewhere in this file),
+    // hasVisibleFaq() is false, both checks are skipped, and the "distinct ids"
+    // assertions over an empty array would pass trivially without testing anything.
+    const pages = [makeScored("/services/seo"), makeScored("/services/consulting")];
+    const summary = buildSummary(pages);
+    const faqIssues = summary.issuesByType.filter((i) => i.label === "Has FAQ schema");
+    expect(faqIssues.length).toBe(2);
+    // Either both categories failed it, or neither did — but they must be distinct rows.
+    const ids = faqIssues.map((i) => i.id);
+    expect(new Set(ids).size).toBe(ids.length);
+    expect(ids.every((id) => id === "geo-faq" || id === "aeo-faq")).toBe(true);
+  });
+
+  it("never reports a check that did not apply to the page", () => {
+    // A utility page skips geo-faq entirely; it must not appear as an issue.
+    const utility = makeScoredWithType("/contact", "utility");
+    const summary = buildSummary([utility]);
+    expect(summary.issuesByType.map((i) => i.id)).not.toContain("geo-faq");
   });
 });
 

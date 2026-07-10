@@ -13,7 +13,10 @@ function ScoreCard({ label, breakdown }: { label: string; breakdown: ScoreBreakd
         <StatusBadge tone={SCORE_TONE[color]}>{breakdown.score}%</StatusBadge>
       </div>
       <p className="mt-2 text-2xl font-bold text-admin-text">{breakdown.passed.length}/{breakdown.passed.length + breakdown.failed.length}</p>
-      <p className="text-xs text-admin-text-muted">checks passed</p>
+      <p className="text-xs text-admin-text-muted">
+        checks passed
+        {breakdown.skipped.length > 0 && ` · ${breakdown.skipped.length} n/a`}
+      </p>
     </AdminCard>
   );
 }
@@ -67,7 +70,7 @@ export function PageDetail({ data }: { data: PageAuditEntry }) {
   }
 
   const failedChecks = scores.checks
-    .filter((c) => !c.passed)
+    .filter((c) => c.applicable && !c.passed)
     .sort((a, b) => {
       const order = { high: 0, medium: 1, low: 2 };
       return order[a.priority] - order[b.priority];

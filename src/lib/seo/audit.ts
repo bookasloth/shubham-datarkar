@@ -1,4 +1,4 @@
-import type { AuditResult, AuditSummary, PageAuditEntry, ScoreColor } from "./types";
+import type { AuditResult, AuditSummary, IssueCount, PageAuditEntry, ScoreColor } from "./types";
 import { discoverPages } from "./discovery";
 import { analyzePage } from "./analyzer";
 import { scorePage } from "./scoring";
@@ -32,17 +32,18 @@ export function buildSummary(pages: PageAuditEntry[]): AuditSummary {
   const avg = (pick: (p: ScoredPage) => number) =>
     scored.length > 0 ? Math.round(scored.reduce((sum, p) => sum + pick(p), 0) / scored.length) : 0;
 
-  const issueCounts = new Map<string, number>();
+  const issueCounts = new Map<string, IssueCount>();
   for (const page of scored) {
     for (const check of page.scores.checks) {
-      if (!check.passed) {
-        issueCounts.set(check.label, (issueCounts.get(check.label) ?? 0) + 1);
+      // A check that did not apply is neither passed nor failed — it is not an issue.
+      if (check.applicable && !check.passed) {
+        const existing = issueCounts.get(check.id);
+        if (existing) existing.count++;
+        else issueCounts.set(check.id, { id: check.id, label: check.label, category: check.category, count: 1 });
       }
     }
   }
-  const issuesByType = [...issueCounts.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count);
+  const issuesByType = [...issueCounts.values()].sort((a, b) => b.count - a.count);
 
   const colorDistribution: Record<ScoreColor, number> = { red: 0, orange: 0, yellow: 0, green: 0 };
   for (const page of scored) {

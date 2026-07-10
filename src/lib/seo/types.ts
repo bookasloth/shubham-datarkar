@@ -81,6 +81,13 @@ export type PageAuditEntry = {
   scores: PageScores | null;
 };
 
+export type IssueCount = {
+  id: string;
+  label: string;
+  category: "seo" | "geo" | "aeo";
+  count: number;
+};
+
 export type AuditSummary = {
   totalPages: number;
   indexedPages: number;
@@ -93,7 +100,7 @@ export type AuditSummary = {
   avgSeoScore: number;
   avgGeoScore: number;
   avgAeoScore: number;
-  issuesByType: { label: string; count: number }[];
+  issuesByType: IssueCount[];
   colorDistribution: Record<ScoreColor, number>;
 };
 
