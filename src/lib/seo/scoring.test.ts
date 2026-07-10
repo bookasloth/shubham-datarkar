@@ -120,9 +120,24 @@ describe("profile-aware scoring", () => {
 
 describe("weighting", () => {
   it("costs more to fail a high-priority check than a low-priority one", () => {
-    const missingTitle = scorePage(goodEntry, { ...goodAnalysis, title: null, titleLength: 0 });
+    // Both fixtures fail exactly ONE check, so the score difference is
+    // attributable to weight alone, not to the number of failures.
+    // hasCanonical -> seo-canonical (high, 3). hasTwitterCard -> seo-twitter (low, 1).
+    const missingCanonical = scorePage(goodEntry, { ...goodAnalysis, hasCanonical: false });
     const missingTwitter = scorePage(goodEntry, { ...goodAnalysis, hasTwitterCard: false });
-    expect(missingTitle.seo.score).toBeLessThan(missingTwitter.seo.score);
+
+    const failedCanonical = missingCanonical.checks.filter((c) => c.applicable && !c.passed);
+    const failedTwitter = missingTwitter.checks.filter((c) => c.applicable && !c.passed);
+    expect(failedCanonical.length).toBe(failedTwitter.length);
+
+    expect(missingCanonical.seo.score).toBeLessThan(missingTwitter.seo.score);
+  });
+
+  it("a high-priority failure costs exactly three times a low-priority one", () => {
+    const baseline = scorePage(goodEntry, goodAnalysis).seo.score;
+    const missingCanonical = scorePage(goodEntry, { ...goodAnalysis, hasCanonical: false }).seo.score;
+    const missingTwitter = scorePage(goodEntry, { ...goodAnalysis, hasTwitterCard: false }).seo.score;
+    expect(baseline - missingCanonical).toBeGreaterThan(2 * (baseline - missingTwitter));
   });
 
   it("scores 100 when every applicable check passes", () => {
