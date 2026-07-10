@@ -6,7 +6,6 @@ import type { PageType } from "./routes";
 const entryOf = (route: string, pageType: PageType): PageEntry => ({
   route,
   filePath: "src/app/x/page.tsx",
-  isDynamic: false,
   isPrivate: false,
   inSitemap: true,
   pageType,

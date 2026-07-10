@@ -27,7 +27,11 @@ export function buildSummary(pages: PageAuditEntry[]): AuditSummary {
   const notIndexed = scored.filter((p) => !p.analysis.robotsIndex || !p.entry.inSitemap);
   const missingMetadata = scored.filter((p) => !p.analysis.title || !p.analysis.description);
   const missingSchema = scored.filter((p) => p.analysis.schemas.length === 0);
-  const missingOgImage = scored.filter((p) => p.analysis.ogImageSource !== "dedicated");
+  // `seo-og-image` only applies to pillars, so counting every page here would
+  // report a number the score does not agree with.
+  const missingOgImage = scored.filter(
+    (p) => p.entry.pageType === "pillar" && p.analysis.ogImageSource !== "dedicated",
+  );
 
   const avg = (pick: (p: ScoredPage) => number) =>
     scored.length > 0 ? Math.round(scored.reduce((sum, p) => sum + pick(p), 0) / scored.length) : 0;

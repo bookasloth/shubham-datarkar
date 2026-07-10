@@ -12,7 +12,6 @@ function makeEntry(route: string, overrides: Partial<PageEntry> = {}): PageEntry
   return {
     route,
     filePath: `src/app${route}/page.tsx`,
-    isDynamic: false,
     isPrivate: false,
     inSitemap: true,
     pageType: "pillar",
@@ -132,6 +131,21 @@ describe("buildSummary", () => {
     expect(summary.avgGeoScore).toBe(0);
     expect(summary.avgAeoScore).toBe(0);
     expect(summary.issuesByType).toEqual([]);
+  });
+
+  it("missingOgImage counts pillars only, matching the check that scores it", () => {
+    // `seo-og-image` has applies: onlyOn("pillar"). A hub without a dedicated OG
+    // image is not failing anything, so the KPI must not count it — otherwise the
+    // dashboard number contradicts the score beside it.
+    const noOgImage = { ogImageSource: "root-fallback" as const };
+    const pillar = makeScored("/about", noOgImage, { pageType: "pillar" });
+    const hub = makeScored("/blog", noOgImage, { pageType: "hub" });
+    const utility = makeScored("/contact", noOgImage, { pageType: "utility" });
+
+    const summary = buildSummary([pillar, hub, utility]);
+
+    expect(summary.totalPages).toBe(3);
+    expect(summary.missingOgImage).toBe(1);
   });
 
   it("an empty input does not divide by zero", () => {

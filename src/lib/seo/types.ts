@@ -2,8 +2,8 @@ import type { PageType } from "./routes";
 
 export type PageEntry = {
   route: string;
+  /** Source path. The analyzer no longer reads it; `noindex.test.ts` walks it to find ancestor layouts. */
   filePath: string;
-  isDynamic: boolean;
   isPrivate: boolean;
   inSitemap: boolean;
   pageType: PageType;
