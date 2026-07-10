@@ -17,7 +17,8 @@ function isScored(page: PageAuditEntry): page is ScoredPage {
   return page.analysis !== null && page.scores !== null;
 }
 
-function buildSummary(pages: PageAuditEntry[]): AuditSummary {
+/** Exported for unit testing: pure, and the null-handling below is worth pinning. */
+export function buildSummary(pages: PageAuditEntry[]): AuditSummary {
   const publicPages = pages.filter((p) => !p.entry.isPrivate);
   const scored = publicPages.filter(isScored);
   const unreachablePages = publicPages.length - scored.length;
