@@ -15,6 +15,7 @@ function revalidateEntity(key: EntityKey): void {
   switch (key) {
     case "case-studies":
       revalidatePath("/"); // home shows featured case studies
+      revalidatePath("/me");
       revalidatePath("/case-studies");
       revalidatePath("/case-studies/[slug]", "page");
       break;
@@ -28,6 +29,7 @@ function revalidateEntity(key: EntityKey): void {
       break;
     case "testimonials":
       revalidatePath("/"); // home marquee
+      revalidatePath("/me");
       revalidatePath("/testimonials");
       break;
     case "projects":

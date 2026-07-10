@@ -14,6 +14,7 @@ type PostFields = ReturnType<typeof fields>;
 /** Revalidate every public ISR page that renders posts, so edits go live now. */
 function revalidateBlog(): void {
   revalidatePath("/"); // home shows featured posts
+  revalidatePath("/me"); // /me shows them too
   revalidatePath("/blog");
   revalidatePath("/blog/[category]", "page");
   revalidatePath("/blog/[category]/[slug]", "page");

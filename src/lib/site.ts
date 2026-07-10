@@ -111,6 +111,7 @@ export const footerNav: NavGroup[] = [
     label: "Explore",
     items: [
       { label: "Home", href: "/" },
+      { label: "Me", href: "/me" },
       { label: "About", href: "/about" },
       { label: "My Story", href: "/my-story" },
       { label: "Now", href: "/now" },
