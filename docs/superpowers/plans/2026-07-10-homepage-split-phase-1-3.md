@@ -997,7 +997,7 @@ Push the branch and open a PR against `main`. Do not merge without the user's wo
 
 ## What this plan does not do
 
-- **The audit tool.** The middle rung between "read a post" and "book a call" is the whole point of the funnel, and it is not here. It needs a rendered-HTML fetcher that does not exist; `src/lib/seo/analyzer.ts` reads TSX from the local filesystem. Separate spec, separate plan. Until it ships, the hero CTA points at `/contact`.
+- **The audit tool.** The middle rung between "read a post" and "book a call" is the whole point of the funnel, and it is not here. It needs to score a stranger's URL, but `src/lib/seo/analyzer.ts` reads TSX from the local filesystem. The missing pieces — `src/lib/seo/fetch-html.ts` and `src/lib/seo/parse-html.ts` — **landed on `origin/main` during this planning session** via PR #108. Its own plan should adapt the analyzer to consume parsed HTML and wrap it in a public route; it must not rebuild the fetcher. Until it ships, the hero CTA points at `/contact`.
 - **Contextual CTAs.** `CtaBand` gains the props here; nothing yet chooses a case study by post category.
 - **Bottom-of-funnel content.** Money pages for "AEO agency India" and its neighbours. Content, not code.
 - **Lead qualification, scoring, and reply-speed SLAs.** There is no pipeline to triage yet. Attribution first; decide what to filter once something arrives.

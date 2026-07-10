@@ -129,7 +129,9 @@ Sub-changes:
 
 Public AEO/GEO audit: a visitor enters a URL, gets a real score, sees what an LLM sees. Email-gated for the full report. This is the first-touch capture, and it self-selects for people who own a site worth auditing.
 
-**This is not free.** The existing engine (`analyzer.ts`, `scoring.ts`, `audit.ts`) reads TSX source from the local filesystem. Auditing a third party's URL requires fetching and parsing rendered HTML — a module that does not exist. A file named `src/lib/seo/fetch-html.ts` was present untracked at the start of this session and has since been deleted by a concurrent session. Do not assume it exists. Scope this phase as: build the fetcher, adapt the analyzer to accept HTML rather than a source tree, then wrap it in a public route.
+**Cheaper than it looks.** The scoring engine (`analyzer.ts`, `scoring.ts`, `audit.ts`) reads TSX source from the local filesystem, so it cannot audit a stranger's URL as-is. Fetching and parsing rendered HTML is the missing capability — and `src/lib/seo/fetch-html.ts` and `src/lib/seo/parse-html.ts` **both landed on `origin/main` during this planning session** (PR #108, the separate SEO-audit-accuracy work, built in a worktree at `C:\Users\shubh\seo-wt`).
+
+Scope this phase as: adapt the analyzer to accept parsed HTML rather than a source tree, wrap it in a public route, and gate the full report on an email. Do not rebuild the fetcher or the parser. Re-read both modules before planning — they were written for a different caller.
 
 Because Phase 3's hero CTA depends on this, Phase 3 ships with the CTA pointed at `/contact` and is switched to the audit tool when Phase 4 lands.
 
