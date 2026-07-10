@@ -18,7 +18,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const tool = getTool(slug);
   if (!tool) return buildMetadata({ title: "Tool", path: `/tools/${slug}` });
-  return buildMetadata({ title: tool.name, description: tool.description, path: `/tools/${tool.slug}` });
+  return buildMetadata({
+    title: tool.seo?.title ?? tool.name,
+    description: tool.seo?.description ?? tool.description,
+    ogTitle: tool.seo?.ogTitle,
+    ogDescription: tool.seo?.ogDescription,
+    path: `/tools/${tool.slug}`,
+  });
 }
 
 export default async function ToolDetailPage({ params }: { params: Promise<{ slug: string }> }) {

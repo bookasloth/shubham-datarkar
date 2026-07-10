@@ -1,5 +1,22 @@
 /** Shared content types. Shapes mirror what a CMS (Sanity) would return. */
 
+/**
+ * Per-entity SEO copy. Every field is optional and falls back to the entity's
+ * own name/description, so adding this block breaks nothing. PR 4 fills it in.
+ */
+export type SeoFields = {
+  /** Keyword phrase, 15-40 chars, no brand name (the root template appends it). */
+  title?: string;
+  /** 120-160 chars. */
+  description?: string;
+  /** Social-card headline. Defaults to the branded full title. */
+  ogTitle?: string;
+  /** Social-card body. Defaults to `description`. */
+  ogDescription?: string;
+  /** Visible page heading, when it should differ from the entity name. */
+  h1?: string;
+};
+
 export type IconName = string;
 
 export type BlogCategory = "seo" | "ai" | "performance" | "content" | "saas" | "founder" | "build-in-public";
@@ -160,6 +177,7 @@ export type CaseStudy = {
   learnings: string;
   quote: { text: string; author: string; role: string };
   featured?: boolean;
+  seo?: SeoFields;
 };
 
 export type Service = {
@@ -172,6 +190,7 @@ export type Service = {
   deliverables: string[];
   process: { step: string; detail: string }[];
   startingAt: string;
+  seo?: SeoFields;
 };
 
 export type ProductStatus = "Live" | "Beta" | "Building" | "Concept";
@@ -186,6 +205,7 @@ export type Product = {
   category: string;
   status: ProductStatus;
   url?: string;
+  seo?: SeoFields;
 };
 
 export type Platform = {
@@ -221,6 +241,7 @@ export type Tool = {
   description: string;
   status: "Live" | "Beta" | "Soon";
   uses?: number;
+  seo?: SeoFields;
 };
 
 export type Testimonial = {

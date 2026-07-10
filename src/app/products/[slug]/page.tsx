@@ -34,7 +34,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const product = await getPublishedEntityBySlug<Product>("products", slug);
   if (!product) return buildMetadata({ title: "Product", path: `/products/${slug}` });
-  return buildMetadata({ title: `${product.name} — ${product.tagline}`, description: product.about.slice(0, 160), path: `/products/${product.slug}` });
+  return buildMetadata({
+    title: product.seo?.title ?? `${product.name} — ${product.tagline}`,
+    description: product.seo?.description ?? product.about.slice(0, 160),
+    ogTitle: product.seo?.ogTitle,
+    ogDescription: product.seo?.ogDescription,
+    path: `/products/${product.slug}`,
+  });
 }
 
 const bookASloth = {
