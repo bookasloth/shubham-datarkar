@@ -11,19 +11,19 @@ const goodEntry: PageEntry = {
 };
 
 const goodAnalysis: PageAnalysis = {
-  hasMetadata: true,
-  metadataSource: "buildMetadata",
-  title: "About Shubham Datarkar",
-  titleLength: 25,
-  description: "Shubham Datarkar is a founder, marketer, and copywriter building things that make other things easier.",
-  descriptionLength: 101,
+  title: "Founder, Marketer & Copywriter — Shubham Datarkar",
+  titleLength: 49,
+  description:
+    "Shubham Datarkar is a founder, marketer, and copywriter building things that make other things easier for the people who use them.",
+  descriptionLength: 130,
   hasCanonical: true,
   hasOgTags: true,
   hasTwitterCard: true,
   robotsIndex: true,
   robotsFollow: true,
-  schemas: ["breadcrumb", "profilePage"],
+  schemas: ["BreadcrumbList", "ProfilePage", "Person", "WebSite"],
   hasBreadcrumbs: true,
+  schemaParseErrors: 0,
   ogImageSource: "root-fallback",
   h1Count: 1,
   h2Count: 3,
@@ -34,6 +34,8 @@ const goodAnalysis: PageAnalysis = {
   externalLinks: 2,
   imageCount: 3,
   missingAltCount: 0,
+  listCount: 2,
+  mainRegionFound: true,
 };
 
 describe("scorePage", () => {

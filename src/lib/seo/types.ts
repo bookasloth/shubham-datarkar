@@ -6,11 +6,10 @@ export type PageEntry = {
   inSitemap: boolean;
 };
 
-export type MetadataSource = "buildMetadata" | "static-export" | "generateMetadata" | "none";
-
+/**
+ * Analysis derived from a route's rendered HTML.
+ */
 export type PageAnalysis = {
-  hasMetadata: boolean;
-  metadataSource: MetadataSource;
   title: string | null;
   titleLength: number;
   description: string | null;
@@ -21,8 +20,11 @@ export type PageAnalysis = {
   robotsIndex: boolean;
   robotsFollow: boolean;
 
+  /** schema.org `@type` values, e.g. "BreadcrumbList", "FAQPage". */
   schemas: string[];
   hasBreadcrumbs: boolean;
+  /** JSON-LD blocks that failed `JSON.parse`. */
+  schemaParseErrors: number;
 
   ogImageSource: "dedicated" | "root-fallback" | "none";
 
@@ -35,6 +37,10 @@ export type PageAnalysis = {
   externalLinks: number;
   imageCount: number;
   missingAltCount: number;
+  /** `<ul>`, `<ol>`, and `<table>` elements inside the main region. */
+  listCount: number;
+  /** False when no `<main id="main">` was found and metrics include chrome. */
+  mainRegionFound: boolean;
 };
 
 export type ScoreColor = "red" | "orange" | "yellow" | "green";
@@ -64,8 +70,8 @@ export type PageScores = {
 
 export type PageAuditEntry = {
   entry: PageEntry;
-  analysis: PageAnalysis;
-  scores: PageScores;
+  analysis: PageAnalysis | null;
+  scores: PageScores | null;
 };
 
 export type AuditSummary = {
@@ -75,6 +81,8 @@ export type AuditSummary = {
   missingMetadata: number;
   missingSchema: number;
   missingOgImage: number;
+  /** Routes whose HTML could not be fetched. Excluded from every average. */
+  unreachablePages: number;
   avgSeoScore: number;
   avgGeoScore: number;
   avgAeoScore: number;

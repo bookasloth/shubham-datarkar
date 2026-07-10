@@ -1,126 +1,60 @@
-import fs from "node:fs";
-import path from "node:path";
-import type { PageEntry, PageAnalysis, MetadataSource } from "./types";
-import { SCHEMA_FUNCTIONS } from "./constants";
+import { unstable_cache } from "next/cache";
+import type { PageEntry, PageAnalysis } from "./types";
+import { getRenderedHtml, SEO_AUDIT_TAG } from "./fetch-html";
+import { parseHtml } from "./parse-html";
 
-function readSource(filePath: string): string {
-  const abs = path.join(process.cwd(), filePath);
+/**
+ * Thrown when a route can't be fetched. `unstable_cache` only writes the cache
+ * after its callback resolves (see `cacheNewResult` in Next's unstable-cache.js:
+ * the write is `await`ed only on the success path). Throwing therefore keeps
+ * unfetchable routes OUT of the cache — a transient failure is retried on the
+ * next load instead of being pinned as "Could not fetch" for the whole hour.
+ */
+class UnfetchableRouteError extends Error {
+  name = "UnfetchableRouteError";
+}
+
+/**
+ * Cache the parsed `PageAnalysis` (small JSON), not the raw HTML (hundreds of
+ * KB per route × ~100 routes). Keyed on `origin` + `route`, which
+ * `unstable_cache` folds into the cache key via the call arguments. Tagged with
+ * `SEO_AUDIT_TAG` and given a 1h TTL, so the Re-run button's
+ * `updateTag(SEO_AUDIT_TAG)` genuinely invalidates it. Survives the pages'
+ * `export const dynamic = "force-dynamic"`: that sets `workStore.forceDynamic`,
+ * not `workStore.fetchCache`, and `unstable_cache` only bypasses the cache when
+ * `fetchCache === "force-no-store"`.
+ */
+const cachedAnalyze = unstable_cache(
+  async (origin: string, route: string): Promise<PageAnalysis> => {
+    const html = await getRenderedHtml(origin, route);
+    if (html === null) throw new UnfetchableRouteError();
+    return parseHtml(html);
+  },
+  ["seo-page-analysis"],
+  { tags: [SEO_AUDIT_TAG], revalidate: 3600 },
+);
+
+/**
+ * Analyses a route by fetching and parsing its rendered HTML, caching the
+ * parsed result for an hour behind `SEO_AUDIT_TAG`.
+ *
+ * Returns `null` when the route could not be fetched — an unexpanded dynamic
+ * template such as `/community/p/[id]` is not a real URL, and a dev server may
+ * be down. Callers must not treat `null` as a zero score. Unfetchable routes
+ * are not cached (see `UnfetchableRouteError`), so they retry next load.
+ */
+export async function analyzePage(
+  entry: PageEntry,
+  origin: string,
+): Promise<PageAnalysis | null> {
   try {
-    return fs.readFileSync(abs, "utf-8");
-  } catch {
-    return "";
+    return await cachedAnalyze(origin, entry.route);
+  } catch (error) {
+    // Only an unfetchable route becomes `null`. Anything else — a parser bug, a
+    // missing incremental cache — must surface, not masquerade as "Could not
+    // fetch". Reporting a real defect as a benign state is the exact failure
+    // this analyzer was rewritten to remove.
+    if (error instanceof UnfetchableRouteError) return null;
+    throw error;
   }
-}
-
-function detectMetadataSource(source: string): MetadataSource {
-  if (/export\s+(async\s+)?function\s+generateMetadata/.test(source)) return "generateMetadata";
-  if (/buildMetadata\s*\(/.test(source)) return "buildMetadata";
-  if (/export\s+const\s+metadata/.test(source)) return "static-export";
-  return "none";
-}
-
-function extractBuildMetadataArg(source: string, key: string): string | null {
-  const pattern = new RegExp(`${key}\\s*:\\s*["'\`]([^"'\`]+)["'\`]`);
-  const buildCall = source.match(/buildMetadata\s*\(\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}\s*\)/);
-  if (!buildCall) return null;
-  const match = buildCall[1].match(pattern);
-  return match?.[1] ?? null;
-}
-
-function extractStaticMetadataField(source: string, key: string): string | null {
-  const metadataBlock = source.match(/export\s+const\s+metadata[^=]*=\s*\{([^}]*(?:\{[^}]*\}[^}]*)*)\}/);
-  if (!metadataBlock) return null;
-  const pattern = new RegExp(`${key}\\s*:\\s*["'\`]([^"'\`]+)["'\`]`);
-  const match = metadataBlock[1].match(pattern);
-  return match?.[1] ?? null;
-}
-
-function detectSchemas(source: string): string[] {
-  return SCHEMA_FUNCTIONS.filter((fn) => source.includes(fn));
-}
-
-function checkOgImage(filePath: string): "dedicated" | "root-fallback" | "none" {
-  const dir = path.join(process.cwd(), path.dirname(filePath));
-  const ogFile = path.join(dir, "opengraph-image.tsx");
-  if (fs.existsSync(ogFile)) return "dedicated";
-  const rootOg = path.join(process.cwd(), "src", "app", "opengraph-image.tsx");
-  if (fs.existsSync(rootOg)) return "root-fallback";
-  return "none";
-}
-
-function countPattern(source: string, pattern: RegExp): number {
-  return (source.match(pattern) || []).length;
-}
-
-function estimateWordCount(source: string): number {
-  // Strip imports, JSX tags, and code constructs; count remaining words
-  const text = source
-    .replace(/import\s+.*?from\s+["'].*?["'];?/g, "")
-    .replace(/export\s+(default\s+)?(async\s+)?function\s+\w+/g, "")
-    .replace(/export\s+const\s+\w+/g, "")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/\{[^}]*\}/g, " ")
-    .replace(/className="[^"]*"/g, "")
-    .replace(/["'`]([^"'`]{2,})["'`]/g, "$1");
-  const words = text.split(/\s+/).filter((w) => w.length > 1 && !/^[{}()[\];,.<>=!&|?:]+$/.test(w));
-  return Math.round(words.length * 0.4); // discount code tokens
-}
-
-function countMissingAlt(source: string): number {
-  const imgTags = source.match(/<(?:img|Image)\s[^>]*>/g) || [];
-  return imgTags.filter((tag) => !/alt\s*=/.test(tag)).length;
-}
-
-export async function analyzePage(entry: PageEntry): Promise<PageAnalysis> {
-  const source = readSource(entry.filePath);
-  const metadataSource = detectMetadataSource(source);
-
-  let title: string | null = null;
-  let description: string | null = null;
-
-  if (metadataSource === "buildMetadata") {
-    title = extractBuildMetadataArg(source, "title");
-    description = extractBuildMetadataArg(source, "description");
-  } else if (metadataSource === "static-export") {
-    title = extractStaticMetadataField(source, "title");
-    description = extractStaticMetadataField(source, "description");
-  }
-  // generateMetadata: can't extract static values, leave null
-
-  const hasMetadata = metadataSource !== "none";
-  const hasBuildMetadata = metadataSource === "buildMetadata";
-
-  const schemas = detectSchemas(source);
-
-  const wordCount = estimateWordCount(source);
-
-  return {
-    hasMetadata,
-    metadataSource,
-    title,
-    titleLength: title?.length ?? 0,
-    description,
-    descriptionLength: description?.length ?? 0,
-    // buildMetadata always sets canonical, OG, and Twitter
-    hasCanonical: hasBuildMetadata || metadataSource === "generateMetadata",
-    hasOgTags: hasBuildMetadata || metadataSource === "generateMetadata",
-    hasTwitterCard: hasBuildMetadata || metadataSource === "generateMetadata",
-    robotsIndex: !source.includes("noIndex: true") && !source.includes("index: false"),
-    robotsFollow: !source.includes("follow: false"),
-
-    schemas: schemas.map((fn) => fn.replace("Schema", "")),
-    hasBreadcrumbs: schemas.includes("breadcrumbSchema"),
-
-    ogImageSource: checkOgImage(entry.filePath),
-
-    h1Count: countPattern(source, /<h1[\s>]/gi),
-    h2Count: countPattern(source, /<h2[\s>]/gi),
-    h3Count: countPattern(source, /<h3[\s>]/gi),
-    wordCount,
-    readingTime: Math.max(1, Math.round(wordCount / 200)),
-    internalLinks: countPattern(source, /href=["']\/[^"']*/g),
-    externalLinks: countPattern(source, /href=["']https?:\/\//g),
-    imageCount: countPattern(source, /<(?:img|Image)[\s>]/gi),
-    missingAltCount: countMissingAlt(source),
-  };
 }

@@ -9,9 +9,9 @@ type Check = {
 };
 
 const SEO_CHECKS: Check[] = [
-  { id: "seo-has-title", label: "Has title", test: (_, a) => !!a.title || a.metadataSource === "generateMetadata", priority: "high" },
+  { id: "seo-has-title", label: "Has title", test: (_, a) => !!a.title, priority: "high" },
   { id: "seo-title-length", label: "Title length 30-60 chars", test: (_, a) => a.titleLength >= 30 && a.titleLength <= 60, priority: "medium" },
-  { id: "seo-has-desc", label: "Has description", test: (_, a) => !!a.description || a.metadataSource === "generateMetadata", priority: "high" },
+  { id: "seo-has-desc", label: "Has description", test: (_, a) => !!a.description, priority: "high" },
   { id: "seo-desc-length", label: "Description length 120-160 chars", test: (_, a) => a.descriptionLength >= 120 && a.descriptionLength <= 160, priority: "medium" },
   { id: "seo-canonical", label: "Has canonical URL", test: (_, a) => a.hasCanonical, priority: "high" },
   { id: "seo-og", label: "Has Open Graph tags", test: (_, a) => a.hasOgTags, priority: "medium" },
@@ -23,26 +23,29 @@ const SEO_CHECKS: Check[] = [
   { id: "seo-sitemap", label: "In sitemap", test: (e) => e.inSitemap, priority: "high" },
 ];
 
+const ENTITY_TYPES = ["Article", "Service", "Product", "ProfilePage", "Organization"];
+const SITE_WIDE_TYPES = ["Person", "WebSite", "BreadcrumbList"];
+
 const GEO_CHECKS: Check[] = [
   { id: "geo-schema", label: "Has structured data", test: (_, a) => a.schemas.length > 0, priority: "high" },
-  { id: "geo-author", label: "Has author/person schema", test: (_, a) => a.schemas.some((s) => ["profilePage", "person"].includes(s.toLowerCase())), priority: "medium" },
-  { id: "geo-faq", label: "Has FAQ schema", test: (_, a) => a.schemas.includes("faq"), priority: "medium" },
+  { id: "geo-author", label: "Has author/person schema", test: (_, a) => a.schemas.some((s) => ["ProfilePage", "Person"].includes(s)), priority: "medium" },
+  { id: "geo-faq", label: "Has FAQ schema", test: (_, a) => a.schemas.includes("FAQPage"), priority: "medium" },
   { id: "geo-breadcrumbs", label: "Has breadcrumbs", test: (_, a) => a.hasBreadcrumbs, priority: "medium" },
-  { id: "geo-description", label: "Has description", test: (_, a) => a.descriptionLength > 0 || a.metadataSource === "generateMetadata", priority: "high" },
-  { id: "geo-entity-schema", label: "Has entity-relevant schema", test: (_, a) => a.schemas.some((s) => ["article", "service", "product", "profilePage", "organization"].includes(s)), priority: "medium" },
+  { id: "geo-description", label: "Has description", test: (_, a) => a.descriptionLength > 0, priority: "high" },
+  { id: "geo-entity-schema", label: "Has entity-relevant schema", test: (_, a) => a.schemas.some((s) => ENTITY_TYPES.includes(s)), priority: "medium" },
   { id: "geo-word-count", label: "Word count > 300", test: (_, a) => a.wordCount > 300, priority: "medium" },
   { id: "geo-internal-links", label: "Has internal links > 2", test: (_, a) => a.internalLinks > 2, priority: "low" },
-  { id: "geo-content-schema", label: "Content type schema matches page", test: (_, a) => a.schemas.length > 1, priority: "low" },
+  { id: "geo-content-schema", label: "Content type schema matches page", test: (_, a) => a.schemas.some((s) => !SITE_WIDE_TYPES.includes(s)), priority: "low" },
   { id: "geo-sitemap", label: "In sitemap", test: (e) => e.inSitemap, priority: "high" },
 ];
 
 const AEO_CHECKS: Check[] = [
-  { id: "aeo-faq", label: "Has FAQ schema", test: (_, a) => a.schemas.includes("faq"), priority: "high" },
+  { id: "aeo-faq", label: "Has FAQ schema", test: (_, a) => a.schemas.includes("FAQPage"), priority: "high" },
   { id: "aeo-breadcrumbs", label: "Has breadcrumbs", test: (_, a) => a.hasBreadcrumbs, priority: "medium" },
   { id: "aeo-headings", label: "Has structured headings (H1 + H2s)", test: (_, a) => a.h1Count >= 1 && a.h2Count >= 1, priority: "high" },
   { id: "aeo-word-count", label: "Word count > 200", test: (_, a) => a.wordCount > 200, priority: "medium" },
-  { id: "aeo-description", label: "Has description", test: (_, a) => a.descriptionLength > 0 || a.metadataSource === "generateMetadata", priority: "medium" },
-  { id: "aeo-lists", label: "Has list or table patterns", test: (_, a) => a.h2Count >= 2 || a.internalLinks > 3, priority: "low" },
+  { id: "aeo-description", label: "Has description", test: (_, a) => a.descriptionLength > 0, priority: "medium" },
+  { id: "aeo-lists", label: "Has list or table patterns", test: (_, a) => a.listCount > 0, priority: "low" },
   { id: "aeo-h2-count", label: "H2 count >= 2", test: (_, a) => a.h2Count >= 2, priority: "medium" },
   { id: "aeo-schema", label: "Has schema.org markup", test: (_, a) => a.schemas.length > 0, priority: "high" },
 ];

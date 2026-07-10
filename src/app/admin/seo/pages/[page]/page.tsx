@@ -19,7 +19,11 @@ export default async function AdminSeoPageDetail({
     <div>
       <PageHeader
         title={route}
-        description={`SEO: ${data.scores.seo.score}% | GEO: ${data.scores.geo.score}% | AEO: ${data.scores.aeo.score}%`}
+        description={
+          data.scores
+            ? `SEO: ${data.scores.seo.score}% | GEO: ${data.scores.geo.score}% | AEO: ${data.scores.aeo.score}%`
+            : "Could not fetch this route"
+        }
       />
       <PageDetail data={data} />
     </div>
