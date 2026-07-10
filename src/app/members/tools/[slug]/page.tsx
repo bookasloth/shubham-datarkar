@@ -1,8 +1,11 @@
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { getToolBySlug } from "@/lib/members/queries";
 import { ToolRenderer } from "@/components/members/tools/registry";
+
+export const metadata = buildMetadata({ title: "Tool", path: "/members/tools", noIndex: true });
 
 export default async function ToolPage({
   params,

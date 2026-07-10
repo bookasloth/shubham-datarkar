@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import GamesHeader from "@/components/games/GamesHeader";
 
 export const metadata: Metadata = {
-  title: "Games · Shubham Datarkar",
+  // No brand here: the root layout's title.template appends " — Shubham Datarkar".
+  title: "Games",
   description: "Daily word and code puzzles — Alfazy and Hit and Blow. A new puzzle every day.",
 };
 

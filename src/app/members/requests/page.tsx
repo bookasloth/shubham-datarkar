@@ -1,10 +1,11 @@
+import { buildMetadata } from "@/lib/seo";
 import { requireMember } from "@/lib/members/session";
 import { getMyRequests } from "@/lib/members/member-queries";
 import { RequestForm } from "@/components/members/request-form";
 import { formatDate } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
-export const metadata = { title: "Requests" };
+export const metadata = buildMetadata({ title: "Requests", path: "/members/requests", noIndex: true });
 
 const STATUS_STYLES: Record<string, string> = {
   open: "bg-accent text-muted-foreground",

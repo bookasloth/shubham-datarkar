@@ -30,6 +30,10 @@ type DbRow = {
   updated_at: string;
 };
 
+// Not selecting seo_title/og_title/og_description yet: this constant feeds
+// every blog query below, and those queries catch-and-return-empty on error.
+// The columns don't exist until migration 20260711000002 is applied — PR 4
+// adds them here (and back to toPost) once it has run.
 const POST_COLS = "slug,title,excerpt,category,tags,words,featured,body,published_at,updated_at";
 
 function toPost(r: DbRow): Post {

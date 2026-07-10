@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import { isToday, isTodayOrYesterday } from "@/lib/daily";
 import { getMemberContext } from "@/lib/members/session";
 import { requireGameUser } from "@/lib/games/session";
@@ -7,6 +8,8 @@ import IntegraBoard from "@/components/games/IntegraBoard";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
 import { equationForPuzzle } from "@/lib/games/integra-puzzles";
 import { getMyIntegraStats } from "@/lib/games/profile-queries";
+
+export const metadata = buildMetadata({ title: "Integra", path: "/games/integra", noIndex: true });
 
 export default async function IntegraArchive({ params }: { params: Promise<{ puzzle: string }> }) {
   const { puzzle } = await params;

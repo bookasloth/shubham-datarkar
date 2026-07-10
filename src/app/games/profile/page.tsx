@@ -1,8 +1,11 @@
+import { buildMetadata } from "@/lib/seo";
 import { requireGameUser } from "@/lib/games/session";
 import { getMyStats, getMyRecent, getMyUsername } from "@/lib/games/profile-queries";
 import UsernameForm from "@/components/games/UsernameForm";
 
 const NAMES: Record<string, string> = { alfazy: "Alfazy", hit_and_blow: "Hit and Blow", integra: "Integra" };
+
+export const metadata = buildMetadata({ title: "Profile", path: "/games/profile", noIndex: true });
 
 export default async function ProfilePage() {
   await requireGameUser("/games/profile");

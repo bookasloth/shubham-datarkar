@@ -1,8 +1,9 @@
+import { buildMetadata } from "@/lib/seo";
 import { getMemberContext } from "@/lib/members/session";
 import { listResources } from "@/lib/resources/queries";
 import { ResourceGrid } from "@/components/members/resource-grid";
 
-export const metadata = { title: "Latest" };
+export const metadata = buildMetadata({ title: "Latest", path: "/members/latest", noIndex: true });
 
 export default async function LatestPage() {
   const [{ capabilities }, resources] = await Promise.all([

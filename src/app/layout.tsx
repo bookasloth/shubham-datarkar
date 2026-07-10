@@ -34,6 +34,12 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   ...buildMetadata(),
+  // Child pages export a bare keyword phrase; this appends the brand.
+  // `buildMetadata({ titleAbsolute: true })` opts a page out (see /).
+  title: {
+    default: `${site.name} · ${site.alias}`,
+    template: `%s — ${site.name}`,
+  },
   applicationName: site.name,
   authors: [{ name: site.name, url: site.url }],
   creator: site.name,

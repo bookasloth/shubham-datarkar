@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { puzzleNumberFor } from "@/lib/daily";
 import { weekBoundsIST, monthBoundsIST } from "@/lib/games/periods";
@@ -21,6 +22,8 @@ function tab(active: boolean) {
       : "text-muted-foreground hover:text-foreground",
   );
 }
+
+export const metadata = buildMetadata({ title: "Leaderboard", path: "/games/leaderboard", noIndex: true });
 
 export default async function LeaderboardPage({
   searchParams,

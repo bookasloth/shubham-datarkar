@@ -88,7 +88,6 @@ export async function discoverPages(
           pages.push({
             route: expanded.route,
             filePath: relFilePath,
-            isDynamic: true,
             isPrivate: isPrivate(expanded.route),
             inSitemap: isIndexable(expanded.route),
             pageType: pageTypeOf(expanded.route),
@@ -99,7 +98,6 @@ export async function discoverPages(
         pages.push({
           route,
           filePath: relFilePath,
-          isDynamic: true,
           isPrivate: isPrivate(route),
           inSitemap: isIndexable(route),
           pageType: pageTypeOf(route),
@@ -109,7 +107,6 @@ export async function discoverPages(
       pages.push({
         route,
         filePath: relFilePath,
-        isDynamic: false,
         isPrivate: isPrivate(route),
         inSitemap: isIndexable(route),
         pageType: pageTypeOf(route),

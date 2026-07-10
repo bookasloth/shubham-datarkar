@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { requireMember } from "@/lib/members/session";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
@@ -8,7 +9,7 @@ import { getSubscriptionStatus } from "@/lib/subscribers/queries";
 import { getMyDonations } from "@/lib/support/queries";
 import { NewsletterPrefs } from "@/components/members/newsletter-prefs";
 
-export const metadata = { title: "Account" };
+export const metadata = buildMetadata({ title: "Account", path: "/members/account", noIndex: true });
 
 function formatDay(iso: string): string {
   return new Date(iso).toLocaleDateString("en-IN", {

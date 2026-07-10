@@ -3,8 +3,20 @@ import { site, sameAs } from "@/lib/site";
 import type { Service, Product, Testimonial } from "@/lib/data/types";
 
 type SeoInput = {
+  /**
+   * Keyword phrase, 15-40 chars, WITHOUT the brand name. The root layout's
+   * `title.template` appends " — Shubham Datarkar" (19 chars), landing the
+   * rendered <title> in the 30-60 window the audit checks. Writing the brand
+   * into this argument double-brands the tag.
+   */
   title?: string;
   description?: string;
+  /** Social-card headline. Defaults to the branded full title. */
+  ogTitle?: string;
+  /** Social-card body. Defaults to `description`. */
+  ogDescription?: string;
+  /** Opt out of the root title template. The homepage needs this. */
+  titleAbsolute?: boolean;
   path?: string;
   type?: "website" | "article" | "profile";
   publishedTime?: string;
@@ -20,6 +32,9 @@ type SeoInput = {
 export function buildMetadata({
   title,
   description = site.description,
+  ogTitle,
+  ogDescription,
+  titleAbsolute,
   path = "/",
   type = "website",
   publishedTime,
@@ -28,9 +43,12 @@ export function buildMetadata({
 }: SeoInput = {}): Metadata {
   const url = `${site.url}${path}`;
   const fullTitle = title ? `${title} — ${site.name}` : `${site.name} · ${site.alias}`;
+  const socialTitle = ogTitle ?? fullTitle;
+  const socialDescription = ogDescription ?? description;
+  const plainTitle = title ?? `${site.name} · ${site.alias}`;
 
   return {
-    title: title ?? `${site.name} · ${site.alias}`,
+    title: titleAbsolute ? { absolute: plainTitle } : plainTitle,
     description,
     alternates: { canonical: url },
     robots: noIndex
@@ -39,16 +57,16 @@ export function buildMetadata({
     openGraph: {
       type: type === "profile" ? "profile" : type,
       url,
-      title: fullTitle,
-      description,
+      title: socialTitle,
+      description: socialDescription,
       siteName: site.name,
       ...(publishedTime ? { publishedTime } : {}),
       ...(modifiedTime ? { modifiedTime } : {}),
     },
     twitter: {
       card: "summary_large_image",
-      title: fullTitle,
-      description,
+      title: socialTitle,
+      description: socialDescription,
       creator: "@sndatarkar",
     },
   };

@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import { isToday, isTodayOrYesterday } from "@/lib/daily";
 import { getMemberContext } from "@/lib/members/session";
 import { requireGameUser } from "@/lib/games/session";
@@ -7,6 +8,8 @@ import AlfazyBoard from "@/components/games/AlfazyBoard";
 import AlfazyThemeProvider from "@/components/games/AlfazyThemeProvider";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
 import { wordForPuzzle } from "@/lib/games/alfazy-puzzles";
+
+export const metadata = buildMetadata({ title: "Alfazy", path: "/games/alfazy", noIndex: true });
 
 export default async function AlfazyArchive({ params }: { params: Promise<{ puzzle: string }> }) {
   const { puzzle } = await params;

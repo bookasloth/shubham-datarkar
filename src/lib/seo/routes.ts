@@ -9,8 +9,16 @@
 
 export type PageType = "pillar" | "hub" | "utility" | "app";
 
-/** Subtrees that are entirely application UI. */
-const APP_PREFIXES = [
+/**
+ * Subtrees that are entirely application UI, and that robots.txt disallows.
+ *
+ * Only these. App routes under public subtrees (`/games/login`,
+ * `/members/account`) must stay crawlable: Googlebot cannot read a `noindex`
+ * tag on a URL it is forbidden to fetch, so disallowing them would leave them
+ * eligible for URL-only indexing from inbound links. They carry `noIndex`
+ * metadata instead.
+ */
+export const ROBOTS_DISALLOW_PREFIXES = [
   "/admin",
   "/dashboard",
   "/login",
@@ -18,13 +26,18 @@ const APP_PREFIXES = [
   "/profile",
   "/success",
   "/search",
-];
+] as const;
 
 /** Application routes sitting under an otherwise-public subtree. */
 const APP_ROUTES = new Set([
   "/games/login",
   "/games/profile",
   "/games/leaderboard",
+  // `/members` itself is the member dashboard: its page calls requireMember() and
+  // its layout already serves `robots: { index: false }`. Classifying it as a hub
+  // put an auth-gated, noindexed page into the sitemap — the same contradiction
+  // PR #109 removed everywhere else.
+  "/members",
   "/members/login",
   "/members/account",
   "/members/bookmarks",
@@ -60,7 +73,10 @@ const UTILITY_ROUTES = new Set([
   "/terms-of-use",
 ]);
 
-const PILLAR_ROUTES = new Set(["/", "/about", "/my-story", "/philosophy", "/speaking"]);
+// `/me` is the founder-story home, split out of `/` in PR #110. It is long-form
+// content, not an index page, so it faces the pillar checks (word count,
+// dedicated OG image) rather than falling through to the `hub` default.
+const PILLAR_ROUTES = new Set(["/", "/me", "/about", "/my-story", "/philosophy", "/speaking"]);
 
 const PILLAR_PATTERNS = [
   /^\/(?:services|products|case-studies)\/[^/]+$/,
@@ -69,7 +85,7 @@ const PILLAR_PATTERNS = [
 ];
 
 export function pageTypeOf(route: string): PageType {
-  if (APP_PREFIXES.some((p) => route === p || route.startsWith(`${p}/`))) return "app";
+  if (ROBOTS_DISALLOW_PREFIXES.some((p) => route === p || route.startsWith(`${p}/`))) return "app";
   if (APP_ROUTES.has(route)) return "app";
   if (APP_PATTERNS.some((re) => re.test(route))) return "app";
   if (UTILITY_ROUTES.has(route)) return "utility";

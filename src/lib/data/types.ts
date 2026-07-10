@@ -1,5 +1,22 @@
 /** Shared content types. Shapes mirror what a CMS (Sanity) would return. */
 
+/**
+ * Per-entity SEO copy. Every field is optional and falls back to the entity's
+ * own name/description, so adding this block breaks nothing. PR 4 fills it in.
+ */
+export type SeoFields = {
+  /** Keyword phrase, 15-40 chars, no brand name (the root template appends it). */
+  title?: string;
+  /** 120-160 chars. */
+  description?: string;
+  /** Social-card headline. Defaults to the branded full title. */
+  ogTitle?: string;
+  /** Social-card body. Defaults to `description`. */
+  ogDescription?: string;
+  /** Visible page heading, when it should differ from the entity name. */
+  h1?: string;
+};
+
 export type IconName = string;
 
 export type BlogCategory = "seo" | "ai" | "performance" | "content" | "saas" | "founder" | "build-in-public";
@@ -128,6 +145,16 @@ export type Post = {
   words: number;
   featured?: boolean;
   body: ContentBlock[];
+  // seoTitle/ogTitle/ogDescription: always undefined until migration
+  // 20260711000002 is applied AND PR 4 adds the columns to POST_COLS in
+  // src/lib/blog/queries.ts. The fields stay here now so the editor and
+  // generateMetadata wiring have a stable interface to fill in later.
+  /** Keyword <title> phrase; falls back to `title`. See SeoFields. */
+  seoTitle?: string;
+  /** Social-card headline; falls back to the branded full title. */
+  ogTitle?: string;
+  /** Social-card body; falls back to `excerpt`. */
+  ogDescription?: string;
 };
 
 export type Project = {
@@ -160,6 +187,7 @@ export type CaseStudy = {
   learnings: string;
   quote: { text: string; author: string; role: string };
   featured?: boolean;
+  seo?: SeoFields;
 };
 
 export type Service = {
@@ -172,6 +200,7 @@ export type Service = {
   deliverables: string[];
   process: { step: string; detail: string }[];
   startingAt: string;
+  seo?: SeoFields;
 };
 
 export type ProductStatus = "Live" | "Beta" | "Building" | "Concept";
@@ -186,6 +215,7 @@ export type Product = {
   category: string;
   status: ProductStatus;
   url?: string;
+  seo?: SeoFields;
 };
 
 export type Platform = {
@@ -221,6 +251,7 @@ export type Tool = {
   description: string;
   status: "Live" | "Beta" | "Soon";
   uses?: number;
+  seo?: SeoFields;
 };
 
 export type Testimonial = {

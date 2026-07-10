@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowLeft, ArrowRight } from "lucide-react";
@@ -12,7 +13,7 @@ import {
 import { FilterBar } from "@/components/members/filter-bar";
 import { ResourceGrid } from "@/components/members/resource-grid";
 
-export const metadata = { title: "Explore" };
+export const metadata = buildMetadata({ title: "Explore", path: "/members/explore", noIndex: true });
 
 type Params = {
   q?: string;

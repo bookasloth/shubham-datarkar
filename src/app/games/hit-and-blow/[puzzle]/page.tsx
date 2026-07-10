@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import { isToday, isTodayOrYesterday } from "@/lib/daily";
 import { getMemberContext } from "@/lib/members/session";
 import { requireGameUser } from "@/lib/games/session";
@@ -5,6 +6,8 @@ import { can } from "@/lib/members/capabilities";
 import { notFound } from "next/navigation";
 import HitAndBlowBoard from "@/components/games/HitAndBlowBoard";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
+
+export const metadata = buildMetadata({ title: "Hit and Blow", path: "/games/hit-and-blow", noIndex: true });
 
 export default async function HitAndBlowArchive({ params }: { params: Promise<{ puzzle: string }> }) {
   const { puzzle } = await params;

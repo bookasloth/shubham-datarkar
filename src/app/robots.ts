@@ -1,13 +1,18 @@
 import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
+import { ROBOTS_DISALLOW_PREFIXES } from "@/lib/seo/routes";
 
 export default function robots(): MetadataRoute.Robots {
-  const privatePaths = ["/admin", "/dashboard", "/profile", "/settings", "/login", "/success", "/search"];
+  // Only the server-private subtrees are disallowed. Other app routes
+  // (/games/login, /members/account, ...) stay crawlable so Googlebot can read
+  // the `noindex` each of them serves — a disallowed URL is never fetched, so
+  // its noindex is never seen, and it can still be indexed URL-only.
+  const disallow = [...ROBOTS_DISALLOW_PREFIXES];
   return {
     rules: [
-      { userAgent: "*", allow: "/", disallow: privatePaths },
+      { userAgent: "*", allow: "/", disallow },
       // AI crawlers are welcome on content, kept off private/app routes.
-      { userAgent: ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"], allow: "/", disallow: privatePaths },
+      { userAgent: ["GPTBot", "ClaudeBot", "PerplexityBot", "Google-Extended"], allow: "/", disallow },
     ],
     sitemap: `${site.url}/sitemap.xml`,
     host: site.url,

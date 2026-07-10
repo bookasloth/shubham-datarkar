@@ -1,8 +1,9 @@
+import { buildMetadata } from "@/lib/seo";
 import { requireMember } from "@/lib/members/session";
 import { getBookmarkedResources } from "@/lib/members/member-queries";
 import { ResourceGrid } from "@/components/members/resource-grid";
 
-export const metadata = { title: "Bookmarks" };
+export const metadata = buildMetadata({ title: "Bookmarks", path: "/members/bookmarks", noIndex: true });
 
 export default async function BookmarksPage() {
   const { capabilities } = await requireMember("/members/bookmarks");

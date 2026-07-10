@@ -1,3 +1,4 @@
+import { buildMetadata } from "@/lib/seo";
 import { notFound } from "next/navigation";
 import { ArrowRight, Clock } from "lucide-react";
 import { getMemberContext } from "@/lib/members/session";
@@ -18,6 +19,8 @@ import { BookmarkButton } from "@/components/members/bookmark-button";
 import { ProgressTracker } from "@/components/members/progress-tracker";
 import { TypeIcon } from "@/components/members/type-icons";
 import Link from "next/link";
+
+export const metadata = buildMetadata({ title: "Resource", path: "/members/resources", noIndex: true });
 
 export default async function ResourcePage({
   params,

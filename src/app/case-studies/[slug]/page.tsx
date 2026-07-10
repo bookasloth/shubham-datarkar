@@ -30,8 +30,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const study = await getPublishedEntityBySlug<CaseStudy>("case_studies", slug);
   if (!study) return buildMetadata({ title: "Case Study", path: `/case-studies/${slug}` });
   return buildMetadata({
-    title: study.title,
-    description: `${study.client} · ${study.heroMetric.value} ${study.heroMetric.label}. ${study.problem.slice(0, 120)}`,
+    title: study.seo?.title ?? study.title,
+    description:
+      study.seo?.description ??
+      `${study.client} · ${study.heroMetric.value} ${study.heroMetric.label}. ${study.problem.slice(0, 120)}`,
+    ogTitle: study.seo?.ogTitle,
+    ogDescription: study.seo?.ogDescription,
     path: `/case-studies/${study.slug}`,
     type: "article",
   });

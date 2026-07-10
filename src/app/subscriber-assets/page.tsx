@@ -9,6 +9,7 @@ export const metadata = buildMetadata({
   title: "Subscriber Assets",
   description: "Exclusive frameworks, templates, and resources for newsletter subscribers.",
   path: "/subscriber-assets",
+  noIndex: true,
 });
 
 const ASSETS = [

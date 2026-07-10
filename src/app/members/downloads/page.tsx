@@ -1,8 +1,9 @@
+import { buildMetadata } from "@/lib/seo";
 import { requireMember } from "@/lib/members/session";
 import { getMyDownloads } from "@/lib/members/member-queries";
 import { ResourceGrid } from "@/components/members/resource-grid";
 
-export const metadata = { title: "Downloads" };
+export const metadata = buildMetadata({ title: "Downloads", path: "/members/downloads", noIndex: true });
 
 export default async function DownloadsPage() {
   const { capabilities, user } = await requireMember("/members/downloads");

@@ -30,7 +30,13 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const service = await getPublishedEntityBySlug<Service>("services", slug);
   if (!service) return buildMetadata({ title: "Service", path: `/services/${slug}` });
-  return buildMetadata({ title: service.name, description: service.outcome, path: `/services/${service.slug}` });
+  return buildMetadata({
+    title: service.seo?.title ?? service.name,
+    description: service.seo?.description ?? service.outcome,
+    ogTitle: service.seo?.ogTitle,
+    ogDescription: service.seo?.ogDescription,
+    path: `/services/${service.slug}`,
+  });
 }
 
 const serviceFaqs = faqs.filter((f) => f.group === "Working together" || f.group === "Pricing").slice(0, 5);
