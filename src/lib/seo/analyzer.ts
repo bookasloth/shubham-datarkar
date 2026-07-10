@@ -10,7 +10,9 @@ import { parseHtml } from "./parse-html";
  * unfetchable routes OUT of the cache — a transient failure is retried on the
  * next load instead of being pinned as "Could not fetch" for the whole hour.
  */
-class UnfetchableRouteError extends Error {}
+class UnfetchableRouteError extends Error {
+  name = "UnfetchableRouteError";
+}
 
 /**
  * Cache the parsed `PageAnalysis` (small JSON), not the raw HTML (hundreds of
@@ -47,7 +49,12 @@ export async function analyzePage(
 ): Promise<PageAnalysis | null> {
   try {
     return await cachedAnalyze(origin, entry.route);
-  } catch {
-    return null;
+  } catch (error) {
+    // Only an unfetchable route becomes `null`. Anything else — a parser bug, a
+    // missing incremental cache — must surface, not masquerade as "Could not
+    // fetch". Reporting a real defect as a benign state is the exact failure
+    // this analyzer was rewritten to remove.
+    if (error instanceof UnfetchableRouteError) return null;
+    throw error;
   }
 }
