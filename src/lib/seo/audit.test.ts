@@ -147,8 +147,15 @@ describe("buildSummary", () => {
 
 describe("issuesByType", () => {
   it("keys on check id, so no issue can exceed the page count", () => {
-    const pages = [makeScored("/a"), makeScored("/b")];
+    // The fixture must produce real failures, or the loop below iterates an empty
+    // array and asserts nothing. /services/* makes the FAQ checks applicable and
+    // the default analysis omits "FAQPage", so geo-faq and aeo-faq both fail on
+    // both pages. Under the old label key those two collapse into one row of 4
+    // across 2 pages — which is precisely the bug this test exists to catch.
+    const pages = [makeScored("/services/seo"), makeScored("/services/consulting")];
     const summary = buildSummary(pages);
+
+    expect(summary.issuesByType.length).toBeGreaterThan(0);
     for (const issue of summary.issuesByType) {
       expect(issue.count).toBeLessThanOrEqual(summary.totalPages);
     }
