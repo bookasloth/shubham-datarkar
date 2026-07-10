@@ -5,32 +5,31 @@ import { requireMember } from "@/lib/members/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
+import { AnalysisPoller } from "@/components/kalamai/analysis-poller";
+import { KalamaiReport, type AnalysisReport } from "@/components/kalamai/report";
 
-export const metadata = buildMetadata({
-  title: "KalamAI Analysis",
-  path: "/tools/kalamai",
-  noIndex: true,
-});
+export const metadata = buildMetadata({ title: "KalamAI Analysis", path: "/tools/kalamai", noIndex: true });
+export const dynamic = "force-dynamic";
 
 export default async function KalamaiAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await requireMember(`/tools/kalamai/a/${id}`);
 
-  // Ownership-scoped read. Unknown or someone else's id → 404. The report body
-  // and live polling land here with the research engine (Phase 2).
-  const { data: analysis } = await supabaseAdmin()
+  const { data: a } = await supabaseAdmin()
     .from("kalamai_analyses")
-    .select("id, keyword, status, progress")
+    .select("id, keyword, status, progress, report, low_confidence")
     .eq("id", id)
     .eq("user_id", ctx.user!.id)
     .maybeSingle();
-  if (!analysis) notFound();
+  if (!a) notFound();
+
+  const terminal = a.status === "complete" || a.status === "failed";
 
   return (
     <>
       <PageHero
         eyebrow="KalamAI analysis"
-        title={analysis.keyword}
+        title={a.keyword}
         crumbs={[
           { label: "Home", href: "/" },
           { label: "KalamAI", href: "/tools/kalamai" },
@@ -39,14 +38,28 @@ export default async function KalamaiAnalysisPage({ params }: { params: Promise<
       />
       <Section>
         <Container size="narrow">
-          <div className="rounded-card border border-border bg-card p-6">
-            <p className="text-sm text-muted-foreground">
-              Status: <span className="font-medium text-foreground">{analysis.status}</span>
-            </p>
-          </div>
-          <Link href="/tools/kalamai/history" className="mt-4 inline-block text-sm font-medium hover:underline">
-            Back to history
-          </Link>
+          {a.status === "complete" && a.report ? (
+            <KalamaiReport report={a.report as AnalysisReport} lowConfidence={!!a.low_confidence} />
+          ) : a.status === "failed" ? (
+            <div className="rounded-card border border-border bg-card p-6">
+              <p className="text-sm font-medium text-danger">This analysis failed.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your quota was not charged.{" "}
+                <Link href="/tools/kalamai" className="font-medium text-foreground hover:underline">
+                  Start a new analysis
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            <AnalysisPoller id={a.id} initialStatus={a.status} initialProgress={a.progress ?? 0} />
+          )}
+
+          {terminal && (
+            <Link href="/tools/kalamai/history" className="mt-6 inline-block text-sm font-medium hover:underline">
+              Back to history
+            </Link>
+          )}
         </Container>
       </Section>
     </>
