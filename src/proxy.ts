@@ -41,11 +41,9 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  if (path === "/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/admin";
-    return NextResponse.redirect(url);
-  }
+  // No /login -> /admin bounce. requireAdmin() also gates on ADMIN_EMAIL, so a
+  // signed-in non-admin (games/members account — same Supabase cookie) would
+  // ping-pong: /admin -> /login -> /admin. signIn() redirects to /admin itself.
 
   // Games: bounce logged-in users away from the games login page.
   if (path === "/games/login" && user) {
@@ -69,7 +67,6 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/admin/:path*",
-    "/login",
     "/games/login",
     "/games/profile/:path*",
     "/members/:path*",
