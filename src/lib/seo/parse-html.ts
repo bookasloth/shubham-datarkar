@@ -50,6 +50,48 @@ function ogImageSourceOf(head: string): RenderedAnalysis["ogImageSource"] {
   return pathnameOf(ogImage).startsWith("/opengraph-image") ? "root-fallback" : "dedicated";
 }
 
+const LD_BLOCK = /<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+
+/**
+ * Top-level nodes only: the value itself, array members, or `@graph` members.
+ * Nested entities (`author`, `provider`, `mainEntity`) describe a node rather
+ * than the page, so descending into them would report types the page does not
+ * actually declare.
+ */
+function topLevelNodes(value: unknown): Record<string, unknown>[] {
+  if (Array.isArray(value)) return value.flatMap(topLevelNodes);
+  if (value && typeof value === "object") {
+    const node = value as Record<string, unknown>;
+    if (node["@graph"]) return topLevelNodes(node["@graph"]);
+    return [node];
+  }
+  return [];
+}
+
+function extractSchemas(html: string): { schemas: string[]; schemaParseErrors: number } {
+  const types = new Set<string>();
+  let schemaParseErrors = 0;
+
+  for (const match of html.matchAll(LD_BLOCK)) {
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(match[1]);
+    } catch {
+      schemaParseErrors++;
+      continue;
+    }
+    for (const node of topLevelNodes(parsed)) {
+      const type = node["@type"];
+      if (typeof type === "string") types.add(type);
+      else if (Array.isArray(type)) {
+        for (const t of type) if (typeof t === "string") types.add(t);
+      }
+    }
+  }
+
+  return { schemas: [...types], schemaParseErrors };
+}
+
 export function parseHtml(html: string): RenderedAnalysis {
   const head = headOf(html);
 
@@ -57,6 +99,7 @@ export function parseHtml(html: string): RenderedAnalysis {
   const title = rawTitle === undefined ? null : decodeEntities(rawTitle).trim();
   const description = metaContent(head, "name", "description");
   const robots = metaContent(head, "name", "robots") ?? "";
+  const { schemas, schemaParseErrors } = extractSchemas(html);
 
   return {
     title,
@@ -69,9 +112,9 @@ export function parseHtml(html: string): RenderedAnalysis {
     robotsIndex: !/noindex/i.test(robots),
     robotsFollow: !/nofollow/i.test(robots),
 
-    schemas: [],
-    hasBreadcrumbs: false,
-    schemaParseErrors: 0,
+    schemas,
+    hasBreadcrumbs: schemas.includes("BreadcrumbList"),
+    schemaParseErrors,
 
     ogImageSource: ogImageSourceOf(head),
 

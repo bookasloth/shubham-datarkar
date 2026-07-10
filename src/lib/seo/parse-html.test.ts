@@ -89,3 +89,61 @@ describe("parseHtml — head", () => {
     expect(r.robotsFollow).toBe(false);
   });
 });
+
+const ld = (json: string) =>
+  page("", `<main id="main"></main><script type="application/ld+json">${json}</script>`);
+
+describe("parseHtml — JSON-LD", () => {
+  it("collects @type from a single top-level object", () => {
+    const r = parseHtml(ld('{"@context":"https://schema.org","@type":"Person","name":"S"}'));
+    expect(r.schemas).toEqual(["Person"]);
+  });
+
+  it("collects @type from a top-level array", () => {
+    const r = parseHtml(ld('[{"@type":"Review"},{"@type":"Review"},{"@type":"Product"}]'));
+    expect(r.schemas.sort()).toEqual(["Product", "Review"]);
+  });
+
+  it("unwraps @graph containers", () => {
+    const r = parseHtml(ld('{"@context":"https://schema.org","@graph":[{"@type":"Person"},{"@type":"WebSite"}]}'));
+    expect(r.schemas.sort()).toEqual(["Person", "WebSite"]);
+  });
+
+  it("handles an @type that is itself an array", () => {
+    const r = parseHtml(ld('{"@type":["Person","Author"]}'));
+    expect(r.schemas.sort()).toEqual(["Author", "Person"]);
+  });
+
+  it("does not descend into nested entities", () => {
+    const r = parseHtml(ld('{"@type":"Article","author":{"@type":"Person","name":"S"}}'));
+    expect(r.schemas).toEqual(["Article"]);
+  });
+
+  it("sets hasBreadcrumbs from BreadcrumbList", () => {
+    expect(parseHtml(ld('{"@type":"BreadcrumbList"}')).hasBreadcrumbs).toBe(true);
+    expect(parseHtml(ld('{"@type":"Article"}')).hasBreadcrumbs).toBe(false);
+  });
+
+  it("counts malformed blocks without throwing", () => {
+    const r = parseHtml(ld("{not json}"));
+    expect(r.schemaParseErrors).toBe(1);
+    expect(r.schemas).toEqual([]);
+  });
+
+  it("keeps parsing valid blocks after a malformed one", () => {
+    const html = page(
+      "",
+      '<main id="main"></main>' +
+        '<script type="application/ld+json">{oops}</script>' +
+        '<script type="application/ld+json">{"@type":"FAQPage"}</script>',
+    );
+    const r = parseHtml(html);
+    expect(r.schemaParseErrors).toBe(1);
+    expect(r.schemas).toEqual(["FAQPage"]);
+  });
+
+  it("deduplicates repeated types", () => {
+    const r = parseHtml(ld('[{"@type":"Review"},{"@type":"Review"}]'));
+    expect(r.schemas).toEqual(["Review"]);
+  });
+});
