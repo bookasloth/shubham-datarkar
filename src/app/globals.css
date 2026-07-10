@@ -122,6 +122,66 @@
   cursor: none !important;
 }
 
+/* Diya visuals — used by <TorchOverlay>. left/top set inline (px or CSS var). */
+.diya-mark {
+  position: absolute;
+  top: 0;
+  left: 0;
+  transform: translate(-20px, -6px); /* flame tip -> the point */
+  filter: drop-shadow(0 0 6px rgba(255, 150, 50, 0.9));
+}
+.diya-flame {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: diya-flame 0.28s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+.diya-aura {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 360px;
+  height: 360px;
+  margin-left: -180px; /* center the 360px circle on the point */
+  margin-top: -186px; /* +6px so glow sits over the flame, not the base */
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 150, 50, 0.28),
+    rgba(255, 120, 30, 0.08) 42%,
+    transparent 68%
+  );
+  animation: diya-aura 3s ease-in-out infinite;
+  will-change: transform, opacity;
+}
+@keyframes diya-flame {
+  0% {
+    transform: scaleY(1) scaleX(1) skewX(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scaleY(1.13) scaleX(0.93) skewX(-3deg);
+    opacity: 0.9;
+  }
+}
+@keyframes diya-aura {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.14);
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diya-flame,
+  .diya-aura {
+    animation: none;
+  }
+}
+
 /* ================================================================== */
 /*  Tailwind theme mapping — exposes tokens as utilities              */
 /* ================================================================== */
