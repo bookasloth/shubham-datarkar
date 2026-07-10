@@ -37,7 +37,7 @@ So the two mechanisms are used for different routes:
 - **Work in the git worktree `C:\Users\shubh\seo-wt`, on branch `feat/seo-metadata-plumbing`.** Do NOT touch `C:\Users\shubh\OneDrive\Documents\Claude\Projects\Shubham Datarkar Website` — a concurrent Claude session owns it. `node_modules` there is junctioned; the suite works.
 - Before every commit, run `git branch --show-current`. Must print `feat/seo-metadata-plumbing`.
 - No new production dependencies.
-- **The title copy rule.** The root template appends `" — Shubham Datarkar"` — exactly 20 characters. For the rendered `<title>` to land in the 30–60 window that `seo-title-length` checks, each page's `title` argument must be **15–40 characters and must not contain the brand name**. `"About"` → `"Founder, Marketer & Copywriter"` (30) → renders as 49. `"About Shubham Datarkar"` double-brands. The homepage escapes the template with `title.absolute`.
+- **The title copy rule.** The root template appends `" — Shubham Datarkar"` — exactly 19 characters. For the rendered `<title>` to land in the 30–60 window that `seo-title-length` checks, each page's `title` argument must be **15–40 characters and must not contain the brand name**. `"About"` → `"Founder, Marketer & Copywriter"` (30) → renders as 49. `"About Shubham Datarkar"` double-brands. The homepage escapes the template with `title.absolute`.
 - **Do not write marketing copy in this PR.** Wherever a real string is needed to make a page compile or to satisfy a type, use the page's existing heading or an obviously-placeholder-free minimal descriptor. PR 4 writes the copy. This PR builds the sockets.
 - **Do not apply the Supabase migration.** Write the file and hand the SQL to the maintainer. That is the standing workflow.
 - Every commit message ends with:
@@ -261,7 +261,7 @@ In `src/lib/seo.ts`, replace the `SeoInput` type and `buildMetadata`:
 type SeoInput = {
   /**
    * Keyword phrase, 15-40 chars, WITHOUT the brand name. The root layout's
-   * `title.template` appends " — Shubham Datarkar" (20 chars), landing the
+   * `title.template` appends " — Shubham Datarkar" (19 chars), landing the
    * rendered <title> in the 30-60 window the audit checks. Writing the brand
    * into this argument double-brands the tag.
    */

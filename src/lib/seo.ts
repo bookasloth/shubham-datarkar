@@ -5,7 +5,7 @@ import type { Service, Product, Testimonial } from "@/lib/data/types";
 type SeoInput = {
   /**
    * Keyword phrase, 15-40 chars, WITHOUT the brand name. The root layout's
-   * `title.template` appends " — Shubham Datarkar" (20 chars), landing the
+   * `title.template` appends " — Shubham Datarkar" (19 chars), landing the
    * rendered <title> in the 30-60 window the audit checks. Writing the brand
    * into this argument double-brands the tag.
    */
