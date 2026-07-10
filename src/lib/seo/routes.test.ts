@@ -1,0 +1,117 @@
+import { describe, it, expect } from "vitest";
+import { pageTypeOf, isPrivate, isIndexable } from "./routes";
+
+describe("pageTypeOf", () => {
+  it("classifies the marketing pillars", () => {
+    for (const route of ["/", "/about", "/my-story", "/philosophy", "/speaking"]) {
+      expect(pageTypeOf(route)).toBe("pillar");
+    }
+  });
+
+  it("classifies detail pages as pillars", () => {
+    expect(pageTypeOf("/services/seo")).toBe("pillar");
+    expect(pageTypeOf("/products/alluminaty")).toBe("pillar");
+    expect(pageTypeOf("/case-studies/corart-meta-lead-gen")).toBe("pillar");
+    expect(pageTypeOf("/blog/seo/some-post-slug")).toBe("pillar");
+  });
+
+  it("classifies index pages as hubs, not pillars", () => {
+    expect(pageTypeOf("/services")).toBe("hub");
+    expect(pageTypeOf("/products")).toBe("hub");
+    expect(pageTypeOf("/case-studies")).toBe("hub");
+    expect(pageTypeOf("/blog")).toBe("hub");
+  });
+
+  it("treats a blog category as a hub and a blog post as a pillar", () => {
+    expect(pageTypeOf("/blog/seo")).toBe("hub");
+    expect(pageTypeOf("/blog/seo/technical-seo-guide")).toBe("pillar");
+  });
+
+  it("classifies game and member landings as hubs", () => {
+    for (const route of ["/games", "/games/alfazy", "/games/hit-and-blow", "/games/integra", "/members", "/community"]) {
+      expect(pageTypeOf(route)).toBe("hub");
+    }
+  });
+
+  it("classifies utility pages", () => {
+    for (const route of ["/contact", "/book", "/link", "/help", "/support", "/support/supporters", "/support/updates", "/privacy-policy", "/terms-of-use"]) {
+      expect(pageTypeOf(route)).toBe("utility");
+    }
+  });
+
+  it("classifies admin subtrees as app", () => {
+    expect(pageTypeOf("/admin")).toBe("app");
+    expect(pageTypeOf("/admin/seo/pages")).toBe("app");
+    expect(pageTypeOf("/dashboard")).toBe("app");
+    expect(pageTypeOf("/login")).toBe("app");
+    expect(pageTypeOf("/search")).toBe("app");
+  });
+
+  it("classifies auth and account routes under public subtrees as app", () => {
+    for (const route of [
+      "/games/login", "/games/profile", "/games/leaderboard",
+      "/members/login", "/members/account", "/members/upgrade", "/members/tools",
+      "/community/compose", "/community/me", "/community/bookmarks",
+      "/unsubscribe", "/subscriber-assets",
+    ]) {
+      expect(pageTypeOf(route)).toBe("app");
+    }
+  });
+
+  it("classifies per-game archive, results, and leaderboard as app", () => {
+    expect(pageTypeOf("/games/alfazy/archive")).toBe("app");
+    expect(pageTypeOf("/games/hit-and-blow/results")).toBe("app");
+    expect(pageTypeOf("/games/integra/leaderboard")).toBe("app");
+  });
+
+  it("classifies gated dynamic templates as app", () => {
+    expect(pageTypeOf("/games/alfazy/[puzzle]")).toBe("app");
+    expect(pageTypeOf("/members/tools/[slug]")).toBe("app");
+    expect(pageTypeOf("/members/resources/[slug]")).toBe("app");
+    expect(pageTypeOf("/support/updates/[code]")).toBe("app");
+  });
+
+  it("does not let the /profile prefix swallow /games/profile via prefix matching", () => {
+    // Both are app, but for different reasons — this pins that /games/profile is
+    // matched by the explicit route list, not by a sloppy startsWith("/profile").
+    expect(pageTypeOf("/profile")).toBe("app");
+    expect(pageTypeOf("/games/profile")).toBe("app");
+    expect(pageTypeOf("/profiles-of-founders")).toBe("hub");
+  });
+
+  it("falls back to hub for anything unrecognised", () => {
+    expect(pageTypeOf("/tools")).toBe("hub");
+    expect(pageTypeOf("/tools/roas-calculator")).toBe("hub");
+    expect(pageTypeOf("/newsletter")).toBe("hub");
+    expect(pageTypeOf("/some-new-page-nobody-mapped")).toBe("hub");
+  });
+});
+
+describe("isPrivate", () => {
+  it("is true exactly for app routes", () => {
+    expect(isPrivate("/admin/seo")).toBe(true);
+    expect(isPrivate("/members/account")).toBe(true);
+    expect(isPrivate("/about")).toBe(false);
+    expect(isPrivate("/games")).toBe(false);
+  });
+});
+
+describe("isIndexable", () => {
+  it("excludes app routes", () => {
+    expect(isIndexable("/games/login")).toBe(false);
+    expect(isIndexable("/members/account")).toBe(false);
+    expect(isIndexable("/unsubscribe")).toBe(false);
+    expect(isIndexable("/admin")).toBe(false);
+  });
+
+  it("excludes unexpanded dynamic templates, which are not URLs", () => {
+    expect(isIndexable("/community/p/[id]")).toBe(false);
+    expect(isIndexable("/blog/[category]")).toBe(false);
+  });
+
+  it("includes real public routes", () => {
+    for (const route of ["/", "/about", "/blog", "/blog/seo", "/services/seo", "/games", "/link", "/privacy-policy"]) {
+      expect(isIndexable(route)).toBe(true);
+    }
+  });
+});
