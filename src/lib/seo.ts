@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { site, sameAs } from "@/lib/site";
+import { site } from "@/lib/site";
+import { personRef } from "./seo/entities";
 import type { Service, Product, Testimonial } from "@/lib/data/types";
 
 type SeoInput = {
@@ -73,77 +74,22 @@ export function buildMetadata({
 }
 
 /* ----------------------------- JSON-LD ----------------------------- */
-
-export function personSchema() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    name: site.name,
-    alternateName: site.alias,
-    url: site.url,
-    email: `mailto:${site.email}`,
-    jobTitle: "Founder, Marketer & Copywriter",
-    address: { "@type": "PostalAddress", addressLocality: "Nagpur", addressCountry: "IN" },
-    sameAs,
-    knowsAbout: [
-      "Copywriting",
-      "Conversion Copywriting",
-      "SEO",
-      "Generative Engine Optimization",
-      "Performance Marketing",
-      "Content Marketing",
-      "Growth Marketing",
-      "Branding",
-      "AI Automation",
-      "SaaS",
-      "Product Strategy",
-      "Entrepreneurship",
-      "WordPress",
-    ],
-  };
-}
+/*
+ * The canonical Person and WebSite nodes live in `./seo/entities` and are
+ * emitted once per page by the root layout. The builders below reference the
+ * Person by `@id` (`personRef`) instead of inlining it — see entities.ts.
+ */
 
 /**
  * ProfilePage wrapper for the /about page — tells search + answer engines this
  * page is the canonical profile of the Person entity (boosts entity confidence).
+ * References the Person the root layout's graph already defines on this page.
  */
 export function profilePageSchema() {
   return {
     "@context": "https://schema.org",
     "@type": "ProfilePage",
-    // Nested entity drops its own @context (undefined keys are omitted by JSON.stringify).
-    mainEntity: { ...personSchema(), "@context": undefined },
-  };
-}
-
-export function organizationSchema() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "The Bogus Company",
-    founder: { "@type": "Person", name: site.name },
-    url: site.url,
-    logo: `${site.url}/opengraph-image`,
-    sameAs,
-  };
-}
-
-export function websiteSchema() {
-  return {
-    "@context": "https://schema.org",
-    "@type": "WebSite",
-    name: site.name,
-    alternateName: site.alias,
-    url: site.url,
-    publisher: { "@type": "Person", name: site.name },
-    potentialAction: {
-      "@type": "SearchAction",
-      target: {
-        "@type": "EntryPoint",
-        urlTemplate: `${site.url}/search?q={search_term_string}`,
-      },
-      "query-input": "required name=search_term_string",
-    },
+    mainEntity: personRef,
   };
 }
 
@@ -163,8 +109,8 @@ export function articleSchema(input: {
     image: input.image ?? `${site.url}/opengraph-image`,
     datePublished: input.datePublished,
     dateModified: input.dateModified ?? input.datePublished,
-    author: { "@type": "Person", name: site.name, url: site.url },
-    publisher: { "@type": "Person", name: site.name },
+    author: personRef,
+    publisher: personRef,
     mainEntityOfPage: `${site.url}${input.path}`,
   };
 }
@@ -209,7 +155,7 @@ export function serviceSchema(service: Service) {
     name: service.name,
     serviceType: service.name,
     description: service.description,
-    provider: { "@type": "Person", name: site.name, url: site.url },
+    provider: personRef,
     areaServed: "Worldwide",
     url,
     ...(hasPrice
@@ -258,7 +204,7 @@ export function reviewSchema(testimonials: Testimonial[]) {
       ...(t.role ? { jobTitle: t.role } : {}),
       ...(t.company ? { worksFor: { "@type": "Organization", name: t.company } } : {}),
     },
-    itemReviewed: { "@type": "Person", name: site.name, url: site.url },
+    itemReviewed: personRef,
   }));
 }
 
@@ -275,7 +221,7 @@ export function speakingServiceSchema() {
     name: "Keynotes & Workshops by Shubham Datarkar",
     description:
       "Keynotes and workshops on SEO, AI workflows, and founder-led growth — built on real experiments and outcomes.",
-    provider: { "@type": "Person", name: site.name, url: site.url },
+    provider: personRef,
     areaServed: "Worldwide",
     url: `${site.url}/speaking`,
   };
