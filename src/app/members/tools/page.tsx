@@ -1,9 +1,10 @@
+import { buildMetadata } from "@/lib/seo";
 import Link from "next/link";
 import { Wrench } from "lucide-react";
 import { listLiveTools } from "@/lib/members/queries";
 import { EmptyState } from "@/components/ui/empty-state";
 
-export const metadata = { title: "Tools" };
+export const metadata = buildMetadata({ title: "Tools", path: "/members/tools", noIndex: true });
 
 export default async function ToolsPage() {
   const tools = await listLiveTools();

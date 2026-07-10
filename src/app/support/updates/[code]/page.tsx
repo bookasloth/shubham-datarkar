@@ -21,9 +21,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { code } = await params;
   const update = await getUpdateByCode(code);
-  if (!update) return buildMetadata({ title: "Update", path: `/support/updates/${code}` });
+  if (!update) return buildMetadata({ title: "Update", path: `/support/updates/${code}`, noIndex: true });
   const text = update.body.slice(0, 140) || "An update from Shubham Datarkar.";
-  return buildMetadata({ title: "Update", description: text, path: `/support/updates/${code}` });
+  return buildMetadata({ title: "Update", description: text, path: `/support/updates/${code}`, noIndex: true });
 }
 
 export default async function UpdatePage({

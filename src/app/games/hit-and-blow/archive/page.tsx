@@ -1,9 +1,10 @@
+import { buildMetadata } from "@/lib/seo";
 import { listArchive } from "@/lib/games/archive-queries";
 import { getMemberContext } from "@/lib/members/session";
 import { can } from "@/lib/members/capabilities";
 import { ArchiveGrid } from "@/components/games/ArchiveGrid";
 
-export const metadata = { title: "Hit and Blow Archive" };
+export const metadata = buildMetadata({ title: "Hit and Blow Archive", path: "/games/hit-and-blow/archive", noIndex: true });
 
 export default async function HitAndBlowArchivePage() {
   const now = Date.now();

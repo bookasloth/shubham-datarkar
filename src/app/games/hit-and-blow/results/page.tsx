@@ -1,6 +1,7 @@
+import { buildMetadata } from "@/lib/seo";
 import { ResultsView } from "@/components/games/ResultsView";
 
-export const metadata = { title: "Hit and Blow — Results" };
+export const metadata = buildMetadata({ title: "Hit and Blow — Results", path: "/games/hit-and-blow/results", noIndex: true });
 
 export default async function Page({
   searchParams,

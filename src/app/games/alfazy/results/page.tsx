@@ -1,6 +1,7 @@
+import { buildMetadata } from "@/lib/seo";
 import { ResultsView } from "@/components/games/ResultsView";
 
-export const metadata = { title: "Alfazy — Results" };
+export const metadata = buildMetadata({ title: "Alfazy — Results", path: "/games/alfazy/results", noIndex: true });
 
 export default async function Page({
   searchParams,

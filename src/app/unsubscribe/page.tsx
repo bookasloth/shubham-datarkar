@@ -7,6 +7,7 @@ export const metadata = buildMetadata({
   title: "Unsubscribe",
   description: "Unsubscribe from the Shubham Datarkar newsletter.",
   path: "/unsubscribe",
+  noIndex: true,
 });
 
 export default function UnsubscribePage() {

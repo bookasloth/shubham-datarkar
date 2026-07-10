@@ -1,9 +1,10 @@
+import { buildMetadata } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
 import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 
-export const metadata = { title: "Bookmarks" };
+export const metadata = buildMetadata({ title: "Bookmarks", path: "/community/bookmarks", noIndex: true });
 
 export default async function BookmarksPage() {
   const { user } = await getMemberContext();

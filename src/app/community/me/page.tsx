@@ -1,10 +1,11 @@
+import { buildMetadata } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
 import { listFeed, listPollResults, viewerCanPost, viewerHandle } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 
-export const metadata = { title: "Profile" };
+export const metadata = buildMetadata({ title: "Profile", path: "/community/me", noIndex: true });
 
 export default async function ProfilePage() {
   const { user } = await getMemberContext();

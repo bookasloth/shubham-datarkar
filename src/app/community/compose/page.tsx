@@ -1,9 +1,10 @@
+import { buildMetadata } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
 import { viewerCanPost } from "@/lib/community/queries";
 import { Composer } from "@/components/community/composer";
 
-export const metadata = { title: "New post" };
+export const metadata = buildMetadata({ title: "New post", path: "/community/compose", noIndex: true });
 
 export default async function ComposePage() {
   const { user } = await getMemberContext();

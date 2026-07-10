@@ -1,10 +1,11 @@
+import { buildMetadata } from "@/lib/seo";
 import { redirect } from "next/navigation";
 import { Check } from "lucide-react";
 import { getMemberContext } from "@/lib/members/session";
 import { getActivePlans } from "@/lib/members/membership-server";
 import { UpgradePanel } from "@/components/members/upgrade-panel";
 
-export const metadata = { title: "Become a Member" };
+export const metadata = buildMetadata({ title: "Become a Member", path: "/members/upgrade", noIndex: true });
 
 const FREE_INCLUDES = [
   "Today's puzzle and yesterday's puzzle",
