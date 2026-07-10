@@ -147,3 +147,75 @@ describe("parseHtml — JSON-LD", () => {
     expect(r.schemas).toEqual(["Review"]);
   });
 });
+
+const doc = (body: string) =>
+  `<!DOCTYPE html><html><head><title>T</title></head><body>` +
+  `<nav><a href="/about">About</a><a href="/blog">Blog</a><a href="/work">Work</a></nav>` +
+  body +
+  `<footer><a href="/faq">FAQ</a><p>Footer words here</p></footer>` +
+  `</body></html>`;
+
+describe("parseHtml — main region", () => {
+  it("ignores links outside the main region", () => {
+    const r = parseHtml(doc('<main id="main"><a href="/contact">Contact</a></main>'));
+    expect(r.internalLinks).toBe(1);
+    expect(r.mainRegionFound).toBe(true);
+  });
+
+  it("runs to the LAST closing main tag when layouts nest their own", () => {
+    const r = parseHtml(
+      doc('<main id="main"><main class="inner"><h2>Inner</h2></main><h2>Outer</h2></main>'),
+    );
+    expect(r.h2Count).toBe(2);
+  });
+
+  it("falls back to the body and flags mainRegionFound=false", () => {
+    const r = parseHtml(doc("<div><h1>No main</h1></div>"));
+    expect(r.mainRegionFound).toBe(false);
+    expect(r.h1Count).toBe(1);
+    expect(r.internalLinks).toBe(4); // nav 3 + footer 1
+  });
+
+  it("counts headings", () => {
+    const r = parseHtml(doc('<main id="main"><h1>A</h1><h2>B</h2><h2>C</h2><h3>D</h3></main>'));
+    expect(r.h1Count).toBe(1);
+    expect(r.h2Count).toBe(2);
+    expect(r.h3Count).toBe(1);
+  });
+
+  it("counts lists and tables", () => {
+    const r = parseHtml(doc('<main id="main"><ul><li>a</li></ul><ol><li>b</li></ol><table></table></main>'));
+    expect(r.listCount).toBe(3);
+  });
+
+  it("separates internal from external links", () => {
+    const r = parseHtml(
+      doc('<main id="main"><a href="/a">a</a><a href="https://x.com">x</a></main>'),
+    );
+    expect(r.internalLinks).toBe(1);
+    expect(r.externalLinks).toBe(1);
+  });
+
+  it("counts images and those missing alt text", () => {
+    const r = parseHtml(doc('<main id="main"><img src="a.png" alt="A"><img src="b.png"></main>'));
+    expect(r.imageCount).toBe(2);
+    expect(r.missingAltCount).toBe(1);
+  });
+
+  it("counts words from text only, excluding markup and scripts", () => {
+    const r = parseHtml(
+      doc('<main id="main"><p>one two three</p><script>var ignored = "four five";</script></main>'),
+    );
+    expect(r.wordCount).toBe(3);
+  });
+
+  it("derives readingTime from wordCount with a floor of 1", () => {
+    const r = parseHtml(doc('<main id="main"><p>one</p></main>'));
+    expect(r.readingTime).toBe(1);
+  });
+
+  it("decodes entities before counting words", () => {
+    const r = parseHtml(doc('<main id="main"><p>ads &amp; copy</p></main>'));
+    expect(r.wordCount).toBe(3);
+  });
+});

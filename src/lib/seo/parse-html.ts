@@ -92,6 +92,31 @@ function extractSchemas(html: string): { schemas: string[]; schemaParseErrors: n
   return { schemas: [...types], schemaParseErrors };
 }
 
+/**
+ * The main region runs from `<main id="main">` to the LAST `</main>` in the
+ * document. The games, community, and members layouts each render a nested
+ * `<main>` inside the root layout's, so a lazy match would close the region at
+ * the inner tag and silently drop most of the page.
+ */
+function mainRegion(html: string): { region: string; found: boolean } {
+  const start = html.search(/<main[^>]*id=["']main["'][^>]*>/i);
+  if (start === -1) {
+    const body = html.match(/<body[^>]*>([\s\S]*)<\/body>/i)?.[1];
+    return { region: body ?? html, found: false };
+  }
+  const end = html.lastIndexOf("</main>");
+  return { region: html.slice(start, end === -1 ? html.length : end), found: true };
+}
+
+function count(source: string, pattern: RegExp): number {
+  return (source.match(pattern) || []).length;
+}
+
+function countWords(region: string): number {
+  const text = decodeEntities(region.replace(/<[^>]+>/g, " "));
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
 export function parseHtml(html: string): RenderedAnalysis {
   const head = headOf(html);
 
@@ -100,6 +125,11 @@ export function parseHtml(html: string): RenderedAnalysis {
   const description = metaContent(head, "name", "description");
   const robots = metaContent(head, "name", "robots") ?? "";
   const { schemas, schemaParseErrors } = extractSchemas(html);
+
+  const { region, found } = mainRegion(html);
+  const content = region.replace(/<(script|style)[\s\S]*?<\/\1>/gi, "");
+  const images = content.match(/<img\s[^>]*>/gi) ?? [];
+  const wordCount = countWords(content);
 
   return {
     title,
@@ -118,16 +148,16 @@ export function parseHtml(html: string): RenderedAnalysis {
 
     ogImageSource: ogImageSourceOf(head),
 
-    h1Count: 0,
-    h2Count: 0,
-    h3Count: 0,
-    wordCount: 0,
-    readingTime: 1,
-    internalLinks: 0,
-    externalLinks: 0,
-    imageCount: 0,
-    missingAltCount: 0,
-    listCount: 0,
-    mainRegionFound: false,
+    h1Count: count(content, /<h1[\s>]/gi),
+    h2Count: count(content, /<h2[\s>]/gi),
+    h3Count: count(content, /<h3[\s>]/gi),
+    wordCount,
+    readingTime: Math.max(1, Math.round(wordCount / 200)),
+    internalLinks: count(content, /<a[^>]+href=["']\/[^"']*["']/gi),
+    externalLinks: count(content, /<a[^>]+href=["']https?:\/\//gi),
+    imageCount: images.length,
+    missingAltCount: images.filter((tag) => !/\salt\s*=/i.test(tag)).length,
+    listCount: count(content, /<(?:ul|ol|table)[\s>]/gi),
+    mainRegionFound: found,
   };
 }
