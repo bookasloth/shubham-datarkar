@@ -221,10 +221,12 @@ const ENTITIES: Record<string, string> = {
   "&#39;": "'",
   "&#x27;": "'",
   "&nbsp;": " ",
+  "&mdash;": "—",
+  "&ndash;": "–",
 };
 
 function decodeEntities(input: string): string {
-  return input.replace(/&(?:amp|lt|gt|quot|nbsp|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
+  return input.replace(/&(?:amp|lt|gt|quot|nbsp|mdash|ndash|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
 }
 
 function headOf(html: string): string {
@@ -561,8 +563,14 @@ describe("parseHtml — main region", () => {
   });
 
   it("decodes entities before counting words", () => {
-    const r = parseHtml(doc('<main id="main"><p>ads &amp; copy</p></main>'));
-    expect(r.wordCount).toBe(3);
+    // `a&nbsp;b` is ONE whitespace-free token until &nbsp; is decoded to a space.
+    const r = parseHtml(doc('<main id="main"><p>alpha&nbsp;beta</p></main>'));
+    expect(r.wordCount).toBe(2);
+  });
+
+  it("does not count standalone punctuation as a word", () => {
+    const r = parseHtml(doc('<main id="main"><p>Shubham Datarkar &mdash; The Kalamwala</p></main>'));
+    expect(r.wordCount).toBe(4);
   });
 });
 ```

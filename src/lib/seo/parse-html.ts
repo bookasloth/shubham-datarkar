@@ -18,10 +18,12 @@ const ENTITIES: Record<string, string> = {
   "&#39;": "'",
   "&#x27;": "'",
   "&nbsp;": " ",
+  "&mdash;": "—",
+  "&ndash;": "–",
 };
 
 function decodeEntities(input: string): string {
-  return input.replace(/&(?:amp|lt|gt|quot|nbsp|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
+  return input.replace(/&(?:amp|lt|gt|quot|nbsp|mdash|ndash|#39|#x27);/g, (m) => ENTITIES[m] ?? m);
 }
 
 function headOf(html: string): string {
@@ -114,7 +116,7 @@ function count(source: string, pattern: RegExp): number {
 
 function countWords(region: string): number {
   const text = decodeEntities(region.replace(/<[^>]+>/g, " "));
-  return text.split(/\s+/).filter(Boolean).length;
+  return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
 export function parseHtml(html: string): RenderedAnalysis {

@@ -215,7 +215,13 @@ describe("parseHtml — main region", () => {
   });
 
   it("decodes entities before counting words", () => {
-    const r = parseHtml(doc('<main id="main"><p>ads &amp; copy</p></main>'));
-    expect(r.wordCount).toBe(3);
+    // `a&nbsp;b` is ONE whitespace-free token until &nbsp; is decoded to a space.
+    const r = parseHtml(doc('<main id="main"><p>alpha&nbsp;beta</p></main>'));
+    expect(r.wordCount).toBe(2);
+  });
+
+  it("does not count standalone punctuation as a word", () => {
+    const r = parseHtml(doc('<main id="main"><p>Shubham Datarkar &mdash; The Kalamwala</p></main>'));
+    expect(r.wordCount).toBe(4);
   });
 });
