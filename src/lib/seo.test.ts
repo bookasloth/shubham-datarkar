@@ -64,6 +64,42 @@ describe("buildMetadata", () => {
   });
 });
 
+describe("buildMetadata OG overrides", () => {
+  it("defaults the OG title to the branded full title", () => {
+    const m = buildMetadata({ title: "SEO Consultant in India", path: "/x" });
+    expect(m.openGraph?.title).toBe("SEO Consultant in India — Shubham Datarkar");
+  });
+
+  it("lets the OG title differ from the SERP title", () => {
+    const m = buildMetadata({ title: "SEO Consultant in India", ogTitle: "I make Google notice you", path: "/x" });
+    expect(m.title).toBe("SEO Consultant in India");
+    expect(m.openGraph?.title).toBe("I make Google notice you");
+    expect(m.twitter?.title).toBe("I make Google notice you");
+  });
+
+  it("defaults the OG description to the meta description", () => {
+    const m = buildMetadata({ description: "A plain description.", path: "/x" });
+    expect(m.openGraph?.description).toBe("A plain description.");
+  });
+
+  it("lets the OG description differ", () => {
+    const m = buildMetadata({ description: "A plain description.", ogDescription: "A biting one.", path: "/x" });
+    expect(m.description).toBe("A plain description.");
+    expect(m.openGraph?.description).toBe("A biting one.");
+    expect(m.twitter?.description).toBe("A biting one.");
+  });
+
+  it("titleAbsolute escapes the root title template", () => {
+    const m = buildMetadata({ title: "Shubham Datarkar — Digital Marketer", titleAbsolute: true, path: "/" });
+    expect(m.title).toEqual({ absolute: "Shubham Datarkar — Digital Marketer" });
+  });
+
+  it("noIndex still produces index:false, follow:false", () => {
+    const m = buildMetadata({ title: "Login", noIndex: true, path: "/games/login" });
+    expect(m.robots).toEqual({ index: false, follow: false });
+  });
+});
+
 describe("serviceSchema", () => {
   it("is a Service provided by the Person, with a priced Offer", () => {
     const s = serviceSchema(makeService()) as Record<string, unknown>;

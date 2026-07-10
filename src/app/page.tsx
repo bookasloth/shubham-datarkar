@@ -29,7 +29,7 @@ import { PostCard } from "@/components/cards/post-card";
 import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { cn } from "@/lib/utils";
 
-export const metadata = buildMetadata({ path: "/" });
+export const metadata = buildMetadata({ path: "/", titleAbsolute: true });
 
 function ViewAll({ href, label }: { href: string; label: string }) {
   return (
