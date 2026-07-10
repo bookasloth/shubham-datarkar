@@ -5,8 +5,10 @@ import { getUpdatesFeed } from "@/lib/support/updates";
 export const dynamic = "force-dynamic";
 
 export const metadata = buildMetadata({
-  title: "Updates",
-  description: "What I'm building, writing, and shipping — straight from the desk.",
+  title: "What I'm Shipping Now",
+  description: "What I'm building, writing, and shipping — straight from the desk, newest first. Follow along as products, essays, and experiments ship.",
+  ogTitle: "What I'm building, writing, and shipping",
+  ogDescription: "Straight from the desk, newest first. Follow along as products, essays, and experiments ship.",
   path: "/support/updates",
 });
 

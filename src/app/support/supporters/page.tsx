@@ -7,8 +7,10 @@ import { tierFor } from "@/lib/support/tiers";
 import { getSupporters, getSupportStats } from "@/lib/support/queries";
 
 export const metadata = buildMetadata({
-  title: "Supporters",
-  description: "The people keeping the lights on. Coffees, toffees, and the wall of thanks.",
+  title: "The Supporters Wall",
+  description: "The people keeping the lights on — coffees, toffees, and the wall of thanks to everyone supporting the writing, tools, and experiments.",
+  ogTitle: "The people keeping the lights on",
+  ogDescription: "Coffees, toffees, and the wall of thanks to everyone who supports the work.",
   path: "/support/supporters",
 });
 

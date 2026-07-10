@@ -5,8 +5,10 @@ import { PageHero } from "@/components/layout/page-hero";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 
 export const metadata = buildMetadata({
-  title: "Uses",
-  description: "The hardware, software, and tools Shubham Datarkar uses to run three companies.",
+  title: "The Tools Behind the Work",
+  description: "The hardware, software, and services I use to build, write, and run three companies. Boring, deliberate, and kept minimal on purpose.",
+  ogTitle: "The tools behind the work",
+  ogDescription: "Everything I use to build, write, and run three companies. Boring, deliberate, minimal on purpose.",
   path: "/uses",
 });
 

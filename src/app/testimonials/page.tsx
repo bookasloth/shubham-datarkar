@@ -11,8 +11,10 @@ import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Testimonials",
-  description: "What founders and teams say about working with Shubham Datarkar.",
+  title: "Client Results & Reviews",
+  description: "Outcome-specific reviews from the founders and teams I've worked with — real results, no generic praise. See what working together delivers.",
+  ogTitle: "In their words — client results & reviews",
+  ogDescription: "Outcome-specific feedback from the founders and teams I've worked with. No generic praise.",
   path: "/testimonials",
 });
 

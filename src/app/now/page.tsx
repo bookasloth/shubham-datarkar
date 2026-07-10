@@ -6,8 +6,10 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
 
 export const metadata = buildMetadata({
-  title: "Now",
-  description: "What Shubham Datarkar is focused on right now — building, reading, and thinking about.",
+  title: "What I'm Focused On Now",
+  description: "A living snapshot of what Shubham Datarkar is building, writing, reading, and thinking about right now. Updated roughly monthly.",
+  ogTitle: "What I'm focused on right now",
+  ogDescription: "Building, writing, reading, thinking — a living snapshot of where my attention goes, updated monthly.",
   path: "/now",
 });
 

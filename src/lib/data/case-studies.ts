@@ -46,6 +46,11 @@ export const caseStudies: CaseStudy[] = [
       role: "Owner, Occasion Cakes",
     },
     featured: true,
+    seo: {
+      title: "Local SEO Case Study: Bakery",
+      description:
+        "How a UAE bakery went from invisible in local search to ranking #1 for 40+ searches — and grew online orders 212% with local SEO and Google Business.",
+    },
   },
   {
     slug: "khiladi-adda-gaming-ua",
@@ -88,6 +93,11 @@ export const caseStudies: CaseStudy[] = [
       role: "Marketing Head, Khiladi Adda",
     },
     featured: true,
+    seo: {
+      title: "Gaming App Ad Copy Case Study",
+      description:
+        "How a real-money gaming app cut cost per install 34% with a compliant hook library and a disciplined weekly ad-copy testing matrix across Google and Meta.",
+    },
   },
   {
     slug: "dhawade-vadewale-franchise",
@@ -130,6 +140,11 @@ export const caseStudies: CaseStudy[] = [
       role: "Founder, Dhawade Vadewale",
     },
     featured: true,
+    seo: {
+      title: "Franchise Marketing Case Study",
+      description:
+        "How a Maharashtrian vada shop grew from 7 to 19 outlets in 12 months with a franchise microsite, investor narrative, and a full inquiry-to-onboarding funnel.",
+    },
   },
   {
     slug: "stone-and-acres-land-stories",
@@ -171,6 +186,11 @@ export const caseStudies: CaseStudy[] = [
       author: "Anjali M.",
       role: "Sales Lead, Stone & Acres",
     },
+    seo: {
+      title: "Real Estate Copywriting Case Study",
+      description:
+        "How a plotted-land brand turned commodity plots into life stories, growing qualified site visits 2.6x with narrative ad campaigns and a lead-qualifying funnel.",
+    },
   },
   {
     slug: "corart-meta-lead-gen",
@@ -211,6 +231,11 @@ export const caseStudies: CaseStudy[] = [
       text: "Same budget, completely different business. The funnel finally turned interest into paying customers.",
       author: "Karan V.",
       role: "Founder, Corart",
+    },
+    seo: {
+      title: "Meta Ads Lead-Gen Case Study",
+      description:
+        "How a custom-art D2C brand turned Meta clicks into customers, lifting ROAS to 4.4x with a rebuilt landing page, intent-qualifying forms, and creative testing.",
     },
   },
 ];

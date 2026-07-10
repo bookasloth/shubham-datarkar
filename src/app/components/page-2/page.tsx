@@ -9,9 +9,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Components — Page 2",
+  title: "Component Library — Page 2",
   description:
     "Twenty more monochrome components and blocks — radio, slider, rating, OTP, dropzone, combobox, progress, pricing, carousel, sheet, and more.",
+  ogTitle: "Twenty more components",
+  ogDescription:
+    "The next set — form controls, feedback, and composed blocks, built on the same monochrome motion language as Page 1.",
   path: "/components/page-2",
 });
 

@@ -18,8 +18,12 @@ import { formatDate, readingTime } from "@/lib/utils";
 
 export const metadata = {
   ...buildMetadata({
-    title: "Blog",
-    description: "Essays, playbooks, and teardowns on SEO, AI, performance marketing, content, SaaS, and founder life.",
+    title: "Marketing, SEO & AI Essays",
+    description:
+      "Essays, playbooks, and teardowns on SEO, AI, performance marketing, content, and SaaS. Two a week — one deep dive, one short essay.",
+    ogTitle: "Thinking, in public",
+    ogDescription:
+      "Two a week — one deep dive, one short essay. Systems, receipts, and the occasional contrarian take.",
     path: "/blog",
   }),
   alternates: {

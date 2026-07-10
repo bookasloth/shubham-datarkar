@@ -15,8 +15,10 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { formatDate, cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "Speaking",
-  description: "Keynotes and workshops on SEO, AI workflows, and founder-led growth — built on real experiments, not theory.",
+  title: "Keynotes & Workshops",
+  description: "Keynotes and workshops on SEO, AI workflows, and founder-led growth — built on real experiments and outcomes, not theory. Rooms leave with tools.",
+  ogTitle: "Talks with receipts",
+  ogDescription: "Keynotes and workshops on SEO, AI workflows, and founder-led growth. Rooms leave with things they can use on Monday.",
   path: "/speaking",
 });
 

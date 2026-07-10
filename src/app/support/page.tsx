@@ -4,8 +4,10 @@ import { SupporterStrip } from "@/components/support/supporter-strip";
 import { getRecentSupporters } from "@/lib/support/queries";
 
 export const metadata = buildMetadata({
-  title: "Support",
-  description: "Buy me a coffee or a toffee. Your support keeps the writing, free tools, and experiments coming.",
+  title: "Buy Me a Coffee or Toffee",
+  description: "Buy me a coffee or a toffee. Pick how many, leave a note — done in under a minute. Your support keeps the writing, free tools, and experiments coming.",
+  ogTitle: "Buy me a coffee or a toffee",
+  ogDescription: "Pick how many, leave a note, done in under a minute. Support keeps the writing and free tools coming.",
   path: "/support",
 });
 

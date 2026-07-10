@@ -22,6 +22,11 @@ export const services: Service[] = [
       { step: "Compound", detail: "Refresh, expand, and instrument on a fixed cadence." },
     ],
     startingAt: "₹1.5L / month",
+    seo: {
+      title: "SEO & Organic Growth Services",
+      description:
+        "Own your category in search and in AI answers with topic clusters, programmatic SEO, and an answer-first content system built to compound for years.",
+    },
   },
   {
     slug: "performance",
@@ -44,6 +49,11 @@ export const services: Service[] = [
       { step: "Scale", detail: "Push spend only where the unit economics hold." },
     ],
     startingAt: "₹2L / month",
+    seo: {
+      title: "Performance Marketing Services",
+      description:
+        "Profitable paid acquisition at scale — account structure, creative testing systems, and post-click pages engineered to convert, not just to spend.",
+    },
   },
   {
     slug: "content",
@@ -66,6 +76,11 @@ export const services: Service[] = [
       { step: "Review", detail: "Kill what doesn't work, double the rest." },
     ],
     startingAt: "₹1.25L / month",
+    seo: {
+      title: "Content Strategy & Editorial Systems",
+      description:
+        "An editorial engine that demonstrates real thinking: content pillars, a repurposing pipeline, and a QA rubric that turns one idea into a month of distribution.",
+    },
   },
   {
     slug: "ai-workflows",
@@ -88,6 +103,11 @@ export const services: Service[] = [
       { step: "Enable", detail: "Hand the team a system they can run." },
     ],
     startingAt: "₹1.75L / month",
+    seo: {
+      title: "AI Automation & Workflows",
+      description:
+        "Custom AI workflows for research, drafting, analysis, and ops — built with human-in-the-loop QA gates so quality goes up, not down, as output scales.",
+    },
   },
   {
     slug: "advisory",
@@ -110,6 +130,11 @@ export const services: Service[] = [
       { step: "Compound", detail: "Build the system so it outlasts the engagement." },
     ],
     startingAt: "₹75K / month",
+    seo: {
+      title: "Startup Advisory for Founders",
+      description:
+        "Founder-to-founder advisory on growth, distribution, and positioning — hands-on working sessions built for early and growth-stage startups.",
+    },
   },
   {
     slug: "speaking",
@@ -132,6 +157,11 @@ export const services: Service[] = [
       { step: "Extend", detail: "Provide resources that outlast the talk." },
     ],
     startingAt: "On request",
+    seo: {
+      title: "SEO & AI Speaking, Workshops",
+      description:
+        "Keynotes and workshops on SEO, AI workflows, and founder-led growth — built on real experiments and outcomes, not recycled theory or borrowed slides.",
+    },
   },
 ];
 

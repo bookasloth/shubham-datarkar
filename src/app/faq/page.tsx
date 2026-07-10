@@ -8,8 +8,12 @@ import { Reveal } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "FAQ",
-  description: "Answers to common questions about working with Shubham Datarkar — process, pricing, and approach.",
+  title: "Questions, Answered",
+  description:
+    "Answers to common questions about working with a marketing and AI founder — process, pricing, timelines, and approach, before we start.",
+  ogTitle: "Questions, answered",
+  ogDescription:
+    "The things people ask before we work together — process, pricing, and approach. If yours isn't here, just get in touch.",
   path: "/faq",
 });
 

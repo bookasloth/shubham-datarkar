@@ -4,8 +4,10 @@ import { Section } from "@/components/layout/container";
 import { LegalDoc, type LegalBlock } from "@/components/sections/legal-doc";
 
 export const metadata = buildMetadata({
-  title: "Privacy Policy",
-  description: "How shubhamdatarkar.com collects, uses, and protects your information.",
+  title: "Privacy Policy & Your Data",
+  description: "How shubhamdatarkar.com collects, uses, and protects your data — contact forms, newsletter, payments, cookies, analytics, and your rights.",
+  ogTitle: "Privacy Policy — shubhamdatarkar.com",
+  ogDescription: "What's collected, how it's used, and the control you have over it.",
   path: "/privacy-policy",
 });
 

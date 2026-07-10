@@ -12,8 +12,12 @@ import { JsonLd } from "@/components/seo/json-ld";
 import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
-  title: "AI Experiments",
-  description: "The lab — AI experiments, documented results, and what's being built next.",
+  title: "AI Experiments & Prototypes",
+  description:
+    "AI experiments run in the open — RAG chatbots, semantic search, content QA, and autonomous agents. What worked, what didn't, and the receipts.",
+  ogTitle: "AI experiments, in the open",
+  ogDescription:
+    "AI is a multiplier, not a magic trick. The tests, the wins, the failures — documented with receipts, not hype.",
   path: "/ai-experiments",
 });
 

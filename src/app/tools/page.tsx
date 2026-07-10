@@ -8,8 +8,10 @@ import { ToolCard } from "@/components/cards/tool-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Free Tools",
-  description: "Free marketing and SEO tools — audits, calculators, generators. Use them, no signup required.",
+  title: "Free Marketing & SEO Tools",
+  description: "Free marketing and SEO tools — audits, calculators, and generators that give value before they ask for an email. No signup required.",
+  ogTitle: "Tools that earn trust — free to use",
+  ogDescription: "Genuinely useful marketing and SEO tools. Value before they ever ask for an email. No signup.",
   path: "/tools",
 });
 

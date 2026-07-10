@@ -11,8 +11,10 @@ import { Card } from "@/components/ui/card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Services",
-  description: "SEO, performance marketing, content, AI automation, and founder advisory — productized and outcome-first.",
+  title: "Marketing, SEO & AI Services",
+  description: "SEO, performance marketing, content, AI automation, and founder advisory — productized engagements with clear, compounding outcomes.",
+  ogTitle: "How I can help — marketing, SEO & AI",
+  ogDescription: "Productized engagements with clear outcomes. Pick a path, or book a call to find the right one.",
   path: "/services",
 });
 

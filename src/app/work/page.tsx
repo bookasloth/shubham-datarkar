@@ -11,8 +11,10 @@ import { Badge } from "@/components/ui/badge";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
-  title: "Work",
-  description: "20+ websites, 8+ SaaS products, 200+ content pieces, 30+ marketing campaigns, and a lab of personal projects.",
+  title: "Everything I've Shipped",
+  description: "20+ websites, 8+ SaaS products, 200+ content pieces, and 30+ campaigns — a decade of agency work, independent projects, and ventures of my own.",
+  ogTitle: "Everything I've shipped",
+  ogDescription: "20+ websites, 8+ SaaS products, 200+ content pieces, 30+ campaigns. A decade of work in one place.",
   path: "/work",
 });
 
