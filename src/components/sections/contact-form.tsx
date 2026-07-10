@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/toast";
 import { submitContact } from "@/lib/contact/actions";
 import { CreateAccountCTA } from "@/components/members/create-account-cta";
+import { readFirstTouch } from "@/components/analytics/attribution-probe";
 
 const PROJECT_TYPES = ["Agency Work", "Consulting", "Speaking", "Partnership", "Other"];
 const BUDGETS = ["Under ₹1L / mo", "₹1L–3L / mo", "₹3L–6L / mo", "₹6L+ / mo", "Not sure yet"];
@@ -50,6 +51,7 @@ export function ContactForm() {
       projectType: values.projectType,
       budget: values.budget || undefined,
       message: values.message,
+      attribution: readFirstTouch(),
     });
     setLoading(false);
 
