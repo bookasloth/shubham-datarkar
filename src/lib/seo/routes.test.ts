@@ -16,6 +16,11 @@ describe("pageTypeOf", () => {
     expect(isIndexable("/me")).toBe(true);
   });
 
+  it("classifies the SEO Expert national landing as a pillar", () => {
+    expect(pageTypeOf("/seo-expert-india")).toBe("pillar");
+    expect(isIndexable("/seo-expert-india")).toBe(true);
+  });
+
   it("classifies detail pages as pillars", () => {
     expect(pageTypeOf("/services/seo")).toBe("pillar");
     expect(pageTypeOf("/products/alluminaty")).toBe("pillar");
