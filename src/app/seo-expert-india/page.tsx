@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
-import { site, socials } from "@/lib/site";
+import { site, socials, companies } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema, reviewSchema, seoLandingSchema } from "@/lib/seo";
 import type { CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
@@ -171,9 +171,9 @@ export default async function SeoExpertIndiaPage() {
                   Who you&rsquo;re working with
                 </h2>
                 <p className="mx-auto mt-4 max-w-2xl text-lg text-muted-foreground">
-                  I&rsquo;m {site.name} — {site.role.toLowerCase()}, based in {site.location}. I&rsquo;ve run SEO and
-                  growth for 8+ years across The Bogus Company, Book A Sloth, and Timewheel Internet, which means the
-                  playbook on this page is the same one I run on my own businesses, not a repackaged template.
+                  I&rsquo;m {site.name} — {site.role.toLowerCase()}, based in {site.location}. I run SEO and growth
+                  across my own businesses — {companies.map((co) => co.name).join(", ")} — which means the playbook
+                  on this page is the same one I use in practice, not a repackaged template.
                 </p>
               </div>
               <ul className="flex flex-wrap items-center justify-center gap-4">
