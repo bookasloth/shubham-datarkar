@@ -31,7 +31,9 @@ const nextConfig: NextConfig = {
   // Security headers (audit M-1). Clickjacking, MIME-sniff, referrer, and a CSP
   // scoped to the origins the app actually loads: Razorpay Checkout, Vercel
   // Analytics/Speed Insights, Supabase (REST + realtime wss + Storage images),
-  // and the two known embed providers (YouTube-nocookie, OpenStreetMap).
+  // the asset CDNs that serve site images (company-assets.bookasloth.in,
+  // website-assets.shubhamdatarkar.com), and the two known embed providers
+  // (YouTube-nocookie, OpenStreetMap).
   // ponytail: `script-src` keeps 'unsafe-inline' — the app has no user-HTML XSS
   // sink (only escaped JSON-LD), and nonce-based CSP needs a proxy rewrite that
   // risks breaking Next's inline theme/hydration scripts. Move to nonces if a
@@ -43,7 +45,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${scriptEval} https://checkout.razorpay.com https://va.vercel-scripts.com`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://www.openstreetmap.org",
+      "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://www.openstreetmap.org",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com",
       "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube-nocookie.com https://www.openstreetmap.org",
