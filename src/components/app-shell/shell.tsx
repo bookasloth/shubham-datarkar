@@ -33,8 +33,8 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             >
               <Menu className="size-5" />
             </SheetTrigger>
-            <SheetContent className="left-0 right-auto border-l-0 border-r border-border">
-              <SheetHeader><SheetTitle><Logo /></SheetTitle></SheetHeader>
+            <SheetContent>
+              <SheetHeader><SheetTitle onClick={() => setDrawer(false)}><Logo /></SheetTitle></SheetHeader>
               <SheetBody>
                 <AppSidebar signedIn={signedIn} onNavigate={() => setDrawer(false)} />
               </SheetBody>
@@ -53,7 +53,16 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
             <Search className="size-4" /> Search…
           </button>
 
-          <div className="ml-auto flex items-center gap-2 sm:ml-0">
+          <button
+            type="button"
+            aria-label="Search"
+            onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_EVENT))}
+            className="ml-auto rounded-btn p-2 text-muted-foreground transition-ui hover:bg-accent hover:text-foreground sm:hidden"
+          >
+            <Search className="size-5" />
+          </button>
+
+          <div className="flex items-center gap-2">
             {signedIn ? (
               <ProfileMenu
                 displayName={user!.displayName}
