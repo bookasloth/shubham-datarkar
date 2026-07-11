@@ -18,14 +18,19 @@ export async function signIn(
   }
 
   const supabase = await supabaseAuthServer();
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
     return { error: "Invalid email or password." };
   }
 
+  // Route by identity. Non-admins have no place in /admin — requireAdmin would
+  // bounce them straight back to /login, an infinite loop. Send the single
+  // admin to the console; everyone else to their member workspace. Strict
+  // email match mirrors getAdminUser so this never disagrees with the gate.
   // redirect() throws to perform the redirect — keep it outside try/catch.
-  redirect("/admin");
+  const isAdmin = !!process.env.ADMIN_EMAIL && data.user?.email === process.env.ADMIN_EMAIL;
+  redirect(isAdmin ? "/admin" : "/members");
 }
 
 export async function signOut(): Promise<void> {
