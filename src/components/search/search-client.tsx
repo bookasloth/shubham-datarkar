@@ -15,7 +15,18 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/ui/empty-state";
 
-type Entry = { title: string; href: string; type: string; description: string };
+type Entry = { title: string; href: string; type: string; description: string; ad?: boolean };
+
+// Affiliate slot — shown as the second search result. Swap `description`/`title`
+// to rotate creative. `ad: true` renders it as an external, sponsored link.
+const AD: Entry = {
+  title: "The host I actually deploy to",
+  href: "https://www.hostinger.com/in?REFERRALCODE=SND1995",
+  type: "Recommendation",
+  description:
+    "Moved three side projects to Hostinger this year. Cheap, fast, stays out of my way — here's why I stopped shopping around.",
+  ad: true,
+};
 
 const staticIndex: Entry[] = [
   ...caseStudies.map((c) => ({
@@ -55,6 +66,13 @@ export function SearchClient({ articles = [] }: { articles?: Post[] }) {
     return index.filter((e) => (e.title + " " + e.description + " " + e.type).toLowerCase().includes(q));
   }, [query, index]);
 
+  const rows = React.useMemo(() => {
+    if (results.length === 0) return results;
+    const r = [...results];
+    r.splice(1, 0, AD); // always second
+    return r;
+  }, [results]);
+
   return (
     <div>
       <div className="relative">
@@ -83,9 +101,10 @@ export function SearchClient({ articles = [] }: { articles?: Post[] }) {
               {results.length} result{results.length === 1 ? "" : "s"} for &ldquo;{query}&rdquo;
             </p>
             <ul className="divide-y divide-border rounded-card border border-border">
-              {results.map((r) => (
-                <li key={r.href + r.title}>
-                  <Link href={r.href} className="group flex items-start gap-4 p-4 transition-ui hover:bg-accent">
+              {rows.map((r) => {
+                const cls = "group flex items-start gap-4 p-4 transition-ui hover:bg-accent";
+                const inner = (
+                  <>
                     <Badge variant="muted" className="mt-0.5 shrink-0">
                       {r.type}
                     </Badge>
@@ -93,9 +112,22 @@ export function SearchClient({ articles = [] }: { articles?: Post[] }) {
                       <span className="font-medium group-hover:underline">{r.title}</span>
                       <span className="mt-0.5 block text-sm text-muted-foreground">{r.description}</span>
                     </span>
-                  </Link>
-                </li>
-              ))}
+                  </>
+                );
+                return (
+                  <li key={r.ad ? "ad-slot" : r.href + r.title}>
+                    {r.ad ? (
+                      <a href={r.href} target="_blank" rel="noopener noreferrer" className={cls}>
+                        {inner}
+                      </a>
+                    ) : (
+                      <Link href={r.href} className={cls}>
+                        {inner}
+                      </Link>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </>
         )}
