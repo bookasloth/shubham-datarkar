@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { isReactionKey, type ReactionCounts, type ReactionKey } from "./reactions";
 
 export type ReactResult = { ok: true; counts: ReactionCounts } | { ok: false };
@@ -20,6 +22,10 @@ export async function react(
   if (next !== null && !isReactionKey(next)) return { ok: false };
   if (prev !== null && !isReactionKey(prev)) return { ok: false };
   if (next === null && prev === null) return { ok: false };
+
+  // Anonymous by design (dedup is client-side only), so cap the rate per IP to
+  // keep the counts from being trivially inflated in a loop.
+  if (!allow(`react:${clientIp(await headers())}`, 30, 60_000)) return { ok: false };
 
   const { data, error } = await supabaseAdmin().rpc("apply_reaction", {
     p_slug: slug,

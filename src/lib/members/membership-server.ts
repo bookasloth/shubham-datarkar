@@ -61,10 +61,25 @@ export async function upsertPendingMembership(
 export async function activateMembership(
   userId: string,
   subscriptionId: string,
-  interval: "monthly" | "yearly",
 ): Promise<boolean> {
+  const admin = supabaseAdmin();
+
+  // Derive the period from the plan on the reserved row — never from the client.
+  // (A monthly subscriber could otherwise POST interval:"yearly" on confirm and
+  // self-grant a year of local access from one monthly charge.)
+  const { data: row } = await admin
+    .from("memberships")
+    .select("plan_key")
+    .eq("user_id", userId)
+    .eq("razorpay_subscription_id", subscriptionId)
+    .maybeSingle();
+  if (!row) return false;
+
+  const plan = await getPlanByKey(row.plan_key as string);
+  const interval: "monthly" | "yearly" = plan?.interval === "yearly" ? "yearly" : "monthly";
   const periodMs = (interval === "monthly" ? 31 : 366) * 24 * 60 * 60 * 1000;
-  const { data, error } = await supabaseAdmin()
+
+  const { data, error } = await admin
     .from("memberships")
     .update({
       status: "active",

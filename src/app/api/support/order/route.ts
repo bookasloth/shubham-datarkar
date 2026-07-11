@@ -5,6 +5,7 @@ import { createOrder, razorpayKeyId } from "@/lib/razorpay/client";
 import { insertPendingSupport, attachOrder, markSupportStatus } from "@/lib/support/server";
 
 import { EMAIL_RE } from "@/lib/validation/email";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,12 @@ const MAX_UNITS = 1000;
  * client what Checkout needs. The confirm route is the source of truth for paid.
  */
 export async function POST(request: Request) {
+  // Unauthenticated + creates a live Razorpay order per call — throttle by IP so
+  // it can't be scripted into a supports-table flood / provider-API hammer.
+  if (!allow(`support-order:${clientIp(request.headers)}`, 5, 60_000)) {
+    return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await request.json();
