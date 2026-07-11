@@ -12,7 +12,13 @@ export const metadata = buildMetadata({
   noIndex: true,
 });
 
-export default function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ reset?: string }>;
+}) {
+  const { reset } = await searchParams;
+
   return (
     <Section className="flex min-h-[80vh] items-center">
       <Container size="narrow">
@@ -22,9 +28,22 @@ export default function LoginPage() {
             <h1 className="mt-5 text-2xl font-bold tracking-tight">Welcome back</h1>
             <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to your dashboard.</p>
           </div>
+          {reset === "1" && (
+            <div
+              className="mb-4 rounded-card border border-border bg-card p-3 text-center text-sm text-muted-foreground"
+              role="status"
+            >
+              Password updated. Sign in with your new password.
+            </div>
+          )}
           <Card className="p-6">
             <LoginForm />
           </Card>
+          <p className="mt-3 text-center text-sm">
+            <Link href="/forgot-password" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+              Forgot your password?
+            </Link>
+          </p>
           <p className="mt-6 text-center text-sm text-muted-foreground">
             New here?{" "}
             <Link href="/newsletter" className="font-medium text-foreground underline-offset-4 hover:underline">
