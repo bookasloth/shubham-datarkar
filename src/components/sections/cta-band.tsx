@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { BrandIcon } from "@/components/ui/brand-icon";
+import { BrandIcon, type BrandIconName } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { Container, Section } from "@/components/layout/container";
 import { buttonVariants } from "@/components/ui/button";
@@ -14,6 +14,7 @@ export function CtaBand({
   secondaryLabel = "Start a project",
   primaryHref = site.bookingUrl,
   secondaryHref = "/contact",
+  primaryIcon = "CalendarCheck",
 }: {
   title?: string;
   description?: string;
@@ -21,6 +22,7 @@ export function CtaBand({
   secondaryLabel?: string;
   primaryHref?: string;
   secondaryHref?: string;
+  primaryIcon?: BrandIconName | null; // null hides it — for non-booking CTAs
 }) {
   const primaryIsExternal = primaryHref.startsWith("http");
 
@@ -42,7 +44,7 @@ export function CtaBand({
                     "w-full bg-background text-foreground hover:bg-background/90 sm:w-auto",
                   )}
                 >
-                  <BrandIcon name="CalendarCheck" />
+                  {primaryIcon && <BrandIcon name={primaryIcon} />}
                   {primaryLabel}
                 </a>
                 <Link
