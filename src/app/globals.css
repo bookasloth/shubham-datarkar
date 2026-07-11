@@ -128,12 +128,19 @@
   top: 0;
   left: 0;
   transform: translate(-20px, -6px); /* flame tip -> the point */
-  filter: drop-shadow(0 0 6px rgba(255, 150, 50, 0.9));
+  filter: drop-shadow(0 0 6px var(--diya-glow, rgba(255, 150, 50, 0.9)));
 }
 .diya-flame {
   transform-box: fill-box;
   transform-origin: 50% 100%;
   animation: diya-flame 0.28s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+/* Jyoti — the flame core. Its own flicker on top of the group's sway. */
+.diya-jyoti {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: diya-jyoti 0.5s ease-in-out infinite;
   will-change: transform, opacity;
 }
 .diya-aura {
@@ -147,8 +154,8 @@
   border-radius: 50%;
   background: radial-gradient(
     circle,
-    rgba(255, 150, 50, 0.28),
-    rgba(255, 120, 30, 0.08) 42%,
+    var(--aura-strong, rgba(255, 150, 50, 0.28)),
+    var(--aura-soft, rgba(255, 120, 30, 0.08)) 42%,
     transparent 68%
   );
   animation: diya-aura 3s ease-in-out infinite;
@@ -159,9 +166,28 @@
     transform: scaleY(1) scaleX(1) skewX(0deg);
     opacity: 1;
   }
+  35% {
+    transform: scaleY(1.09) scaleX(0.96) skewX(2deg);
+    opacity: 0.95;
+  }
+  70% {
+    transform: scaleY(1.16) scaleX(0.91) skewX(-3deg);
+    opacity: 0.87;
+  }
   100% {
-    transform: scaleY(1.13) scaleX(0.93) skewX(-3deg);
-    opacity: 0.9;
+    transform: scaleY(1.06) scaleX(0.97) skewX(1deg);
+    opacity: 0.94;
+  }
+}
+@keyframes diya-jyoti {
+  0%,
+  100% {
+    transform: scaleY(1);
+    opacity: 0.82;
+  }
+  50% {
+    transform: scaleY(1.14);
+    opacity: 1;
   }
 }
 @keyframes diya-aura {
@@ -177,6 +203,7 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .diya-flame,
+  .diya-jyoti,
   .diya-aura {
     animation: none;
   }
