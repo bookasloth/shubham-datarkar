@@ -4,8 +4,14 @@ import { useActionState, useState } from "react";
 import { signIn, signUp, type MembersAuthState } from "@/lib/members/auth-actions";
 import { Button } from "@/components/ui/button";
 
-export default function MembersAuthForm({ next }: { next: string }) {
-  const [mode, setMode] = useState<"in" | "up">("in");
+export default function MembersAuthForm({
+  next,
+  initialMode = "in",
+}: {
+  next: string;
+  initialMode?: "in" | "up";
+}) {
+  const [mode, setMode] = useState<"in" | "up">(initialMode);
   const action = mode === "in" ? signIn : signUp;
   const [state, formAction, pending] = useActionState<MembersAuthState, FormData>(
     action,
