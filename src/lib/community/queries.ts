@@ -40,6 +40,8 @@ export async function listFeed(opts: {
   offset?: number;
   author?: string;
   bookmarked?: boolean;
+  reblogged?: boolean;
+  liked?: boolean;
 }): Promise<FeedPost[]> {
   // Call as the request user (cookie-scoped): the RPC derives the viewer from
   // auth.uid(), so vote/bookmark state can't be spoofed for another user.
@@ -51,6 +53,8 @@ export async function listFeed(opts: {
     p_offset: opts.offset ?? 0,
     p_author: opts.author ?? null,
     p_bookmarked: opts.bookmarked ?? false,
+    p_reblogged: opts.reblogged ?? false,
+    p_liked: opts.liked ?? false,
   });
   if (error) {
     console.warn("community_feed failed:", error.message);
