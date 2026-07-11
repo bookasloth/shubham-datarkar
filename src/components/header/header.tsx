@@ -1,10 +1,10 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
-import { site } from "@/lib/site";
 import { cn } from "@/lib/utils";
 import { BurgerMenu } from "./burger-menu";
 import { MoreMenu } from "./more-menu";
@@ -47,17 +47,15 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 justify-self-end">
-          <a
-            href={site.bookingUrl}
-            target="_blank"
-            rel="noopener noreferrer"
+          <Link
+            href="/membership"
             className={cn(
               buttonVariants({ size: "sm" }),
               "mr-1 hidden sm:inline-flex",
             )}
           >
-            Book a call
-          </a>
+            Join Community
+          </Link>
           <ThemeToggle />
           <MoreMenu />
         </div>
