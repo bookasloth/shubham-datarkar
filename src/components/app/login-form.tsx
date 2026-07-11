@@ -2,13 +2,27 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { ArrowRight, Eye, EyeOff } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { signIn, type SignInState } from "@/lib/auth/actions";
+import {
+  signIn,
+  signInWithMagicLink,
+  type SignInState,
+  type MagicLinkState,
+} from "@/lib/auth/actions";
 
 export function LoginForm() {
+  const [magic, setMagic] = React.useState(false);
+  return magic ? (
+    <MagicForm onBack={() => setMagic(false)} />
+  ) : (
+    <PasswordForm onMagic={() => setMagic(true)} />
+  );
+}
+
+function PasswordForm({ onMagic }: { onMagic: () => void }) {
   const [show, setShow] = React.useState(false);
   const [state, action, pending] = useActionState<SignInState, FormData>(
     signIn,
@@ -61,6 +75,73 @@ export function LoginForm() {
         Sign in
         {!pending && <ArrowRight />}
       </Button>
+
+      <button
+        type="button"
+        onClick={onMagic}
+        className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        Email me a sign-in link instead
+      </button>
+    </form>
+  );
+}
+
+function MagicForm({ onBack }: { onBack: () => void }) {
+  const [state, action, pending] = useActionState<MagicLinkState, FormData>(
+    signInWithMagicLink,
+    undefined,
+  );
+
+  if (state && "ok" in state) {
+    return (
+      <div className="grid gap-4 text-center">
+        <p className="text-sm text-muted-foreground" role="status">
+          Check your inbox for a sign-in link. It expires shortly, so use it soon.
+        </p>
+        <button
+          type="button"
+          onClick={onBack}
+          className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Back to password sign-in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form action={action} className="grid gap-4">
+      <div className="grid gap-1.5">
+        <Label htmlFor="magic-email">Email</Label>
+        <Input
+          id="magic-email"
+          name="email"
+          type="email"
+          autoComplete="email"
+          placeholder="you@company.com"
+          required
+        />
+      </div>
+
+      {state?.error && (
+        <p className="text-sm text-destructive" role="alert">
+          {state.error}
+        </p>
+      )}
+
+      <Button type="submit" size="lg" loading={pending} className="w-full">
+        Email me a sign-in link
+        {!pending && <Mail />}
+      </Button>
+
+      <button
+        type="button"
+        onClick={onBack}
+        className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+      >
+        Sign in with a password instead
+      </button>
     </form>
   );
 }

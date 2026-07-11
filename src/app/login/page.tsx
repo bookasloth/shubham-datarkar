@@ -15,9 +15,9 @@ export const metadata = buildMetadata({
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string }>;
+  searchParams: Promise<{ reset?: string; error?: string }>;
 }) {
-  const { reset } = await searchParams;
+  const { reset, error } = await searchParams;
 
   return (
     <Section className="flex min-h-[80vh] items-center">
@@ -34,6 +34,14 @@ export default async function LoginPage({
               role="status"
             >
               Password updated. Sign in with your new password.
+            </div>
+          )}
+          {error === "link" && (
+            <div
+              className="mb-4 rounded-card border border-destructive/40 bg-card p-3 text-center text-sm text-destructive"
+              role="alert"
+            >
+              That sign-in link was invalid or expired. Request a new one.
             </div>
           )}
           <Card className="p-6">

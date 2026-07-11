@@ -3,8 +3,10 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { postLoginPath } from "@/lib/auth/redirect";
 
 export type SignInState = { error: string } | undefined;
+export type MagicLinkState = { ok: true } | { error: string } | undefined;
 export type ResetRequestState = { ok: true } | { error: string } | undefined;
 export type UpdatePasswordState = { error: string } | undefined;
 
@@ -35,13 +37,30 @@ export async function signIn(
     return { error: "Invalid email or password." };
   }
 
-  // Route by identity. Non-admins have no place in /admin — requireAdmin would
-  // bounce them straight back to /login, an infinite loop. Send the single
-  // admin to the console; everyone else to their member workspace. Strict
-  // email match mirrors getAdminUser so this never disagrees with the gate.
   // redirect() throws to perform the redirect — keep it outside try/catch.
-  const isAdmin = !!process.env.ADMIN_EMAIL && data.user?.email === process.env.ADMIN_EMAIL;
-  redirect(isAdmin ? "/admin" : "/members");
+  redirect(postLoginPath(data.user?.email));
+}
+
+/**
+ * Passwordless sign-in: email a one-time magic link. The link lands on
+ * /auth/callback, which exchanges the code and routes by identity. Doubles as
+ * signup (Supabase creates the user if none exists). Reports success even on
+ * error-free unknown emails for the same reason password reset does.
+ */
+export async function signInWithMagicLink(
+  _prev: MagicLinkState,
+  formData: FormData,
+): Promise<MagicLinkState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Enter your email." };
+
+  const supabase = await supabaseAuthServer();
+  const { error } = await supabase.auth.signInWithOtp({
+    email,
+    options: { emailRedirectTo: `${await origin()}/auth/callback` },
+  });
+  if (error) return { error: "Could not send the link. Try again in a moment." };
+  return { ok: true };
 }
 
 /**
