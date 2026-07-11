@@ -172,17 +172,19 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               <p className="text-[17px] leading-8 text-foreground/90">{study.learnings}</p>
             </Block>
 
-            <Reveal className="border-t border-border pt-10">
-              <Card className="bg-card p-8">
-                <Quote className="size-6 text-muted-foreground" aria-hidden />
-                <blockquote className="mt-4 font-display text-xl font-medium leading-snug tracking-tight">
-                  {study.quote.text}
-                </blockquote>
-                <figcaption className="mt-4 text-sm text-muted-foreground">
-                  — {study.quote.author}, {study.quote.role}
-                </figcaption>
-              </Card>
-            </Reveal>
+            {study.quote && (
+              <Reveal className="border-t border-border pt-10">
+                <Card className="bg-card p-8">
+                  <Quote className="size-6 text-muted-foreground" aria-hidden />
+                  <blockquote className="mt-4 font-display text-xl font-medium leading-snug tracking-tight">
+                    {study.quote.text}
+                  </blockquote>
+                  <figcaption className="mt-4 text-sm text-muted-foreground">
+                    — {study.quote.author}, {study.quote.role}
+                  </figcaption>
+                </Card>
+              </Reveal>
+            )}
 
             <Reveal className="flex flex-col items-start gap-4 border-t border-border pt-10 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-lg font-semibold">Want results like this?</p>
