@@ -22,6 +22,7 @@ export function AppSidebar({
   // and route changes re-open the section you navigated into.
   const [open, setOpen] = React.useState<string>(section ?? "");
   React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (section) setOpen(section);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
