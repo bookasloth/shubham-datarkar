@@ -9,13 +9,13 @@ export const metadata = buildMetadata({ title: "Sign in", path: "/members/login"
 export default async function MembersLoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ next?: string }>;
+  searchParams: Promise<{ next?: string; mode?: string }>;
 }) {
-  const { next } = await searchParams;
+  const { next, mode } = await searchParams;
   const safeNext = safeMembersNext(next ?? null);
 
   const { user } = await getMemberContext();
   if (user) redirect(safeNext);
 
-  return <MembersAuthForm next={safeNext} />;
+  return <MembersAuthForm next={safeNext} initialMode={mode === "signup" ? "up" : "in"} />;
 }

@@ -46,10 +46,10 @@ export default async function LoginPage({
           </p>
           <p className="mt-6 text-center text-sm text-muted-foreground">
             New here?{" "}
-            <Link href="/newsletter" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Join the newsletter
-            </Link>{" "}
-            to get started.
+            <Link href="/members/login?mode=signup" className="font-medium text-foreground underline-offset-4 hover:underline">
+              Create a free account
+            </Link>
+            .
           </p>
         </div>
       </Container>
