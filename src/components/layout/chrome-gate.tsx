@@ -7,7 +7,7 @@ const BARE_PREFIXES = ["/games", "/link", "/login", "/admin", "/members"];
 
 /**
  * Hides site chrome (header/footer) on standalone routes: the /games mini-app
- * (own GamesHeader), the bare /link + /login pages, and /admin (which has its
+ * (own AppShell), the bare /link + /login pages, and /admin (which has its
  * own admin shell with its own header + command palette). Renders children
  * everywhere else.
  */
