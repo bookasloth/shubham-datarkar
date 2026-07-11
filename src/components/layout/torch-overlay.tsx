@@ -2,38 +2,62 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
-import { usePathname } from "next/navigation";
 
 /**
  * Full-screen darkness for the "torch" (extra dark) theme. A black sheet is
- * masked so a warm hole opens at the cursor and at every diya the user has
- * placed by clicking — masks composite with `intersect`, so N holes = N reveals
- * (stacked black gradients cannot do this). Each diya draws an animated flame
- * (jyoti) and a breathing aura on top. pointer-events-none keeps the page
- * clickable.
+ * masked so a single warm hole opens at the cursor — the diya IS the cursor.
+ * The diya carries an animated flame (jyoti) and a breathing aura.
+ * pointer-events-none keeps the page clickable.
  *
- * As diyas accumulate, a warm wash brightens the whole page (more light with
- * every lamp). The 7th diya saturates the page to a full yellow glow, holds,
- * then smoothly whitens into light mode. State resets whenever torch is
- * (re)entered, so it can be triggered as many times as you like.
+ * The diya starts wherever the cursor already was when torch was entered (not
+ * flashing in from a corner), because a global pointer listener records the
+ * last position even outside torch.
+ *
+ * Aura + flame color follow IST clock: warm yellow-orange from 7 PM to 7 AM,
+ * blue flame from 7 AM to 7 PM. IST = UTC+5:30.
  *
  * The diya is a real DOM element (not a CSS cursor) because Chrome does not
  * render SVG data-URI cursors.
  */
-
-type Diya = { id: number; x: number; y: number };
-type Finish = "idle" | "yellow" | "white";
 
 const AT_CURSOR = "var(--tx) var(--ty)";
 // Transparent center (the reveal hole) fading to opaque black (the dark sheet).
 const hole = (at: string) =>
   `radial-gradient(circle 150px at ${at}, transparent 0%, transparent 28%, #000 70%)`;
 
-const DIYA_LIMIT = 7;
-const WARM_YELLOW = "#ffc93c";
-const YELLOW_HOLD_MS = 550; // full-yellow saturation before whitening
-const WHITEN_MS = 850; // yellow -> white
-const WASH_TRANSITION = `opacity 500ms ease, background-color ${WHITEN_MS}ms ease`;
+type Palette = {
+  auraStrong: string;
+  auraSoft: string;
+  flameOuter: string;
+  flameInner: string;
+  glow: string;
+};
+
+const WARM: Palette = {
+  auraStrong: "rgba(255, 150, 50, 0.28)",
+  auraSoft: "rgba(255, 120, 30, 0.08)",
+  flameOuter: "#ffb020",
+  flameInner: "#fff2b0",
+  glow: "rgba(255, 150, 50, 0.9)",
+};
+
+const BLUE: Palette = {
+  auraStrong: "rgba(90, 160, 255, 0.3)",
+  auraSoft: "rgba(50, 120, 255, 0.09)",
+  flameOuter: "#3b82f6",
+  flameInner: "#dbeafe",
+  glow: "rgba(90, 160, 255, 0.9)",
+};
+
+// Warm 7 PM–7 AM IST, blue 7 AM–7 PM. Read once on render; a session rarely
+// crosses the boundary, and the diya rebuilds on any re-entry to torch.
+// ponytail: no live re-eval at the boundary — refresh covers it if it matters.
+function warmNow() {
+  const now = new Date();
+  const istMinutes = (now.getUTCHours() * 60 + now.getUTCMinutes() + 330) % 1440;
+  const hour = istMinutes / 60;
+  return hour >= 19 || hour < 7;
+}
 
 function DiyaMark() {
   return (
@@ -43,8 +67,12 @@ function DiyaMark() {
         <ellipse cx="20" cy="31" rx="12" ry="4" fill="#a8641e" />
         <path d="M8 30 Q20 22 32 30 Q20 35 8 30Z" fill="#c8802a" />
         <g className="diya-flame">
-          <path d="M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z" fill="#ffb020" />
-          <path d="M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z" fill="#fff2b0" />
+          <path d="M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z" fill="var(--flame-outer)" />
+          <path
+            className="diya-jyoti"
+            d="M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z"
+            fill="var(--flame-inner)"
+          />
         </g>
       </svg>
     </>
@@ -52,66 +80,36 @@ function DiyaMark() {
 }
 
 export function TorchOverlay() {
-  const { resolvedTheme, setTheme } = useTheme();
-  const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
   const ref = React.useRef<HTMLDivElement>(null);
-  const idRef = React.useRef(0);
+  // Last known pointer position, tracked even outside torch so the diya can
+  // start where the cursor already is (React ref: no re-render, no flash).
+  const posRef = React.useRef({ x: -1000, y: -1000 });
   const [mounted, setMounted] = React.useState(false);
-  const [placed, setPlaced] = React.useState<Diya[]>([]);
-  const [finish, setFinish] = React.useState<Finish>("idle");
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
   const torch = resolvedTheme === "torch";
 
-  // Reset when torch is (re)entered/left, and per page. Without this, `placed`
-  // stays at 7 after a flip, so re-entering torch would instantly flip again.
+  // Always-on cursor tracking. Updates CSS vars directly when torch is live
+  // (cheap repaint, no React re-render) and always records the last position.
   React.useEffect(() => {
-    setPlaced([]);
-    setFinish("idle");
-  }, [torch, pathname]);
-
-  // Cursor tracking (CSS vars: cheap repaint, no React re-render). Seeded
-  // off-screen so the diya never flashes in the center before the first move.
-  React.useEffect(() => {
-    if (!torch) return;
     const move = (e: PointerEvent) => {
+      posRef.current = { x: e.clientX, y: e.clientY };
       const el = ref.current;
-      if (!el) return;
-      el.style.setProperty("--tx", `${e.clientX}px`);
-      el.style.setProperty("--ty", `${e.clientY}px`);
+      if (el) {
+        el.style.setProperty("--tx", `${e.clientX}px`);
+        el.style.setProperty("--ty", `${e.clientY}px`);
+      }
     };
-    window.addEventListener("pointermove", move);
+    window.addEventListener("pointermove", move, { passive: true });
     return () => window.removeEventListener("pointermove", move);
-  }, [torch]);
-
-  // Click anywhere -> leave a lit diya there (page stays clickable: no preventDefault).
-  React.useEffect(() => {
-    if (!torch) return;
-    const click = (e: MouseEvent) => {
-      setPlaced((prev) => [...prev, { id: idRef.current++, x: e.clientX, y: e.clientY }]);
-    };
-    window.addEventListener("click", click);
-    return () => window.removeEventListener("click", click);
-  }, [torch]);
-
-  // 7 diyas -> saturate to yellow, hold, whiten, then flip to light mode.
-  React.useEffect(() => {
-    if (placed.length < DIYA_LIMIT || finish !== "idle") return;
-    setFinish("yellow");
-    const toWhite = window.setTimeout(() => setFinish("white"), YELLOW_HOLD_MS);
-    const toLight = window.setTimeout(() => setTheme("light"), YELLOW_HOLD_MS + WHITEN_MS);
-    return () => {
-      window.clearTimeout(toWhite);
-      window.clearTimeout(toLight);
-    };
-  }, [placed.length, finish, setTheme]);
+  }, []);
 
   if (!mounted || !torch) return null;
 
-  const mask = [hole(AT_CURSOR), ...placed.map((d) => hole(`${d.x}px ${d.y}px`))].join(",");
-  // Each diya adds warmth; the wash fills the page with light as lamps accumulate.
-  const warmth = Math.min(placed.length / DIYA_LIMIT, 1);
+  const p = warmNow() ? WARM : BLUE;
+  const mask = hole(AT_CURSOR);
 
   return (
     <div
@@ -119,12 +117,17 @@ export function TorchOverlay() {
       aria-hidden
       className="pointer-events-none fixed inset-0 z-[9999]"
       style={{
-        // Off-screen until the first pointer move (kills the center flash).
-        ["--tx" as string]: "-1000px",
-        ["--ty" as string]: "-1000px",
+        // Seed at the last known cursor position (kills the corner flash).
+        ["--tx" as string]: `${posRef.current.x}px`,
+        ["--ty" as string]: `${posRef.current.y}px`,
+        ["--aura-strong" as string]: p.auraStrong,
+        ["--aura-soft" as string]: p.auraSoft,
+        ["--flame-outer" as string]: p.flameOuter,
+        ["--flame-inner" as string]: p.flameInner,
+        ["--diya-glow" as string]: p.glow,
       }}
     >
-      {/* Dark sheet: masked so each hole reveals the page beneath. */}
+      {/* Dark sheet: masked so the single hole reveals the page beneath. */}
       <div
         className="absolute inset-0"
         style={{
@@ -135,23 +138,6 @@ export function TorchOverlay() {
           maskComposite: "intersect",
         }}
       />
-
-      {/* Warm wash: brightens with every diya, saturates yellow then whitens. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: finish === "white" ? "#ffffff" : WARM_YELLOW,
-          opacity: finish === "idle" ? warmth * 0.8 : 1,
-          transition: WASH_TRANSITION,
-        }}
-      />
-
-      {/* Placed diyas: aura + flame, positioned by px. */}
-      {placed.map((d) => (
-        <div key={d.id} style={{ position: "absolute", left: d.x, top: d.y }}>
-          <DiyaMark />
-        </div>
-      ))}
 
       {/* Cursor diya: aura + flame, positioned by CSS var. */}
       <div style={{ position: "absolute", left: "var(--tx)", top: "var(--ty)" }}>
