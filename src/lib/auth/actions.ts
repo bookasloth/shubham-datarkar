@@ -3,7 +3,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
-import { postLoginPath } from "@/lib/auth/redirect";
+import { loginDestination, safeNext } from "@/lib/auth/redirect";
 
 export type SignInState = { error: string } | undefined;
 export type MagicLinkState = { ok: true } | { error: string } | undefined;
@@ -25,6 +25,7 @@ export async function signIn(
 ): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "");
 
   if (!email || !password) {
     return { error: "Email and password are required." };
@@ -38,7 +39,30 @@ export async function signIn(
   }
 
   // redirect() throws to perform the redirect — keep it outside try/catch.
-  redirect(postLoginPath(data.user?.email));
+  redirect(loginDestination(next, data.user?.email));
+}
+
+/** Create a password account, then route to the return path or identity default. */
+export async function signUp(
+  _prev: SignInState,
+  formData: FormData,
+): Promise<SignInState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const next = String(formData.get("next") ?? "");
+
+  if (!email || !password) {
+    return { error: "Email and password are required." };
+  }
+  if (password.length < 8) {
+    return { error: "Password must be at least 8 characters." };
+  }
+
+  const supabase = await supabaseAuthServer();
+  const { data, error } = await supabase.auth.signUp({ email, password });
+  if (error) return { error: error.message };
+
+  redirect(loginDestination(next, data.user?.email));
 }
 
 /**
@@ -54,10 +78,13 @@ export async function signInWithMagicLink(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Enter your email." };
 
+  const safe = safeNext(String(formData.get("next") ?? ""));
+  const callback = `${await origin()}/auth/callback${safe ? `?next=${encodeURIComponent(safe)}` : ""}`;
+
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: `${await origin()}/auth/callback` },
+    options: { emailRedirectTo: callback },
   });
   if (error) return { error: "Could not send the link. Try again in a moment." };
   return { ok: true };
