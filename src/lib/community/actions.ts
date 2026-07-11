@@ -6,6 +6,9 @@ import { validatePost } from "./validate";
 
 const BUCKET = "community-media";
 const MAX_BYTES = 5 * 1024 * 1024;
+// Raster only. `startsWith("image/")` would admit image/svg+xml — an SVG can carry
+// <script>, and this bucket is public (served inline from *.supabase.co). (audit L-2)
+const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 
 export type CreatePostState = { error?: string; ok?: boolean } | undefined;
 
@@ -38,7 +41,7 @@ export async function createPost(
   if (valid.type === "image") {
     for (const f of files) {
       if (f.size > MAX_BYTES) return { error: "Each image must be under 5MB." };
-      if (!f.type.startsWith("image/")) return { error: "Images only." };
+      if (!ALLOWED_IMAGE_TYPES.has(f.type)) return { error: "Use a JPG, PNG, WebP, GIF, or AVIF image." };
     }
     const admin = supabaseAdmin();
     const urls: string[] = [];

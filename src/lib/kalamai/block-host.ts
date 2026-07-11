@@ -13,6 +13,13 @@ export function isBlockedHost(hostname: string): boolean {
 
   if (h === "localhost" || h.endsWith(".local") || h.endsWith(".internal")) return true;
 
+  // Non-standard IPv4 literal encodings that the dotted-decimal tail check below
+  // would miss but the OS resolver still honours — all classic SSRF bypasses
+  // for reaching 127.0.0.1 / 169.254.169.254 (audit L-1):
+  if (/^\d+$/.test(h)) return true; // integer form, e.g. 2130706433 = 127.0.0.1
+  if (/^0x[\da-f]+$/i.test(h)) return true; // hex form, e.g. 0x7f000001
+  if (/^[\d.]+$/.test(h) && /(^|\.)0\d/.test(h)) return true; // octal octet, e.g. 0177.0.0.1
+
   if (h.includes(":")) {
     // IPv6 literal: loopback (::1), link-local (fe80::/10), unique-local (fc00::/7).
     if (h === "::1" || h.startsWith("fe80:") || h.startsWith("fc") || h.startsWith("fd")) return true;

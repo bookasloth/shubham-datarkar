@@ -228,3 +228,26 @@ Cannot be proven from source; confirm operationally (see §6):
 ---
 
 *Static source review only. Dynamic testing (live auth flows, real payment replay, header inspection on the deployed domain, Supabase Advisor lint) is recommended to confirm the runtime items in L-5 and validate the CSP against the live Razorpay checkout.*
+
+---
+
+## 7. Remediation Log — applied on `red-team-security-audit`
+
+Fixed in-code this pass (tsc clean, 382 tests pass, headers verified live in dev):
+
+| ID | Status | What changed |
+|----|--------|--------------|
+| **M-1** | ✅ Fixed | `next.config.ts` — CSP + `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`. `frame-ancestors 'none'`. `'unsafe-eval'` scoped to dev only. Verified: all five headers served; no CSP refusals; page renders. |
+| **M-2** | ✅ Fixed | `contact/actions.ts` — IP throttle (`allow(contact, 3, 60s)`) + honeypot (`company` field) short-circuits silently. Honeypot wired into `contact-form.tsx` (off-screen, `tabIndex=-1`, `aria-hidden`). |
+| **D-1** | ✅ Partial | `npm audit fix` cleared both **High** (nodemailer, undici). 2 moderate remain — postcss **bundled inside Next**; npm's only "fix" is `next@9` (destructive downgrade), so left as build-time-only residual until an upstream Next release ships patched postcss. |
+| **L-1** | ✅ Fixed | `block-host.ts` — reject integer (`2130706433`), hex (`0x7f000001`), and octal-octet (`0177.0.0.1`) IP encodings. Test cases added. (Mixed-form `0x7f.0.0.1` and DNS rebinding still out of scope — SERP-bounded.) |
+| **L-2** | ✅ Fixed | `community/actions.ts` — upload MIME check tightened from `startsWith("image/")` (admitted `image/svg+xml`) to a raster allowlist. Plus defense-in-depth migration `20260713000002_storage_upload_hardening.sql` scopes the direct-write RLS policy to the uploader's folder + image extensions. |
+| **L-3** | ✅ Fixed | `session.ts` — admin email compare made case-insensitive to match `members/session.ts` (prevents mixed-case `ADMIN_EMAIL` lockout). Full `is_admin()` single-source-of-truth dedup deferred (bigger change, fails-safe today). |
+| **L-4** | ✅ Fixed | `contact/actions.ts` — `oneLine()` strips CR/LF from the email subject. |
+| **M-3** | ⏳ Deferred | Durable rate limiting needs external infra (Upstash/Vercel KV) not yet provisioned. In-memory L1 retained; move `allow()` to KV when provisioned (drop-in, same signature). |
+
+**Manual follow-ups required (cannot be done from code):**
+1. Run migration `20260713000002_storage_upload_hardening.sql` in the OWN Supabase SQL editor.
+2. Provision Vercel KV / Upstash and back `rate-limit.ts` with it (M-3).
+3. Confirm the L-5 runtime items (prod env vars set; all RLS migrations applied; Supabase Auth policy).
+4. After deploy, re-verify headers on the live domain and validate the CSP against a real Razorpay checkout (tighten `script-src` toward nonces if feasible).

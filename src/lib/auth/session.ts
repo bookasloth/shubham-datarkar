@@ -21,7 +21,9 @@ export const getAdminUser = cache(async (): Promise<User | null> => {
   } = await supabase.auth.getUser();
 
   if (!user) return null;
-  if (user.email !== ADMIN_EMAIL) return null;
+  // Case-insensitive to match getMemberContext (members/session.ts) — a mixed-case
+  // ADMIN_EMAIL must not silently lock the admin out of /admin. Fails safe either way.
+  if (user.email?.toLowerCase() !== ADMIN_EMAIL.toLowerCase()) return null;
   return user;
 });
 

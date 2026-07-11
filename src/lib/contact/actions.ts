@@ -1,11 +1,14 @@
 "use server";
 
+import { headers } from "next/headers";
+
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail } from "@/lib/email/template";
 import { toAttributionRow, type FirstTouch } from "@/lib/attribution";
 import { EMAIL_RE } from "@/lib/validation/email";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 export type ContactInput = {
   name: string;
@@ -14,7 +17,14 @@ export type ContactInput = {
   budget?: string;
   message: string;
   attribution?: FirstTouch | null;
+  /** Honeypot: must stay empty. A real user never sees this field. */
+  company?: string;
 };
+
+/** Strip CR/LF so user text can't inject email headers (defense in depth; nodemailer also encodes). */
+function oneLine(s: string): string {
+  return s.replace(/[\r\n]+/g, " ");
+}
 
 export type ContactResult = { ok: boolean; error?: string };
 
@@ -35,6 +45,17 @@ function esc(s: string): string {
  * is configured.
  */
 export async function submitContact(input: ContactInput): Promise<ContactResult> {
+  // Honeypot: bots fill hidden fields. Silently succeed — no row, no email —
+  // so the bot can't tell it was caught.
+  if (input.company && input.company.trim() !== "") return { ok: true };
+
+  // Throttle by IP: this action writes a row AND sends two emails (incl. an
+  // auto-reply to the submitter-supplied address), so it's an email-amplification
+  // + DB-flood vector without a cap. (M-2)
+  if (!allow(`contact:${clientIp(await headers())}`, 3, 60_000)) {
+    return { ok: false, error: "Too many messages. Please wait a minute." };
+  }
+
   const name = String(input.name ?? "").trim().slice(0, 120);
   const email = String(input.email ?? "").trim().toLowerCase();
   const projectType = input.projectType ? String(input.projectType).trim().slice(0, 60) : null;
@@ -76,7 +97,7 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
       const notify = await sendEmail(creds, {
         to: creds.toEmail,
         replyTo: email,
-        subject: `New contact: ${name}${projectType ? ` — ${projectType}` : ""}`,
+        subject: oneLine(`New contact: ${name}${projectType ? ` — ${projectType}` : ""}`),
         text: `New contact from ${name} <${email}>\nProject: ${projectType ?? "—"}\nBudget: ${budget ?? "—"}\n\n${message}`,
         html: renderEmail({
           preheader: `New contact from ${name}`,
