@@ -27,6 +27,8 @@ export type SendInput = {
   html: string;
   text?: string;
   replyTo?: string;
+  inReplyTo?: string;
+  references?: string;
 };
 
 export async function sendEmail(
@@ -41,6 +43,8 @@ export async function sendEmail(
       html: input.html,
       text: input.text,
       replyTo: input.replyTo,
+      inReplyTo: input.inReplyTo,
+      references: input.references,
     });
     return { ok: true };
   } catch (e) {
