@@ -2,25 +2,69 @@
 
 import * as React from "react";
 import { useTheme } from "next-themes";
+import { usePathname } from "next/navigation";
 
 /**
- * Full-screen darkness that follows the cursor with a warm diya glow punched
- * through it, plus a diya (oil lamp) drawn AS the cursor. Only active in the
- * "torch" (extra dark) theme. pointer-events-none so the page stays clickable.
+ * Full-screen darkness for the "torch" (extra dark) theme. A black sheet is
+ * masked so a warm hole opens at the cursor and at every diya the user has
+ * placed by clicking — masks composite with `intersect`, so N holes = N reveals
+ * (stacked black gradients cannot do this). Each diya draws an animated flame
+ * (jyoti) and a breathing aura on top. pointer-events-none keeps the page
+ * clickable. When the 7th diya lands, we fade out and flip to light mode.
  *
  * The diya is a real DOM element (not a CSS cursor) because Chrome does not
  * render SVG data-URI cursors.
  */
+
+type Diya = { id: number; x: number; y: number };
+
+const AT_CURSOR = "var(--tx) var(--ty)";
+// Transparent center (the reveal hole) fading to opaque black (the dark sheet).
+const hole = (at: string) =>
+  `radial-gradient(circle 150px at ${at}, transparent 0%, transparent 28%, #000 70%)`;
+
+const DIYA_LIMIT = 7;
+const FADE_MS = 700;
+
+function DiyaMark() {
+  return (
+    <>
+      <div aria-hidden className="diya-aura" />
+      <svg width="40" height="40" viewBox="0 0 40 40" className="diya-mark" aria-hidden>
+        <ellipse cx="20" cy="31" rx="12" ry="4" fill="#a8641e" />
+        <path d="M8 30 Q20 22 32 30 Q20 35 8 30Z" fill="#c8802a" />
+        <g className="diya-flame">
+          <path d="M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z" fill="#ffb020" />
+          <path d="M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z" fill="#fff2b0" />
+        </g>
+      </svg>
+    </>
+  );
+}
+
 export function TorchOverlay() {
-  const { resolvedTheme } = useTheme();
+  const { resolvedTheme, setTheme } = useTheme();
+  const pathname = usePathname();
   const ref = React.useRef<HTMLDivElement>(null);
+  const idRef = React.useRef(0);
   const [mounted, setMounted] = React.useState(false);
+  const [placed, setPlaced] = React.useState<Diya[]>([]);
+  const [fading, setFading] = React.useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
+  const torch = resolvedTheme === "torch";
+
+  // Reset per page — "reach 7 on one page" is scoped to the current route.
   React.useEffect(() => {
-    if (resolvedTheme !== "torch") return;
-    // Direct CSS-var writes: cheap (repaint of the gradient + diya, no layout).
+    setPlaced([]);
+    setFading(false);
+  }, [pathname]);
+
+  // Cursor tracking (CSS vars: cheap repaint, no React re-render). Seeded
+  // off-screen so the diya never flashes in the center before the first move.
+  React.useEffect(() => {
+    if (!torch) return;
     const move = (e: PointerEvent) => {
       const el = ref.current;
       if (!el) return;
@@ -29,9 +73,29 @@ export function TorchOverlay() {
     };
     window.addEventListener("pointermove", move);
     return () => window.removeEventListener("pointermove", move);
-  }, [resolvedTheme]);
+  }, [torch]);
 
-  if (!mounted || resolvedTheme !== "torch") return null;
+  // Click anywhere -> leave a lit diya there (page stays clickable: no preventDefault).
+  React.useEffect(() => {
+    if (!torch) return;
+    const click = (e: MouseEvent) => {
+      setPlaced((prev) => [...prev, { id: idRef.current++, x: e.clientX, y: e.clientY }]);
+    };
+    window.addEventListener("click", click);
+    return () => window.removeEventListener("click", click);
+  }, [torch]);
+
+  // 7 diyas -> fade the darkness, then flip to light mode.
+  React.useEffect(() => {
+    if (placed.length < DIYA_LIMIT) return;
+    setFading(true);
+    const t = window.setTimeout(() => setTheme("light"), FADE_MS);
+    return () => window.clearTimeout(t);
+  }, [placed.length, setTheme]);
+
+  if (!mounted || !torch) return null;
+
+  const mask = [hole(AT_CURSOR), ...placed.map((d) => hole(`${d.x}px ${d.y}px`))].join(",");
 
   return (
     <div
@@ -39,30 +103,36 @@ export function TorchOverlay() {
       aria-hidden
       className="pointer-events-none fixed inset-0 z-[9999]"
       style={{
-        // --tx/--ty default to center until the first pointer move.
-        ["--tx" as string]: "50vw",
-        ["--ty" as string]: "50vh",
-        background: `radial-gradient(circle 190px at var(--tx) var(--ty), rgba(255,150,50,0.22), rgba(255,120,30,0.07) 42%, transparent 66%), radial-gradient(circle 240px at var(--tx) var(--ty), transparent 34%, rgba(0,0,0,0.86) 62%, #000 92%)`,
+        // Off-screen until the first pointer move (kills the center flash).
+        ["--tx" as string]: "-1000px",
+        ["--ty" as string]: "-1000px",
+        opacity: fading ? 0 : 1,
+        transition: `opacity ${FADE_MS}ms ease-out`,
       }}
     >
-      {/* Diya cursor: flame tip sits at the pointer (hotspot 20,6 in a 40px box). */}
-      <svg
-        width="40"
-        height="40"
-        viewBox="0 0 40 40"
+      {/* Dark sheet: masked so each hole reveals the page beneath. */}
+      <div
+        className="absolute inset-0"
         style={{
-          position: "absolute",
-          left: "var(--tx)",
-          top: "var(--ty)",
-          transform: "translate(-20px, -6px)",
-          filter: "drop-shadow(0 0 6px rgba(255,150,50,0.9))",
+          background: "#000",
+          WebkitMaskImage: mask,
+          maskImage: mask,
+          WebkitMaskComposite: "source-in",
+          maskComposite: "intersect",
         }}
-      >
-        <ellipse cx="20" cy="31" rx="12" ry="4" fill="#a8641e" />
-        <path d="M8 30 Q20 22 32 30 Q20 35 8 30Z" fill="#c8802a" />
-        <path d="M20 6 C24 12 26 16 20 22 C14 16 16 12 20 6Z" fill="#ffb020" />
-        <path d="M20 11 C22 15 22 18 20 21 C18 18 18 15 20 11Z" fill="#fff2b0" />
-      </svg>
+      />
+
+      {/* Placed diyas: aura + flame, positioned by px. */}
+      {placed.map((d) => (
+        <div key={d.id} style={{ position: "absolute", left: d.x, top: d.y }}>
+          <DiyaMark />
+        </div>
+      ))}
+
+      {/* Cursor diya: aura + flame, positioned by CSS var. */}
+      <div style={{ position: "absolute", left: "var(--tx)", top: "var(--ty)" }}>
+        <DiyaMark />
+      </div>
     </div>
   );
 }
