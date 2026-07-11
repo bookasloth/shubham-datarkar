@@ -26,18 +26,35 @@ export function InboxClient() {
   const [sendMsg, setSendMsg] = React.useState<{ ok: boolean; text: string } | null>(null);
   const [showImages, setShowImages] = React.useState(false);
 
-  const load = React.useCallback(async () => {
+  // Apply a fetch result to state. Only ever called from a .then callback or an
+  // event handler — never synchronously inside an effect body.
+  const applyList = React.useCallback(
+    (res: Awaited<ReturnType<typeof fetchInbox>>) => {
+      if (res.ok && res.messages) setList(res.messages);
+      else setListErr(res.error ?? "Failed to load inbox.");
+      setLoadingList(false);
+    },
+    [],
+  );
+
+  // Refresh handler (event context).
+  const load = React.useCallback(() => {
     setLoadingList(true);
     setListErr(null);
-    const res = await fetchInbox();
-    if (res.ok && res.messages) setList(res.messages);
-    else setListErr(res.error ?? "Failed to load inbox.");
-    setLoadingList(false);
-  }, []);
+    void fetchInbox().then(applyList);
+  }, [applyList]);
 
+  // Initial load. setState happens in the .then callback (async), so the effect
+  // body itself never calls setState synchronously.
   React.useEffect(() => {
-    void load();
-  }, [load]);
+    let active = true;
+    void fetchInbox().then((res) => {
+      if (active) applyList(res);
+    });
+    return () => {
+      active = false;
+    };
+  }, [applyList]);
 
   async function select(uid: number) {
     setActiveUid(uid);
