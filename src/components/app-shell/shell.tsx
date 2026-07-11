@@ -1,0 +1,107 @@
+"use client";
+
+import * as React from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { Menu, Search } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Logo } from "@/components/brand/logo";
+import {
+  Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
+} from "@/components/ui/sheet";
+import { OPEN_COMMAND_EVENT } from "@/components/layout/command-menu";
+import { AppSidebar } from "./sidebar";
+import { ProfileMenu } from "./profile-menu";
+import { APP_NAV, activeSection, sectionHref } from "./nav-config";
+import type { ShellUser } from "@/lib/app-shell/user";
+
+export function AppShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
+  const pathname = usePathname() ?? "/";
+  const [drawer, setDrawer] = React.useState(false);
+  const signedIn = !!user;
+  const currentSection = activeSection(pathname);
+
+  return (
+    <div className="flex min-h-dvh flex-col">
+      {/* Top bar */}
+      <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
+        <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
+          <Sheet open={drawer} onOpenChange={setDrawer}>
+            <SheetTrigger
+              aria-label="Open menu"
+              className="rounded-btn p-2 text-muted-foreground transition-ui hover:bg-accent hover:text-foreground lg:hidden"
+            >
+              <Menu className="size-5" />
+            </SheetTrigger>
+            <SheetContent className="left-0 right-auto border-l-0 border-r border-border">
+              <SheetHeader><SheetTitle><Logo /></SheetTitle></SheetHeader>
+              <SheetBody>
+                <AppSidebar signedIn={signedIn} onNavigate={() => setDrawer(false)} />
+              </SheetBody>
+            </SheetContent>
+          </Sheet>
+
+          <Logo />
+
+          {/* Global search → opens the existing Cmd-K command menu via its exported
+              open event (same pattern as admin/layout/header.tsx + admin-command.tsx). */}
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new Event(OPEN_COMMAND_EVENT))}
+            className="ml-auto hidden max-w-xs flex-1 items-center gap-2 rounded-input border border-input bg-background px-3 py-1.5 text-sm text-muted-foreground transition-ui hover:border-brand sm:flex"
+          >
+            <Search className="size-4" /> Search…
+          </button>
+
+          <div className="ml-auto flex items-center gap-2 sm:ml-0">
+            {signedIn ? (
+              <ProfileMenu
+                displayName={user!.displayName}
+                email={user!.email}
+                isAdmin={user!.isAdmin}
+                isPremium={user!.isPremium}
+              />
+            ) : (
+              <Link
+                href={`/login?next=${encodeURIComponent(pathname)}`}
+                className="rounded-btn border border-border px-3 py-1.5 text-xs font-medium transition-ui hover:bg-accent"
+              >
+                Sign in
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
+      <div className="flex flex-1">
+        {/* Desktop sidebar */}
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border p-3 lg:block">
+          <AppSidebar signedIn={signedIn} />
+        </aside>
+        <main className="min-w-0 flex-1 pb-24 lg:pb-10">{children}</main>
+      </div>
+
+      {/* Mobile bottom nav — one entry per section */}
+      <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-border bg-background lg:hidden">
+        <div className="grid grid-cols-4">
+          {APP_NAV.map((s) => {
+            const Icon = s.icon;
+            const active = currentSection === s.key;
+            return (
+              <Link
+                key={s.key}
+                href={sectionHref(s.key)}
+                className={cn(
+                  "flex flex-col items-center gap-1 py-2.5 text-[11px] transition-ui",
+                  active ? "text-foreground" : "text-muted-foreground",
+                )}
+              >
+                <Icon className="size-5" /> {s.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
+    </div>
+  );
+}
