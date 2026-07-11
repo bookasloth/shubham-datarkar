@@ -185,7 +185,7 @@ export type CaseStudy = {
   execution: string[];
   results: KpiRow[];
   learnings: string;
-  quote: { text: string; author: string; role: string };
+  quote?: { text: string; author: string; role: string };
   featured?: boolean;
   seo?: SeoFields;
 };
