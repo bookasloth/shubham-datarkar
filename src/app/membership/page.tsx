@@ -180,9 +180,9 @@ export default function MembershipPage() {
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             How it works
           </h2>
-          <ol className="mt-6 flex max-w-2xl flex-col gap-4">
+          <ol className="mt-6 grid gap-6 sm:grid-cols-3">
             {m.steps.map((s, i) => (
-              <li key={s.step} className="flex gap-4">
+              <li key={s.step} className="flex flex-col gap-3">
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-foreground font-display text-xs font-bold text-background">
                   {i + 1}
                 </span>
