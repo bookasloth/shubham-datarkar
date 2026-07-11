@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import GamesHeader from "@/components/games/GamesHeader";
+import { getShellUser } from "@/lib/app-shell/user";
+import { AppShell } from "@/components/app-shell/shell";
 
 export const metadata: Metadata = {
   // No brand here: the root layout's title.template appends " — Shubham Datarkar".
   title: "Games",
-  description: "Daily word and code puzzles — Alfazy and Hit and Blow. A new puzzle every day.",
+  description: "Daily word and code puzzles — Alfazy, Hit and Blow, Integra.",
 };
 
-export default function GamesLayout({ children }: { children: React.ReactNode }) {
+export default async function GamesLayout({ children }: { children: React.ReactNode }) {
+  const user = await getShellUser();
   return (
-    <div className="min-h-[100dvh] bg-background text-foreground">
-      <GamesHeader />
-      <main className="mx-auto max-w-md px-4 py-8">{children}</main>
-    </div>
+    <AppShell user={user}>
+      <div className="mx-auto max-w-md px-4 py-8">{children}</div>
+    </AppShell>
   );
 }

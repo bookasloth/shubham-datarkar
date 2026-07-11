@@ -40,18 +40,26 @@ export async function listFeed(opts: {
   offset?: number;
   author?: string;
   bookmarked?: boolean;
+  reblogged?: boolean;
+  liked?: boolean;
 }): Promise<FeedPost[]> {
   // Call as the request user (cookie-scoped): the RPC derives the viewer from
   // auth.uid(), so vote/bookmark state can't be spoofed for another user.
   const sb = await supabaseAuthServer();
-  const { data, error } = await sb.rpc("community_feed", {
+  const params: Record<string, unknown> = {
     p_sort: opts.sort,
     p_window: opts.window,
     p_limit: opts.limit ?? 20,
     p_offset: opts.offset ?? 0,
     p_author: opts.author ?? null,
     p_bookmarked: opts.bookmarked ?? false,
-  });
+  };
+  // Only send the viewer-filter params when actually filtering. The default feed
+  // then still matches the pre-migration 6-arg community_feed; the Reblogs/Likes
+  // pages (which set these) require migration 20260711000003 to be applied.
+  if (opts.reblogged) params.p_reblogged = true;
+  if (opts.liked) params.p_liked = true;
+  const { data, error } = await sb.rpc("community_feed", params);
   if (error) {
     console.warn("community_feed failed:", error.message);
     return [];
