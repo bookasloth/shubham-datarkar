@@ -6,8 +6,9 @@ import type { SeoLandingContent } from "./types";
  * classic search snippets and AI answer engines (AEO/GEO). The city template
  * (future work) reuses this shape with `areaServedType: "City"`.
  *
- * `differentiators` and `trustNames` carry only facts I can back — see the
- * PR description for anything flagged as needing sign-off before merge.
+ * `differentiators` values are provider-specific claims still pending Shubham's
+ * sign-off before merge (see the task report's "USER MUST VERIFY" list).
+ * `trustNames` are real clients confirmed in case-studies.ts.
  */
 export const seoExpertIndia: SeoLandingContent = {
   areaName: "India",
@@ -20,7 +21,7 @@ export const seoExpertIndia: SeoLandingContent = {
   subhead:
     "I run SEO for Indian businesses that need organic search to produce revenue, not vanity rankings: technical audits, keyword-mapped content, local and national visibility, and the answer-first structure that gets pages cited by ChatGPT, Perplexity, and Google's AI Overviews. You get a fixed monthly scope, a single point of contact, and a report you can act on — built around the keywords that actually move your pipeline, not the ones that just look good on a slide.",
   answer:
-    "An SEO expert in India audits your site, fixes technical issues, builds answer-first content, and earns authority links so you rank higher on Google and get cited by AI answer engines like ChatGPT and AI Overviews. Packages run roughly ₹6,999 to ₹22,999 a month; expect early ranking movement in three to four months and compounding organic leads by month six.",
+    "An SEO expert in India audits your site, fixes technical issues, builds answer-first content, and earns authority links so you rank higher on Google and get cited by AI answer engines like ChatGPT and AI Overviews. Packages run ₹6,999 to ₹22,999 a month; sites typically see ranking movement within three to four months and compounding organic leads by month six.",
   serviceBlocks: [
     {
       h3: "Keyword Research",
@@ -140,12 +141,12 @@ export const seoExpertIndia: SeoLandingContent = {
     {
       question: "How long does SEO take to show results?",
       answer:
-        "Most sites see measurable ranking movement in three to four months and meaningful organic traffic and lead growth by month six. Timelines vary with domain age, competition, and how much technical debt the audit uncovers — a brand-new site in a competitive category will move slower than an established one with a clean technical base.",
+        "As a general rule for SEO, most sites see measurable ranking movement in three to four months and meaningful organic traffic and lead growth by month six. Timelines vary with domain age, competition, and how much technical debt the audit uncovers — a brand-new site in a competitive category will move slower than an established one with a clean technical base. Lower-competition, question-shaped queries tend to rank first, which is why the roadmap usually front-loads those to produce early wins while the harder commercial terms build.",
     },
     {
       question: "Is hiring an SEO expert worth it for a small business?",
       answer:
-        "Usually, yes — a focused SEO expert targets the specific local and commercial keywords your buyers already search, which compounds into ongoing leads at a lower cost per lead than most paid ads over twelve months. It's less worth it if you need leads this week; SEO is a medium-term investment, not a same-week channel.",
+        "Usually, yes — a focused SEO expert targets the specific local and commercial keywords your buyers already search, and because organic rankings keep earning clicks after the work is done, SEO tends to lower the long-term cost per lead compared with paid ads for many businesses. It's less worth it if you need leads this week; SEO is a medium-term investment, not a same-week channel.",
     },
     {
       question: "What's the difference between SEO and AEO/GEO?",
@@ -175,7 +176,7 @@ export const seoExpertIndia: SeoLandingContent = {
     {
       question: "What do you need from me to get started?",
       answer:
-        "Access to your website's analytics and search console, a short call to understand your target customer and current lead sources, and sign-off on the audit's priority list before execution starts. Most clients are ready to begin within a week of that first call, and the audit itself is what surfaces most of the detail I need — you don't have to arrive with a fully formed brief.",
+        "Access to your website's analytics and search console, a short call to understand your target customer and current lead sources, and sign-off on the audit's priority list before execution starts. Engagements typically begin promptly after that first call, and the audit itself is what surfaces most of the detail I need — you don't have to arrive with a fully formed brief.",
     },
     {
       question: "Can you work alongside an existing marketing or content team?",
