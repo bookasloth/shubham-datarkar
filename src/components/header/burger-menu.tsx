@@ -5,7 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, Menu, X } from "lucide-react";
-import { primaryNav, site, socials } from "@/lib/site";
+import { primaryNav, site } from "@/lib/site";
 import { caseStudies } from "@/lib/data/case-studies";
 import { getLatestPostsForNav } from "@/lib/blog/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -128,28 +128,6 @@ export function BurgerMenu() {
                   <SpotifyIcon className="size-4" />
                   Spotify
                 </a>
-              </div>
-
-              {/* Follow */}
-              <div className="mt-8">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                  Follow
-                </p>
-                <ul className="mt-2 flex flex-col">
-                  {socials.map((s) => (
-                    <li key={s.label}>
-                      <a
-                        href={s.href}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-between rounded-btn px-2 py-2 text-sm transition-ui hover:bg-accent"
-                      >
-                        <span className="font-medium text-foreground">{s.label}</span>
-                        <span className="text-xs text-muted-foreground">{s.handle}</span>
-                      </a>
-                    </li>
-                  ))}
-                </ul>
               </div>
             </nav>
 

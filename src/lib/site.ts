@@ -101,6 +101,7 @@ export const navGroups: NavGroup[] = [
 /** Flat top-level links shown directly in the bar. */
 export const primaryNav: NavItem[] = [
   { label: "The Kalamwala", href: "/about" },
+  { label: "In Progress", href: "/projects" },
   { label: "Case Files", href: "/work" },
   { label: "My Offerings", href: "/services" },
   { label: "Notes/Updates", href: "/blog" },
