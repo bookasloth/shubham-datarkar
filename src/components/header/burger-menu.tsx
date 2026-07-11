@@ -108,25 +108,29 @@ export function BurgerMenu() {
                   href={site.youtubeUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(
-                    buttonVariants({ size: "default" }),
-                    "bg-[#FF0000] text-white hover:bg-[#ff1a1a]",
-                  )}
+                  className="flex flex-col justify-center gap-1 rounded-btn bg-[#FF0000] px-4 py-5 text-white transition-ui hover:bg-[#ff1a1a]"
                 >
-                  <YouTubeIcon className="size-4" />
-                  YouTube
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-white/80">
+                    Watch me build
+                  </span>
+                  <span className="flex items-center gap-2 font-semibold">
+                    <YouTubeIcon className="size-5" />
+                    YouTube
+                  </span>
                 </a>
                 <a
                   href={site.spotifyUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className={cn(
-                    buttonVariants({ size: "default" }),
-                    "bg-[#1DB954] text-black hover:bg-[#1ed760]",
-                  )}
+                  className="flex flex-col justify-center gap-1 rounded-btn bg-[#1DB954] px-4 py-5 text-black transition-ui hover:bg-[#1ed760]"
                 >
-                  <SpotifyIcon className="size-4" />
-                  Spotify
+                  <span className="text-[11px] font-medium uppercase tracking-wide text-black/70">
+                    Focus, build, repeat
+                  </span>
+                  <span className="flex items-center gap-2 font-semibold">
+                    <SpotifyIcon className="size-5" />
+                    Spotify
+                  </span>
                 </a>
               </div>
             </nav>
