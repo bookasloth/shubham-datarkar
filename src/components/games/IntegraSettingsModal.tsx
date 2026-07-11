@@ -22,7 +22,7 @@ export default function IntegraSettingsModal({
   return (
     <Dialog>
       <DialogTrigger className={triggerCls}>Settings</DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent data-game="integra" className="max-w-md">
         <DialogHeader>
           <DialogTitle>Settings</DialogTitle>
         </DialogHeader>

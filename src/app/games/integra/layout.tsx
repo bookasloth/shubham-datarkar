@@ -1,5 +1,5 @@
 import { GameSubnav } from "@/components/games/game-subnav";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  return (<><GameSubnav base="/games/integra" />{children}</>);
+  return (<div data-game="integra"><GameSubnav base="/games/integra" />{children}</div>);
 }
