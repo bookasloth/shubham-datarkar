@@ -23,7 +23,8 @@ export function AppSidebar({
   const [open, setOpen] = React.useState<string>(section ?? "");
   React.useEffect(() => {
     if (section) setOpen(section);
-  }, [section]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   return (
     <Accordion
