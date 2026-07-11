@@ -17,8 +17,14 @@ import {
 type View = "signin" | "signup" | "magic";
 type CredentialsAction = (state: SignInState, form: FormData) => Promise<SignInState>;
 
-export function LoginForm({ next = "" }: { next?: string }) {
-  const [view, setView] = React.useState<View>("signin");
+export function LoginForm({
+  next = "",
+  initialView = "signin",
+}: {
+  next?: string;
+  initialView?: "signin" | "signup";
+}) {
+  const [view, setView] = React.useState<View>(initialView);
 
   if (view === "magic") {
     return <MagicForm next={next} onBack={() => setView("signin")} />;
