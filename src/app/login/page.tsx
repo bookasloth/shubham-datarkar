@@ -1,9 +1,12 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { LoginForm } from "@/components/app/login-form";
+import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { loginDestination, safeNext } from "@/lib/auth/redirect";
 
 export const metadata = buildMetadata({
   title: "Sign in",
@@ -15,9 +18,16 @@ export const metadata = buildMetadata({
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; error?: string }>;
+  searchParams: Promise<{ reset?: string; error?: string; next?: string }>;
 }) {
-  const { reset, error } = await searchParams;
+  const { reset, error, next } = await searchParams;
+
+  // Already signed in? Skip the form and go straight to the destination. This
+  // is the single entry point — /members/login and /games/login redirect here.
+  const {
+    data: { user },
+  } = await (await supabaseAuthServer()).auth.getUser();
+  if (user) redirect(loginDestination(next ?? null, user.email));
 
   return (
     <Section className="flex min-h-[80vh] items-center">
@@ -26,7 +36,7 @@ export default async function LoginPage({
           <div className="mb-8 flex flex-col items-center text-center">
             <Logo showWordmark={false} />
             <h1 className="mt-5 text-2xl font-bold tracking-tight">Welcome back</h1>
-            <p className="mt-1 text-sm text-muted-foreground">Sign in to continue to your dashboard.</p>
+            <p className="mt-1 text-sm text-muted-foreground">Sign in to your account.</p>
           </div>
           {reset === "1" && (
             <div
@@ -45,19 +55,12 @@ export default async function LoginPage({
             </div>
           )}
           <Card className="p-6">
-            <LoginForm />
+            <LoginForm next={safeNext(next ?? null) ?? ""} />
           </Card>
           <p className="mt-3 text-center text-sm">
             <Link href="/forgot-password" className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
               Forgot your password?
             </Link>
-          </p>
-          <p className="mt-6 text-center text-sm text-muted-foreground">
-            New here?{" "}
-            <Link href="/members/login?mode=signup" className="font-medium text-foreground underline-offset-4 hover:underline">
-              Create a free account
-            </Link>
-            .
           </p>
         </div>
       </Container>

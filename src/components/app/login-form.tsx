@@ -8,29 +8,56 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
   signIn,
+  signUp,
   signInWithMagicLink,
   type SignInState,
   type MagicLinkState,
 } from "@/lib/auth/actions";
 
-export function LoginForm() {
-  const [magic, setMagic] = React.useState(false);
-  return magic ? (
-    <MagicForm onBack={() => setMagic(false)} />
-  ) : (
-    <PasswordForm onMagic={() => setMagic(true)} />
+type View = "signin" | "signup" | "magic";
+type CredentialsAction = (state: SignInState, form: FormData) => Promise<SignInState>;
+
+export function LoginForm({ next = "" }: { next?: string }) {
+  const [view, setView] = React.useState<View>("signin");
+
+  if (view === "magic") {
+    return <MagicForm next={next} onBack={() => setView("signin")} />;
+  }
+  const signup = view === "signup";
+  return (
+    <CredentialsForm
+      key={view}
+      signup={signup}
+      next={next}
+      action={signup ? signUp : signIn}
+      onSwap={() => setView(signup ? "signin" : "signup")}
+      onMagic={() => setView("magic")}
+    />
   );
 }
 
-function PasswordForm({ onMagic }: { onMagic: () => void }) {
+function CredentialsForm({
+  signup,
+  next,
+  action,
+  onSwap,
+  onMagic,
+}: {
+  signup: boolean;
+  next: string;
+  action: CredentialsAction;
+  onSwap: () => void;
+  onMagic: () => void;
+}) {
   const [show, setShow] = React.useState(false);
-  const [state, action, pending] = useActionState<SignInState, FormData>(
-    signIn,
+  const [state, formAction, pending] = useActionState<SignInState, FormData>(
+    action,
     undefined,
   );
 
   return (
-    <form action={action} className="grid gap-4">
+    <form action={formAction} className="grid gap-4">
+      <input type="hidden" name="next" value={next} />
       <div className="grid gap-1.5">
         <Label htmlFor="login-email">Email</Label>
         <Input
@@ -49,9 +76,10 @@ function PasswordForm({ onMagic }: { onMagic: () => void }) {
             id="login-password"
             name="password"
             type={show ? "text" : "password"}
-            autoComplete="current-password"
-            placeholder="••••••••"
+            autoComplete={signup ? "new-password" : "current-password"}
+            placeholder={signup ? "At least 8 characters" : "••••••••"}
             required
+            minLength={signup ? 8 : undefined}
             className="pr-10"
           />
           <button
@@ -72,22 +100,31 @@ function PasswordForm({ onMagic }: { onMagic: () => void }) {
       )}
 
       <Button type="submit" size="lg" loading={pending} className="w-full">
-        Sign in
+        {signup ? "Create account" : "Sign in"}
         {!pending && <ArrowRight />}
       </Button>
 
-      <button
-        type="button"
-        onClick={onMagic}
-        className="text-sm text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
-      >
-        Email me a sign-in link instead
-      </button>
+      <div className="grid gap-2 text-center text-sm">
+        <button
+          type="button"
+          onClick={onMagic}
+          className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          Email me a sign-in link instead
+        </button>
+        <button
+          type="button"
+          onClick={onSwap}
+          className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          {signup ? "Already have an account? Sign in" : "New here? Create a free account"}
+        </button>
+      </div>
     </form>
   );
 }
 
-function MagicForm({ onBack }: { onBack: () => void }) {
+function MagicForm({ next, onBack }: { next: string; onBack: () => void }) {
   const [state, action, pending] = useActionState<MagicLinkState, FormData>(
     signInWithMagicLink,
     undefined,
@@ -112,6 +149,7 @@ function MagicForm({ onBack }: { onBack: () => void }) {
 
   return (
     <form action={action} className="grid gap-4">
+      <input type="hidden" name="next" value={next} />
       <div className="grid gap-1.5">
         <Label htmlFor="magic-email">Email</Label>
         <Input

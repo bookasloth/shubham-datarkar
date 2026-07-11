@@ -9,3 +9,30 @@ export function postLoginPath(email: string | null | undefined): string {
     ? "/admin"
     : "/members";
 }
+
+/** Authed subtrees a post-login `next` may return to. Anything else is dropped. */
+const NEXT_ALLOWED = ["/admin", "/members", "/games", "/community", "/tools/kalamai"];
+
+/**
+ * Validate a `next` return path. Returns the path only if it points at one of
+ * the app's own authed subtrees; otherwise null. Rejects absolute URLs,
+ * protocol-relative (`//host`, `/\host`), and unknown paths — this is the open
+ * redirect boundary, so it fails closed.
+ */
+export function safeNext(raw: string | null | undefined): string | null {
+  const v = String(raw ?? "");
+  if (!v.startsWith("/") || v.startsWith("//") || v.startsWith("/\\")) return null;
+  return NEXT_ALLOWED.some(
+    (p) => v === p || v.startsWith(`${p}/`) || v.startsWith(`${p}?`),
+  )
+    ? v
+    : null;
+}
+
+/** Post-login destination: an explicit safe `next`, else the identity default. */
+export function loginDestination(
+  next: string | null | undefined,
+  email: string | null | undefined,
+): string {
+  return safeNext(next) ?? postLoginPath(email);
+}
