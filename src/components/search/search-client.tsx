@@ -22,7 +22,7 @@ type Entry = { title: string; href: string; type: string; description: string; a
 const AD: Entry = {
   title: "The host I actually deploy to",
   href: "https://www.hostinger.com/in?REFERRALCODE=SND1995",
-  type: "Recommendation",
+  type: "Deal",
   description:
     "Moved three side projects to Hostinger this year. Cheap, fast, stays out of my way — here's why I stopped shopping around.",
   ad: true,
