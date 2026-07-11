@@ -21,6 +21,8 @@ type Errors = Partial<Record<"name" | "email" | "projectType" | "message", strin
 export function ContactForm() {
   const { toast } = useToast();
   const [values, setValues] = React.useState({ name: "", email: "", projectType: "", budget: "", message: "" });
+  // Honeypot: hidden from real users; bots that auto-fill it get silently dropped server-side.
+  const [company, setCompany] = React.useState("");
   const [errors, setErrors] = React.useState<Errors>({});
   const [loading, setLoading] = React.useState(false);
   const [done, setDone] = React.useState(false);
@@ -52,6 +54,7 @@ export function ContactForm() {
       budget: values.budget || undefined,
       message: values.message,
       attribution: readFirstTouch(),
+      company,
     });
     setLoading(false);
 
@@ -81,6 +84,20 @@ export function ContactForm() {
 
   return (
     <form onSubmit={onSubmit} noValidate className="grid gap-5">
+      {/* Honeypot: off-screen + aria-hidden + no tab stop. Real users never fill it. */}
+      <div aria-hidden="true" className="absolute left-[-9999px] top-[-9999px] h-0 w-0 overflow-hidden">
+        <label htmlFor="company">Company (leave blank)</label>
+        <input
+          id="company"
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          value={company}
+          onChange={(e) => setCompany(e.target.value)}
+        />
+      </div>
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Name" id="name" error={errors.name}>
           <Input id="name" value={values.name} onChange={(e) => set("name")(e.target.value)} aria-invalid={!!errors.name} placeholder="Jane Founder" />

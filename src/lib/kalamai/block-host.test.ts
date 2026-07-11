@@ -18,6 +18,12 @@ describe("isBlockedHost", () => {
     expect(isBlockedHost("::ffff:127.0.0.1")).toBe(true);
   });
 
+  it("blocks non-standard IPv4 encodings for 127.0.0.1 (audit L-1)", () => {
+    for (const h of ["2130706433", "0x7f000001", "0177.0.0.1", "017.0.0.1"]) {
+      expect(isBlockedHost(h), h).toBe(true);
+    }
+  });
+
   it("allows public hosts", () => {
     for (const h of ["example.com", "8.8.8.8", "172.15.0.1", "172.32.0.1", "shubhamdatarkar.com", "fcdn.example.com"]) {
       expect(isBlockedHost(h), h).toBe(false);
