@@ -6,6 +6,7 @@ import {
   productSchema,
   reviewSchema,
   speakingServiceSchema,
+  seoLandingSchema,
 } from "@/lib/seo";
 import { site } from "@/lib/site";
 import type { Service, Product, Testimonial } from "@/lib/data/types";
@@ -148,5 +149,45 @@ describe("speakingServiceSchema", () => {
     expect(s["@type"]).toBe("Service");
     expect(s.serviceType).toBe("Speaking & Workshops");
     expect(s.url).toBe(`${site.url}/speaking`);
+  });
+});
+
+describe("seoLandingSchema", () => {
+  const input = {
+    path: "/seo-expert-india",
+    name: "SEO Expert Services in India",
+    areaServed: { type: "Country" as const, name: "India" },
+    offers: [
+      { name: "Silver SEO Package", price: "6999", description: "1-3 keywords, audit, on-page + off-page, monthly report." },
+      { name: "Gold SEO Package", price: "13999", description: "5-10 keywords, technical SEO, content, competitor analysis." },
+      { name: "Platinum SEO Package", price: "22999", description: "15+ keywords, advanced technical + content, CRO, link building." },
+    ],
+  };
+
+  it("is a Service provided by the canonical Person (by @id)", () => {
+    const s = seoLandingSchema(input);
+    expect(s["@type"]).toBe("Service");
+    expect(s.serviceType).toBe("Search Engine Optimization");
+    expect(s.provider).toEqual({ "@id": `${site.url}/#person` });
+    expect(s.url).toBe(`${site.url}/seo-expert-india`);
+  });
+
+  it("sets areaServed as a Country for the national page", () => {
+    const s = seoLandingSchema(input);
+    expect(s.areaServed).toEqual({ "@type": "Country", name: "India" });
+  });
+
+  it("reuses the same builder for a City area (city template)", () => {
+    const s = seoLandingSchema({ ...input, areaServed: { type: "City", name: "Kochi" } });
+    expect(s.areaServed).toEqual({ "@type": "City", name: "Kochi" });
+  });
+
+  it("emits an OfferCatalog of three INR Offers and no fabricated rating", () => {
+    const s = seoLandingSchema(input);
+    const cat = s.hasOfferCatalog as { "@type": string; itemListElement: Record<string, unknown>[] };
+    expect(cat["@type"]).toBe("OfferCatalog");
+    expect(cat.itemListElement).toHaveLength(3);
+    expect(cat.itemListElement[0]).toMatchObject({ "@type": "Offer", name: "Silver SEO Package", price: "6999", priceCurrency: "INR" });
+    expect("aggregateRating" in s).toBe(false);
   });
 });

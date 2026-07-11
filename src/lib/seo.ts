@@ -172,6 +172,49 @@ export function serviceSchema(service: Service) {
   };
 }
 
+export type LandingOffer = { name: string; price: string; description: string };
+
+/**
+ * SEO landing-page Service node. Unlike serviceSchema (bound to the Service DB
+ * type + /services URL, areaServed "Worldwide"), this targets a geography and
+ * carries productized tiers as an OfferCatalog. `areaServed` is a parameter so
+ * the city template passes { type: "City", name } with no code change.
+ * No aggregateRating: no real numeric ratings exist to mark up honestly.
+ */
+export function seoLandingSchema(input: {
+  path: string;
+  name: string;
+  areaServed: { type: "Country" | "City"; name: string };
+  offers: LandingOffer[];
+}): Record<string, unknown> {
+  const url = `${site.url}${input.path}`;
+  return {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    serviceType: "Search Engine Optimization",
+    name: input.name,
+    url,
+    provider: personRef,
+    areaServed: { "@type": input.areaServed.type, name: input.areaServed.name },
+    ...(input.offers.length
+      ? {
+          hasOfferCatalog: {
+            "@type": "OfferCatalog",
+            name: input.name,
+            itemListElement: input.offers.map((o) => ({
+              "@type": "Offer",
+              name: o.name,
+              price: o.price,
+              priceCurrency: "INR",
+              description: o.description,
+              url: `${url}#pricing`,
+            })),
+          },
+        }
+      : {}),
+  };
+}
+
 /**
  * Product (SaaS) entity. No public price, so no `Offer` is fabricated — name,
  * description, category, brand, and live URL only.
