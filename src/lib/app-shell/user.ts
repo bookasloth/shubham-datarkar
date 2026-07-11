@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { getMemberContext, type MemberRole } from "@/lib/members/session";
 
@@ -11,7 +12,7 @@ export type ShellUser = {
 } | null;
 
 /** The serializable identity slice the client AppShell renders. Null when signed out. */
-export async function getShellUser(): Promise<ShellUser> {
+export const getShellUser = cache(async (): Promise<ShellUser> => {
   const ctx = await getMemberContext();
   if (!ctx.user) return null;
 
@@ -37,4 +38,4 @@ export async function getShellUser(): Promise<ShellUser> {
     isAdmin: ctx.role === "admin",
     isPremium: ctx.role === "premium" || ctx.role === "admin",
   };
-}
+});
