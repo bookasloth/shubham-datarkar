@@ -157,6 +157,22 @@ export default async function SeoExpertIndiaPage() {
 
       <PricingTiers tiers={c.pricingTiers} />
 
+      {/* Reconciles this page's fixed-scope packages with the custom retainer
+          priced on /services/seo, so the two SEO prices don't read as a
+          contradiction. Link only — no rupee figure duplicated (avoids drift). */}
+      <Section className="pt-0">
+        <Container>
+          <p className="mx-auto max-w-2xl text-center text-sm text-muted-foreground">
+            These are fixed-scope monthly packages. For custom or larger-scale SEO programmes, I also run
+            retainer engagements — see the{" "}
+            <Link href="/services/seo" className="font-medium text-foreground underline underline-offset-4">
+              full SEO service
+            </Link>
+            .
+          </p>
+        </Container>
+      </Section>
+
       {/* About — no real headshot asset exists yet, so this degrades to an
           initials avatar (same principle as TrustBar's text-only fallback)
           instead of a broken <img>. No Person JSON-LD here: it's already
