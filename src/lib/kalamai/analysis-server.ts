@@ -32,6 +32,7 @@ function defaultDeps(): { serp: SerpProvider; crawl: Crawler } {
 const BATCH = 6;
 const CRAWL_CONCURRENCY = 6;
 const MIN_CONFIDENT = 20; // < this many successful crawls → low_confidence banner
+const STEP_LOCK_MS = 2 * 60_000; // reclaim a claim left behind by a crashed/timed-out step (maxDuration is 60s)
 
 export type StepResult = { status: string; progress: number };
 export type AnalysisDeps = { serp?: SerpProvider; crawl?: Crawler };
@@ -45,6 +46,7 @@ type AnalysisRow = {
   locale: string;
   status: string;
   progress: number;
+  locked_at: string | null;
   crawl_cursor: number;
   serp_urls: SerpOrganic[];
   ai_overview_urls: string[];
@@ -71,6 +73,27 @@ export async function runStep(analysisId: string, deps: AnalysisDeps = {}): Prom
   const a = data as AnalysisRow | null;
   if (!a) throw new Error(`analysis ${analysisId} not found`);
 
+  if (a.status === "complete" || a.status === "failed") {
+    return { status: a.status, progress: a.progress }; // terminal → no-op
+  }
+
+  // Single-flight claim. Flip locked_at only if the row is still at this status
+  // and not already locked (or the lock is stale past the function ceiling).
+  // Concurrent /step calls race on this UPDATE; exactly one row comes back, so
+  // one worker does the (paid, for R4) work and the rest no-op — a single quota
+  // unit can no longer be fanned out into unbounded LLM spend.
+  const staleBefore = new Date(Date.now() - STEP_LOCK_MS).toISOString();
+  const { data: claimed } = await db
+    .from("kalamai_analyses")
+    .update({ locked_at: new Date().toISOString() })
+    .eq("id", a.id)
+    .eq("status", a.status)
+    .or(`locked_at.is.null,locked_at.lt.${staleBefore}`)
+    .select("id");
+  if (!claimed?.length) {
+    return { status: a.status, progress: a.progress }; // lost the race — someone else holds it
+  }
+
   try {
     switch (a.status) {
       case "queued":
@@ -82,13 +105,17 @@ export async function runStep(analysisId: string, deps: AnalysisDeps = {}): Prom
       case "analyzing":
         return await stepR4(db, a);
       default:
-        return { status: a.status, progress: a.progress }; // complete / failed → no-op
+        return { status: a.status, progress: a.progress };
     }
   } catch (e) {
     const message = (e instanceof Error ? e.message : String(e)).slice(0, 500);
-    await db.from("kalamai_analyses").update({ status: "failed", error: message }).eq("id", a.id);
+    await db.from("kalamai_analyses").update({ status: "failed", error: message, locked_at: null }).eq("id", a.id);
     await logEvent("analysis_failed", { userId: a.user_id, analysisId: a.id, meta: { at: a.status } });
     return { status: "failed", progress: a.progress };
+  } finally {
+    // Release the claim so the next transition can proceed at once. The step
+    // already advanced status; this just nulls the lock (idempotent, cheap).
+    await db.from("kalamai_analyses").update({ locked_at: null }).eq("id", a.id);
   }
 }
 

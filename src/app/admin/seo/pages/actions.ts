@@ -2,6 +2,7 @@
 
 import { updateTag } from "next/cache";
 import { SEO_AUDIT_TAG } from "@/lib/seo/fetch-html";
+import { requireAdmin } from "@/lib/auth/session";
 
 /**
  * Invalidates the cached page analyses (tagged `SEO_AUDIT_TAG` by
@@ -10,5 +11,6 @@ import { SEO_AUDIT_TAG } from "@/lib/seo/fetch-html";
  * API for read-your-own-writes: the reload after clicking waits for fresh data.
  */
 export async function rerunAudit(): Promise<void> {
+  await requireAdmin(); // "use server" endpoints are publicly invocable — gate it.
   updateTag(SEO_AUDIT_TAG);
 }

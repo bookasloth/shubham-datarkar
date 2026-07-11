@@ -19,6 +19,8 @@ const store: Record<string, Row[]> = {
 class Query {
   private mode: "select" | "update" | "upsert" | "insert" = "select";
   private filters: [string, unknown][] = [];
+  private orGroups: string[] = [];
+  private selectRequested = false;
   private patch: Row = {};
   private rows: Row[] = [];
   private conflict = "";
@@ -28,7 +30,10 @@ class Query {
   constructor(private table: string) {}
 
   select() {
-    this.mode = "select";
+    // On a write chain (.update(...).select()), keep the write mode but return
+    // the affected rows — don't clobber it back to a plain select.
+    this.selectRequested = true;
+    if (this.mode === "select") this.mode = "select";
     return this;
   }
   update(patch: Row) {
@@ -51,6 +56,11 @@ class Query {
     this.filters.push([col, val]);
     return this;
   }
+  // Only the shapes runStep uses: "col.is.null" / "col.lt.<value>", comma-joined.
+  or(expr: string) {
+    this.orGroups.push(expr);
+    return this;
+  }
   order(col: string) {
     this.orderCol = col;
     return this;
@@ -69,8 +79,19 @@ class Query {
   private table_(): Row[] {
     return store[this.table];
   }
+  private orOk(r: Row, expr: string): boolean {
+    return expr.split(",").some((cond) => {
+      const [col, op, ...rest] = cond.split(".");
+      const val = rest.join(".");
+      if (op === "is" && val === "null") return r[col] == null;
+      if (op === "lt") return r[col] != null && String(r[col]) < val;
+      return false;
+    });
+  }
   private match(): Row[] {
-    let rows = this.table_().filter((r) => this.filters.every(([c, v]) => r[c] === v));
+    let rows = this.table_().filter(
+      (r) => this.filters.every(([c, v]) => r[c] === v) && this.orGroups.every((g) => this.orOk(r, g)),
+    );
     if (this.orderCol) rows = [...rows].sort((a, b) => Number(a[this.orderCol]) - Number(b[this.orderCol]));
     if (this.limitN !== Infinity) rows = rows.slice(0, this.limitN);
     return rows;
@@ -78,8 +99,9 @@ class Query {
   private resolve(): { data: Row[] | null; error: null } {
     if (this.mode === "select") return { data: this.match(), error: null };
     if (this.mode === "update") {
-      for (const r of this.match()) Object.assign(r, this.patch);
-      return { data: null, error: null };
+      const matched = this.match(); // evaluate filters BEFORE applying the patch
+      for (const r of matched) Object.assign(r, this.patch);
+      return { data: this.selectRequested ? matched.map((r) => ({ ...r })) : null, error: null };
     }
     if (this.mode === "insert") {
       this.table_().push(...this.rows.map((r) => ({ ...r })));

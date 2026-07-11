@@ -79,8 +79,12 @@ export async function markSupportStatus(opts: {
   else if (opts.supportId) q = q.eq("id", opts.supportId);
   else return { updated: false };
 
-  // Idempotency guard: skip rows already at the target status.
-  q = q.neq("status", opts.status);
+  // Only a pending support may be failed. The confirm route's failure path is
+  // unauthenticated (no signature), so without this anyone who learns an
+  // order_id could flip an already-paid row to `failed`. Success (paid) keeps
+  // the plain idempotency guard.
+  if (opts.status === "failed") q = q.eq("status", "pending");
+  else q = q.neq("status", opts.status);
 
   const { data, error } = await q.select("id, name, anonymous, total_amount");
   if (error) {

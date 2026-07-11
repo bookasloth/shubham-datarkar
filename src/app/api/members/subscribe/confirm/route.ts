@@ -14,7 +14,6 @@ export async function POST(request: Request) {
     paymentId?: string;
     subscriptionId?: string;
     signature?: string;
-    interval?: string;
   };
   const { paymentId, subscriptionId, signature } = body;
   if (!paymentId || !subscriptionId || !signature) {
@@ -25,10 +24,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Signature verification failed." }, { status: 400 });
   }
 
-  const interval = body.interval === "yearly" ? "yearly" : "monthly";
   // Scoped to this user + this subscription: a stranger's valid signature
-  // cannot activate someone else's row.
-  const activated = await activateMembership(user.id, subscriptionId, interval);
+  // cannot activate someone else's row. The period is derived server-side from
+  // the plan, so the client can't influence how long access lasts.
+  const activated = await activateMembership(user.id, subscriptionId);
   if (!activated) {
     return NextResponse.json({ error: "No matching membership found." }, { status: 404 });
   }

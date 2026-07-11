@@ -1,8 +1,11 @@
 import "server-only";
 
+import { isBlockedHost } from "./block-host";
+
 const UA = "KalamAIBot/1.0 (+https://shubhamdatarkar.com/tools/kalamai)";
 const CRAWL_TIMEOUT = 10_000;
 const ROBOTS_TIMEOUT = 5_000;
+const MAX_REDIRECTS = 4;
 
 export type Crawler = (url: string, robots?: RobotsCache) => Promise<string | null>;
 
@@ -32,6 +35,7 @@ export class RobotsCache {
   async allows(url: string): Promise<boolean> {
     try {
       const u = new URL(url);
+      if (isBlockedHost(u.hostname)) return false; // never fetch robots.txt from an internal host either
       let rules = this.cache.get(u.host);
       if (!rules) {
         rules = await this.fetchRules(u.origin);
@@ -58,14 +62,27 @@ export class RobotsCache {
 export const crawlUrl: Crawler = async (url, robots) => {
   try {
     if (robots && !(await robots.allows(url))) return null;
-    const res = await fetch(url, {
-      headers: { "User-Agent": UA, Accept: "text/html" },
-      signal: AbortSignal.timeout(CRAWL_TIMEOUT),
-      redirect: "follow",
-    });
-    if (!res.ok) return null;
-    if (!(res.headers.get("content-type") ?? "").includes("html")) return null;
-    return await res.text();
+    // Follow redirects manually so every hop's host is SSRF-checked — a public
+    // page can't 302 us onto localhost / a private IP / the metadata endpoint.
+    let current = url;
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+      if (isBlockedHost(new URL(current).hostname)) return null;
+      const res = await fetch(current, {
+        headers: { "User-Agent": UA, Accept: "text/html" },
+        signal: AbortSignal.timeout(CRAWL_TIMEOUT),
+        redirect: "manual",
+      });
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) return null;
+        current = new URL(loc, current).toString(); // resolve relative redirects
+        continue;
+      }
+      if (!res.ok) return null;
+      if (!(res.headers.get("content-type") ?? "").includes("html")) return null;
+      return await res.text();
+    }
+    return null; // too many redirects
   } catch {
     return null;
   }

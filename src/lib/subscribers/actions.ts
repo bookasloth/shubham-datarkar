@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
+import { allow, clientIp } from "@/lib/rate-limit";
 import { getKitCredentials } from "@/lib/kit/store";
 import { kitAddSubscriberToForm } from "@/lib/kit/client";
 import { getEmailCredentials } from "@/lib/email/store";
@@ -30,6 +32,12 @@ export async function subscribe(
 ): Promise<{ ok: boolean; error?: string }> {
   const e = email.trim().toLowerCase();
   if (!EMAIL_RE.test(e)) return { ok: false, error: "Enter a valid email address." };
+
+  // Anon INSERT is open by design (RLS allows it); rate-limit by IP so the list
+  // can't be script-poisoned with junk addresses.
+  if (!allow(`subscribe:${clientIp(await headers())}`, 5, 60_000)) {
+    return { ok: false, error: "Too many attempts. Please wait a minute." };
+  }
 
   const { error } = await supabaseAnon().from("subscribers").insert({ email: e, source });
   if (error && error.code !== "23505") {
