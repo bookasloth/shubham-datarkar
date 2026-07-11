@@ -20,7 +20,7 @@ const MAX_UNITS = 1000;
 export async function POST(request: Request) {
   // Unauthenticated + creates a live Razorpay order per call — throttle by IP so
   // it can't be scripted into a supports-table flood / provider-API hammer.
-  if (!allow(`support-order:${clientIp(request.headers)}`, 5, 60_000)) {
+  if (!(await allow(`support-order:${clientIp(request.headers)}`, 5, 60_000))) {
     return NextResponse.json({ error: "Too many attempts. Please wait a minute." }, { status: 429 });
   }
 

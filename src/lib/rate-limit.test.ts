@@ -4,24 +4,25 @@ import { allow, clientIp, _reset } from "./rate-limit";
 describe("allow", () => {
   beforeEach(() => _reset());
 
-  it("permits up to the limit, then blocks within the window", () => {
+  // No KV env in the test process → allow() uses the deterministic in-memory path.
+  it("permits up to the limit, then blocks within the window", async () => {
     const t = 1000;
-    expect(allow("k", 3, 60_000, t)).toBe(true);
-    expect(allow("k", 3, 60_000, t)).toBe(true);
-    expect(allow("k", 3, 60_000, t)).toBe(true);
-    expect(allow("k", 3, 60_000, t)).toBe(false); // 4th hit blocked
+    expect(await allow("k", 3, 60_000, t)).toBe(true);
+    expect(await allow("k", 3, 60_000, t)).toBe(true);
+    expect(await allow("k", 3, 60_000, t)).toBe(true);
+    expect(await allow("k", 3, 60_000, t)).toBe(false); // 4th hit blocked
   });
 
-  it("resets after the window elapses", () => {
-    expect(allow("k", 1, 1000, 0)).toBe(true);
-    expect(allow("k", 1, 1000, 500)).toBe(false); // still in window
-    expect(allow("k", 1, 1000, 1000)).toBe(true); // window rolled over
+  it("resets after the window elapses", async () => {
+    expect(await allow("k", 1, 1000, 0)).toBe(true);
+    expect(await allow("k", 1, 1000, 500)).toBe(false); // still in window
+    expect(await allow("k", 1, 1000, 1000)).toBe(true); // window rolled over
   });
 
-  it("keys are independent", () => {
-    expect(allow("a", 1, 1000, 0)).toBe(true);
-    expect(allow("b", 1, 1000, 0)).toBe(true); // different key, own budget
-    expect(allow("a", 1, 1000, 0)).toBe(false);
+  it("keys are independent", async () => {
+    expect(await allow("a", 1, 1000, 0)).toBe(true);
+    expect(await allow("b", 1, 1000, 0)).toBe(true); // different key, own budget
+    expect(await allow("a", 1, 1000, 0)).toBe(false);
   });
 });
 
