@@ -25,7 +25,7 @@ export async function react(
 
   // Anonymous by design (dedup is client-side only), so cap the rate per IP to
   // keep the counts from being trivially inflated in a loop.
-  if (!allow(`react:${clientIp(await headers())}`, 30, 60_000)) return { ok: false };
+  if (!(await allow(`react:${clientIp(await headers())}`, 30, 60_000))) return { ok: false };
 
   const { data, error } = await supabaseAdmin().rpc("apply_reaction", {
     p_slug: slug,

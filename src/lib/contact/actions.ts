@@ -52,7 +52,7 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
   // Throttle by IP: this action writes a row AND sends two emails (incl. an
   // auto-reply to the submitter-supplied address), so it's an email-amplification
   // + DB-flood vector without a cap. (M-2)
-  if (!allow(`contact:${clientIp(await headers())}`, 3, 60_000)) {
+  if (!(await allow(`contact:${clientIp(await headers())}`, 3, 60_000))) {
     return { ok: false, error: "Too many messages. Please wait a minute." };
   }
 

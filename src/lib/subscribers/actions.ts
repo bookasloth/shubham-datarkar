@@ -35,7 +35,7 @@ export async function subscribe(
 
   // Anon INSERT is open by design (RLS allows it); rate-limit by IP so the list
   // can't be script-poisoned with junk addresses.
-  if (!allow(`subscribe:${clientIp(await headers())}`, 5, 60_000)) {
+  if (!(await allow(`subscribe:${clientIp(await headers())}`, 5, 60_000))) {
     return { ok: false, error: "Too many attempts. Please wait a minute." };
   }
 
