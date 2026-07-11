@@ -10,19 +10,13 @@ import { usePathname } from "next/navigation";
  * placed by clicking — masks composite with `intersect`, so N holes = N reveals
  * (stacked black gradients cannot do this). Each diya draws an animated flame
  * (jyoti) and a breathing aura on top. pointer-events-none keeps the page
- * clickable.
- *
- * As diyas accumulate, a warm wash brightens the whole page (more light with
- * every lamp). The 7th diya saturates the page to a full yellow glow, holds,
- * then smoothly whitens into light mode. State resets whenever torch is
- * (re)entered, so it can be triggered as many times as you like.
+ * clickable. When the 7th diya lands, we fade out and flip to light mode.
  *
  * The diya is a real DOM element (not a CSS cursor) because Chrome does not
  * render SVG data-URI cursors.
  */
 
 type Diya = { id: number; x: number; y: number };
-type Finish = "idle" | "yellow" | "white";
 
 const AT_CURSOR = "var(--tx) var(--ty)";
 // Transparent center (the reveal hole) fading to opaque black (the dark sheet).
@@ -30,10 +24,7 @@ const hole = (at: string) =>
   `radial-gradient(circle 150px at ${at}, transparent 0%, transparent 28%, #000 70%)`;
 
 const DIYA_LIMIT = 7;
-const WARM_YELLOW = "#ffc93c";
-const YELLOW_HOLD_MS = 550; // full-yellow saturation before whitening
-const WHITEN_MS = 850; // yellow -> white
-const WASH_TRANSITION = `opacity 500ms ease, background-color ${WHITEN_MS}ms ease`;
+const FADE_MS = 700;
 
 function DiyaMark() {
   return (
@@ -58,18 +49,17 @@ export function TorchOverlay() {
   const idRef = React.useRef(0);
   const [mounted, setMounted] = React.useState(false);
   const [placed, setPlaced] = React.useState<Diya[]>([]);
-  const [finish, setFinish] = React.useState<Finish>("idle");
+  const [fading, setFading] = React.useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
   const torch = resolvedTheme === "torch";
 
-  // Reset when torch is (re)entered/left, and per page. Without this, `placed`
-  // stays at 7 after a flip, so re-entering torch would instantly flip again.
+  // Reset per page — "reach 7 on one page" is scoped to the current route.
   React.useEffect(() => {
     setPlaced([]);
-    setFinish("idle");
-  }, [torch, pathname]);
+    setFading(false);
+  }, [pathname]);
 
   // Cursor tracking (CSS vars: cheap repaint, no React re-render). Seeded
   // off-screen so the diya never flashes in the center before the first move.
@@ -95,23 +85,17 @@ export function TorchOverlay() {
     return () => window.removeEventListener("click", click);
   }, [torch]);
 
-  // 7 diyas -> saturate to yellow, hold, whiten, then flip to light mode.
+  // 7 diyas -> fade the darkness, then flip to light mode.
   React.useEffect(() => {
-    if (placed.length < DIYA_LIMIT || finish !== "idle") return;
-    setFinish("yellow");
-    const toWhite = window.setTimeout(() => setFinish("white"), YELLOW_HOLD_MS);
-    const toLight = window.setTimeout(() => setTheme("light"), YELLOW_HOLD_MS + WHITEN_MS);
-    return () => {
-      window.clearTimeout(toWhite);
-      window.clearTimeout(toLight);
-    };
-  }, [placed.length, finish, setTheme]);
+    if (placed.length < DIYA_LIMIT) return;
+    setFading(true);
+    const t = window.setTimeout(() => setTheme("light"), FADE_MS);
+    return () => window.clearTimeout(t);
+  }, [placed.length, setTheme]);
 
   if (!mounted || !torch) return null;
 
   const mask = [hole(AT_CURSOR), ...placed.map((d) => hole(`${d.x}px ${d.y}px`))].join(",");
-  // Each diya adds warmth; the wash fills the page with light as lamps accumulate.
-  const warmth = Math.min(placed.length / DIYA_LIMIT, 1);
 
   return (
     <div
@@ -122,6 +106,8 @@ export function TorchOverlay() {
         // Off-screen until the first pointer move (kills the center flash).
         ["--tx" as string]: "-1000px",
         ["--ty" as string]: "-1000px",
+        opacity: fading ? 0 : 1,
+        transition: `opacity ${FADE_MS}ms ease-out`,
       }}
     >
       {/* Dark sheet: masked so each hole reveals the page beneath. */}
@@ -133,16 +119,6 @@ export function TorchOverlay() {
           maskImage: mask,
           WebkitMaskComposite: "source-in",
           maskComposite: "intersect",
-        }}
-      />
-
-      {/* Warm wash: brightens with every diya, saturates yellow then whitens. */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: finish === "white" ? "#ffffff" : WARM_YELLOW,
-          opacity: finish === "idle" ? warmth * 0.8 : 1,
-          transition: WASH_TRANSITION,
         }}
       />
 
