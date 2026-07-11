@@ -15,7 +15,7 @@ export const seoExpertIndia: SeoLandingContent = {
   areaServedType: "Country",
   path: "/seo-expert-india",
   h1: "SEO Expert in India",
-  metaTitle: "SEO Expert in India: Services, Process & Pricing",
+  metaTitle: "SEO Expert in India: Services & Pricing",
   metaDescription:
     "Hire an SEO expert in India for technical SEO, content, and AI answer-engine optimisation. Packages from ₹6,999/month — see pricing and book a call.",
   subhead:

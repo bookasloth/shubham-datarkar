@@ -25,7 +25,7 @@ import { cn } from "@/lib/utils";
 export const revalidate = 300; // ISR — CDN-instant, refresh every 5 min
 
 export const metadata = buildMetadata({
-  title: c.metaTitle, // "SEO Expert in India: Services, Process & Pricing" (brand appended by root template)
+  title: c.metaTitle, // "SEO Expert in India: Services & Pricing" (brand appended by root template)
   description: c.metaDescription,
   path: c.path,
 });
@@ -35,6 +35,8 @@ export default async function SeoExpertIndiaPage() {
     getPublishedEntities<CaseStudy>("case_studies"),
     getPublishedEntities<Testimonial>("testimonials"),
   ]);
+  // Intentional: no fallback to `featured` if none of caseStudySlugs match —
+  // an empty Results section is correct here, not a bug to "fix" with fabricated proof.
   const seoCases = (c.caseStudySlugs?.length
     ? caseStudies.filter((cs) => c.caseStudySlugs!.includes(cs.slug))
     : caseStudies.filter((cs) => cs.featured)
