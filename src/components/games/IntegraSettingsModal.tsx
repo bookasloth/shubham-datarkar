@@ -8,9 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const triggerCls =
-  "rounded-btn border border-border px-2 py-1 text-xs text-muted-foreground transition-ui hover:border-foreground hover:text-foreground";
+import { triggerCls } from "@/components/games/modal-trigger";
 
 export default function IntegraSettingsModal({
   colorblind,

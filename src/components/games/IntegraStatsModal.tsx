@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { triggerCls } from "@/components/games/modal-trigger";
 
 export type IntegraStats = {
   played: number;
@@ -15,9 +16,6 @@ export type IntegraStats = {
   currentStreak: number;
   maxStreak: number;
 };
-
-const triggerCls =
-  "rounded-btn border border-border px-2 py-1 text-xs text-muted-foreground transition-ui hover:border-foreground hover:text-foreground";
 
 function Stat({ label, value }: { label: string; value: string | number }) {
   return (

@@ -1,37 +1,29 @@
 import Link from "next/link";
 import { Lock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
-/** Native in-game wall for archive puzzles the viewer can't open yet. No emoji (project rule). */
+/** In-game wall for archive puzzles the viewer can't open yet. No emoji (project rule). */
 export function ArchiveUpsell({ game }: { game: "alfazy" | "hit-and-blow" | "integra" }) {
   return (
-    <div className="mx-auto mt-10 max-w-sm rounded-card border border-border bg-card p-6 text-center">
-      <div className="mx-auto flex size-12 items-center justify-center rounded-card bg-muted">
-        <Lock className="size-6 text-muted-foreground" />
-      </div>
-      <h1 className="mt-4 font-display text-xl font-bold">This puzzle is in the Member archive</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
-        Today and yesterday are free. Become a Member to play every past puzzle.
-      </p>
-      <div className="mt-6 flex flex-col gap-2">
-        <Link
-          href="/members/upgrade"
-          className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
-        >
-          Unlock the archive
-        </Link>
-        <Link
-          href={`/games/${game}`}
-          className="rounded-btn border border-border px-4 py-2 text-sm transition-ui hover:bg-accent"
-        >
-          Continue with today&apos;s puzzle
-        </Link>
-        <Link
-          href="/members/upgrade"
-          className="text-xs text-muted-foreground underline-offset-4 hover:underline"
-        >
-          See everything included in Membership
-        </Link>
-      </div>
-    </div>
+    <EmptyState
+      className="mx-auto mt-10 max-w-sm"
+      icon={<Lock />}
+      title="This puzzle is in the Member archive"
+      description="Today and yesterday are free. Become a Member to play every past puzzle."
+      action={
+        <div className="flex w-full flex-col gap-2">
+          <Button asChild>
+            <Link href="/members/upgrade">Unlock the archive</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href={`/games/${game}`}>Continue with today&apos;s puzzle</Link>
+          </Button>
+          <Button variant="link" size="sm" asChild>
+            <Link href="/members/upgrade">See everything included in Membership</Link>
+          </Button>
+        </div>
+      }
+    />
   );
 }
