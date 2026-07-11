@@ -87,7 +87,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
         <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border p-3 lg:block">
           <AppSidebar signedIn={signedIn} />
         </aside>
-        <main className="min-w-0 flex-1 pb-24 lg:pb-10">{children}</main>
+        <div className="min-w-0 flex-1 pb-24 lg:pb-10">{children}</div>
       </div>
 
       {/* Mobile bottom nav — one entry per section */}
