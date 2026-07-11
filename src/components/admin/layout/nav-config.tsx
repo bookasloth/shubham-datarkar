@@ -2,7 +2,7 @@ import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
   Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Gamepad2, Search,
   Library, Tags, MessageSquarePlus, UserRound, Bell, BarChart3, MessagesSquare,
-  Contact, Send, type LucideIcon,
+  Contact, Send, Inbox, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
@@ -54,6 +54,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Subscribers", href: "/admin/subscribers", icon: Users },
       { label: "Broadcast", href: "/admin/broadcast", icon: Send },
       { label: "Contacts", href: "/admin/contacts", icon: Mail },
+      { label: "Email Inbox", href: "/admin/inbox", icon: Inbox },
     ],
   },
   {

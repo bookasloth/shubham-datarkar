@@ -44,10 +44,45 @@ export async function subscribe(
     return { ok: false, error: "Something went wrong. Please try again." };
   }
 
+  // Welcome a genuinely new subscriber only — `error === null` means the row was
+  // inserted; 23505 is a duplicate re-submit and was already welcomed.
+  if (!error) await sendWelcomeEmail(e);
+
   // Dual-write to Kit (fail-safe; idempotent for existing/duplicate emails).
   await pushToKit(e);
 
   return { ok: true };
+}
+
+/** Branded newsletter welcome. Fires once on a fresh subscribe. Fail-safe; no-ops without SMTP. */
+async function sendWelcomeEmail(email: string): Promise<void> {
+  try {
+    const creds = await getEmailCredentials();
+    if (!creds) return;
+    await sendEmail(creds, {
+      to: email,
+      subject: "Welcome aboard — you're in",
+      text: "You're in. Expect ad breakdowns, SEO and growth frameworks, build logs, and subscriber-only resources. Access your exclusive goodies at https://shubhamdatarkar.com/subscriber-assets",
+      html: renderEmail({
+        preheader: "You're in. Strategy, stories, and subscriber-only assets await.",
+        title: "Welcome aboard,",
+        bodyHtml:
+          `<p style="margin:0 0 18px;font-size:14px;color:#2d2d2d;line-height:1.7">You just joined a circle of builders, marketers, and thinkers who care about one thing: creating work that converts and compounds.</p>` +
+          `<h2 style="margin:28px 0 10px;font-size:18px;font-weight:600;color:#202124">Here's what to expect</h2>` +
+          `<ul style="margin:0 0 24px 22px;padding:0;font-size:14px;color:#3c4043;line-height:1.6">` +
+          `<li>Deep dives on ads that work (and why they work).</li>` +
+          `<li>Actionable SEO and growth frameworks you can implement immediately.</li>` +
+          `<li>Build logs from my ventures and experiments.</li>` +
+          `<li>Occasional hard truths about marketing most people won't say publicly.</li>` +
+          `</ul>` +
+          `<p style="margin:0;font-size:14px;color:#2d2d2d;line-height:1.7">And because you're a subscriber, you get access to exclusive resources I don't share anywhere else.</p>`,
+        cta: { label: "Access Exclusive Goodies", href: "https://shubhamdatarkar.com/subscriber-assets" },
+        heroImageUrl: EMAIL_BRAND.welcomeGif,
+      }),
+    });
+  } catch (e) {
+    console.warn("[subscribers] welcome email threw:", (e as Error).message);
+  }
 }
 
 /**
