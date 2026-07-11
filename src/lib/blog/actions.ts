@@ -7,7 +7,16 @@ import { requireAdmin } from "@/lib/auth/session";
 import { countWords } from "@/lib/blog/words";
 import { pingIndexNow } from "@/lib/seo/indexnow";
 import { site } from "@/lib/site";
+import { getPublishedPosts } from "@/lib/blog/queries";
 import type { ContentBlock } from "@/lib/data/types";
+
+/** Public: latest N published posts for the nav menu (minimal, serializable). */
+export async function getLatestPostsForNav(n = 2) {
+  const posts = await getPublishedPosts();
+  return posts
+    .slice(0, n)
+    .map((p) => ({ slug: p.slug, title: p.title, category: p.category }));
+}
 
 type PostFields = ReturnType<typeof fields>;
 

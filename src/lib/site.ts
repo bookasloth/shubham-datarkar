@@ -19,6 +19,7 @@ export const site = {
   // External booking software — Book A Sloth, his own scheduling product.
   bookingUrl: "https://bookasloth.com/sndatarkar",
   spotifyUrl: "https://open.spotify.com/playlist/1p5XuC8FEI1iYrBRZIxVSW",
+  youtubeUrl: "https://www.youtube.com/@sndatarkar",
 } as const;
 
 export const companies = [
@@ -99,11 +100,11 @@ export const navGroups: NavGroup[] = [
 
 /** Flat top-level links shown directly in the bar. */
 export const primaryNav: NavItem[] = [
-  { label: "About", href: "/about" },
-  { label: "Work", href: "/work" },
-  { label: "Services", href: "/services" },
-  { label: "Blog", href: "/blog" },
-  { label: "Games", href: "/games" },
+  { label: "The Kalamwala", href: "/about" },
+  { label: "Case Files", href: "/work" },
+  { label: "My Offerings", href: "/services" },
+  { label: "Notes/Updates", href: "/blog" },
+  { label: "Reach Me", href: "/contact" },
 ];
 
 export const footerNav: NavGroup[] = [
@@ -159,6 +160,11 @@ export const socials: SocialLink[] = [
   { label: "LinkedIn", href: "https://www.linkedin.com/in/sndatarkar", handle: "in/sndatarkar" },
   { label: "YouTube", href: "https://www.youtube.com/@sndatarkar", handle: "@sndatarkar" },
   { label: "Instagram", href: "https://www.instagram.com/sndatarkar", handle: "@sndatarkar" },
+  { label: "Book A Sloth", href: site.bookingUrl, handle: "@sndatarkar" },
 ];
 
-export const sameAs = socials.map((s) => s.href);
+// sameAs feeds JSON-LD social-profile links — keep it to real identity
+// profiles, not the Book A Sloth booking page.
+export const sameAs = socials
+  .filter((s) => s.label !== "Book A Sloth")
+  .map((s) => s.href);
