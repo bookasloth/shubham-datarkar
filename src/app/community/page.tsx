@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getMemberContext } from "@/lib/members/session";
+import { getShellUser } from "@/lib/app-shell/user";
 import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
 import { SortMenu } from "@/components/community/sort-menu";
@@ -22,9 +23,10 @@ export default async function CommunityPage({
     : "all";
 
   const { user } = await getMemberContext();
-  const [canPost, posts] = await Promise.all([
+  const [canPost, posts, shellUser] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
     listFeed({ sort, window, limit: 30 }),
+    user ? getShellUser() : Promise.resolve(null),
   ]);
   const pollResults = await listPollResults(
     posts.filter((p) => p.type === "poll").map((p) => p.id),
@@ -35,7 +37,7 @@ export default async function CommunityPage({
       <SortMenu sort={sort} window={window} />
 
       {canPost ? (
-        <Composer />
+        <Composer name={shellUser?.displayName ?? null} username={shellUser?.username ?? null} />
       ) : (
         <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
           {user ? (

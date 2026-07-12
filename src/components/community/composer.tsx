@@ -1,22 +1,28 @@
 "use client";
 import { useActionState, useState } from "react";
-import { X } from "lucide-react";
+import { X, Type, Image as ImageIcon, Video, BarChart3 } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
 const TABS = [
-  { key: "text", label: "Text" },
-  { key: "image", label: "Image" },
-  { key: "youtube", label: "YouTube" },
-  { key: "poll", label: "Poll" },
+  { key: "text", label: "Text", Icon: Type },
+  { key: "image", label: "Image", Icon: ImageIcon },
+  { key: "youtube", label: "YouTube", Icon: Video },
+  { key: "poll", label: "Poll", Icon: BarChart3 },
 ] as const;
 
 const MAX = 500;
 const MAX_OPTIONS = 4;
 
-export function Composer() {
+export function Composer({
+  name,
+  username,
+}: {
+  name?: string | null;
+  username?: string | null;
+}) {
   const [type, setType] = useState<(typeof TABS)[number]["key"]>("text");
   const [body, setBody] = useState("");
   const [options, setOptions] = useState<string[]>(["", ""]);
@@ -34,19 +40,33 @@ export function Composer() {
     <form action={formAction} className="border-b border-border px-4 py-3">
       <input type="hidden" name="type" value={type} />
 
-      <div className="mb-2 flex gap-1">
+      <div className="mb-3">
+        <h2 className="text-base font-semibold text-foreground">
+          Welcome back{name ? `, ${name}` : ""}
+          {username && username !== name && (
+            <span className="ml-1.5 font-normal text-muted-foreground">@{username}</span>
+          )}
+        </h2>
+        <p className="text-sm text-muted-foreground">
+          Here&apos;s what your community is up to. Share something.
+        </p>
+      </div>
+
+      <div className="mb-3 grid grid-cols-4 gap-2">
         {TABS.map((t) => (
           <button
             key={t.key}
             type="button"
             onClick={() => setType(t.key)}
+            aria-pressed={type === t.key}
             className={cn(
-              "rounded-btn px-2.5 py-1 text-xs transition-ui",
+              "flex flex-col items-center justify-center gap-1.5 rounded-card border px-2 py-3 text-xs transition-ui",
               type === t.key
-                ? "bg-accent font-medium text-foreground"
-                : "text-muted-foreground hover:bg-accent",
+                ? "border-foreground bg-accent font-medium text-foreground"
+                : "border-dashed border-border text-muted-foreground hover:bg-accent hover:text-foreground",
             )}
           >
+            <t.Icon className="size-5" />
             {t.label}
           </button>
         ))}
