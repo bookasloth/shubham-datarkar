@@ -11,6 +11,7 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     rowId: (r.row_id as string) ?? (r.id as string),
     rebloggedBy: (r.reblogged_by as string) ?? null,
     id: r.id as string,
+    publicId: String(r.public_id),
     userId: r.user_id as string,
     username: r.username as string,
     displayName: (r.display_name as string) ?? null,
@@ -67,11 +68,25 @@ export async function listFeed(opts: {
   return (data ?? []).map(mapRow);
 }
 
-export async function getPost(id: string): Promise<FeedPost | null> {
+/** Resolve a post by its public_id (the routing key). */
+export async function getPostByPublicId(publicId: string): Promise<FeedPost | null> {
   const sb = await supabaseAuthServer();
-  const { data, error } = await sb.rpc("community_post", { p_id: id });
+  const { data, error } = await sb.rpc("community_post", { p_public: publicId });
   if (error || !data || data.length === 0) return null;
   return mapRow(data[0]);
+}
+
+/** Map an internal UUID to its public_id — the sole use is 301-ing legacy
+ *  /community/p/{uuid} links to the canonical /community/p/{public_id}. Returns
+ *  null for unknown or non-readable (hidden) rows, so those just 404. */
+export async function publicIdForUuid(uuid: string): Promise<string | null> {
+  const sb = await supabaseAuthServer();
+  const { data } = await sb
+    .from("community_posts")
+    .select("public_id")
+    .eq("id", uuid)
+    .maybeSingle();
+  return data?.public_id != null ? String(data.public_id) : null;
 }
 
 export async function listReplies(postId: string): Promise<FeedPost[]> {

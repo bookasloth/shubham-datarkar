@@ -18,6 +18,10 @@ export type FeedPost = {
   rowId: string;
   /** The SOURCE post. Votes, replies and bookmarks all target this. */
   id: string;
+  /** Human-friendly permalink key (YYYY + global sequence). Public URLs use
+   *  this, never the UUID. Kept as a string — URLs are strings and it sidesteps
+   *  any bigint precision worry. */
+  publicId: string;
   /** Handle of the reblogger when this row is a reblog, else null. */
   rebloggedBy: string | null;
   userId: string;

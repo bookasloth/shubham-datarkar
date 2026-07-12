@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
-import { getPost, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
+import { getPostByPublicId, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
 import { buildMetadata } from "@/lib/seo";
@@ -19,7 +19,7 @@ function snippet(body: string | null, max: number): string {
  */
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const post = await getPost(id);
+  const post = await getPostByPublicId(id);
   if (!post) return buildMetadata({ title: "Community post", path: `/community/p/${id}`, noIndex: true });
 
   const author = post.displayName ?? `@${post.username}`;
@@ -29,20 +29,23 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
     description: body || `A post by ${author} in the community.`,
     ogTitle: `${author} in the community`,
     ogDescription: body || `A post by ${author} in the community.`,
-    path: `/community/p/${post.id}`,
+    path: `/community/p/${post.publicId}`,
     noIndex: true,
   });
 }
 
 export default async function PostPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const post = await getPost(id);
+  // `id` is the public_id. Legacy /community/p/{uuid} links are 301'd to the
+  // canonical public_id URL in proxy.ts before they reach here, so an id that
+  // doesn't resolve as a public_id simply 404s.
+  const post = await getPostByPublicId(id);
   if (!post) notFound();
 
   const { user } = await getMemberContext();
   const [canPost, replies] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    listReplies(id),
+    listReplies(post.id),
   ]);
   const pollResults = await listPollResults(post.type === "poll" ? [post.id] : []);
 
