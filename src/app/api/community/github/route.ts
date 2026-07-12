@@ -34,6 +34,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false }, { status: 400 });
   }
 
+  if (typeof payload !== "object" || payload === null) {
+    return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
   const pr = payload.pull_request;
   if (payload.action !== "closed" || !pr?.merged || !pr.number) {
     return NextResponse.json({ ok: true, ignored: "not-merged" });
