@@ -6,11 +6,21 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { reportPost, deleteOwnPost } from "@/lib/community/engage-actions";
+import { setPostHidden, setPostDemoted, adminDeletePost } from "@/lib/community/admin-actions";
 
-export function PostMenu({ postId, isOwner }: { postId: string; isOwner: boolean }) {
+export function PostMenu({
+  postId,
+  isOwner,
+  isAdmin = false,
+}: {
+  postId: string;
+  isOwner: boolean;
+  isAdmin?: boolean;
+}) {
   const router = useRouter();
   const [, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
@@ -32,6 +42,22 @@ export function PostMenu({ postId, isOwner }: { postId: string; isOwner: boolean
     });
   }
 
+  // Admin actions throw on failure (unlike the {error} unions above). Hide/demote
+  // drop the post from the feed RPC for everyone, so refresh to reflect it.
+  // Reversal (unhide/undemote) lives in /admin/community — the feed can't show
+  // what it filters out. ponytail: one-way inline is the takedown path; panel reverses.
+  function runAdmin(fn: () => Promise<void>, confirmMsg?: string) {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    start(async () => {
+      try {
+        await fn();
+        router.refresh();
+      } catch (e) {
+        setNote(e instanceof Error ? e.message : "Action failed.");
+      }
+    });
+  }
+
   return (
     <div className="relative">
       <DropdownMenu>
@@ -42,8 +68,28 @@ export function PostMenu({ postId, isOwner }: { postId: string; isOwner: boolean
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={onReport}>Report</DropdownMenuItem>
-          {isOwner && <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>}
+          {isAdmin ? (
+            <>
+              <DropdownMenuItem onClick={() => runAdmin(() => setPostHidden(postId, true, "", false))}>
+                Hide
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => runAdmin(() => setPostDemoted(postId, true))}>
+                Demote
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className="text-destructive"
+                onClick={() => runAdmin(() => adminDeletePost(postId), "Delete this post? This can't be undone.")}
+              >
+                Delete
+              </DropdownMenuItem>
+            </>
+          ) : (
+            <>
+              <DropdownMenuItem onClick={onReport}>Report</DropdownMenuItem>
+              {isOwner && <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>}
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
       {note && <p className="absolute right-0 top-7 whitespace-nowrap text-xs text-muted-foreground">{note}</p>}
