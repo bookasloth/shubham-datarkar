@@ -10,6 +10,7 @@ import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
+import { WinBurst } from "@/components/games/board/WinBurst";
 import { triggerCls } from "@/components/games/modal-trigger";
 
 const ALFAZY_ROWS: KeyDef[][] = [
@@ -41,6 +42,7 @@ export default function AlfazyBoard({
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
   const [shakeCount, setShakeCount] = useState(0);
+  const [justWon, setJustWon] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -85,6 +87,8 @@ export default function AlfazyBoard({
     setCurrent("");
     if (isWin(tiles)) {
       setStatus("won");
+      setJustWon(true);
+      setTimeout(() => setJustWon(false), 1500);
     } else if (next.length >= ALFAZY.maxGuesses) {
       setStatus("lost");
     }
@@ -195,6 +199,8 @@ export default function AlfazyBoard({
       ) : (
         <Keyboard game="alfazy" rows={ALFAZY_ROWS} keyStates={keyState} onKey={key} />
       )}
+
+      {justWon && <WinBurst />}
     </GameStage>
   );
 }

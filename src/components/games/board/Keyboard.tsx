@@ -5,26 +5,32 @@ export type KeyDef = { label: string; value: string; wide?: boolean };
 
 /**
  * Config-driven on-screen keyboard. The caller passes rows of keys, so a word
- * game hands it QWERTY and a code game hands it a digit pad — same component,
- * same styling. Key colour comes from per-game CSS (`.{game}-key`), matching
- * the board tiles. Wide keys (Enter / Backspace) get horizontal padding; the
- * rest are fixed-width, exactly as before.
+ * game hands it QWERTY (`variant="flex"`, fixed-width keys, wide Enter/Back)
+ * and a math game hands it a digit/ops pad (`variant="grid"`, keys sized by
+ * the grid track). Key colour comes from per-game CSS (`.{game}-key`).
  */
 export function Keyboard({
   game,
   rows,
   keyStates,
   onKey,
+  variant = "flex",
 }: {
   game: string;
   rows: KeyDef[][];
   keyStates?: Record<string, TileState | undefined>;
   onKey: (value: string) => void;
+  variant?: "flex" | "grid";
 }) {
+  const grid = variant === "grid";
   return (
-    <div className="flex flex-col items-center gap-1.5">
+    <div className={cn("flex flex-col gap-1.5", grid ? "w-full max-w-[22rem]" : "items-center")}>
       {rows.map((row, i) => (
-        <div key={i} className="flex gap-1.5">
+        <div
+          key={i}
+          className={grid ? "grid gap-1" : "flex gap-1.5"}
+          style={grid ? { gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` } : undefined}
+        >
           {row.map((k) => {
             const st = keyStates?.[k.value];
             return (
@@ -32,9 +38,10 @@ export function Keyboard({
                 key={k.value}
                 onClick={() => onKey(k.value)}
                 className={cn(
-                  `${game}-key h-12 rounded-btn font-semibold uppercase transition-ui`,
+                  `${game}-key h-12 rounded-btn font-semibold transition-ui`,
                   st ? `${game}-key--${st}` : "bg-secondary text-secondary-foreground",
-                  k.wide ? "px-3" : "w-8",
+                  grid ? "text-base" : "uppercase",
+                  !grid && (k.wide ? "px-3" : "w-8"),
                 )}
               >
                 {k.label}

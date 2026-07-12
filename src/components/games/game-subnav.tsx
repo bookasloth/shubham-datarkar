@@ -16,7 +16,11 @@ const TABS: Record<string, { label: string; seg: string }[]> = {
     { label: "Results", seg: "results" },
     { label: "Leaderboard", seg: "leaderboard" },
   ],
-  "/games/integra": [{ label: "Archive", seg: "archive" }],
+  "/games/integra": [
+    { label: "Archive", seg: "archive" },
+    { label: "Results", seg: "results" },
+    { label: "Leaderboard", seg: "leaderboard" },
+  ],
 };
 
 export function GameSubnav({ base }: { base: keyof typeof TABS | string }) {

@@ -7,6 +7,7 @@ import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
+import { WinBurst } from "@/components/games/board/WinBurst";
 
 type Row = { guess: string; hits: number; blows: number };
 type Saved = { history: Row[]; status: "playing" | "won" | "lost" };
@@ -19,6 +20,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
   const [current, setCurrent] = useState("");
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
+  const [justWon, setJustWon] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -66,7 +68,8 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
     setCurrent("");
     if (isWin(hits)) {
       setStatus("won");
-      // Phase 2: submitResult server action -> supabase.rpc('submit_result', ...)
+      setJustWon(true);
+      setTimeout(() => setJustWon(false), 1500);
     } else if (next.length >= HIT_AND_BLOW.maxGuesses) {
       setStatus("lost");
     }
@@ -132,6 +135,8 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
           </button>
         </div>
       )}
+
+      {justWon && <WinBurst />}
     </GameStage>
   );
 }
