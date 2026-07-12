@@ -47,6 +47,8 @@ declare
   ];
   body text;
 begin
+  -- ponytail: exact-count check can miss a threshold under concurrent signups
+  -- (READ COMMITTED); upgrade to a locked counter/sequence if it ever matters.
   select count(*) into n from public.profiles;
   if n not in (10, 25, 50, 100, 250, 500, 1000) then
     return null;
@@ -58,7 +60,7 @@ begin
   body := replace(msgs[1 + floor(random() * array_length(msgs, 1))::int], '{n}', n::text);
   insert into public.community_posts (user_id, type, body, auto_key)
   values (owner_id, 'text', body, 'member-milestone:' || n)
-  on conflict (auto_key) do nothing;
+  on conflict do nothing;
   return null;
 end $$;
 
