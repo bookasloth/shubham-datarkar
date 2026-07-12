@@ -12,7 +12,7 @@ export default async function GamesLayout({ children }: { children: React.ReactN
   const user = await getShellUser();
   return (
     <AppShell user={user}>
-      <div className="mx-auto max-w-md px-4 py-8">{children}</div>
+      <div data-games className="mx-auto max-w-md px-4 py-8">{children}</div>
     </AppShell>
   );
 }

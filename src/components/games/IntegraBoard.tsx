@@ -223,7 +223,7 @@ function KeyBtn({ label, onClick, state }: { label: string; onClick: () => void;
 
 /** Lightweight win celebration — a burst of pieces, no extra dependency. */
 function Confetti() {
-  const colors = ["#16a34a", "#7c3aed", "#ff4800", "var(--foreground)"];
+  const colors = ["#16a34a", "#7c3aed", "#d4af37", "var(--foreground)"];
   const pieces = Array.from({ length: 28 }, (_, i) => ({
     x: (i / 28) * 320 - 160 + ((i * 37) % 40) - 20,
     delay: (i % 7) * 0.03,

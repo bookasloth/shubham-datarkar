@@ -657,3 +657,22 @@
 [data-members] {
   --brand: #fe5100;
 }
+
+/* ================================================================== */
+/*  GAMES SCOPE — daily games platform. Brand orange is retired here;   */
+/*  each game owns its logo colour as the accent via a per-game --brand */
+/*  override (same mechanism as [data-members], so every existing       */
+/*  ring-brand / focus:border-brand / accent-brand utility follows).    */
+/*  [data-games] default = platform violet for game-neutral surfaces    */
+/*  (the /games hub, cross-game leaderboard).                           */
+/* ================================================================== */
+[data-games] { --brand: #7c3aed; }
+[data-game="alfazy"] { --brand: #16a34a; }        /* leaf green — word */
+[data-game="hit-and-blow"] { --brand: #2563eb; }  /* cobalt blue — code */
+[data-game="integra"] { --brand: #7c3aed; }       /* violet — math */
+
+/* Lighter tints in dark/torch so the accent stays legible on black. */
+.dark [data-games], .torch [data-games] { --brand: #8b5cf6; }
+.dark [data-game="alfazy"], .torch [data-game="alfazy"] { --brand: #22c55e; }
+.dark [data-game="hit-and-blow"], .torch [data-game="hit-and-blow"] { --brand: #3b82f6; }
+.dark [data-game="integra"], .torch [data-game="integra"] { --brand: #8b5cf6; }
