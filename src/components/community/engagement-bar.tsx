@@ -121,8 +121,8 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           aria-pressed={state.vote === 1}
           className={cn(ITEM, state.vote === 1 && "text-brand")}
         >
-          <Heart className={cn("size-4", burst === "up" && "animate-pop")} />{" "}
-          {compactNumber(state.up)}
+          <Heart className={cn("size-4", burst === "up" && "animate-pop")} />
+          <span className="hidden sm:inline">Upvote</span> {compactNumber(state.up)}
         </button>
 
         <button
@@ -133,12 +133,13 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           aria-pressed={state.vote === -1}
           className={cn(ITEM, state.vote === -1 && "text-foreground")}
         >
-          <Egg className={cn("size-4", burst === "down" && "animate-wobble")} />{" "}
-          {compactNumber(state.down)}
+          <Egg className={cn("size-4", burst === "down" && "animate-wobble")} />
+          <span className="hidden sm:inline">Downvote</span> {compactNumber(state.down)}
         </button>
 
-        <Link href={`/community/p/${post.id}`} className={ITEM} aria-label="Replies">
-          <MessagesSquare className="size-4" /> {compactNumber(post.replyCount)}
+        <Link href={`/community/p/${post.id}`} className={ITEM} aria-label="Comments">
+          <MessagesSquare className="size-4" />
+          <span className="hidden sm:inline">Comments</span> {compactNumber(post.replyCount)}
         </Link>
 
         <button
@@ -153,7 +154,8 @@ export function EngagementBar({ post }: { post: FeedPost }) {
         </button>
 
         <button type="button" onClick={onShare} aria-label="Share link" className={ITEM}>
-          <Send className="size-4" /> {copied && <span>Copied</span>}
+          <Send className="size-4" />
+          {copied ? <span>Copied</span> : <span className="hidden sm:inline">Share</span>}
         </button>
 
         <button

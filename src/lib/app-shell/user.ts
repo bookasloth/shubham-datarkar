@@ -6,6 +6,7 @@ import { getMemberContext, type MemberRole } from "@/lib/members/session";
 export type ShellUser = {
   email: string;
   displayName: string;
+  username: string | null;
   role: MemberRole;
   isAdmin: boolean;
   isPremium: boolean;
@@ -34,6 +35,7 @@ export const getShellUser = cache(async (): Promise<ShellUser> => {
   return {
     email,
     displayName,
+    username: profile?.username?.trim() || null,
     role: ctx.role,
     isAdmin: ctx.role === "admin",
     isPremium: ctx.role === "premium" || ctx.role === "admin",
