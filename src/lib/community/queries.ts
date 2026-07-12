@@ -26,6 +26,10 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     score: r.score as number,
     replyCount: r.reply_count as number,
     reblogCount: r.reblog_count as number,
+    // ?? 0 so a DB that hasn't run the bookmark_count migration yet (or the
+    // dormant community_post(uuid) shim, which doesn't return it) renders 0
+    // instead of NaN.
+    bookmarkCount: (r.bookmark_count as number) ?? 0,
     reblogOf: (r.reblog_of as string) ?? null,
     createdAt: r.created_at as string,
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,

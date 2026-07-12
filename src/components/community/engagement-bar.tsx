@@ -17,6 +17,7 @@ type Engagement = {
   up: number;
   down: number;
   marked: boolean;
+  bookmarks: number;
   reblogs: number;
   reblogged: boolean;
 };
@@ -36,7 +37,8 @@ function reduce(s: Engagement, a: Action): Engagement {
     // switching sides moves the count across
     return { ...s, vote: v, up: v === 1 ? s.up + 1 : s.up - 1, down: v === -1 ? s.down + 1 : s.down - 1 };
   }
-  if (a.kind === "bookmark") return { ...s, marked: !s.marked };
+  if (a.kind === "bookmark")
+    return { ...s, marked: !s.marked, bookmarks: s.marked ? s.bookmarks - 1 : s.bookmarks + 1 };
   return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? s.reblogs - 1 : s.reblogs + 1 };
 }
 
@@ -57,6 +59,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
       up: post.upCount,
       down: post.downCount,
       marked: post.viewerBookmarked,
+      bookmarks: post.bookmarkCount,
       reblogs: post.reblogCount,
       reblogged: post.viewerReblogged,
     },
@@ -187,6 +190,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           className={cn(ITEM, state.marked && "text-brand")}
         >
           <Bookmark className={cn("size-4", state.marked && "fill-current animate-pop")} />
+          {compactNumber(state.bookmarks)}
         </button>
 
         <span
