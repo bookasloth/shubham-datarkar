@@ -100,7 +100,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
   }
 
   async function onShare() {
-    const url = `${window.location.origin}/community/p/${post.id}`;
+    const url = `${window.location.origin}/community/p/${post.publicId}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -137,7 +137,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           <span className="hidden sm:inline">Downvote</span> {compactNumber(state.down)}
         </button>
 
-        <Link href={`/community/p/${post.id}`} className={ITEM} aria-label="Comments">
+        <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments">
           <MessagesSquare className="size-4" />
           <span className="hidden sm:inline">Comments</span> {compactNumber(post.replyCount)}
         </Link>

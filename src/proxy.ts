@@ -43,11 +43,33 @@ export async function proxy(request: NextRequest) {
     return redirect;
   };
 
+  const path = request.nextUrl.pathname;
+
+  // Community post permalinks resolve by public_id. Legacy /community/p/{uuid}
+  // links get a permanent 301 to the canonical public_id URL so nothing breaks.
+  // public_id-form (all digits) and unknown ids fall straight through to the
+  // page — no auth round trip on the common read path.
+  const permalink = path.match(/^\/community\/p\/([^/]+)\/?$/);
+  if (permalink) {
+    const seg = permalink[1];
+    if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(seg)) {
+      const { data } = await supabase
+        .from("community_posts")
+        .select("public_id")
+        .eq("id", seg)
+        .maybeSingle();
+      if (data?.public_id != null) {
+        const url = request.nextUrl.clone();
+        url.pathname = `/community/p/${data.public_id}`;
+        return NextResponse.redirect(url, 301);
+      }
+    }
+    return NextResponse.next({ request });
+  }
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
-  const path = request.nextUrl.pathname;
 
   if (path.startsWith("/admin") && !user) {
     const url = request.nextUrl.clone();
@@ -81,6 +103,7 @@ export async function proxy(request: NextRequest) {
 export const config = {
   matcher: [
     "/admin/:path*",
+    "/community/p/:path*",
     "/games/login",
     "/games/profile/:path*",
     "/members/:path*",

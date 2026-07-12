@@ -159,7 +159,9 @@ export async function voteOnPoll(postId: string, optionIndex: number): Promise<E
     return { error: err.message };
   }
   revalidatePath("/community");
-  revalidatePath(`/community/p/${postId}`);
+  // The rendered URL keys on public_id, not this UUID — revalidate the whole
+  // dynamic segment rather than a path that would never match.
+  revalidatePath("/community/p/[id]", "page");
   return { ok: true };
 }
 
@@ -186,7 +188,7 @@ export async function createReply(postId: string, body: string): Promise<EngageR
     body: valid.body,
   });
   if (err) return { error: err.message };
-  revalidatePath(`/community/p/${postId}`);
+  revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");
   return { ok: true };
 }
