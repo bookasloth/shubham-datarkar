@@ -3,9 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { INTEGRA, scoreGuess, isWin, isValidGuess, shareGrid, type Tile } from "@/lib/games/integra";
+import { INTEGRA, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/integra";
 import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
+import { GameStage } from "@/components/games/shell/GameStage";
+import { GameHeader } from "@/components/games/shell/GameHeader";
+import { Tile } from "@/components/games/board/Tile";
 import IntegraHelpModal from "./IntegraHelpModal";
 import IntegraStatsModal, { type IntegraStats } from "./IntegraStatsModal";
 import IntegraSettingsModal from "./IntegraSettingsModal";
@@ -66,7 +69,7 @@ export default function IntegraBoard({
     void submitResult({ game: "integra", puzzleNumber, status, guesses, timeMs: null });
   }, [isArchive, status, user, guesses, puzzleNumber]);
 
-  const rows: Tile[][] = guesses.map((g) => scoreGuess(g, answer));
+  const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
 
   function setColorblindPref(v: boolean) {
     setColorblind(v);
@@ -115,8 +118,8 @@ export default function IntegraBoard({
     setTimeout(() => setToast(""), 1400);
   }
 
-  const keyState: Record<string, Tile> = {};
-  const rankMap: Record<Tile, number> = { correct: 3, present: 2, absent: 1 };
+  const keyState: Record<string, TileState> = {};
+  const rankMap: Record<TileState, number> = { correct: 3, present: 2, absent: 1 };
   guesses.forEach((g, r) =>
     g.split("").forEach((ch, i) => {
       const t = rows[r][i];
@@ -131,15 +134,17 @@ export default function IntegraBoard({
   }
 
   return (
-    <div className={`flex flex-col items-center gap-4${colorblind ? " integra-cb" : ""}`}>
-      <div className="flex w-full items-center justify-between">
-        <h1 className="font-display text-xl font-bold">Integra #{puzzleNumber}{isArchive && " (archive)"}</h1>
-        <div className="flex gap-1">
-          <IntegraHelpModal />
-          <IntegraStatsModal stats={stats} authed={!!user} />
-          <IntegraSettingsModal colorblind={colorblind} onColorblindChange={setColorblindPref} />
-        </div>
-      </div>
+    <GameStage className={colorblind ? "integra-cb" : undefined}>
+      <GameHeader
+        title={<>Integra #{puzzleNumber}{isArchive && " (archive)"}</>}
+        actions={
+          <>
+            <IntegraHelpModal />
+            <IntegraStatsModal stats={stats} authed={!!user} />
+            <IntegraSettingsModal colorblind={colorblind} onColorblindChange={setColorblindPref} />
+          </>
+        }
+      />
 
       {/* grid — fluid so 7 tiles fit any phone width */}
       <div className="grid w-full max-w-[19rem] grid-rows-6 gap-1.5">
@@ -156,14 +161,16 @@ export default function IntegraBoard({
               {Array.from({ length: INTEGRA.length }).map((_, c) => {
                 const tile = r < guesses.length ? rows[r][c] : undefined;
                 return (
-                  <div
+                  <Tile
                     key={c}
-                    className={`integra-tile flex aspect-square items-center justify-center rounded-btn border-2 text-lg font-bold ${tile ? `integra-tile--${tile}` : "border-border"}${r < guesses.length && isNewest && !justWon ? " animate-tile-flip" : ""}`}
-                    style={r < guesses.length && isNewest && !justWon ? { animationDelay: `${c * 0.08}s` } : undefined}
-                  >
-                    {g[c] ? show(g[c]) : ""}
-                    {colorblind && tile && <span className="integra-tile__icon" aria-hidden="true" />}
-                  </div>
+                    game="integra"
+                    size="fluid"
+                    state={tile}
+                    char={g[c] ? show(g[c]) : ""}
+                    flip={r < guesses.length && isNewest && !justWon}
+                    flipDelay={c * 0.08}
+                    colorblind={colorblind}
+                  />
                 );
               })}
             </div>
@@ -208,11 +215,11 @@ export default function IntegraBoard({
       )}
 
       {justWon && <Confetti />}
-    </div>
+    </GameStage>
   );
 }
 
-function KeyBtn({ label, onClick, state }: { label: string; onClick: () => void; state?: Tile }) {
+function KeyBtn({ label, onClick, state }: { label: string; onClick: () => void; state?: TileState }) {
   const cls = state ? `integra-key--${state}` : "bg-secondary text-secondary-foreground";
   return (
     <button onClick={onClick} className={`integra-key h-12 rounded-btn text-base font-semibold transition-ui ${cls}`}>

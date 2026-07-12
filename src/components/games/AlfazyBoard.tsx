@@ -2,12 +2,25 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ALFAZY, scoreGuess, isWin, isValidGuess, shareGrid, type Tile } from "@/lib/games/alfazy";
+import { ALFAZY, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/alfazy";
 import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { useAlfazyTheme } from "@/components/games/AlfazyThemeProvider";
+import { GameStage } from "@/components/games/shell/GameStage";
+import { GameHeader } from "@/components/games/shell/GameHeader";
+import { Tile } from "@/components/games/board/Tile";
+import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
+import { triggerCls } from "@/components/games/modal-trigger";
 
-const KEYS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+const ALFAZY_ROWS: KeyDef[][] = [
+  [..."qwertyuiop"].map((c) => ({ label: c, value: c })),
+  [..."asdfghjkl"].map((c) => ({ label: c, value: c })),
+  [
+    { label: "⏎", value: "enter", wide: true },
+    ...[..."zxcvbnm"].map((c) => ({ label: c, value: c })),
+    { label: "⌫", value: "back", wide: true },
+  ],
+];
 
 type Saved = { guesses: string[]; status: "playing" | "won" | "lost" };
 
@@ -60,7 +73,7 @@ export default function AlfazyBoard({
     });
   }, [isArchive, status, user, guesses, puzzleNumber]);
 
-  const rows: Tile[][] = guesses.map((g) => scoreGuess(g, answer));
+  const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
 
   function submit() {
     if (status !== "playing") return;
@@ -99,8 +112,8 @@ export default function AlfazyBoard({
     setTimeout(() => setToast(""), 1200);
   }
 
-  const keyState: Record<string, Tile> = {};
-  const rankMap: Record<Tile, number> = { correct: 3, present: 2, absent: 1 };
+  const keyState: Record<string, TileState> = {};
+  const rankMap: Record<TileState, number> = { correct: 3, present: 2, absent: 1 };
   guesses.forEach((g, r) =>
     g.split("").forEach((ch, i) => {
       const t = rows[r][i];
@@ -115,17 +128,19 @@ export default function AlfazyBoard({
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="flex w-full items-center justify-between">
-        <h1 className="font-display text-xl font-bold">Alfazy #{puzzleNumber}{isArchive && " (archive)"}</h1>
-        <button
-          onClick={() => setColorblind(!colorblind)}
-          className="rounded-btn border border-border px-2 py-1 text-xs text-muted-foreground transition-ui hover:border-foreground hover:text-foreground"
-          title={colorblind ? "Disable colourblind mode" : "Enable colourblind mode"}
-        >
-          {colorblind ? "Colors" : "A11y"}
-        </button>
-      </div>
+    <GameStage>
+      <GameHeader
+        title={<>Alfazy #{puzzleNumber}{isArchive && " (archive)"}</>}
+        actions={
+          <button
+            onClick={() => setColorblind(!colorblind)}
+            className={triggerCls}
+            title={colorblind ? "Disable colourblind mode" : "Enable colourblind mode"}
+          >
+            {colorblind ? "Colors" : "A11y"}
+          </button>
+        }
+      />
 
       {/* grid */}
       <div className="grid grid-rows-6 gap-1.5">
@@ -140,17 +155,17 @@ export default function AlfazyBoard({
             >
               {Array.from({ length: ALFAZY.length }).map((_, c) => {
                 const tile = r < guesses.length ? rows[r][c] : undefined;
+                const scored = r < guesses.length && isNewest;
                 return (
-                  <div
+                  <Tile
                     key={c}
-                    className={`alfazy-tile flex h-12 w-12 items-center justify-center rounded-btn border-2 text-xl font-bold uppercase ${tile ? `alfazy-tile--${tile}` : "border-border"}${r < guesses.length && isNewest ? " animate-tile-flip" : ""}`}
-                    style={r < guesses.length && isNewest ? { animationDelay: `${c * 0.08}s` } : undefined}
-                  >
-                    {g[c] ?? ""}
-                    {colorblind && tile && (
-                      <span className="alfazy-tile__icon" aria-hidden="true" />
-                    )}
-                  </div>
+                    game="alfazy"
+                    state={tile}
+                    char={g[c] ?? ""}
+                    flip={scored}
+                    flipDelay={c * 0.08}
+                    colorblind={colorblind}
+                  />
                 );
               })}
             </div>
@@ -178,29 +193,8 @@ export default function AlfazyBoard({
           )}
         </div>
       ) : (
-        <div className="flex flex-col items-center gap-1.5">
-          {KEYS.map((row, i) => (
-            <div key={i} className="flex gap-1.5">
-              {i === 2 && <KeyBtn label="⏎" onClick={() => key("enter")} wide />}
-              {row.split("").map((ch) => (
-                <KeyBtn key={ch} label={ch} state={keyState[ch]} onClick={() => key(ch)} />
-              ))}
-              {i === 2 && <KeyBtn label="⌫" onClick={() => key("back")} wide />}
-            </div>
-          ))}
-        </div>
+        <Keyboard game="alfazy" rows={ALFAZY_ROWS} keyStates={keyState} onKey={key} />
       )}
-    </div>
-  );
-}
-
-function KeyBtn({ label, onClick, state, wide }: { label: string; onClick: () => void; state?: Tile; wide?: boolean }) {
-  const cls = state
-    ? `alfazy-key--${state}`
-    : "bg-secondary text-secondary-foreground";
-  return (
-    <button onClick={onClick} className={`alfazy-key h-12 rounded-btn font-semibold uppercase transition-ui ${cls} ${wide ? "px-3" : "w-8"}`}>
-      {label}
-    </button>
+    </GameStage>
   );
 }

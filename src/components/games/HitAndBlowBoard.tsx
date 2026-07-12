@@ -5,6 +5,8 @@ import Link from "next/link";
 import { HIT_AND_BLOW, secretFor, scoreGuess, isWin, isValidGuess, shareSummary } from "@/lib/games/hit-and-blow";
 import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
+import { GameStage } from "@/components/games/shell/GameStage";
+import { GameHeader } from "@/components/games/shell/GameHeader";
 
 type Row = { guess: string; hits: number; blows: number };
 type Saved = { history: Row[]; status: "playing" | "won" | "lost" };
@@ -77,8 +79,8 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
   }
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <h1 className="font-display text-xl font-bold">Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</h1>
+    <GameStage>
+      <GameHeader title={<>Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</>} />
       <p className="text-sm text-muted-foreground">
         {HIT_AND_BLOW.length} unique digits, no leading 0 · {HIT_AND_BLOW.maxGuesses} tries · 🎯 right spot · 💨 wrong spot
       </p>
@@ -130,6 +132,6 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
           </button>
         </div>
       )}
-    </div>
+    </GameStage>
   );
 }
