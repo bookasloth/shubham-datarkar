@@ -8,14 +8,30 @@ export function Dropzone({
   onFiles,
   hint = "PNG, JPG or PDF, up to 10MB",
   className,
+  name,
+  accept,
 }: {
   onFiles?: (files: File[]) => void;
   hint?: string;
   className?: string;
+  /** When set, the internal input carries this name and submits the current
+   *  files inside a form — dropped files included. */
+  name?: string;
+  accept?: string;
 }) {
   const [over, setOver] = React.useState(false);
   const [files, setFiles] = React.useState<File[]>([]);
   const inputRef = React.useRef<HTMLInputElement>(null);
+
+  // A <input type=file> only receives click-browsed files natively; dropped
+  // files live in React state. Mirror state → input.files so a form submit
+  // sends whatever the list currently shows.
+  React.useEffect(() => {
+    if (!name || !inputRef.current) return;
+    const dt = new DataTransfer();
+    files.forEach((f) => dt.items.add(f));
+    inputRef.current.files = dt.files;
+  }, [files, name]);
 
   function add(list: FileList | null) {
     if (!list) return;
@@ -54,6 +70,8 @@ export function Dropzone({
       <input
         ref={inputRef}
         type="file"
+        name={name}
+        accept={accept}
         multiple
         className="sr-only"
         onChange={(e) => add(e.target.files)}

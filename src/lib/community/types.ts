@@ -3,7 +3,14 @@ export type FeedWindow = "all" | "today" | "week" | "month" | "year";
 export type Badge = "grey" | "orange" | "gold";
 export type PostType = "text" | "image" | "poll" | "youtube";
 
-export type PollData = { options: { i: number; label: string }[]; closes_at?: string };
+export type PollData = {
+  options: { i: number; label: string }[];
+  closes_at?: string;
+  /** Present only for quizzes; a plain poll omits it. */
+  mode?: "quiz";
+  /** Option index of the correct answer. Present iff `mode === "quiz"`. */
+  correct?: number;
+};
 
 export type FeedPost = {
   /** The feed row (a reblog row, or the post itself). Use as the React key —
