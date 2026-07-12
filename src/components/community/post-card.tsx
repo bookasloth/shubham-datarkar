@@ -2,6 +2,7 @@ import Image from "next/image";
 import { cn, timeAgo } from "@/lib/utils";
 import { getAdminUser } from "@/lib/auth/session";
 import type { FeedPost, PollResult } from "@/lib/community/types";
+import { tokenizeLinks } from "@/lib/community/linkify";
 import { BadgeTick } from "./badge-tick";
 import { CommunityAvatar } from "./community-avatar";
 import { EngagementBar } from "./engagement-bar";
@@ -46,7 +47,23 @@ export async function PostCard({
           </div>
 
           {post.body && (
-            <p className="mt-1 whitespace-pre-wrap break-words text-sm">{post.body}</p>
+            <p className="mt-1 whitespace-pre-wrap break-words text-sm">
+              {tokenizeLinks(post.body).map((t, i) =>
+                t.type === "link" ? (
+                  <a
+                    key={i}
+                    href={t.href}
+                    target="_blank"
+                    rel="noopener noreferrer nofollow ugc"
+                    className="text-foreground underline underline-offset-2 hover:opacity-70"
+                  >
+                    {t.text}
+                  </a>
+                ) : (
+                  <span key={i}>{t.value}</span>
+                ),
+              )}
+            </p>
           )}
 
           {post.type === "image" && post.images?.length ? (
