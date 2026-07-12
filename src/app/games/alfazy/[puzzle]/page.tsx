@@ -8,6 +8,7 @@ import AlfazyBoard from "@/components/games/AlfazyBoard";
 import AlfazyThemeProvider from "@/components/games/AlfazyThemeProvider";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
 import { wordForPuzzle } from "@/lib/games/alfazy-puzzles";
+import { getMyGameStats } from "@/lib/games/profile-queries";
 
 export const metadata = buildMetadata({ title: "Alfazy", path: "/games/alfazy", noIndex: true });
 
@@ -25,10 +26,10 @@ export default async function AlfazyArchive({ params }: { params: Promise<{ puzz
     }
   }
   const now = Date.now();
-  const answer = await wordForPuzzle(n);
+  const [answer, stats] = await Promise.all([wordForPuzzle(n), getMyGameStats("alfazy")]);
   return (
     <AlfazyThemeProvider now={now}>
-      <AlfazyBoard puzzleNumber={n} isArchive={!isToday(n)} answer={answer} />
+      <AlfazyBoard puzzleNumber={n} isArchive={!isToday(n)} answer={answer} stats={stats} />
     </AlfazyThemeProvider>
   );
 }

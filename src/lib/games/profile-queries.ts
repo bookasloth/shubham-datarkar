@@ -24,12 +24,12 @@ export async function getMyStats(): Promise<StatRow[]> {
   return (data ?? []) as StatRow[];
 }
 
-/** The current user's Integra stats in the board/modal shape, or null if none/anon. */
-export async function getMyIntegraStats(): Promise<
-  { played: number; won: number; currentStreak: number; maxStreak: number } | null
-> {
+/** One game's stats for the current user in the board/modal shape, or null if none/anon. */
+export async function getMyGameStats(
+  game: StatRow["game"],
+): Promise<{ played: number; won: number; currentStreak: number; maxStreak: number } | null> {
   const rows = await getMyStats();
-  const r = rows.find((s) => s.game === "integra");
+  const r = rows.find((s) => s.game === game);
   if (!r) return null;
   return { played: r.total_played, won: r.total_won, currentStreak: r.current_streak, maxStreak: r.max_streak };
 }
