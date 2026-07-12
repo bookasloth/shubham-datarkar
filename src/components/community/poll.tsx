@@ -1,6 +1,7 @@
 "use client";
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { FeedPost, PollResult } from "@/lib/community/types";
 import { voteOnPoll } from "@/lib/community/engage-actions";
@@ -27,6 +28,10 @@ export function Poll({
   const counts = result?.counts ?? {};
   const total = result?.total ?? 0;
   const showTally = choice !== null || closed || !canVote;
+  const isQuiz = post.poll?.mode === "quiz";
+  const correct = post.poll?.correct;
+  // ponytail: quiz answer reveals whenever the tally shows (post-vote / closed /
+  // can't-vote) — same rule as a plain poll, no separate non-voter gating.
 
   function vote(i: number) {
     const prev = choice;
@@ -64,12 +69,15 @@ export function Poll({
           );
         }
 
+        const isCorrect = isQuiz && o.i === correct;
+        const wrongPick = isQuiz && mine && o.i !== correct;
+
         return (
           <div
             key={o.i}
             className={cn(
               "relative overflow-hidden rounded-input border px-3 py-1.5 text-sm",
-              mine ? "border-brand" : "border-border",
+              isCorrect ? "border-foreground" : mine ? "border-brand" : "border-border",
             )}
           >
             <div
@@ -77,15 +85,22 @@ export function Poll({
               style={{ width: `${pct}%` }}
               aria-hidden
             />
-            <div className="relative flex justify-between">
-              <span className={cn(mine && "font-medium")}>{o.label}</span>
-              <span className="text-muted-foreground">{pct}%</span>
+            <div className="relative flex items-center justify-between gap-2">
+              <span className={cn("flex items-center gap-1.5", (mine || isCorrect) && "font-medium")}>
+                {isCorrect && <Check className="size-3.5 shrink-0" aria-label="Correct answer" />}
+                {o.label}
+              </span>
+              <span className="flex items-center gap-1.5 text-muted-foreground">
+                {wrongPick && <span className="text-danger">Your pick</span>}
+                {pct}%
+              </span>
             </div>
           </div>
         );
       })}
 
       <p className="text-xs text-muted-foreground">
+        {isQuiz && "Quiz · "}
         {total} {total === 1 ? "vote" : "votes"}
         {closed && " · Poll closed"}
       </p>

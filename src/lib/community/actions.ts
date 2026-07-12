@@ -33,6 +33,8 @@ export async function createPost(
     youtubeUrl: String(formData.get("youtubeUrl") ?? ""),
     pollOptions: formData.getAll("pollOptions").map((o) => String(o)),
     pollClosesAt: String(formData.get("pollClosesAt") ?? ""),
+    pollMode: String(formData.get("pollMode") ?? ""),
+    pollCorrect: String(formData.get("pollCorrect") ?? ""),
   });
   if (!valid.ok) return { error: valid.error };
 

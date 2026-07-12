@@ -15,6 +15,10 @@ export type PostInput = {
   youtubeUrl: string;
   pollOptions?: string[];
   pollClosesAt?: string;
+  /** "quiz" turns the poll into a quiz; anything else is a plain poll. */
+  pollMode?: string;
+  /** Original array position (pre-filter) of the correct option, when quiz. */
+  pollCorrect?: string;
 };
 
 export type PostValid =
@@ -53,13 +57,17 @@ export function validatePost(input: PostInput): PostValid {
   }
 
   if (type === "poll") {
-    const options = (input.pollOptions ?? []).map((o) => o.trim()).filter((o) => o.length > 0);
-    if (options.length < MIN_OPTIONS) return { ok: false, error: `Add at least ${MIN_OPTIONS} options.` };
-    if (options.length > MAX_OPTIONS) return { ok: false, error: `Up to ${MAX_OPTIONS} options.` };
-    if (options.some((o) => o.length > MAX_OPTION_LEN)) {
+    // Keep the original array position so a quiz's marked-correct index can be
+    // re-mapped after blanks are dropped (else deleting a blank shifts the answer).
+    const kept = (input.pollOptions ?? [])
+      .map((o, origIndex) => ({ origIndex, label: o.trim() }))
+      .filter((o) => o.label.length > 0);
+    if (kept.length < MIN_OPTIONS) return { ok: false, error: `Add at least ${MIN_OPTIONS} options.` };
+    if (kept.length > MAX_OPTIONS) return { ok: false, error: `Up to ${MAX_OPTIONS} options.` };
+    if (kept.some((o) => o.label.length > MAX_OPTION_LEN)) {
       return { ok: false, error: `Each option must be under ${MAX_OPTION_LEN} characters.` };
     }
-    if (options.some((o) => containsBlocked(o))) {
+    if (kept.some((o) => containsBlocked(o.label))) {
       return { ok: false, error: "That poll looks like explicit content." };
     }
 
@@ -73,9 +81,21 @@ export function validatePost(input: PostInput): PostValid {
     }
 
     const poll: PollData = {
-      options: options.map((label, i) => ({ i, label })),
+      options: kept.map((o, i) => ({ i, label: o.label })),
       ...(closesAt ? { closes_at: closesAt } : {}),
     };
+
+    if (input.pollMode === "quiz") {
+      // pollCorrect is the ORIGINAL position; re-map it to the kept index.
+      const origCorrect = Number(input.pollCorrect);
+      const correct = Number.isInteger(origCorrect)
+        ? kept.findIndex((o) => o.origIndex === origCorrect)
+        : -1;
+      if (correct < 0) return { ok: false, error: "Mark the correct answer." };
+      poll.mode = "quiz";
+      poll.correct = correct;
+    }
+
     return { ok: true, type, body: body || null, youtubeId: null, poll };
   }
 

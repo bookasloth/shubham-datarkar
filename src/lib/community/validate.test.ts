@@ -73,5 +73,38 @@ describe("validatePost", () => {
       expect(r.ok).toBe(true);
       if (r.ok) expect(r.poll?.closes_at).toBeUndefined();
     });
+
+    it("plain poll carries no quiz fields", () => {
+      const r = validatePost({ ...poll, pollOptions: ["a", "b"] });
+      if (r.ok) {
+        expect(r.poll?.mode).toBeUndefined();
+        expect(r.poll?.correct).toBeUndefined();
+      }
+    });
+
+    describe("quiz", () => {
+      it("accepts a quiz with a valid correct answer", () => {
+        const r = validatePost({ ...poll, pollMode: "quiz", pollOptions: ["a", "b", "c"], pollCorrect: "2" });
+        expect(r).toMatchObject({ ok: true });
+        if (r.ok) expect(r.poll).toMatchObject({ mode: "quiz", correct: 2 });
+      });
+      it("rejects a quiz with no correct answer marked", () =>
+        expect(validatePost({ ...poll, pollMode: "quiz", pollOptions: ["a", "b"] })).toMatchObject({ ok: false }));
+      it("rejects a quiz whose correct index is out of range", () =>
+        expect(
+          validatePost({ ...poll, pollMode: "quiz", pollOptions: ["a", "b"], pollCorrect: "9" }),
+        ).toMatchObject({ ok: false }));
+      it("re-maps the correct index after a blank option is dropped", () => {
+        // options ["a", "", "b"] → kept ["a","b"]; original position 2 ("b") becomes index 1.
+        const r = validatePost({ ...poll, pollMode: "quiz", pollOptions: ["a", "", "b"], pollCorrect: "2" });
+        expect(r).toMatchObject({ ok: true });
+        if (r.ok) expect(r.poll?.correct).toBe(1);
+      });
+      it("rejects when the marked-correct option was left blank", () => {
+        // position 1 is blank and dropped, so it can't be the correct answer.
+        const r = validatePost({ ...poll, pollMode: "quiz", pollOptions: ["a", "", "b"], pollCorrect: "1" });
+        expect(r).toMatchObject({ ok: false });
+      });
+    });
   });
 });
