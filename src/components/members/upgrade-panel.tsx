@@ -5,39 +5,53 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { openSubscriptionCheckout } from "@/lib/members/checkout";
 import type { MembershipPlan } from "@/lib/members/membership-server";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
-const PERKS = [
-  "Every Member resource, unlocked",
-  "All downloads and future updates",
-  "Priority on member requests",
-  "New drops every week",
-];
-
-function priceLabel(p: MembershipPlan): string {
-  const rupees = Math.round(p.amount / 100);
-  return `₹${rupees.toLocaleString("en-IN")} / ${p.interval === "monthly" ? "month" : "year"}`;
-}
+const rupees = (paise: number) => Math.round(paise / 100);
+const inr = (paise: number) => `₹${rupees(paise).toLocaleString("en-IN")}`;
 
 export function UpgradePanel({
   plans,
   email,
   signedIn,
+  initialPlanKey,
 }: {
   plans: MembershipPlan[];
   email?: string;
   signedIn: boolean;
+  initialPlanKey?: string;
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState<string | null>(null);
+  const monthly = plans.find((p) => p.interval === "monthly");
+  const yearly = plans.find((p) => p.interval === "yearly");
+  const defaultKey = yearly?.key ?? plans[0]?.key ?? "";
+
+  // Returning from signup with a chosen plan (?plan=): reopen on that plan so
+  // the now-signed-in member finishes checkout in one click.
+  const resumeKey =
+    initialPlanKey && plans.some((p) => p.key === initialPlanKey) ? initialPlanKey : undefined;
+
+  const [open, setOpen] = useState(Boolean(resumeKey));
+  const [selectedKey, setSelectedKey] = useState(resumeKey ?? defaultKey);
+  const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
 
-  async function subscribe(plan: MembershipPlan) {
-    if (!signedIn) {
-      router.push(`/members/login?next=${encodeURIComponent("/members/upgrade")}`);
-      return;
-    }
-    setBusy(plan.key);
+  const selected = plans.find((p) => p.key === selectedKey);
+
+  // Yearly value, framed as free months — computed from live prices, never hardcoded.
+  const monthsFree =
+    monthly && yearly ? Math.round((monthly.amount * 12 - yearly.amount) / monthly.amount) : 0;
+
+  async function checkout(plan: MembershipPlan) {
+    setBusy(true);
     setMessage("");
     try {
       const res = await fetch("/api/members/subscribe", {
@@ -87,8 +101,19 @@ export function UpgradePanel({
         setMessage(outcome.message);
       }
     } finally {
-      setBusy(null);
+      setBusy(false);
     }
+  }
+
+  function onContinue() {
+    if (!selected) return;
+    if (!signedIn) {
+      // Carry the chosen plan through signup; land back here to check out.
+      const next = `/members/upgrade?plan=${selected.key}`;
+      router.push(`/login?view=signup&next=${encodeURIComponent(next)}`);
+      return;
+    }
+    void checkout(selected);
   }
 
   if (!plans.length) {
@@ -99,53 +124,83 @@ export function UpgradePanel({
     );
   }
 
+  const options = [yearly, monthly].filter(Boolean) as MembershipPlan[];
+
   return (
-    <div className="space-y-4">
-      <div className="grid gap-4 sm:grid-cols-2">
-        {plans.map((p) => (
-          <div
-            key={p.key}
-            className={cn(
-              "flex flex-col rounded-card border bg-card p-6 shadow-xs",
-              p.interval === "yearly" ? "border-foreground" : "border-border",
-            )}
-          >
-            <div className="flex items-baseline justify-between">
-              <h2 className="font-display text-lg font-semibold">{p.name}</h2>
-              {p.interval === "yearly" && (
-                <span className="rounded-btn bg-foreground px-2 py-0.5 text-[11px] font-medium text-background">
-                  Best value
-                </span>
-              )}
-            </div>
-            <div className="mt-2 font-display text-2xl font-bold">{priceLabel(p)}</div>
-            {p.description && (
-              <p className="mt-1 text-sm text-muted-foreground">{p.description}</p>
-            )}
-            <ul className="mt-4 space-y-2 text-sm">
-              {PERKS.map((perk) => (
-                <li key={perk} className="flex items-start gap-2">
-                  <Check className="mt-0.5 size-4 shrink-0 text-success" />
-                  {perk}
-                </li>
-              ))}
-            </ul>
-            <button
-              type="button"
-              onClick={() => subscribe(p)}
-              disabled={busy !== null}
-              className="mt-6 rounded-btn bg-foreground px-4 py-2.5 text-sm font-medium text-background transition-ui hover:opacity-85 disabled:opacity-50"
-            >
-              {busy === p.key ? "Opening checkout…" : `Become a Member — ${p.interval}`}
-            </button>
+    <div className="space-y-2">
+      <Button size="lg" onClick={() => setOpen(true)} className="w-full sm:w-auto">
+        Become a Member
+      </Button>
+      {yearly && monthsFree > 0 && (
+        <p className="text-xs text-muted-foreground">
+          From {inr(Math.round(yearly.amount / 12))}/mo billed yearly — {monthsFree} months free.
+        </p>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Become a Member</DialogTitle>
+            <DialogDescription>
+              {monthsFree > 0
+                ? `Go yearly and get ${monthsFree} months free.`
+                : "Pick the plan that suits you."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-2">
+            {options.map((plan) => {
+              const isYear = plan.interval === "yearly";
+              const on = selectedKey === plan.key;
+              return (
+                <button
+                  key={plan.key}
+                  type="button"
+                  onClick={() => setSelectedKey(plan.key)}
+                  aria-pressed={on}
+                  className={cn(
+                    "flex w-full items-center justify-between rounded-card border p-4 text-left transition-ui",
+                    on ? "border-foreground bg-accent" : "border-border hover:bg-accent",
+                  )}
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium">{isYear ? "Yearly" : "Monthly"}</span>
+                      {isYear && monthsFree > 0 && (
+                        <span className="rounded-btn bg-foreground px-2 py-0.5 text-[11px] font-medium text-background">
+                          {monthsFree} months free
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 text-sm text-muted-foreground">
+                      {isYear
+                        ? `${inr(plan.amount)}/yr · ${inr(Math.round(plan.amount / 12))}/mo effective`
+                        : `${inr(plan.amount)}/mo`}
+                    </div>
+                  </div>
+                  <span
+                    className={cn(
+                      "flex size-5 shrink-0 items-center justify-center rounded-full border",
+                      on ? "border-foreground bg-foreground text-background" : "border-border",
+                    )}
+                  >
+                    {on && <Check className="size-3.5" />}
+                  </span>
+                </button>
+              );
+            })}
           </div>
-        ))}
-      </div>
-      {message && <p className="text-sm text-muted-foreground">{message}</p>}
-      <p className="text-xs text-muted-foreground">
-        Payments are processed by Razorpay. Cancel anytime — access runs to the end of the paid
-        period.
-      </p>
+
+          <Button onClick={onContinue} loading={busy} disabled={!selected} className="w-full">
+            {signedIn ? "Continue to checkout" : "Continue to create account"}
+          </Button>
+
+          {message && <p className="text-sm text-muted-foreground">{message}</p>}
+          <p className="text-xs text-muted-foreground">
+            Payments by Razorpay. Cancel anytime — access runs to the end of the paid period.
+          </p>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
