@@ -13,31 +13,35 @@ export const dynamic = "force-dynamic";
  * body just moves the row off `pending` (no signature — it grants nothing).
  */
 export async function POST(request: Request) {
-  let body: Record<string, unknown>;
+  let body: unknown;
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
   }
+  if (!body || typeof body !== "object") {
+    return NextResponse.json({ ok: false, error: "Invalid request." }, { status: 400 });
+  }
+  const fields = body as Record<string, unknown>;
 
-  const orderId = String(body.razorpay_order_id ?? "").trim();
+  const orderId = String(fields.razorpay_order_id ?? "").trim();
   if (!orderId) {
     return NextResponse.json({ ok: false, error: "Missing order id." }, { status: 400 });
   }
 
   // Failure path: move off pending, no thank-you.
-  if (body.failed === true) {
+  if (fields.failed === true) {
     await markSupportStatus({
       orderId,
       status: "failed",
-      paymentId: body.paymentId ? String(body.paymentId) : null,
+      paymentId: fields.paymentId ? String(fields.paymentId) : null,
     });
     return NextResponse.json({ ok: true });
   }
 
   // Success path: verify signature first.
-  const paymentId = String(body.razorpay_payment_id ?? "").trim();
-  const signature = String(body.razorpay_signature ?? "").trim();
+  const paymentId = String(fields.razorpay_payment_id ?? "").trim();
+  const signature = String(fields.razorpay_signature ?? "").trim();
   if (!paymentId || !signature) {
     return NextResponse.json({ ok: false, error: "Missing payment fields." }, { status: 400 });
   }
