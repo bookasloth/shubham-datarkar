@@ -8,11 +8,25 @@ import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { WinBurst } from "@/components/games/board/WinBurst";
+import { triggerCls } from "@/components/games/modal-trigger";
+import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
+import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
+import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import { GameWelcome } from "@/components/games/shell/GameWelcome";
+import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
 type Row = { guess: string; hits: number; blows: number };
 type Saved = { history: Row[]; status: "playing" | "won" | "lost" };
 
-export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNumber: number; isArchive: boolean }) {
+export default function HitAndBlowBoard({
+  puzzleNumber,
+  isArchive,
+  stats,
+}: {
+  puzzleNumber: number;
+  isArchive: boolean;
+  stats: GameStats | null;
+}) {
   const secret = useMemo(() => secretFor(puzzleNumber), [puzzleNumber]);
   const storageKey = `hit-and-blow:${puzzleNumber}`;
 
@@ -21,6 +35,7 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
   const [justWon, setJustWon] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -83,10 +98,23 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
 
   return (
     <GameStage>
-      <GameHeader title={<>Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</>} />
-      <p className="text-sm text-muted-foreground">
-        {HIT_AND_BLOW.length} unique digits, no leading 0 · {HIT_AND_BLOW.maxGuesses} tries · 🎯 right spot · 💨 wrong spot
-      </p>
+      <GameHeader
+        title={<>Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</>}
+        actions={
+          <>
+            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
+            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/hit-and-blow" />
+            <GameSettingsModal game="hit-and-blow" />
+          </>
+        }
+      />
+
+      <GameWelcome
+        game="hit-and-blow"
+        greeting="Welcome to Hit and Blow"
+        howto="Crack the 4-digit code in nine tries."
+        onHowTo={() => setHelpOpen(true)}
+      />
 
       <div className="w-full max-w-xs space-y-1.5">
         {history.map((r, i) => (
@@ -136,6 +164,16 @@ export default function HitAndBlowBoard({ puzzleNumber, isArchive }: { puzzleNum
         </div>
       )}
 
+      {status !== "playing" && !user && (
+        <GameEndCard
+          slug="hit-and-blow"
+          status={status}
+          resultLine={status === "won" ? `Cracked in ${history.length}!` : `The code was ${secret}.`}
+          onShare={share}
+        />
+      )}
+
+      <GameHelpModal game="hit_and_blow" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );

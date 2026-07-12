@@ -12,6 +12,11 @@ import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst } from "@/components/games/board/WinBurst";
 import { triggerCls } from "@/components/games/modal-trigger";
+import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
+import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
+import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import { GameWelcome } from "@/components/games/shell/GameWelcome";
+import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
 const ALFAZY_ROWS: KeyDef[][] = [
   [..."qwertyuiop"].map((c) => ({ label: c, value: c })),
@@ -29,10 +34,12 @@ export default function AlfazyBoard({
   puzzleNumber,
   isArchive,
   answer,
+  stats,
 }: {
   puzzleNumber: number;
   isArchive: boolean;
   answer: string;
+  stats: GameStats | null;
 }) {
   const storageKey = `alfazy:${puzzleNumber}`;
   const { colorblind, setColorblind } = useAlfazyTheme();
@@ -43,6 +50,7 @@ export default function AlfazyBoard({
   const [toast, setToast] = useState("");
   const [shakeCount, setShakeCount] = useState(0);
   const [justWon, setJustWon] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -136,14 +144,19 @@ export default function AlfazyBoard({
       <GameHeader
         title={<>Alfazy #{puzzleNumber}{isArchive && " (archive)"}</>}
         actions={
-          <button
-            onClick={() => setColorblind(!colorblind)}
-            className={triggerCls}
-            title={colorblind ? "Disable colourblind mode" : "Enable colourblind mode"}
-          >
-            {colorblind ? "Colors" : "A11y"}
-          </button>
+          <>
+            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
+            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/alfazy" />
+            <GameSettingsModal game="alfazy" colorblind={colorblind} onColorblindChange={setColorblind} />
+          </>
         }
+      />
+
+      <GameWelcome
+        game="alfazy"
+        greeting="Welcome to Alfazy"
+        howto="Guess the hidden 5-letter word in six tries."
+        onHowTo={() => setHelpOpen(true)}
       />
 
       {/* grid */}
@@ -200,6 +213,16 @@ export default function AlfazyBoard({
         <Keyboard game="alfazy" rows={ALFAZY_ROWS} keyStates={keyState} onKey={key} />
       )}
 
+      {status !== "playing" && !user && (
+        <GameEndCard
+          slug="alfazy"
+          status={status}
+          resultLine={status === "won" ? `Solved in ${guesses.length}!` : `The word was ${answer.toUpperCase()}.`}
+          onShare={share}
+        />
+      )}
+
+      <GameHelpModal game="alfazy" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );
