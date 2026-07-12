@@ -10,6 +10,12 @@ const nextConfig: NextConfig = {
         hostname: "*.supabase.co",
         pathname: "/storage/v1/object/public/**",
       },
+      // Own asset CDN (already trusted in the CSP img-src) — partner logos, etc.
+      {
+        protocol: "https",
+        hostname: "company-assets.bookasloth.in",
+        pathname: "/images/**",
+      },
     ],
   },
   // Tree-shake large icon/UI barrels so each page ships only the components it
