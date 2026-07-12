@@ -21,7 +21,7 @@ export const services: Service[] = [
       { step: "Build", detail: "Ship the pillar, spokes, and programmatic layer." },
       { step: "Compound", detail: "Refresh, expand, and instrument on a fixed cadence." },
     ],
-    startingAt: "₹1.5L / month",
+    startingAt: "₹6,999 / month",
     seo: {
       title: "SEO & Organic Growth Services",
       description:
@@ -48,7 +48,7 @@ export const services: Service[] = [
       { step: "Systematise", detail: "Make creative a pipeline, not a scramble." },
       { step: "Scale", detail: "Push spend only where the unit economics hold." },
     ],
-    startingAt: "₹2L / month",
+    startingAt: "₹9,999 / month",
     seo: {
       title: "Performance Marketing Services",
       description:
@@ -75,7 +75,7 @@ export const services: Service[] = [
       { step: "Distribute", detail: "Repurpose and place across every surface." },
       { step: "Review", detail: "Kill what doesn't work, double the rest." },
     ],
-    startingAt: "₹1.25L / month",
+    startingAt: "₹12,999 / month",
     seo: {
       title: "Content Strategy & Editorial Systems",
       description:
@@ -102,7 +102,7 @@ export const services: Service[] = [
       { step: "Validate", detail: "Prove quality holds before scaling." },
       { step: "Enable", detail: "Hand the team a system they can run." },
     ],
-    startingAt: "₹1.75L / month",
+    startingAt: "₹14,999 / month",
     seo: {
       title: "AI Automation & Workflows",
       description:
