@@ -1,5 +1,6 @@
 import Image from "next/image";
 import { cn, timeAgo } from "@/lib/utils";
+import { getAdminUser } from "@/lib/auth/session";
 import type { FeedPost, PollResult } from "@/lib/community/types";
 import { BadgeTick } from "./badge-tick";
 import { CommunityAvatar } from "./community-avatar";
@@ -7,7 +8,7 @@ import { EngagementBar } from "./engagement-bar";
 import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
 
-export function PostCard({
+export async function PostCard({
   post,
   pollResult,
   canVote = false,
@@ -18,6 +19,9 @@ export function PostCard({
   canVote?: boolean;
   viewerId?: string | null;
 }) {
+  // Cached per request (getAdminUser is React.cache) — one auth check per render
+  // regardless of how many cards map over it.
+  const isAdmin = Boolean(await getAdminUser());
   const name = post.displayName || post.username;
   return (
     <article className="border-b border-border px-4 py-3">
@@ -36,7 +40,7 @@ export function PostCard({
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
             {viewerId && (
               <span className="ml-auto">
-                <PostMenu postId={post.id} isOwner={viewerId === post.userId} />
+                <PostMenu postId={post.id} isOwner={viewerId === post.userId} isAdmin={isAdmin} />
               </span>
             )}
           </div>
