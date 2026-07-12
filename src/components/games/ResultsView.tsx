@@ -3,6 +3,9 @@ import { puzzleNumberFor } from "@/lib/daily";
 import { getResultsPage } from "@/lib/games/results-queries";
 import { resolveAnswers } from "@/lib/games/answer";
 import type { GameKey } from "@/lib/games/registry";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 
 const OUTCOMES = ["all", "won", "lost"] as const;
 
@@ -46,33 +49,26 @@ export async function ResultsView({
       <h1 className="font-display text-2xl font-bold">Results</h1>
 
       <form method="get" className="flex flex-wrap items-center gap-2">
-        <input
+        <Input
           name="player"
           defaultValue={player ?? ""}
           placeholder="Search player"
-          className="rounded-input border border-border bg-background px-3 py-1.5 text-sm"
+          className="h-9 w-auto min-w-[10rem] flex-1"
         />
         <select
           name="outcome"
           defaultValue={outcome}
-          className="rounded-input border border-border bg-background px-3 py-1.5 text-sm"
+          className="h-9 rounded-input border border-input bg-background px-3 text-sm"
         >
           <option value="all">All</option>
           <option value="won">Won</option>
           <option value="lost">Lost</option>
         </select>
-        <button
-          type="submit"
-          className="rounded-btn border border-border bg-muted px-3 py-1.5 text-sm font-medium transition-ui hover:bg-muted/70"
-        >
-          Filter
-        </button>
+        <Button type="submit" variant="outline" size="sm" className="h-9">Filter</Button>
       </form>
 
       {rows.length === 0 ? (
-        <div className="rounded-card border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          No results yet.
-        </div>
+        <EmptyState title="No results yet." />
       ) : (
         <>
           <div className="overflow-x-auto rounded-card border border-border">
@@ -100,12 +96,9 @@ export async function ResultsView({
 
           {rows.length === limit && (
             <div className="text-center">
-              <Link
-                href={loadMoreHref()}
-                className="inline-block rounded-btn border border-border bg-muted px-4 py-2 text-sm font-medium transition-ui hover:bg-muted/70"
-              >
-                Load more
-              </Link>
+              <Button variant="outline" size="sm" asChild>
+                <Link href={loadMoreHref()}>Load more</Link>
+              </Button>
             </div>
           )}
         </>

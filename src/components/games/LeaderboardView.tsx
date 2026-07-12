@@ -8,6 +8,7 @@ import {
 } from "@/lib/games/leaderboard-queries";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 import { Podium, type PodiumEntry } from "@/components/games/Podium";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
 const BOARDS = ["daily", "weekly", "monthly", "streak"] as const;
@@ -80,9 +81,7 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
       </div>
 
       {rows.length === 0 ? (
-        <div className="rounded-card border border-border bg-card p-8 text-center text-sm text-muted-foreground">
-          No results yet — be the first to play.
-        </div>
+        <EmptyState title="No results yet" description="Be the first to play." />
       ) : (
         <>
           <Podium entries={podium} />
