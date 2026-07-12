@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { triggerCls } from "@/components/games/modal-trigger";
 
-export type IntegraStats = {
+export type GameStats = {
   played: number;
   won: number;
   currentStreak: number;
@@ -26,7 +26,16 @@ function Stat({ label, value }: { label: string; value: string | number }) {
   );
 }
 
-export default function IntegraStatsModal({ stats, authed }: { stats: IntegraStats | null; authed: boolean }) {
+/** Shared stats modal for every game. `loginNext` is the return path after login. */
+export function GameStatsModal({
+  stats,
+  authed,
+  loginNext,
+}: {
+  stats: GameStats | null;
+  authed: boolean;
+  loginNext: string;
+}) {
   const winRate = stats && stats.played ? Math.round((stats.won / stats.played) * 100) : 0;
   return (
     <Dialog>
@@ -38,7 +47,10 @@ export default function IntegraStatsModal({ stats, authed }: { stats: IntegraSta
 
         {!authed ? (
           <p className="text-sm text-muted-foreground">
-            <Link href="/games/login?next=/games/integra" className="underline underline-offset-4 hover:text-foreground">
+            <Link
+              href={`/login?next=${encodeURIComponent(loginNext)}`}
+              className="underline underline-offset-4 hover:text-foreground"
+            >
               Log in
             </Link>{" "}
             to track your stats and streaks across days.

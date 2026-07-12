@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { puzzleNumberFor } from "@/lib/daily";
 import IntegraBoard from "@/components/games/IntegraBoard";
 import { equationForPuzzle } from "@/lib/games/integra-puzzles";
-import { getMyIntegraStats } from "@/lib/games/profile-queries";
+import { getMyGameStats } from "@/lib/games/profile-queries";
 
 export const metadata: Metadata = {
   title: "Integra — Daily Math Puzzle",
@@ -11,6 +11,6 @@ export const metadata: Metadata = {
 
 export default async function IntegraToday() {
   const p = puzzleNumberFor();
-  const [answer, stats] = await Promise.all([equationForPuzzle(p), getMyIntegraStats()]);
+  const [answer, stats] = await Promise.all([equationForPuzzle(p), getMyGameStats("integra")]);
   return <IntegraBoard puzzleNumber={p} isArchive={false} answer={answer} stats={stats} />;
 }

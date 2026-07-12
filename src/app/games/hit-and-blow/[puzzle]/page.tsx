@@ -6,6 +6,7 @@ import { can } from "@/lib/members/capabilities";
 import { notFound } from "next/navigation";
 import HitAndBlowBoard from "@/components/games/HitAndBlowBoard";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
+import { getMyGameStats } from "@/lib/games/profile-queries";
 
 export const metadata = buildMetadata({ title: "Hit and Blow", path: "/games/hit-and-blow", noIndex: true });
 
@@ -21,5 +22,6 @@ export default async function HitAndBlowArchive({ params }: { params: Promise<{ 
       return <ArchiveUpsell game="hit-and-blow" />;
     }
   }
-  return <HitAndBlowBoard puzzleNumber={n} isArchive={!isToday(n)} />;
+  const stats = await getMyGameStats("hit_and_blow");
+  return <HitAndBlowBoard puzzleNumber={n} isArchive={!isToday(n)} stats={stats} />;
 }

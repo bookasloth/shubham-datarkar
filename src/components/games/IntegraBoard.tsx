@@ -10,9 +10,12 @@ import { GameHeader } from "@/components/games/shell/GameHeader";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst } from "@/components/games/board/WinBurst";
-import IntegraHelpModal from "./IntegraHelpModal";
-import IntegraStatsModal, { type IntegraStats } from "./IntegraStatsModal";
-import IntegraSettingsModal from "./IntegraSettingsModal";
+import { triggerCls } from "@/components/games/modal-trigger";
+import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
+import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
+import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import { GameWelcome } from "@/components/games/shell/GameWelcome";
+import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
 const DIGITS = "0123456789".split("");
 const OPS = ["+", "-", "*", "/", "="];
@@ -42,7 +45,7 @@ export default function IntegraBoard({
   puzzleNumber: number;
   isArchive: boolean;
   answer: string;
-  stats: IntegraStats | null;
+  stats: GameStats | null;
 }) {
   const storageKey = `integra:${puzzleNumber}`;
 
@@ -53,6 +56,7 @@ export default function IntegraBoard({
   const [shakeCount, setShakeCount] = useState(0);
   const [justWon, setJustWon] = useState(false);
   const [colorblind, setColorblind] = useState(false);
+  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -150,11 +154,18 @@ export default function IntegraBoard({
         title={<>Integra #{puzzleNumber}{isArchive && " (archive)"}</>}
         actions={
           <>
-            <IntegraHelpModal />
-            <IntegraStatsModal stats={stats} authed={!!user} />
-            <IntegraSettingsModal colorblind={colorblind} onColorblindChange={setColorblindPref} />
+            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
+            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/integra" />
+            <GameSettingsModal game="integra" colorblind={colorblind} onColorblindChange={setColorblindPref} />
           </>
         }
+      />
+
+      <GameWelcome
+        game="integra"
+        greeting="Welcome to Integra"
+        howto="Guess the hidden equation in six tries."
+        onHowTo={() => setHelpOpen(true)}
       />
 
       {/* grid — fluid so 7 tiles fit any phone width */}
@@ -212,6 +223,20 @@ export default function IntegraBoard({
         <Keyboard game="integra" variant="grid" rows={INTEGRA_ROWS} keyStates={keyState} onKey={key} />
       )}
 
+      {status !== "playing" && !user && (
+        <GameEndCard
+          slug="integra"
+          status={status}
+          resultLine={
+            status === "won"
+              ? `Solved in ${guesses.length}!`
+              : `The equation was ${answer.split("").map(show).join("")}.`
+          }
+          onShare={share}
+        />
+      )}
+
+      <GameHelpModal game="integra" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );

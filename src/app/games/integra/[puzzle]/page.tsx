@@ -7,7 +7,7 @@ import { notFound } from "next/navigation";
 import IntegraBoard from "@/components/games/IntegraBoard";
 import { ArchiveUpsell } from "@/components/games/ArchiveUpsell";
 import { equationForPuzzle } from "@/lib/games/integra-puzzles";
-import { getMyIntegraStats } from "@/lib/games/profile-queries";
+import { getMyGameStats } from "@/lib/games/profile-queries";
 
 export const metadata = buildMetadata({ title: "Integra", path: "/games/integra", noIndex: true });
 
@@ -24,6 +24,6 @@ export default async function IntegraArchive({ params }: { params: Promise<{ puz
       return <ArchiveUpsell game="integra" />;
     }
   }
-  const [answer, stats] = await Promise.all([equationForPuzzle(n), getMyIntegraStats()]);
+  const [answer, stats] = await Promise.all([equationForPuzzle(n), getMyGameStats("integra")]);
   return <IntegraBoard puzzleNumber={n} isArchive={!isToday(n)} answer={answer} stats={stats} />;
 }
