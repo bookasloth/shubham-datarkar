@@ -2,6 +2,9 @@ import "server-only";
 
 import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
 import { generateCode, type SupportUpdate, type UpdateType, type UpdateMedia, type UpdateAuthor } from "./update-code";
+import { site } from "@/lib/site";
+import { autoPost } from "@/lib/community/auto/post";
+import { pick } from "@/lib/community/auto/templates";
 
 const BUCKET = "support-media";
 
@@ -70,7 +73,13 @@ export async function insertUpdate(input: {
       media: input.media,
       author: input.author ?? null,
     });
-    if (!error) return { ok: true, code };
+    if (!error) {
+      if (input.type !== "thankyou") {
+        const title = input.body.length > 140 ? input.body.slice(0, 137) + "..." : input.body;
+        await autoPost({ sourceKey: `update:${code}`, body: pick("update", { title, url: `${site.url}/support/updates` }) });
+      }
+      return { ok: true, code };
+    }
     // 23505 = unique_violation → regenerate and retry.
     if (error.code !== "23505") return { ok: false, error: error.message };
   }
