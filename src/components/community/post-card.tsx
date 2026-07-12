@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { cn, timeAgo } from "@/lib/utils";
 import { getAdminUser } from "@/lib/auth/session";
 import type { FeedPost, PollResult } from "@/lib/community/types";
@@ -25,7 +26,20 @@ export async function PostCard({
   const isAdmin = Boolean(await getAdminUser());
   const name = post.displayName || post.username;
   return (
-    <article className="border-b border-border px-4 py-3">
+    <article className="group relative border-b border-border px-4 py-3 transition-ui hover:bg-muted/40">
+      {/* Whole-card click target → single post (Twitter-style). Absolutely
+          positioned and z-10 so it paints over the static header/body/media
+          (and the `relative` image cells) to catch clicks anywhere on the card.
+          Every genuinely interactive descendant (menu, links, media, poll,
+          engagement bar) is ALSO z-10 but comes later in the DOM, so it wins the
+          equal-z tie and keeps its own behaviour. This overlay is the first
+          child, guaranteeing it loses that tie to all of them. No nested-anchor
+          problem — it's a sibling of those controls, not an ancestor. */}
+      <Link
+        href={`/community/p/${post.publicId}`}
+        aria-label={`Open post by ${name}`}
+        className="absolute inset-0 z-10"
+      />
       {post.rebloggedBy && (
         <p className="mb-1 pl-[52px] text-xs text-muted-foreground">
           @{post.rebloggedBy} reblogged
@@ -40,7 +54,7 @@ export async function PostCard({
             <span className="truncate text-muted-foreground">@{post.username}</span>
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
             {viewerId && (
-              <span className="ml-auto">
+              <span className="relative z-10 ml-auto">
                 <PostMenu postId={post.id} isOwner={viewerId === post.userId} isAdmin={isAdmin} />
               </span>
             )}
@@ -55,7 +69,7 @@ export async function PostCard({
                     href={t.href}
                     target="_blank"
                     rel="noopener noreferrer nofollow ugc"
-                    className="text-foreground underline underline-offset-2 hover:opacity-70"
+                    className="relative z-10 text-foreground underline underline-offset-2 hover:opacity-70"
                   >
                     {t.text}
                   </a>
@@ -82,7 +96,7 @@ export async function PostCard({
           ) : null}
 
           {post.type === "youtube" && post.youtubeId ? (
-            <div className="mt-2 aspect-video overflow-hidden rounded-card">
+            <div className="relative z-10 mt-2 aspect-video overflow-hidden rounded-card">
               <iframe
                 className="h-full w-full"
                 src={`https://www.youtube-nocookie.com/embed/${post.youtubeId}`}
@@ -95,12 +109,16 @@ export async function PostCard({
           ) : null}
 
           {post.type === "poll" && post.poll ? (
-            <Poll post={post} result={pollResult} canVote={canVote} closed={post.pollClosed} />
+            <div className="relative z-10">
+              <Poll post={post} result={pollResult} canVote={canVote} closed={post.pollClosed} />
+            </div>
           ) : null}
-
-          <EngagementBar post={post} />
         </div>
       </div>
+
+      {/* Full-width action bar (edge-to-edge under the avatar+content row), so
+          the icons spread evenly across the whole card. */}
+      <EngagementBar post={post} />
     </article>
   );
 }
