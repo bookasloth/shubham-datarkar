@@ -41,12 +41,14 @@ async function notifyIfLive(p: PostFields): Promise<void> {
   ]);
 }
 
-/** Cross-post a newly-live blog post to /community, once (idempotent per slug). */
+/** Cross-post a newly-live blog post to /community, once (idempotent per slug —
+ *  editing a post's slug after publish would re-post; slugs rarely change). */
 async function autoPostBlogIfLive(p: PostFields): Promise<void> {
   if (p.status !== "published" || !p.published_at) return;
   if (new Date(p.published_at) > new Date()) return;
   const url = `${site.url}/blog/${p.category}/${p.slug}`;
-  await autoPost({ sourceKey: `blog:${p.slug}`, body: pick("blog", { title: p.title, url }) });
+  // Cap the title so the trailing {url} survives autoPost's 500-char slice.
+  await autoPost({ sourceKey: `blog:${p.slug}`, body: pick("blog", { title: p.title.slice(0, 120), url }) });
 }
 
 function parseBody(raw: FormDataEntryValue | null): ContentBlock[] {

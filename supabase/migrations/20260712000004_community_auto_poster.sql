@@ -58,9 +58,15 @@ begin
     return null;
   end if;
   body := replace(msgs[1 + floor(random() * array_length(msgs, 1))::int], '{n}', n::text);
-  insert into public.community_posts (user_id, type, body, auto_key)
-  values (owner_id, 'text', body, 'member-milestone:' || n)
-  on conflict do nothing;
+  -- Best-effort: this trigger runs INSIDE the signup transaction, so an
+  -- auto-post must never abort a signup. Swallow any insert failure (e.g. a
+  -- future NOT-NULL-without-default column added to community_posts).
+  begin
+    insert into public.community_posts (user_id, type, body, auto_key)
+    values (owner_id, 'text', body, 'member-milestone:' || n)
+    on conflict do nothing;
+  exception when others then null;
+  end;
   return null;
 end $$;
 

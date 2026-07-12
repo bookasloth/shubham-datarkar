@@ -48,7 +48,8 @@ async function autoPostCaseStudy(
 ): Promise<void> {
   if (!def || def.key !== "case-studies" || !row.published || !row.slug) return;
   const d = row.data as { title?: unknown };
-  const title = typeof d?.title === "string" && d.title ? d.title : row.slug;
+  // Cap the title so the trailing {url} survives autoPost's 500-char slice.
+  const title = (typeof d?.title === "string" && d.title ? d.title : row.slug).slice(0, 120);
   const url = `${site.url}/case-studies/${row.slug}`;
   await autoPost({ sourceKey: `case:${row.slug}`, body: pick("caseStudy", { title, url }) });
 }
