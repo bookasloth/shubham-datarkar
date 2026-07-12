@@ -7,10 +7,21 @@ import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
 
-// `active:scale-90` gives every action a tactile press; transition-ui already
-// tweens transform so it eases back on release.
+// `relative` anchors the like-burst overlay; `active:scale-90` gives every
+// action a tactile press that transition-ui eases back on release.
 const ITEM =
-  "inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent active:scale-90 disabled:opacity-50";
+  "relative inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent active:scale-90 disabled:opacity-50";
+
+// Six sparks flung at 60° intervals when a post is liked.
+const SPARKS = [0, 60, 120, 180, 240, 300];
+
+// ponytail: cosmetic share tally (0–3), deterministic per post so it's stable
+// across re-renders. No backend — sharing copies a link, it isn't counted.
+function fakeShareCount(seed: string) {
+  let h = 0;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
+  return Math.abs(h) % 4;
+}
 
 type Engagement = {
   vote: -1 | 0 | 1;
@@ -46,8 +57,10 @@ export function EngagementBar({ post }: { post: FeedPost }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
+  const [reblogFx, setReblogFx] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const shareCount = fakeShareCount(post.publicId);
 
   // Base comes straight from props, so a router.refresh() (or any re-render with
   // fresh server data) is what resets the optimistic overlay. Seeding useState
@@ -68,7 +81,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
 
   function onVote(value: 1 | -1) {
     setBurst(value === 1 ? "up" : "down");
-    setTimeout(() => setBurst(null), 400);
+    setTimeout(() => setBurst(null), 480);
     start(async () => {
       addOptimistic({ kind: "vote", value });
       const r = await toggleVote(post.id, value);
@@ -93,6 +106,8 @@ export function EngagementBar({ post }: { post: FeedPost }) {
   }
 
   function onReblog() {
+    setReblogFx(true);
+    setTimeout(() => setReblogFx(false), 500);
     start(async () => {
       addOptimistic({ kind: "reblog" });
       const r = await toggleReblog(post.id);
@@ -115,13 +130,17 @@ export function EngagementBar({ post }: { post: FeedPost }) {
     }
   }
 
+  // Fire the like burst only when the vote lands ON (not when toggling it off).
+  const showLikeBurst = burst === "up" && state.vote === 1;
+
   return (
     // z-10 keeps the whole action row above the card-wide click overlay so each
-    // control fires its own handler instead of navigating to the post.
-    <div className="relative z-10">
-      {/* justify-between spreads the icons edge-to-edge across the full width
-          with even gaps — no text labels, matching the compact icon+count spec. */}
-      <div className="mt-2 flex items-center justify-between">
+    // control fires its own handler instead of navigating to the post. The
+    // divider (border-t + padding) fences the actions off from the post body.
+    <div className="relative z-10 mt-3 border-t border-border/60 pt-2">
+      {/* justify-between spreads the icons edge-to-edge with even gaps — no text
+          labels, matching the compact icon+count spec. */}
+      <div className="flex items-center justify-between">
         <button
           type="button"
           disabled={pending}
@@ -134,6 +153,18 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           <Heart
             className={cn("size-4", state.vote === 1 && "fill-current", burst === "up" && "animate-pop")}
           />
+          {showLikeBurst && (
+            <span className="like-burst" aria-hidden="true">
+              <span className="like-ring" />
+              {SPARKS.map((a) => (
+                <span
+                  key={a}
+                  className="like-spark"
+                  style={{ "--a": `${a}deg` } as React.CSSProperties}
+                />
+              ))}
+            </span>
+          )}
           {compactNumber(state.up)}
         </button>
 
@@ -166,7 +197,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           title="Reblog"
           className={cn(ITEM, state.reblogged && "text-brand")}
         >
-          <Repeat2 className="size-4" />
+          <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
           {compactNumber(state.reblogs)}
         </button>
 
@@ -178,6 +209,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           className={cn(ITEM, copied && "text-brand")}
         >
           {copied ? <Check className="size-4 animate-pop" /> : <Send className="size-4" />}
+          {compactNumber(shareCount)}
         </button>
 
         <button
