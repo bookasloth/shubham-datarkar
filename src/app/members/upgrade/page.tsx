@@ -23,10 +23,15 @@ const MEMBER_INCLUDES = [
   "Streaks, achievements, and early access",
 ];
 
-export default async function UpgradePage() {
-  const [{ user, role }, plans] = await Promise.all([
+export default async function UpgradePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string }>;
+}) {
+  const [{ user, role }, plans, sp] = await Promise.all([
     getMemberContext(),
     getActivePlans(),
+    searchParams,
   ]);
 
   if (role === "premium") redirect("/members/account");
@@ -69,7 +74,12 @@ export default async function UpgradePage() {
         </div>
       </section>
 
-      <UpgradePanel plans={plans} email={user?.email ?? undefined} signedIn={!!user} />
+      <UpgradePanel
+        plans={plans}
+        email={user?.email ?? undefined}
+        signedIn={!!user}
+        initialPlanKey={sp.plan}
+      />
     </div>
   );
 }
