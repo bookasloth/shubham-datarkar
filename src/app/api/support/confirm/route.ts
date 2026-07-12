@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { verifyPaymentSignature } from "@/lib/razorpay/verify";
 import { markSupportStatus } from "@/lib/support/server";
 import { postThankyou } from "@/lib/support/thankyou";
+import { postCommunitySupporter } from "@/lib/community/auto/supporter";
 
 export const dynamic = "force-dynamic";
 
@@ -46,7 +47,10 @@ export async function POST(request: Request) {
   }
 
   const res = await markSupportStatus({ orderId, status: "paid", paymentId });
-  if (res.updated && res.support) await postThankyou(res.support);
+  if (res.updated && res.support) {
+    await postThankyou(res.support);
+    await postCommunitySupporter(res.support);
+  }
 
   return NextResponse.json({ ok: true });
 }
