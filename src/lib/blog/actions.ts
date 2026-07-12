@@ -8,6 +8,8 @@ import { countWords } from "@/lib/blog/words";
 import { pingIndexNow } from "@/lib/seo/indexnow";
 import { site } from "@/lib/site";
 import { getPublishedPosts } from "@/lib/blog/queries";
+import { autoPost } from "@/lib/community/auto/post";
+import { pick } from "@/lib/community/auto/templates";
 import type { ContentBlock } from "@/lib/data/types";
 
 /** Public: latest N published posts for the nav menu (minimal, serializable). */
@@ -37,6 +39,14 @@ async function notifyIfLive(p: PostFields): Promise<void> {
     `${site.url}/blog`,
     `${site.url}/sitemap.xml`,
   ]);
+}
+
+/** Cross-post a newly-live blog post to /community, once (idempotent per slug). */
+async function autoPostBlogIfLive(p: PostFields): Promise<void> {
+  if (p.status !== "published" || !p.published_at) return;
+  if (new Date(p.published_at) > new Date()) return;
+  const url = `${site.url}/blog/${p.category}/${p.slug}`;
+  await autoPost({ sourceKey: `blog:${p.slug}`, body: pick("blog", { title: p.title, url }) });
 }
 
 function parseBody(raw: FormDataEntryValue | null): ContentBlock[] {
@@ -97,6 +107,7 @@ export async function createPost(formData: FormData): Promise<void> {
   if (error) throw new Error(error.message);
   revalidateBlog();
   await notifyIfLive(data);
+  await autoPostBlogIfLive(data);
   redirect("/admin/posts");
 }
 
@@ -108,6 +119,7 @@ export async function updatePost(id: string, formData: FormData): Promise<void> 
   if (error) throw new Error(error.message);
   revalidateBlog();
   await notifyIfLive(data);
+  await autoPostBlogIfLive(data);
   redirect("/admin/posts");
 }
 
