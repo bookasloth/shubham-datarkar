@@ -2,19 +2,22 @@
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Egg, MessagesSquare, Repeat2, Send, Bookmark, Medal } from "lucide-react";
+import { Heart, Egg, MessagesSquare, Repeat2, Send, Bookmark, Medal, Check } from "lucide-react";
 import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
 
+// `active:scale-90` gives every action a tactile press; transition-ui already
+// tweens transform so it eases back on release.
 const ITEM =
-  "inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent disabled:opacity-50";
+  "inline-flex items-center gap-1.5 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent active:scale-90 disabled:opacity-50";
 
 type Engagement = {
   vote: -1 | 0 | 1;
   up: number;
   down: number;
   marked: boolean;
+  bookmarks: number;
   reblogs: number;
   reblogged: boolean;
 };
@@ -34,7 +37,8 @@ function reduce(s: Engagement, a: Action): Engagement {
     // switching sides moves the count across
     return { ...s, vote: v, up: v === 1 ? s.up + 1 : s.up - 1, down: v === -1 ? s.down + 1 : s.down - 1 };
   }
-  if (a.kind === "bookmark") return { ...s, marked: !s.marked };
+  if (a.kind === "bookmark")
+    return { ...s, marked: !s.marked, bookmarks: s.marked ? s.bookmarks - 1 : s.bookmarks + 1 };
   return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? s.reblogs - 1 : s.reblogs + 1 };
 }
 
@@ -55,6 +59,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
       up: post.upCount,
       down: post.downCount,
       marked: post.viewerBookmarked,
+      bookmarks: post.bookmarkCount,
       reblogs: post.reblogCount,
       reblogged: post.viewerReblogged,
     },
@@ -111,18 +116,25 @@ export function EngagementBar({ post }: { post: FeedPost }) {
   }
 
   return (
-    <div>
-      <div className="mt-2 flex items-center gap-1">
+    // z-10 keeps the whole action row above the card-wide click overlay so each
+    // control fires its own handler instead of navigating to the post.
+    <div className="relative z-10">
+      {/* justify-between spreads the icons edge-to-edge across the full width
+          with even gaps — no text labels, matching the compact icon+count spec. */}
+      <div className="mt-2 flex items-center justify-between">
         <button
           type="button"
           disabled={pending}
           onClick={() => onVote(1)}
           aria-label="Upvote"
           aria-pressed={state.vote === 1}
+          title="Upvote"
           className={cn(ITEM, state.vote === 1 && "text-brand")}
         >
-          <Heart className={cn("size-4", burst === "up" && "animate-pop")} />
-          <span className="hidden sm:inline">Upvote</span> {compactNumber(state.up)}
+          <Heart
+            className={cn("size-4", state.vote === 1 && "fill-current", burst === "up" && "animate-pop")}
+          />
+          {compactNumber(state.up)}
         </button>
 
         <button
@@ -131,15 +143,18 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           onClick={() => onVote(-1)}
           aria-label="Downvote"
           aria-pressed={state.vote === -1}
+          title="Downvote"
           className={cn(ITEM, state.vote === -1 && "text-foreground")}
         >
-          <Egg className={cn("size-4", burst === "down" && "animate-wobble")} />
-          <span className="hidden sm:inline">Downvote</span> {compactNumber(state.down)}
+          <Egg
+            className={cn("size-4", state.vote === -1 && "fill-current", burst === "down" && "animate-wobble")}
+          />
+          {compactNumber(state.down)}
         </button>
 
-        <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments">
+        <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments" title="Comments">
           <MessagesSquare className="size-4" />
-          <span className="hidden sm:inline">Comments</span> {compactNumber(post.replyCount)}
+          {compactNumber(post.replyCount)}
         </Link>
 
         <button
@@ -148,14 +163,21 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           onClick={onReblog}
           aria-label="Reblog"
           aria-pressed={state.reblogged}
+          title="Reblog"
           className={cn(ITEM, state.reblogged && "text-brand")}
         >
-          <Repeat2 className="size-4" /> {compactNumber(state.reblogs)}
+          <Repeat2 className="size-4" />
+          {compactNumber(state.reblogs)}
         </button>
 
-        <button type="button" onClick={onShare} aria-label="Share link" className={ITEM}>
-          <Send className="size-4" />
-          {copied ? <span>Copied</span> : <span className="hidden sm:inline">Share</span>}
+        <button
+          type="button"
+          onClick={onShare}
+          aria-label={copied ? "Link copied" : "Copy link"}
+          title="Copy link"
+          className={cn(ITEM, copied && "text-brand")}
+        >
+          {copied ? <Check className="size-4 animate-pop" /> : <Send className="size-4" />}
         </button>
 
         <button
@@ -164,13 +186,20 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           onClick={onBookmark}
           aria-label="Bookmark"
           aria-pressed={state.marked}
+          title="Bookmark"
           className={cn(ITEM, state.marked && "text-brand")}
         >
-          <Bookmark className="size-4" />
+          <Bookmark className={cn("size-4", state.marked && "fill-current animate-pop")} />
+          {compactNumber(state.bookmarks)}
         </button>
 
-        <span className={cn(ITEM, "cursor-not-allowed opacity-40")} title="Awards coming soon">
+        <span
+          className={cn(ITEM, "cursor-not-allowed opacity-40")}
+          title="Awards coming soon"
+          aria-label="Awards, coming soon"
+        >
           <Medal className="size-4" />
+          {compactNumber(0)}
         </span>
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}

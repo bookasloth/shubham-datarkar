@@ -40,6 +40,7 @@ export type FeedPost = {
   score: number;
   replyCount: number;
   reblogCount: number;
+  bookmarkCount: number;
   reblogOf: string | null;
   createdAt: string;
   viewerVote: -1 | 0 | 1;
