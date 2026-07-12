@@ -113,12 +113,13 @@ export async function PostCard({
               <Poll post={post} result={pollResult} canVote={canVote} closed={post.pollClosed} />
             </div>
           ) : null}
+
+          {/* Action bar lives inside the content column so it starts flush with
+              the name and body (not under the avatar) and spreads across that
+              same width. */}
+          <EngagementBar post={post} />
         </div>
       </div>
-
-      {/* Full-width action bar (edge-to-edge under the avatar+content row), so
-          the icons spread evenly across the whole card. */}
-      <EngagementBar post={post} />
     </article>
   );
 }

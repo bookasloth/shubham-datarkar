@@ -373,9 +373,53 @@
   .animate-pop { animation: community-pop 320ms var(--ease-out-quint); }
   .animate-wobble { animation: community-wobble 380ms var(--ease-out-quint); }
 
+  /* Reblog: one crisp 360° spin the moment it's activated. */
+  @keyframes community-spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+  .animate-reblog-spin { animation: community-spin 500ms var(--ease-out-quint); }
+
+  /* Like burst: an expanding ring + sparks flung outward from the heart —
+     the little dopamine hit that makes a like feel worth clicking. */
+  .like-burst {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    pointer-events: none;
+  }
+  .like-ring {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border-radius: 999px;
+    border: 2px solid var(--brand);
+    animation: like-ring 480ms var(--ease-out-quint) forwards;
+  }
+  @keyframes like-ring {
+    0% { transform: scale(0.3); opacity: 0.85; }
+    100% { transform: scale(2.4); opacity: 0; }
+  }
+  .like-spark {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 999px;
+    background: var(--brand);
+    /* --a set inline per spark → each flings along its own spoke. */
+    animation: like-spark 480ms var(--ease-out-quint) forwards;
+  }
+  @keyframes like-spark {
+    0% { transform: rotate(var(--a)) translateY(-3px) scale(1); opacity: 1; }
+    100% { transform: rotate(var(--a)) translateY(-16px) scale(0); opacity: 0; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     .animate-pop,
-    .animate-wobble { animation: none; }
+    .animate-wobble,
+    .animate-reblog-spin { animation: none; }
+    .like-burst { display: none; }
   }
 
   /* Editorial reading column */
