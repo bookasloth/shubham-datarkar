@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { INTEGRA, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/integra";
 import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { Tile } from "@/components/games/board/Tile";
+import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
+import { WinBurst } from "@/components/games/board/WinBurst";
 import IntegraHelpModal from "./IntegraHelpModal";
 import IntegraStatsModal, { type IntegraStats } from "./IntegraStatsModal";
 import IntegraSettingsModal from "./IntegraSettingsModal";
@@ -19,6 +20,16 @@ const ALLOWED = new Set([...DIGITS, ...OPS]);
 /** Data stays "*"/"/"; tiles + keys render the friendlier math symbols. */
 const DISPLAY: Record<string, string> = { "*": "×", "/": "÷" };
 const show = (ch: string) => DISPLAY[ch] ?? ch;
+
+/** Digit row + operator/enter/backspace row, fed to the shared grid keyboard. */
+const INTEGRA_ROWS: KeyDef[][] = [
+  DIGITS.map((ch) => ({ label: show(ch), value: ch })),
+  [
+    { label: "⏎", value: "enter" },
+    ...OPS.map((ch) => ({ label: show(ch), value: ch })),
+    { label: "⌫", value: "back" },
+  ],
+];
 
 type Saved = { guesses: string[]; status: "playing" | "won" | "lost" };
 
@@ -198,57 +209,10 @@ export default function IntegraBoard({
           )}
         </div>
       ) : (
-        <div className="flex w-full max-w-[22rem] flex-col gap-1.5">
-          <div className="grid grid-cols-10 gap-1">
-            {DIGITS.map((ch) => (
-              <KeyBtn key={ch} label={show(ch)} state={keyState[ch]} onClick={() => key(ch)} />
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            <KeyBtn label="⏎" onClick={() => key("enter")} />
-            {OPS.map((ch) => (
-              <KeyBtn key={ch} label={show(ch)} state={keyState[ch]} onClick={() => key(ch)} />
-            ))}
-            <KeyBtn label="⌫" onClick={() => key("back")} />
-          </div>
-        </div>
+        <Keyboard game="integra" variant="grid" rows={INTEGRA_ROWS} keyStates={keyState} onKey={key} />
       )}
 
-      {justWon && <Confetti />}
+      {justWon && <WinBurst />}
     </GameStage>
-  );
-}
-
-function KeyBtn({ label, onClick, state }: { label: string; onClick: () => void; state?: TileState }) {
-  const cls = state ? `integra-key--${state}` : "bg-secondary text-secondary-foreground";
-  return (
-    <button onClick={onClick} className={`integra-key h-12 rounded-btn text-base font-semibold transition-ui ${cls}`}>
-      {label}
-    </button>
-  );
-}
-
-/** Lightweight win celebration — a burst of pieces, no extra dependency. */
-function Confetti() {
-  const colors = ["#16a34a", "#7c3aed", "#d4af37", "var(--foreground)"];
-  const pieces = Array.from({ length: 28 }, (_, i) => ({
-    x: (i / 28) * 320 - 160 + ((i * 37) % 40) - 20,
-    delay: (i % 7) * 0.03,
-    color: colors[i % colors.length],
-    rot: ((i * 53) % 360),
-  }));
-  return (
-    <div className="pointer-events-none fixed inset-0 z-40 flex justify-center overflow-hidden">
-      {pieces.map((p, i) => (
-        <motion.span
-          key={i}
-          className="absolute top-1/3 h-2 w-2 rounded-[1px]"
-          style={{ background: p.color }}
-          initial={{ opacity: 1, y: 0, x: 0, rotate: 0 }}
-          animate={{ opacity: 0, y: 360, x: p.x, rotate: p.rot }}
-          transition={{ duration: 1.2, delay: p.delay, ease: "easeOut" }}
-        />
-      ))}
-    </div>
   );
 }
