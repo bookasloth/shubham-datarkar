@@ -3,6 +3,7 @@ import { getActivePlans } from "@/lib/members/membership-server";
 import { revokeGiftAction } from "@/lib/members/membership-actions";
 import { PageHeader, StatusBadge } from "@/components/admin";
 import { GiftForm } from "@/components/admin/gift-form";
+import { ResetPassword } from "@/components/admin/reset-password";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 
@@ -98,13 +99,16 @@ export default async function MembersAdminPage() {
                   {m.periodEnd ? formatDate(m.periodEnd) : "-"}
                 </td>
                 <td className="px-4 py-2.5 text-muted-foreground">{formatDate(m.createdAt)}</td>
-                <td className="px-4 py-2.5 text-right">
-                  {m.source === "gift" && (
-                    <form action={revokeGiftAction}>
-                      <input type="hidden" name="user_id" value={m.id} />
-                      <Button type="submit" variant="outline" size="sm">Revoke</Button>
-                    </form>
-                  )}
+                <td className="px-4 py-2.5">
+                  <div className="flex items-center justify-end gap-2">
+                    <ResetPassword userId={m.id} />
+                    {m.source === "gift" && (
+                      <form action={revokeGiftAction}>
+                        <input type="hidden" name="user_id" value={m.id} />
+                        <Button type="submit" variant="outline" size="sm">Revoke</Button>
+                      </form>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
