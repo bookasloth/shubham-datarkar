@@ -29,3 +29,11 @@ export function tokenizeLinks(input: string): LinkToken[] {
   if (last < input.length) out.push({ type: "text", value: input.slice(last) });
   return out;
 }
+
+// Display label for a URL when no short slug is available (RPC hiccup, or the
+// URL isn't http(s)): drop scheme + www and cap the length so the feed never
+// paints a giant raw URL. The href stays the full URL — this only shortens text.
+export function prettyLabel(url: string, max = 42): string {
+  const bare = url.replace(/^https?:\/\//i, "").replace(/^www\./i, "");
+  return bare.length > max ? bare.slice(0, max - 1) + "…" : bare;
+}

@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenizeLinks } from "./linkify";
+import { tokenizeLinks, prettyLabel } from "./linkify";
 
 describe("tokenizeLinks", () => {
   it("passes through text with no URL as a single token", () => {
@@ -29,5 +29,25 @@ describe("tokenizeLinks", () => {
     expect(tokenizeLinks("visit example.com today")).toEqual([
       { type: "text", value: "visit example.com today" },
     ]);
+  });
+});
+
+describe("prettyLabel", () => {
+  it("drops scheme and www", () => {
+    expect(prettyLabel("https://www.example.com/x")).toBe("example.com/x");
+    expect(prettyLabel("http://example.com")).toBe("example.com");
+  });
+
+  it("keeps a short URL intact", () => {
+    expect(prettyLabel("https://x.com/a")).toBe("x.com/a");
+  });
+
+  it("truncates a long URL with an ellipsis", () => {
+    const long =
+      "https://shubhamdatarkar.com/blog/updates/i-fixed-the-error-then-deleted-the-feature";
+    const out = prettyLabel(long);
+    expect(out.length).toBe(42);
+    expect(out.endsWith("…")).toBe(true);
+    expect(out.startsWith("shubhamdatarkar.com/blog")).toBe(true);
   });
 });
