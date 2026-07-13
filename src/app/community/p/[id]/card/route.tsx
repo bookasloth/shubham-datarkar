@@ -43,7 +43,7 @@ function Stat({ d, n, color, fill }: { d: string; n?: number; color: string; fil
 }
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
@@ -68,6 +68,16 @@ export async function GET(
   const bodySize = text.length > 200 ? 40 : text.length > 110 ? 48 : 56;
   const tick = post.badge === "gold" ? "#d4af37" : post.badge === "orange" ? BRAND : null;
 
+  // Plus Jakarta Sans (site display font). Satori needs raw TTF bytes — the
+  // next/font woff2 in .next can't be parsed, and Turbopack rejects
+  // fetch(import.meta.url), so the two static weights live in /public and are
+  // fetched over the same origin (works in dev + prod).
+  const origin = new URL(req.url).origin;
+  const [jakarta400, jakarta700] = await Promise.all([
+    fetch(`${origin}/fonts/PlusJakartaSans-400.ttf`).then((r) => r.arrayBuffer()),
+    fetch(`${origin}/fonts/PlusJakartaSans-700.ttf`).then((r) => r.arrayBuffer()),
+  ]);
+
   return new ImageResponse(
     (
       <div
@@ -80,7 +90,7 @@ export async function GET(
           background: "#0a0a0a",
           color: "#e7e7ea",
           padding: "72px",
-          fontFamily: "sans-serif",
+          fontFamily: "Plus Jakarta Sans",
         }}
       >
         {/* Logo — top-right corner */}
@@ -96,7 +106,7 @@ export async function GET(
               background: "#ffffff",
               color: "#0a0a0a",
               fontSize: "34px",
-              fontWeight: 800,
+              fontWeight: 700,
             }}
           >
             {site.shortName}
@@ -197,6 +207,10 @@ export async function GET(
     ),
     {
       ...size,
+      fonts: [
+        { name: "Plus Jakarta Sans", data: jakarta400, weight: 400, style: "normal" },
+        { name: "Plus Jakarta Sans", data: jakarta700, weight: 700, style: "normal" },
+      ],
       headers: {
         "Content-Disposition": `attachment; filename="post-${id}.png"`,
         "Cache-Control": "public, max-age=600, s-maxage=600",
