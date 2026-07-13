@@ -22,29 +22,40 @@ export const supportProfile = {
   achievements: ["3 companies building", "200+ pieces shipped", "Builders List weekly"],
 };
 
-/** Company-assets base for project logos. */
-const PROJECT_LOGO_BASE = "https://company-assets.bookasloth.in/images/sd/website/projects";
+/** Website-assets base for project logos. Files: `{key}.png`. */
+const PROJECT_LOGO_BASE = "https://website-assets.shubhamdatarkar.com/images/sd/website/project";
 
 export type SupportProject = {
   key: string;
   name: string;
-  /** Square logo, sourced from company-assets. */
+  /** Square logo `{PROJECT_LOGO_BASE}/{key}.png`. */
   logo: string;
   /** One-line "what it is". PLACEHOLDER copy — replace with real blurbs. */
   blurb: string;
-  /** External link. PLACEHOLDER "#" — replace with real URLs. */
+  /** Internal link to the project's page (coming-soon shell until built). */
   href: string;
 };
 
-export const supportProjects: SupportProject[] = [
-  { key: "nnawca", name: "NNAWCA", logo: `${PROJECT_LOGO_BASE}/nnawca.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "coffee-and-toffee", name: "Coffee and Toffee", logo: `${PROJECT_LOGO_BASE}/coffee-and-toffee.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "the-parliament", name: "The Parliament", logo: `${PROJECT_LOGO_BASE}/the-parliament.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "marketing-bug", name: "Marketing Bug", logo: `${PROJECT_LOGO_BASE}/marketing-bug.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "book-a-sloth", name: "Book A Sloth", logo: `${PROJECT_LOGO_BASE}/book-a-sloth.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "rajmudra-media", name: "Rajmudra Media", logo: `${PROJECT_LOGO_BASE}/rajmudra-media.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "corporate-puppets", name: "Corporate Puppets", logo: `${PROJECT_LOGO_BASE}/corporate-puppets.webp`, blurb: "Project overview coming soon.", href: "#" },
-  { key: "shubham-datarkar", name: "Shubham Datarkar", logo: `${PROJECT_LOGO_BASE}/shubham-datarkar.webp`, blurb: "Project overview coming soon.", href: "#" },
+// key = image filename = url slug (single source; logo + href derived below).
+// marketing-bug + shubham-datarkar have no PNG yet — logo 404s until uploaded.
+const PROJECT_LIST: { key: string; name: string }[] = [
+  { key: "nnawca", name: "NNAWCA" },
+  { key: "coffee-and-toffee", name: "Coffee and Toffee" },
+  { key: "parliament", name: "The Parliament" },
+  { key: "marketing-bug", name: "Marketing Bug" },
+  { key: "book-a-sloth", name: "Book A Sloth" },
+  { key: "rajmudra", name: "Rajmudra Media" },
+  { key: "corporate-puppets", name: "Corporate Puppets" },
+  { key: "shubham-datarkar", name: "Shubham Datarkar" },
 ];
+
+export const supportProjects: SupportProject[] = PROJECT_LIST.map((p) => ({
+  ...p,
+  logo: `${PROJECT_LOGO_BASE}/${p.key}.png`,
+  blurb: "Project overview coming soon.",
+  href: `/projects/${p.key}`,
+}));
+
+export const getSupportProject = (key: string) => supportProjects.find((p) => p.key === key);
 
 
