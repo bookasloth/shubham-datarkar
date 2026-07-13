@@ -54,7 +54,7 @@ export async function PostCard({
         </p>
       )}
       <div className="flex gap-3">
-        <CommunityAvatar name={name} size={40} />
+        <CommunityAvatar seed={post.username} size={40} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 text-sm">
             <span className="truncate font-semibold text-foreground">{name}</span>
