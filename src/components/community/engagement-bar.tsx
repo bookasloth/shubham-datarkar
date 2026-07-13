@@ -2,7 +2,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react";
+import { ThumbsUp, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react";
 import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
@@ -129,7 +129,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           title="Upvote"
           className={cn(ITEM, state.vote === 1 && "text-brand")}
         >
-          <Heart
+          <ThumbsUp
             className={cn("size-4", state.vote === 1 && "fill-current", burst === "up" && "animate-pop")}
           />
           {showLikeBurst && (
