@@ -53,15 +53,15 @@ export function ProfileMenu({
           </div>
         </div>
 
-        {/* View profile */}
-        <DropdownMenuItem asChild className="mt-1 justify-center bg-brand/10 py-2 font-medium text-brand focus:bg-brand/20 focus:text-brand">
+        {/* View profile — ghost, turns primary on hover */}
+        <DropdownMenuItem asChild className="mt-1 justify-center bg-brand/10 py-2 font-medium text-brand hover:bg-brand hover:text-white focus:bg-brand focus:text-white">
           <Link href="/community/me">View Your Profile</Link>
         </DropdownMenuItem>
 
-        {/* Membership status */}
+        {/* Membership status — primary, turns ghost on hover */}
         <DropdownMenuItem
           asChild
-          className="mt-1.5 justify-center gap-2 bg-brand py-2 font-medium text-white focus:bg-brand focus:text-white [&_svg]:text-white"
+          className="mt-1.5 justify-center gap-2 bg-brand py-2 font-medium text-white [&_svg]:text-white hover:bg-brand/10 hover:text-brand hover:[&_svg]:text-brand focus:bg-brand/10 focus:text-brand focus:[&_svg]:text-brand"
         >
           <Link href={isPremium ? "/members/account" : "/members/upgrade"}>
             <Crown />
