@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createReply } from "@/lib/community/engage-actions";
 import { Button } from "@/components/ui/button";
@@ -12,12 +12,20 @@ export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
   const [body, setBody] = useState("");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  // Optimistic echo: the reply text shows immediately (faded) under the composer
+  // and clears when router.refresh brings the real thread in — so posting feels
+  // instant. ponytail: the stub lives in the composer, not inline in the thread,
+  // because the thread renders async server PostCards that can't mount here; lift
+  // into a client thread wrapper if inline placement matters.
+  const [optimistic, addReply] = useOptimistic<string[], string>([], (s, text) => [...s, text]);
   const empty = body.trim().length === 0;
 
   function submit() {
     if (empty) return;
+    const text = body;
     start(async () => {
-      const r = await createReply(postId, body);
+      addReply(text);
+      const r = await createReply(postId, text);
       if ("error" in r) {
         setError(r.error);
       } else {
@@ -61,6 +69,12 @@ export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
           </Button>
         </div>
       </div>
+      {optimistic.map((text, i) => (
+        <div key={i} className="mt-3 flex gap-3 opacity-60">
+          <CommunityAvatar seed={seed} size={36} />
+          <p className="min-w-0 flex-1 whitespace-pre-wrap break-words text-sm">{text}</p>
+        </div>
+      ))}
       {error && <p className="mt-2 pl-[48px] text-sm text-danger">{error}</p>}
     </div>
   );

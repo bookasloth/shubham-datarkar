@@ -1,5 +1,5 @@
 "use client";
-import { useState, useTransition } from "react";
+import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -25,8 +25,19 @@ export function Poll({
   const [error, setError] = useState<string | null>(null);
 
   const options = post.poll?.options ?? [];
-  const counts = result?.counts ?? {};
-  const total = result?.total ?? 0;
+  // Optimistic tally: the chosen option and the total bump the instant you vote,
+  // then reset to the fresh server counts when the transition's router.refresh
+  // lands — the same hold-until-refresh pattern as EngagementBar, so the bars
+  // move immediately instead of waiting a round-trip.
+  const [tally, addVote] = useOptimistic(
+    { counts: result?.counts ?? {}, total: result?.total ?? 0 },
+    (s, i: number) => ({
+      counts: { ...s.counts, [i]: (s.counts[i] ?? 0) + 1 },
+      total: s.total + 1,
+    }),
+  );
+  const counts = tally.counts;
+  const total = tally.total;
   const showTally = choice !== null || closed || !canVote;
   const isQuiz = post.poll?.mode === "quiz";
   const correct = post.poll?.correct;
@@ -37,6 +48,7 @@ export function Poll({
     const prev = choice;
     setChoice(i);
     start(async () => {
+      addVote(i);
       const r = await voteOnPoll(post.id, i);
       if ("error" in r) {
         setChoice(prev);

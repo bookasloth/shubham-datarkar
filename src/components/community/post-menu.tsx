@@ -26,7 +26,7 @@ export function PostMenu({
   isAdmin?: boolean;
 }) {
   const router = useRouter();
-  const [, start] = useTransition();
+  const [pending, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
 
   async function onCopyLink() {
@@ -120,7 +120,11 @@ export function PostMenu({
           ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
-      {note && <p className="absolute right-0 top-7 whitespace-nowrap text-xs text-muted-foreground">{note}</p>}
+      {(note || pending) && (
+        <p className="absolute right-0 top-7 whitespace-nowrap text-xs text-muted-foreground">
+          {note ?? "Working…"}
+        </p>
+      )}
     </div>
   );
 }
