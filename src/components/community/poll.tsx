@@ -81,7 +81,7 @@ export function Poll({
             )}
           >
             <div
-              className="absolute inset-y-0 left-0 bg-accent"
+              className={cn("absolute inset-y-0 left-0", mine ? "bg-brand/25" : "bg-brand/15")}
               style={{ width: `${pct}%` }}
               aria-hidden
             />

@@ -3,19 +3,19 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createReply } from "@/lib/community/engage-actions";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
+import { CommunityAvatar } from "./community-avatar";
 
 const MAX = 500;
 
-export function ReplyBox({ postId }: { postId: string }) {
+export function ReplyBox({ postId, name }: { postId: string; name: string }) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
-  const over = body.length > MAX;
+  const empty = body.trim().length === 0;
 
   function submit() {
+    if (empty) return;
     start(async () => {
       const r = await createReply(postId, body);
       if ("error" in r) {
@@ -30,28 +30,38 @@ export function ReplyBox({ postId }: { postId: string }) {
 
   return (
     <div className="border-b border-border px-4 py-3">
-      <Textarea
-        value={body}
-        onChange={(e) => setBody(e.target.value)}
-        placeholder="Write a reply"
-        rows={2}
-        className="resize-none"
-      />
-      <div className="mt-2 flex items-center justify-between">
-        <span className={cn("text-xs", over ? "text-danger" : "text-muted-foreground")}>
-          {body.length}/{MAX}
-        </span>
-        <Button
-          type="button"
-          size="sm"
-          loading={pending}
-          disabled={over || body.trim().length === 0}
-          onClick={submit}
-        >
-          Reply
-        </Button>
+      <div className="flex items-center gap-3">
+        <CommunityAvatar name={name} size={36} />
+        {/* Pill wraps input + button so the whole row reads as one control;
+            focus-within lifts the border to brand like the composer. */}
+        <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-4 pr-1.5 transition-ui focus-within:border-brand">
+          <input
+            value={body}
+            onChange={(e) => setBody(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                submit();
+              }
+            }}
+            placeholder="Post your reply"
+            maxLength={MAX}
+            aria-label="Post your reply"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+          />
+          <Button
+            type="button"
+            size="sm"
+            className="rounded-full"
+            loading={pending}
+            disabled={empty}
+            onClick={submit}
+          >
+            Reply
+          </Button>
+        </div>
       </div>
-      {error && <p className="mt-2 text-sm text-danger">{error}</p>}
+      {error && <p className="mt-2 pl-[48px] text-sm text-danger">{error}</p>}
     </div>
   );
 }

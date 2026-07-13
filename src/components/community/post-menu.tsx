@@ -14,16 +14,30 @@ import { setPostHidden, setPostDemoted, adminDeletePost } from "@/lib/community/
 
 export function PostMenu({
   postId,
+  publicId,
+  isLoggedIn,
   isOwner,
   isAdmin = false,
 }: {
   postId: string;
+  publicId: string;
+  isLoggedIn: boolean;
   isOwner: boolean;
   isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
+
+  async function onCopyLink() {
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/community/p/${publicId}`);
+      setNote("Link copied");
+      setTimeout(() => setNote(null), 1500);
+    } catch {
+      setNote("Couldn't copy the link.");
+    }
+  }
 
   function onReport() {
     const reason = window.prompt("Why are you reporting this post? (optional)") ?? "";
@@ -68,6 +82,13 @@ export function PostMenu({
           <MoreHorizontal className="size-4" />
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          {/* Copy link is available to everyone (feed is public), so it stays
+              outside the auth-gated block. onSelect preventDefault keeps the menu
+              open long enough for the "Link copied" note to register. */}
+          <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={onCopyLink}>
+            Copy link
+          </DropdownMenuItem>
+          {(isLoggedIn || isAdmin) && <DropdownMenuSeparator />}
           {isAdmin ? (
             <>
               <DropdownMenuItem onClick={() => runAdmin(() => setPostHidden(postId, true, "", false))}>
@@ -84,12 +105,12 @@ export function PostMenu({
                 Delete
               </DropdownMenuItem>
             </>
-          ) : (
+          ) : isLoggedIn ? (
             <>
               <DropdownMenuItem onClick={onReport}>Report</DropdownMenuItem>
               {isOwner && <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>}
             </>
-          )}
+          ) : null}
         </DropdownMenuContent>
       </DropdownMenu>
       {note && <p className="absolute right-0 top-7 whitespace-nowrap text-xs text-muted-foreground">{note}</p>}
