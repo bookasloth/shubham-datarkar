@@ -88,6 +88,13 @@ export function PostMenu({
           <DropdownMenuItem onSelect={(e) => e.preventDefault()} onClick={onCopyLink}>
             Copy link
           </DropdownMenuItem>
+          {/* Download image is public too — the route sets Content-Disposition
+              so the anchor's href triggers a PNG download of the post card. */}
+          <DropdownMenuItem asChild>
+            <a href={`/community/p/${publicId}/card`} download={`post-${publicId}.png`}>
+              Download image
+            </a>
+          </DropdownMenuItem>
           {(isLoggedIn || isAdmin) && <DropdownMenuSeparator />}
           {isAdmin ? (
             <>
