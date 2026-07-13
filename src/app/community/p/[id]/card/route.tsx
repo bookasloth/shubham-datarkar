@@ -1,29 +1,27 @@
 import { ImageResponse } from "next/og";
 import { site } from "@/lib/site";
-import { avatarColor, compactNumber } from "@/lib/utils";
+import { avatarColor, compactNumber, timeAgo } from "@/lib/utils";
 import { initialsOf } from "@/lib/support/config";
+import { tokenizeLinks, prettyLabel } from "@/lib/community/linkify";
+import { ensureShortLinks, SHORT_HOST } from "@/lib/community/short-link";
 import { getPostByPublicId } from "@/lib/community/queries";
 
 // Downloadable share card for a single community post. Instagram portrait
-// (1080x1350, 4:5). Same next/og (Satori) pipeline as the blog OG images, so no
-// new deps. Monochrome to match the brand. Runs on the default (nodejs) runtime
-// so the DB read works — do NOT switch to edge.
+// (1080x1350, 4:5), dark, mirroring the real feed post-card skeleton
+// (avatar-left · name+tick+handle+time row · body with shortened link · colored
+// engagement bar). Same next/og (Satori) pipeline as the blog OG images, so no
+// new deps. Runs on the default (nodejs) runtime so the DB read + short-link
+// RPC work — do NOT switch to edge.
 
 export const size = { width: 1080, height: 1350 };
 
-// One inline SVG icon (lucide path), stroked, muted — Satori renders <svg>/<path>.
-function Icon({ d, size = 34 }: { d: string; size?: number }) {
+const BRAND = "#ff4800";
+const MUTED = "#8b8b93";
+
+// One inline SVG icon (lucide path) — Satori renders <svg>/<path>.
+function Icon({ d, fill = "none", stroke = MUTED, size = 40 }: { d: string; fill?: string; stroke?: string; size?: number }) {
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="#6b6b73"
-      strokeWidth={2}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
+    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
       <path d={d} />
     </svg>
   );
@@ -32,6 +30,17 @@ function Icon({ d, size = 34 }: { d: string; size?: number }) {
 const HEART = "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z";
 const REPLY = "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z";
 const REBLOG = "M17 2l4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 M7 22l-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3";
+const BOOKMARK = "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z";
+
+// One engagement pill (icon + count), colored to match the lively feed look.
+function Stat({ d, n, color, fill }: { d: string; n?: number; color: string; fill?: string }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: "12px", color, fontSize: "34px" }}>
+      <Icon d={d} stroke={color} fill={fill ?? "none"} />
+      {n !== undefined ? compactNumber(n) : ""}
+    </span>
+  );
+}
 
 export async function GET(
   _req: Request,
@@ -42,12 +51,22 @@ export async function GET(
   if (!post) return new Response("Not found", { status: 404 });
 
   const name = post.displayName || post.username;
-  // Body carries the card. Collapse whitespace, cap length, ellipsise — then
-  // shrink the type as it grows so it never overflows (mirrors the OG card).
-  const raw = (post.body ?? "").replace(/\s+/g, " ").trim();
-  const body = raw.length > 280 ? `${raw.slice(0, 279).trimEnd()}…` : raw;
-  const bodySize = body.length > 200 ? 44 : body.length > 120 ? 56 : body.length > 60 ? 68 : 80;
-  const tick = post.badge === "gold" ? "#d4af37" : post.badge === "orange" ? "#e8590c" : null;
+
+  // Same link-shortening the feed does on read, so the card shows the identical
+  // shubhamdatarkar.com/s/{slug}. Split body into plain text + shortened links;
+  // links render underlined on their own line(s) below the text.
+  // ponytail: end-of-body links (the common auto-post/seed shape) reproduce the
+  // feed exactly; a mid-text link gets moved to the bottom — fine for a card.
+  const tokens = post.body ? tokenizeLinks(post.body) : [];
+  const short = await ensureShortLinks(tokens.flatMap((t) => (t.type === "link" ? [t.href] : [])));
+  const text = tokens.flatMap((t) => (t.type === "text" ? [t.value] : [])).join("").replace(/\s+/g, " ").trim();
+  const links = tokens.flatMap((t) => {
+    if (t.type !== "link") return [];
+    const slug = short.get(t.href);
+    return [slug ? `${SHORT_HOST}/s/${slug}` : prettyLabel(t.href)];
+  });
+  const bodySize = text.length > 200 ? 40 : text.length > 110 ? 48 : 56;
+  const tick = post.badge === "gold" ? "#d4af37" : post.badge === "orange" ? BRAND : null;
 
   return new ImageResponse(
     (
@@ -58,9 +77,9 @@ export async function GET(
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
-          background: "#ffffff",
-          color: "#0a0a0a",
-          padding: "80px 72px",
+          background: "#0a0a0a",
+          color: "#e7e7ea",
+          padding: "72px",
           fontFamily: "sans-serif",
         }}
       >
@@ -74,8 +93,8 @@ export async function GET(
               width: "76px",
               height: "76px",
               borderRadius: "14px",
-              background: "#0a0a0a",
-              color: "#ffffff",
+              background: "#ffffff",
+              color: "#0a0a0a",
               fontSize: "34px",
               fontWeight: 800,
             }}
@@ -84,88 +103,95 @@ export async function GET(
           </div>
         </div>
 
-        {/* Center — avatar, name, handle, content */}
-        <div
-          style={{
-            display: "flex",
-            flex: 1,
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            textAlign: "center",
-          }}
-        >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: "120px",
-              height: "120px",
-              borderRadius: "999px",
-              background: avatarColor(name),
-              color: "#ffffff",
-              fontSize: "48px",
-              fontWeight: 700,
-            }}
-          >
-            {initialsOf(name)}
-          </div>
+        {/* Post skeleton — avatar left, content column (name row · body · bar) */}
+        <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "28px", width: "100%" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "108px",
+                height: "108px",
+                borderRadius: "999px",
+                background: avatarColor(name),
+                color: "#ffffff",
+                fontSize: "44px",
+                fontWeight: 700,
+              }}
+            >
+              {initialsOf(name)}
+            </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: "10px", marginTop: "28px" }}>
-            <span style={{ fontSize: "38px", fontWeight: 700 }}>{name}</span>
-            {tick && (
-              <svg width={30} height={30} viewBox="0 0 24 24" fill={tick} stroke="none">
-                <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
-                <path d="M9 12l2 2 4-4" fill="none" stroke="#ffffff" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
-          </div>
-          <div style={{ display: "flex", fontSize: "28px", color: "#6b6b73", marginTop: "4px" }}>
-            @{post.username}
-          </div>
+            <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
+              {/* name · tick · @handle · time */}
+              <div style={{ display: "flex", alignItems: "center", gap: "12px", fontSize: "36px" }}>
+                <span style={{ fontWeight: 700 }}>{name}</span>
+                {tick && (
+                  <svg width={32} height={32} viewBox="0 0 24 24" fill={tick} stroke="none">
+                    <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
+                    <path d="M9 12l2 2 4-4" fill="none" stroke="#0a0a0a" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                <span style={{ color: MUTED }}>@{post.username}</span>
+                <span style={{ color: MUTED }}>· {timeAgo(post.createdAt)}</span>
+              </div>
 
-          <div
-            style={{
-              display: "flex",
-              marginTop: "48px",
-              fontSize: `${bodySize}px`,
-              fontWeight: 600,
-              lineHeight: 1.28,
-              letterSpacing: "-0.01em",
-            }}
-          >
-            {body || `A post by ${name}`}
+              {/* body + shortened links */}
+              <div style={{ display: "flex", flexDirection: "column", marginTop: "20px" }}>
+                {text && (
+                  <div style={{ display: "flex", fontSize: `${bodySize}px`, lineHeight: 1.32 }}>{text}</div>
+                )}
+                {links.map((l, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: "flex",
+                      marginTop: text || i ? "10px" : "0px",
+                      fontSize: `${bodySize}px`,
+                      lineHeight: 1.32,
+                      color: "#e7e7ea",
+                      textDecoration: "underline",
+                    }}
+                  >
+                    {l}
+                  </div>
+                ))}
+                {!text && links.length === 0 && (
+                  <div style={{ display: "flex", fontSize: "52px" }}>A post by {name}</div>
+                )}
+              </div>
+
+              {/* engagement bar */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "56px",
+                  marginTop: "40px",
+                  paddingTop: "28px",
+                  borderTop: "1px solid rgba(255,255,255,0.12)",
+                }}
+              >
+                <Stat d={HEART} n={post.upCount} color={BRAND} fill={BRAND} />
+                <Stat d={REPLY} n={post.replyCount} color={MUTED} />
+                <Stat d={REBLOG} n={post.reblogCount} color={BRAND} />
+                <Stat d={BOOKMARK} n={post.bookmarkCount} color={BRAND} fill={BRAND} />
+                <span style={{ display: "flex" }}>
+                  <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="8" r="6" />
+                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                  </svg>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Bottom — engagement icons (center) + link (bottom-left) */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "28px" }}>
-          <div style={{ display: "flex", justifyContent: "center", gap: "56px", color: "#6b6b73", fontSize: "30px" }}>
-            <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Icon d={HEART} />
-              {compactNumber(post.upCount)}
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Icon d={REPLY} />
-              {compactNumber(post.replyCount)}
-            </span>
-            <span style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-              <Icon d={REBLOG} />
-              {compactNumber(post.reblogCount)}
-            </span>
-          </div>
-          <div
-            style={{
-              display: "flex",
-              borderTop: "1px solid #e6e6e9",
-              paddingTop: "24px",
-              fontSize: "26px",
-              color: "#6b6b73",
-            }}
-          >
-            {site.domain}/community
-          </div>
+        {/* Link — bottom-left */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "26px", color: MUTED }}>
+          <span style={{ display: "flex" }}>{site.domain}/community</span>
+          <span style={{ display: "flex" }}>{site.name}</span>
         </div>
       </div>
     ),
