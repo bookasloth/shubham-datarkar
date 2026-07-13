@@ -67,6 +67,7 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
               <ProfileMenu
                 displayName={user!.displayName}
                 email={user!.email}
+                username={user!.username}
                 isAdmin={user!.isAdmin}
                 isPremium={user!.isPremium}
               />
