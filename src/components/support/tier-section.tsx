@@ -1,8 +1,8 @@
 import { Crown, Flame, Shield } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf, type Tier } from "@/lib/support/config";
 import type { Supporter } from "@/lib/support/queries";
-import { cn } from "@/lib/utils";
+import { avatarUrl, avatarBg, cn } from "@/lib/utils";
 
 const ICON = { crown: Crown, shield: Shield, flame: Flame } as const;
 
@@ -54,6 +54,7 @@ export function TierSection({
             <div key={s.key} className="flex w-16 flex-col items-center gap-1.5 text-center" title={displayName(s.name)}>
               <div className="relative">
                 <Avatar
+                  style={{ background: avatarBg(s.key) }}
                   className={cn(
                     "size-12 rounded-full",
                     isTop
@@ -61,6 +62,7 @@ export function TierSection({
                       : "ring-1 ring-border",
                   )}
                 >
+                  <AvatarImage src={avatarUrl(s.key)} alt="" />
                   <AvatarFallback className="rounded-full text-xs font-semibold">{initialsOf(displayName(s.name))}</AvatarFallback>
                 </Avatar>
                 {isTop && (

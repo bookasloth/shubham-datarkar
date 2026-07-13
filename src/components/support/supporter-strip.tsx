@@ -1,6 +1,7 @@
 import { Heart } from "lucide-react";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { initialsOf } from "@/lib/support/config";
+import { avatarUrl, avatarBg } from "@/lib/utils";
 import type { RecentSupporter } from "@/lib/support/queries";
 
 const displayName = (name: string | null) => name ?? "A supporter";
@@ -17,7 +18,8 @@ export function SupporterStrip({ supporters }: { supporters: RecentSupporter[] }
     <div className="mt-6 flex items-center gap-3 rounded-card border border-border bg-card p-4">
       <div className="flex -space-x-2">
         {shown.map((s) => (
-          <Avatar key={s.id} className="size-8 rounded-full ring-2 ring-card">
+          <Avatar key={s.id} className="size-8 rounded-full ring-2 ring-card" style={{ background: avatarBg(s.id) }}>
+            <AvatarImage src={avatarUrl(s.id)} alt="" />
             <AvatarFallback className="rounded-full text-[10px] font-semibold">
               {initialsOf(displayName(s.name))}
             </AvatarFallback>

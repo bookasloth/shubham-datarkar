@@ -2,9 +2,9 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { formatDate } from "@/lib/utils";
+import { avatarUrl, avatarBg, formatDate } from "@/lib/utils";
 import { initialsOf, TIERS } from "@/lib/support/config";
 import { EmailVerifyGate } from "./email-verify-gate";
 import { postComment, deleteComment } from "@/lib/support/comments-actions";
@@ -100,7 +100,8 @@ function CommentItem({
   return (
     <li className={indented ? "border-l border-border pl-4" : ""}>
       <div className="flex items-start gap-3">
-        <Avatar className="size-8 shrink-0 rounded-full">
+        <Avatar className="size-8 shrink-0 rounded-full" style={{ background: avatarBg(node.name) }}>
+          <AvatarImage src={avatarUrl(node.name)} alt="" />
           <AvatarFallback className="rounded-full bg-foreground text-[10px] font-bold text-background">
             {initialsOf(node.name)}
           </AvatarFallback>
