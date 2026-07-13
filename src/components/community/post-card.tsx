@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { cn, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 import { getAdminUser } from "@/lib/auth/session";
 import type { FeedPost, PollResult } from "@/lib/community/types";
 import { tokenizeLinks, prettyLabel } from "@/lib/community/linkify";
@@ -93,18 +93,30 @@ export async function PostCard({
           )}
 
           {post.type === "image" && post.images?.length ? (
-            <div
-              className={cn(
-                "mt-2 grid gap-1 overflow-hidden rounded-card",
-                post.images.length > 1 ? "grid-cols-2" : "grid-cols-1",
-              )}
-            >
-              {post.images.slice(0, 4).map((src) => (
-                <div key={src} className="relative aspect-video bg-muted">
-                  <Image src={src} alt="" fill className="object-cover" />
-                </div>
-              ))}
-            </div>
+            post.images.length === 1 ? (
+              // Single image: render at its natural aspect (uncropped), full column
+              // width. Dimensions aren't stored, so width/height are placeholders
+              // that only seed the srcset — `h-auto w-full` lets the real file's
+              // aspect ratio drive layout (Next's documented responsive pattern).
+              <div className="mt-2 overflow-hidden rounded-card border border-border bg-muted">
+                <Image
+                  src={post.images[0]}
+                  alt=""
+                  width={1200}
+                  height={1200}
+                  sizes="(max-width: 640px) 100vw, 600px"
+                  className="h-auto w-full"
+                />
+              </div>
+            ) : (
+              <div className="mt-2 grid grid-cols-2 gap-1 overflow-hidden rounded-card">
+                {post.images.slice(0, 4).map((src) => (
+                  <div key={src} className="relative aspect-video bg-muted">
+                    <Image src={src} alt="" fill className="object-cover" />
+                  </div>
+                ))}
+              </div>
+            )
           ) : null}
 
           {post.type === "youtube" && post.youtubeId ? (
