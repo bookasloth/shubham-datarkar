@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supportProjects, type SupportProject } from "@/lib/data/support-content";
@@ -41,15 +42,13 @@ export function ProjectsGrid() {
               </span>
               <DialogTitle>{active.name}</DialogTitle>
               <DialogDescription className="text-center">{active.blurb}</DialogDescription>
-              <a
+              <Link
                 href={active.href}
-                target="_blank"
-                rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm font-medium text-foreground transition-ui hover:opacity-70"
               >
                 Visit
                 <ArrowUpRight className="size-3.5" />
-              </a>
+              </Link>
             </div>
           )}
         </DialogContent>
