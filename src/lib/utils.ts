@@ -46,6 +46,35 @@ export function avatarColor(seed: string): string {
   return `hsl(${h} 45% 42%)`; // mid-saturation so white initials stay legible
 }
 
+// Member avatars: one of 12 fixed CDN icons + a milk/off-white backdrop, both
+// assigned deterministically from a stable seed (the username). Same seed →
+// same icon + bg forever, so the assignment is random-looking but unchangeable
+// with no DB column, migration, or backfill.
+const AVATAR_ICONS = [
+  "sd-amber", "sd-blue", "sd-coral", "sd-indigo", "sd-lime", "sd-magenta",
+  "sd-orange", "sd-purple", "sd-sky", "sd-taupe", "sd-teal", "sd-violet",
+] as const;
+const AVATAR_BGS = ["#faf8f5", "#f7f4ee", "#faf9f6", "#f6f3ec", "#fbf8f2"] as const;
+const AVATAR_BASE =
+  "https://website-assets.shubhamdatarkar.com/images/sd/website/icons/avatar-icons";
+
+/** Stable hash → bucket in [0, mod). `salt` decorrelates the icon and bg picks. */
+function avatarBucket(seed: string, mod: number, salt = 0): number {
+  let h = salt;
+  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  return h % mod;
+}
+
+/** CDN URL of the avatar icon assigned to `seed`. */
+export function avatarUrl(seed: string): string {
+  return `${AVATAR_BASE}/${AVATAR_ICONS[avatarBucket(seed, AVATAR_ICONS.length)]}.png`;
+}
+
+/** Off-white / milk-white backdrop assigned to `seed` (independent of the icon). */
+export function avatarBg(seed: string): string {
+  return AVATAR_BGS[avatarBucket(seed, AVATAR_BGS.length, 7)];
+}
+
 /** Short relative time: "now", "5m", "3h", "2d", "4w", else a formatted date. */
 export function timeAgo(input: string | Date): string {
   const then = new Date(input).getTime();

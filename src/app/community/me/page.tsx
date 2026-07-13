@@ -25,7 +25,7 @@ export default async function ProfilePage() {
   return (
     <div>
       <header className="flex items-center gap-3 border-b border-border px-4 py-4">
-        <CommunityAvatar name={handle} size={48} />
+        <CommunityAvatar seed={handle} size={48} />
         <div>
           <h1 className="font-display text-lg font-bold">@{handle}</h1>
           <p className="text-sm text-muted-foreground">

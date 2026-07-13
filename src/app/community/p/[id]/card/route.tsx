@@ -1,7 +1,6 @@
 import { ImageResponse } from "next/og";
 import { site } from "@/lib/site";
-import { avatarColor, compactNumber, timeAgo } from "@/lib/utils";
-import { initialsOf } from "@/lib/support/config";
+import { avatarUrl, avatarBg, compactNumber, timeAgo } from "@/lib/utils";
 import { tokenizeLinks, prettyLabel } from "@/lib/community/linkify";
 import { ensureShortLinks, SHORT_HOST } from "@/lib/community/short-link";
 import { getPostByPublicId } from "@/lib/community/queries";
@@ -118,22 +117,21 @@ export async function GET(
         {/* Post skeleton — avatar left, content column (name row · body · bar) */}
         <div style={{ display: "flex", flex: 1, alignItems: "center" }}>
           <div style={{ display: "flex", gap: "28px", width: "100%" }}>
-            <div
+            {/* next/og (Satori) renders this server-side, not to the DOM — next/image doesn't apply. */}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              alt=""
+              src={avatarUrl(post.username)}
+              width={108}
+              height={108}
               style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
                 width: "108px",
                 height: "108px",
                 borderRadius: "999px",
-                background: avatarColor(name),
-                color: "#ffffff",
-                fontSize: "44px",
-                fontWeight: 700,
+                objectFit: "cover",
+                background: avatarBg(post.username),
               }}
-            >
-              {initialsOf(name)}
-            </div>
+            />
 
             <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
               {/* name · tick · @handle · time */}

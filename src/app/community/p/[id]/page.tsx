@@ -62,10 +62,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
       />
 
       {canPost && (
-        <ReplyBox
-          postId={post.id}
-          name={shellUser?.displayName || shellUser?.username || "You"}
-        />
+        <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />
       )}
 
       {replies.length === 0 ? (

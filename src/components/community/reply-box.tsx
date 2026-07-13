@@ -7,7 +7,7 @@ import { CommunityAvatar } from "./community-avatar";
 
 const MAX = 500;
 
-export function ReplyBox({ postId, name }: { postId: string; name: string }) {
+export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
   const router = useRouter();
   const [body, setBody] = useState("");
   const [pending, start] = useTransition();
@@ -31,7 +31,7 @@ export function ReplyBox({ postId, name }: { postId: string; name: string }) {
   return (
     <div className="border-b border-border px-4 py-3">
       <div className="flex items-center gap-3">
-        <CommunityAvatar name={name} size={36} />
+        <CommunityAvatar seed={seed} size={36} />
         {/* Pill wraps input + button so the whole row reads as one control;
             focus-within lifts the border to brand like the composer. */}
         <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-4 pr-1.5 transition-ui focus-within:border-brand">
