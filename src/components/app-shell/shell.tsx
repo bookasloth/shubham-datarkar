@@ -85,8 +85,10 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
 
       <div className="flex flex-1">
         {/* Desktop sidebar */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-60 shrink-0 overflow-y-auto border-r border-border p-3 lg:block">
-          <AppSidebar signedIn={signedIn} />
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 p-4 lg:block">
+          <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
+            <AppSidebar signedIn={signedIn} />
+          </div>
         </aside>
         <div className="min-w-0 flex-1 pb-24 lg:pb-10">{children}</div>
       </div>

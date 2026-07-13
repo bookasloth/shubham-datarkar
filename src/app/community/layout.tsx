@@ -17,8 +17,8 @@ export default async function CommunityLayout({ children }: { children: React.Re
     <AppShell user={user}>
       <div className="mx-auto flex max-w-4xl gap-6 px-4">
         <div className="min-w-0 flex-1 border-x border-border">{children}</div>
-        <aside className="hidden w-72 shrink-0 py-4 lg:block">
-          <div className="sticky top-14 space-y-4">
+        <aside className="hidden w-72 shrink-0 p-4 lg:block">
+          <div className="sticky top-[4.5rem] space-y-4">
             <AdSlotView ad={bySlot(1)} />
             <AdSlotView ad={bySlot(2)} />
           </div>
