@@ -37,9 +37,17 @@ export function AppSidebar({
     >
       {APP_NAV.map((s) => {
         const Icon = s.icon;
+        const isActive = s.key === section;
         return (
           <AccordionItem key={s.key} value={s.key} className="border-none">
-            <AccordionTrigger className="rounded-input px-3 py-2 text-sm font-medium hover:bg-accent hover:no-underline">
+            <AccordionTrigger
+              className={cn(
+                "rounded-input px-3 py-2 text-sm font-medium transition-ui hover:no-underline",
+                isActive
+                  ? "bg-brand text-brand-foreground hover:bg-brand"
+                  : "hover:bg-accent",
+              )}
+            >
               <span className="flex items-center gap-3">
                 <Icon className="size-4" /> {s.label}
               </span>
