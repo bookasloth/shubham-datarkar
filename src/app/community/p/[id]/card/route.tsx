@@ -41,11 +41,12 @@ const REPLY = "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z";
 const REBLOG = "M17 2l4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 M7 22l-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3";
 const BOOKMARK = "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z";
 
-// One engagement pill (icon + count).
-function Stat({ d, n, color, fill }: { d: string; n: number; color: string; fill?: string }) {
+// One engagement pill (icon + count). Icons stay uncoloured (grey outline);
+// the count reads in the card's text colour.
+function Stat({ d, n }: { d: string; n: number }) {
   return (
-    <span style={{ display: "flex", alignItems: "center", gap: "12px", color, fontSize: "32px", fontWeight: 700 }}>
-      <Icon d={d} stroke={color} fill={fill ?? "none"} />
+    <span style={{ display: "flex", alignItems: "center", gap: "12px", color: TEXT, fontSize: "32px", fontWeight: 700 }}>
+      <Icon d={d} stroke={MUTED} fill="none" />
       {compactNumber(n)}
     </span>
   );
@@ -74,7 +75,9 @@ export async function GET(
     const slug = short.get(t.href);
     return [slug ? `${SHORT_HOST}/s/${slug}` : prettyLabel(t.href)];
   });
-  const bodySize = text.length > 240 ? 44 : text.length > 140 ? 52 : text.length > 70 ? 60 : 68;
+  // Body is 1px smaller than the 40px name, weight 400. ponytail: fixed size,
+  // not length-fit — a very long post can run tall; card is 1350px so there's room.
+  const bodySize = 39;
   // Links a touch smaller so a short /s/ link stays on one line.
   const linkSize = Math.min(bodySize - 6, 44);
 
@@ -99,7 +102,7 @@ export async function GET(
           justifyContent: "space-between",
           background: BG,
           color: TEXT,
-          padding: "72px",
+          padding: "72px 92px",
           fontFamily: "Plus Jakarta Sans",
         }}
       >
@@ -133,7 +136,7 @@ export async function GET(
             <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "6px" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
                 <span style={{ fontWeight: 700, fontSize: "40px", letterSpacing: "-0.02em" }}>{name}</span>
-                <svg width={32} height={32} viewBox="0 0 24 24" fill={BRAND} stroke="none">
+                <svg width={38} height={38} viewBox="0 0 24 24" fill={BRAND} stroke="none" style={{ marginTop: "3px" }}>
                   <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
                   <path d="M9 12l2 2 4-4" fill="none" stroke={BG} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -152,7 +155,7 @@ export async function GET(
           {/* body + shortened links */}
           <div style={{ display: "flex", flexDirection: "column", marginTop: "44px" }}>
             {text && (
-              <div style={{ display: "flex", fontSize: `${bodySize}px`, lineHeight: 1.26, letterSpacing: "-0.025em" }}>
+              <div style={{ display: "flex", fontWeight: 400, fontSize: `${bodySize}px`, lineHeight: 1.26, letterSpacing: "-0.025em" }}>
                 {text}
               </div>
             )}
@@ -189,10 +192,10 @@ export async function GET(
               borderTop: "1px solid rgba(0,0,0,0.12)",
             }}
           >
-            <Stat d={HEART} n={FAKE.like} color={BRAND} fill={BRAND} />
-            <Stat d={REPLY} n={FAKE.reply} color={MUTED} />
-            <Stat d={REBLOG} n={FAKE.reblog} color={BRAND} />
-            <Stat d={BOOKMARK} n={FAKE.bookmark} color={MUTED} />
+            <Stat d={HEART} n={FAKE.like} />
+            <Stat d={REPLY} n={FAKE.reply} />
+            <Stat d={REBLOG} n={FAKE.reblog} />
+            <Stat d={BOOKMARK} n={FAKE.bookmark} />
           </div>
         </div>
 
