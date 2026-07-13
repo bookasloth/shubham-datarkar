@@ -6,7 +6,7 @@ import type { FeedSort, FeedWindow } from "@/lib/community/types";
 import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { MeterGate } from "@/components/community/meter-gate";
-import { Composer } from "@/components/community/composer";
+import { ComposerFab } from "@/components/community/composer-fab";
 
 const SORTS = new Set<FeedSort>(["new", "hot", "top", "controversial"]);
 const WINDOWS = new Set<FeedWindow>(["all", "today", "week", "month", "year"]);
@@ -37,7 +37,7 @@ export default async function CommunityPage({
       <SortMenu sort={sort} window={window} />
 
       {canPost ? (
-        <Composer name={shellUser?.displayName ?? null} username={shellUser?.username ?? null} />
+        <ComposerFab name={shellUser?.displayName ?? null} username={shellUser?.username ?? null} />
       ) : (
         <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
           {user ? (
