@@ -4,7 +4,6 @@ import type { Metadata } from "next";
 import { buildMetadata } from "@/lib/seo";
 import { Button } from "@/components/ui/button";
 import { UpdateCard } from "@/components/support/update-card";
-import { ReactionBar } from "@/components/blog/reaction-bar";
 import { CommentSection } from "@/components/support/comment-section";
 import { getUpdateByCode } from "@/lib/support/updates";
 import { getComments } from "@/lib/support/comments";
@@ -51,8 +50,6 @@ export default async function UpdatePage({
           <Link href="/support">Support</Link>
         </Button>
       </div>
-
-      <ReactionBar slug={`update:${code}`} title="What did you think?" />
 
       <CommentSection
         code={code}
