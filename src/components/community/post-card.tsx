@@ -61,11 +61,15 @@ export async function PostCard({
             <BadgeTick badge={post.badge} />
             <span className="truncate text-muted-foreground">@{post.username}</span>
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
-            {viewerId && (
-              <span className="relative z-10 ml-auto">
-                <PostMenu postId={post.id} isOwner={viewerId === post.userId} isAdmin={isAdmin} />
-              </span>
-            )}
+            <span className="relative z-10 ml-auto">
+              <PostMenu
+                postId={post.id}
+                publicId={post.publicId}
+                isLoggedIn={Boolean(viewerId)}
+                isOwner={viewerId === post.userId}
+                isAdmin={isAdmin}
+              />
+            </span>
           </div>
 
           {post.body && (

@@ -2,7 +2,7 @@
 import { useOptimistic, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Heart, Egg, MessagesSquare, Repeat2, Send, Bookmark, Medal, Check } from "lucide-react";
+import { Heart, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react";
 import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
@@ -14,14 +14,6 @@ const ITEM =
 
 // Six sparks flung at 60° intervals when a post is liked.
 const SPARKS = [0, 60, 120, 180, 240, 300];
-
-// ponytail: cosmetic share tally (0–3), deterministic per post so it's stable
-// across re-renders. No backend — sharing copies a link, it isn't counted.
-function fakeShareCount(seed: string) {
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) | 0;
-  return Math.abs(h) % 4;
-}
 
 type Engagement = {
   vote: -1 | 0 | 1;
@@ -58,9 +50,7 @@ export function EngagementBar({ post }: { post: FeedPost }) {
   const [pending, start] = useTransition();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
-  const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const shareCount = fakeShareCount(post.publicId);
 
   // Base comes straight from props, so a router.refresh() (or any re-render with
   // fresh server data) is what resets the optimistic overlay. Seeding useState
@@ -119,17 +109,6 @@ export function EngagementBar({ post }: { post: FeedPost }) {
     });
   }
 
-  async function onShare() {
-    const url = `${window.location.origin}/community/p/${post.publicId}`;
-    try {
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-      setError("Couldn't copy the link.");
-    }
-  }
-
   // Fire the like burst only when the vote lands ON (not when toggling it off).
   const showLikeBurst = burst === "up" && state.vote === 1;
 
@@ -168,21 +147,6 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           {compactNumber(state.up)}
         </button>
 
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => onVote(-1)}
-          aria-label="Downvote"
-          aria-pressed={state.vote === -1}
-          title="Downvote"
-          className={cn(ITEM, state.vote === -1 && "text-foreground")}
-        >
-          <Egg
-            className={cn("size-4", state.vote === -1 && "fill-current", burst === "down" && "animate-wobble")}
-          />
-          {compactNumber(state.down)}
-        </button>
-
         <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments" title="Comments">
           <MessagesSquare className="size-4" />
           {compactNumber(post.replyCount)}
@@ -203,17 +167,6 @@ export function EngagementBar({ post }: { post: FeedPost }) {
 
         <button
           type="button"
-          onClick={onShare}
-          aria-label={copied ? "Link copied" : "Copy link"}
-          title="Copy link"
-          className={cn(ITEM, copied && "text-brand")}
-        >
-          {copied ? <Check className="size-4 animate-pop" /> : <Send className="size-4" />}
-          {compactNumber(shareCount)}
-        </button>
-
-        <button
-          type="button"
           disabled={pending}
           onClick={onBookmark}
           aria-label="Bookmark"
@@ -225,14 +178,9 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           {compactNumber(state.bookmarks)}
         </button>
 
-        <span
-          className={cn(ITEM, "cursor-not-allowed opacity-40")}
-          title="Awards coming soon"
-          aria-label="Awards, coming soon"
-        >
+        <Link href="/support" className={ITEM} aria-label="Award this post" title="Award">
           <Medal className="size-4" />
-          {compactNumber(0)}
-        </span>
+        </Link>
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
