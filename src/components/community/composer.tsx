@@ -1,5 +1,5 @@
 "use client";
-import { useActionState, useState } from "react";
+import { useActionState, useEffect, useState } from "react";
 import { X, Type, Image as ImageIcon, Video, BarChart3 } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
@@ -23,9 +23,11 @@ const inputCls =
 export function Composer({
   name,
   username,
+  onPosted,
 }: {
   name?: string | null;
   username?: string | null;
+  onPosted?: () => void;
 }) {
   const [type, setType] = useState<(typeof TABS)[number]["key"]>("text");
   const [body, setBody] = useState("");
@@ -37,6 +39,10 @@ export function Composer({
     undefined,
   );
   const over = body.length > MAX;
+
+  useEffect(() => {
+    if (state?.ok) onPosted?.();
+  }, [state?.ok, onPosted]);
 
   function setOption(i: number, value: string) {
     setOptions(options.map((o, idx) => (idx === i ? value : o)));
