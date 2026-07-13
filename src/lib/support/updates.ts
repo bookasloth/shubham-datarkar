@@ -92,6 +92,21 @@ export async function deleteUpdate(code: string): Promise<{ ok: boolean; error?:
   return error ? { ok: false, error: error.message } : { ok: true };
 }
 
+/**
+ * Admin: upload + set the image on an existing post. Used to give the auto
+ * thank-you posts (created without media) an image after the fact — the feed
+ * card already renders `media.url` for thankyou/image posts.
+ */
+export async function setUpdateImage(code: string, file: File): Promise<{ ok: boolean; error?: string }> {
+  const up = await uploadSupportImage(file, "updates");
+  if (!up.ok || !up.url) return { ok: false, error: up.error ?? "Upload failed." };
+  const { error } = await supabaseAdmin()
+    .from("support_updates")
+    .update({ media: { url: up.url } })
+    .eq("code", code);
+  return error ? { ok: false, error: error.message } : { ok: true };
+}
+
 /** Admin: upload an image to the support-media bucket, return its public URL. */
 export async function uploadSupportImage(
   file: File,

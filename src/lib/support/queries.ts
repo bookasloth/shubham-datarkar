@@ -18,6 +18,8 @@ export type Supporter = {
   lifetime: number;
   coffees: number;
   toffees: number;
+  /** Latest note the supporter left (shown for all, incl. anonymous). */
+  message: string | null;
 };
 
 export type RecentSupporter = { id: string; name: string | null };
@@ -36,20 +38,28 @@ function warn(where: string, e: unknown) {
   console.warn(`[support] ${where} failed; returning empty:`, (e as Error)?.message ?? e);
 }
 
+const SUPPORTER_COLS = "supporter_key,name,lifetime_amount,lifetime_coffees,lifetime_toffees";
+
 /** All supporters by lifetime contribution (desc) — feeds the tiered wall. */
 export async function getSupporters(): Promise<Supporter[]> {
   try {
-    const { data, error } = await supabaseAnon()
-      .from("support_lifetime")
-      .select("supporter_key,name,lifetime_amount,lifetime_coffees,lifetime_toffees")
-      .order("lifetime_amount", { ascending: false });
+    const sb = supabaseAnon();
+    // Prefer the note column; fall back to the base cols if the migration
+    // (20260714000006) hasn't run yet, so the wall never blanks mid-deploy.
+    // ponytail: two-shot select beats coupling the whole wall to migration order.
+    const q = (cols: string) =>
+      sb.from("support_lifetime").select(cols).order("lifetime_amount", { ascending: false });
+    let { data, error } = await q(`${SUPPORTER_COLS},message`);
+    if (error) ({ data, error } = await q(SUPPORTER_COLS));
     if (error) throw error;
-    return (data ?? []).map((r) => ({
+    const rows = (data ?? []) as unknown as Record<string, unknown>[];
+    return rows.map((r) => ({
       key: String(r.supporter_key),
       name: (r.name as string | null) ?? null,
       lifetime: Number(r.lifetime_amount ?? 0),
       coffees: Number(r.lifetime_coffees ?? 0),
       toffees: Number(r.lifetime_toffees ?? 0),
+      message: (r.message as string | null) ?? null,
     }));
   } catch (e) {
     warn("getSupporters", e);

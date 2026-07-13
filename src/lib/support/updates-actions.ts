@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/session";
 import { parseVideoUrl } from "./video";
-import { insertUpdate, deleteUpdate, uploadSupportImage, getThankyouImages, setThankyouImages } from "./updates";
+import { insertUpdate, deleteUpdate, setUpdateImage, uploadSupportImage, getThankyouImages, setThankyouImages } from "./updates";
 
 export type ActionState = { ok: boolean; message: string } | undefined;
 
@@ -44,6 +44,23 @@ function finish(res: { ok: boolean; error?: string }): ActionState {
   revalidatePath("/support/updates");
   revalidatePath("/admin/updates");
   return { ok: true, message: "Posted." };
+}
+
+/**
+ * Attach/replace the image on an existing post (admin list, plain form action).
+ * Matches the list's silent-on-error pattern; success is confirmed by the row
+ * thumbnail appearing after the page revalidates.
+ */
+export async function attachUpdateImage(formData: FormData): Promise<void> {
+  await requireAdmin();
+  const code = String(formData.get("code") ?? "");
+  const file = formData.get("image");
+  if (!code || !(file instanceof File) || file.size === 0) return;
+  const res = await setUpdateImage(code, file);
+  if (res.ok) {
+    revalidatePath("/support/updates");
+    revalidatePath("/admin/updates");
+  }
 }
 
 /** Delete a post by code (admin list). */

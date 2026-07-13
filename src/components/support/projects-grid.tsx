@@ -17,17 +17,17 @@ export function ProjectsGrid() {
     <div>
       <p className="text-center text-sm font-semibold">Projects I&apos;m working on</p>
 
-      <div className="mt-3 grid grid-cols-8 gap-1.5">
+      <div className="mt-3 grid grid-cols-5 gap-2">
         {supportProjects.map((proj) => (
           <button
             key={proj.key}
             type="button"
             onClick={() => setActive(proj)}
             aria-label={proj.name}
-            className="aspect-square overflow-hidden rounded-[3px] border border-border bg-muted/40 transition-ui hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="aspect-square rounded-btn border border-border bg-muted/40 p-2 transition-ui hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={proj.logo} alt="" className="size-full object-cover" />
+            <img src={proj.logo} alt="" className="size-full object-contain" />
           </button>
         ))}
       </div>
@@ -36,9 +36,9 @@ export function ProjectsGrid() {
         <DialogContent className="max-w-xs border-white/20 bg-card/60 text-center shadow-xl backdrop-blur-xl">
           {active && (
             <div className="flex flex-col items-center gap-3">
-              <span className="flex size-16 items-center justify-center overflow-hidden rounded-[3px] border border-border bg-muted/40">
+              <span className="flex size-20 items-center justify-center p-1">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={active.logo} alt="" className="size-full object-cover" />
+                <img src={active.logo} alt="" className="size-full object-contain" />
               </span>
               <DialogTitle>{active.name}</DialogTitle>
               <DialogDescription className="text-center">{active.blurb}</DialogDescription>
