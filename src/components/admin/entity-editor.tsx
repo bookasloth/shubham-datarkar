@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -71,9 +71,9 @@ export function EntityEditor({
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={!!jsonError}>
+        <SubmitButton disabled={!!jsonError}>
           Save
-        </Button>
+        </SubmitButton>
       </div>
     </form>
   );

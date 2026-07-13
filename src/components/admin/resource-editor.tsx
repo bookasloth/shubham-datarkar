@@ -5,7 +5,7 @@ import type { ContentBlock } from "@/lib/data/types";
 import type { Category, ResourceMeta, ResourceType } from "@/lib/resources/types";
 import { uploadMemberFile } from "@/lib/resources/actions";
 import { BlockEditor } from "@/components/admin/block-editor";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -254,7 +254,7 @@ export function ResourceEditor({
       </Field>
 
       <div className="flex gap-2">
-        <Button type="submit">Save</Button>
+        <SubmitButton>Save</SubmitButton>
       </div>
     </form>
   );

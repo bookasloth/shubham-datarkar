@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -10,6 +11,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
 import { CommandMenu } from "@/components/layout/command-menu";
 import { ChromeGate } from "@/components/layout/chrome-gate";
+import { NavProgress } from "@/components/layout/nav-progress";
 import { TorchOverlay } from "@/components/layout/torch-overlay";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -82,6 +84,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeProvider>
+          <Suspense fallback={null}>
+            <NavProgress />
+          </Suspense>
           <TorchOverlay />
           <ToastProvider>
             {/* Accessibility: skip directly to main content */}

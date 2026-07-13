@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { getPostByIdAdmin } from "@/lib/blog/queries";
 import { updatePost, deletePost } from "@/lib/blog/actions";
 import { PostEditor } from "@/components/admin/post-editor";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 
 export const dynamic = "force-dynamic";
 
@@ -19,9 +19,9 @@ export default async function EditPostPage({ params }: { params: Promise<{ id: s
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Edit post</h1>
         <form action={remove}>
-          <Button type="submit" variant="outline" size="sm">
+          <SubmitButton variant="outline" size="sm">
             Delete
-          </Button>
+          </SubmitButton>
         </form>
       </div>
       <PostEditor

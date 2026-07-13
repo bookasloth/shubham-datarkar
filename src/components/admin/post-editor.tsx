@@ -3,7 +3,7 @@
 import * as React from "react";
 import type { ContentBlock } from "@/lib/data/types";
 import { BlockEditor } from "@/components/admin/block-editor";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -147,7 +147,7 @@ export function PostEditor({
       </div>
 
       <div className="flex gap-2">
-        <Button type="submit">Save</Button>
+        <SubmitButton>Save</SubmitButton>
       </div>
     </form>
   );

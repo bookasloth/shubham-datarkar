@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { createUpdate, type ActionState } from "@/lib/support/updates-actions";
@@ -65,7 +65,7 @@ export function UpdateEditor() {
       )}
 
       <div>
-        <Button type="submit">Post</Button>
+        <SubmitButton>Post</SubmitButton>
       </div>
     </form>
   );

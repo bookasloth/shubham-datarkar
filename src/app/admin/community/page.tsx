@@ -8,7 +8,7 @@ import {
   saveAd,
 } from "@/lib/community/admin-actions";
 import { PageHeader } from "@/components/admin";
-import { Button } from "@/components/ui/button";
+import { SubmitButton } from "@/components/ui/submit-button";
 import { Input } from "@/components/ui/input";
 import { formatDate } from "@/lib/utils";
 
@@ -89,34 +89,34 @@ export default async function AdminCommunityPage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <form action={resolveReport.bind(null, r.report_id)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     Resolve
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={setPostHidden.bind(null, r.post_id, !r.post_hidden, "", false)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     {r.post_hidden ? "Unhide" : "Hide (silent)"}
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={setPostHidden.bind(null, r.post_id, true, "Violates community rules", true)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     Hide + notify
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={setPostDemoted.bind(null, r.post_id, !r.post_demoted)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     {r.post_demoted ? "Undemote" : "Demote"}
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={setUserBanned.bind(null, r.author_id, !r.author_banned, "Abuse")}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     {r.author_banned ? "Unban author" : "Ban author"}
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={adminDeletePost.bind(null, r.post_id)}>
-                  <Button type="submit" size="sm" variant="destructive">
+                  <SubmitButton size="sm" variant="destructive">
                     Delete post
-                  </Button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>
@@ -140,19 +140,19 @@ export default async function AdminCommunityPage() {
               </p>
               <div className="mt-3 flex flex-wrap gap-2">
                 <form action={setPostHidden.bind(null, p.id, !p.hidden, "", false)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     {p.hidden ? "Unhide" : "Hide"}
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={setPostDemoted.bind(null, p.id, !p.demoted)}>
-                  <Button type="submit" size="sm" variant="outline">
+                  <SubmitButton size="sm" variant="outline">
                     {p.demoted ? "Undemote" : "Demote"}
-                  </Button>
+                  </SubmitButton>
                 </form>
                 <form action={adminDeletePost.bind(null, p.id)}>
-                  <Button type="submit" size="sm" variant="destructive">
+                  <SubmitButton size="sm" variant="destructive">
                     Delete
-                  </Button>
+                  </SubmitButton>
                 </form>
               </div>
             </div>
@@ -177,9 +177,9 @@ export default async function AdminCommunityPage() {
               <label className="flex items-center gap-2 text-sm">
                 <input type="checkbox" name="active" defaultChecked={ad.active} /> Active
               </label>
-              <Button type="submit" size="sm">
+              <SubmitButton size="sm">
                 Save slot {slot}
-              </Button>
+              </SubmitButton>
             </form>
           );
         })}
