@@ -1,6 +1,7 @@
-import { seededShuffle } from "../daily";
+import { puzzleDateISO, seededShuffle } from "../daily";
 import { ANSWER_LIST } from "./word-list";
 import { VALID_GUESSES } from "./valid-guesses";
+import { THEME_DAYS, THEME_WORDS } from "./alfazy-theme-days";
 
 export const ALFAZY = { length: 5, maxGuesses: 6 } as const;
 
@@ -18,8 +19,16 @@ export type Tile = "correct" | "present" | "absent";
 const SHUFFLE_SEED = 0x5f3a91c7;
 const ANSWERS = seededShuffle(ANSWER_LIST, SHUFFLE_SEED);
 
-/** Deterministic answer for a puzzle number. Modulo cycles once the list runs out. */
+/** The themed word for a puzzle's IST date (Earth Day -> EARTH), if that date has one. */
+export function themeWordFor(puzzleNumber: number): string | undefined {
+  return THEME_DAYS[puzzleDateISO("alfazy", puzzleNumber).slice(5)];
+}
+
+/** Deterministic answer for a puzzle number. Themed observance days win; otherwise
+ *  the shuffled list, modulo-cycled once it runs out. */
 export function answerFor(puzzleNumber: number): string {
+  const theme = themeWordFor(puzzleNumber);
+  if (theme) return theme;
   const n = ANSWERS.length;
   return ANSWERS[((puzzleNumber % n) + n) % n];
 }
@@ -54,7 +63,7 @@ export const isWin = (tiles: Tile[]) => tiles.every((t) => t === "correct");
 export const isValidGuess = (guess: string) => {
   const g = guess.toLowerCase();
   if (!/^[a-z]{5}$/.test(g)) return false;
-  return VALID_GUESSES.has(g) || ANSWER_LIST.includes(g);
+  return VALID_GUESSES.has(g) || ANSWER_LIST.includes(g) || THEME_WORDS.has(g);
 };
 
 /** Spoiler-free emoji grid for sharing. */
