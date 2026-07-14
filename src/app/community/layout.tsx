@@ -12,7 +12,7 @@ export default async function CommunityLayout({ children }: { children: React.Re
   const user = await getShellUser();
   return (
     <AppShell user={user} rail={<CommunityRail />}>
-      <div className="min-w-0 border-x border-border">{children}</div>
+      <div className="min-w-0">{children}</div>
     </AppShell>
   );
 }
