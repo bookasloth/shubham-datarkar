@@ -10,7 +10,7 @@ export default async function ToolsPage() {
   const tools = await listLiveTools();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-6">
       <header>
         <h1 className="font-display text-2xl font-bold tracking-tight">Tools</h1>
         <p className="mt-1 text-sm text-muted-foreground">
@@ -19,7 +19,7 @@ export default async function ToolsPage() {
       </header>
 
       {tools.length ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-4 sm:grid-cols-2">
           {tools.map((t) => (
             <Link
               key={t.id}

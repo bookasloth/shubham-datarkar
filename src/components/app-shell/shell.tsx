@@ -15,7 +15,15 @@ import { ProfileMenu } from "./profile-menu";
 import { APP_NAV, activeSection, sectionHref } from "./nav-config";
 import type { ShellUser } from "@/lib/app-shell/user";
 
-export function AppShell({ user, children }: { user: ShellUser; children: React.ReactNode }) {
+export function AppShell({
+  user,
+  rail,
+  children,
+}: {
+  user: ShellUser;
+  rail?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   const pathname = usePathname() ?? "/";
   const [drawer, setDrawer] = React.useState(false);
   const signedIn = !!user;
@@ -83,14 +91,19 @@ export function AppShell({ user, children }: { user: ShellUser; children: React.
         </div>
       </header>
 
-      <div className="flex flex-1">
-        {/* Desktop sidebar */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 p-4 lg:block">
+      <div className="mx-auto flex w-full max-w-[1240px] flex-1 justify-center gap-6 px-4">
+        {/* Desktop sidebar — floating card, glued to the middle column */}
+        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 py-4 lg:block">
           <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
             <AppSidebar signedIn={signedIn} />
           </div>
         </aside>
-        <div className="min-w-0 flex-1 pb-24 lg:pb-10">{children}</div>
+        <main className="min-w-0 w-full max-w-[600px] pb-24 lg:pb-10">{children}</main>
+        {rail && (
+          <aside className="hidden w-80 shrink-0 py-4 xl:block">
+            <div className="sticky top-[4.5rem]">{rail}</div>
+          </aside>
+        )}
       </div>
 
       {/* Mobile bottom nav — one entry per section */}
