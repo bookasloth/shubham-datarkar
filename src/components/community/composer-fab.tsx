@@ -19,7 +19,7 @@ export function ComposerFab({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Compose post"
-        className="fixed bottom-6 left-6 z-40 flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition-ui hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+        className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-40 flex size-14 items-center justify-center rounded-full bg-foreground text-background shadow-lg transition-ui hover:bg-brand hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring sm:right-6 sm:bottom-6"
       >
         <Pencil className="size-6" />
       </button>
