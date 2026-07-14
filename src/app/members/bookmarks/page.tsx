@@ -10,7 +10,7 @@ export default async function BookmarksPage() {
   const resources = await getBookmarkedResources();
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <header>
         <h1 className="font-display text-2xl font-bold tracking-tight">Bookmarks</h1>
         <p className="mt-1 text-sm text-muted-foreground">

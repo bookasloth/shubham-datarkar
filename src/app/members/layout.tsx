@@ -12,7 +12,7 @@ export default async function MembersLayout({ children }: { children: React.Reac
   return (
     <div data-members>
       <AppShell user={user}>
-        <div className="px-4 pt-6 lg:px-8">{children}</div>
+        <div className="pt-6">{children}</div>
       </AppShell>
     </div>
   );

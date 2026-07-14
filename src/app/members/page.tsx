@@ -41,7 +41,7 @@ export default async function MembersDashboard() {
   ]);
 
   return (
-    <div className="mx-auto max-w-5xl space-y-10">
+    <div className="space-y-10">
       <header>
         <h1 className="font-display text-2xl font-bold tracking-tight">
           Welcome back, {name}
@@ -65,7 +65,7 @@ export default async function MembersDashboard() {
       {featured.length > 0 && (
         <section className="space-y-3">
           <SectionHeading title="Featured" href="/members/explore" />
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {featured.map((r) => (
               <ResourceCard key={r.id} resource={r} locked={isLocked(r, capabilities)} />
             ))}
@@ -140,7 +140,7 @@ export default async function MembersDashboard() {
       {trending.length > 0 && (
         <section className="space-y-3">
           <SectionHeading title="Trending" href="/members/explore?sort=popular" />
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid gap-4 sm:grid-cols-2">
             {trending.map((r) => (
               <ResourceCard key={r.id} resource={r} locked={isLocked(r, capabilities)} />
             ))}

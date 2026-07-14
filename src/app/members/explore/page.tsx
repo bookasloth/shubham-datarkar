@@ -70,7 +70,7 @@ export default async function ExplorePage({
   const hasNext = !q && resources.length === PAGE_SIZE;
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
+    <div className="space-y-6">
       <header>
         <h1 className="font-display text-2xl font-bold tracking-tight">
           {q ? `Results for "${q}"` : "Explore"}
