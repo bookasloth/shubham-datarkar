@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { getShellUser } from "@/lib/app-shell/user";
+import { requestNow } from "@/lib/request-now";
 import { AppShell } from "@/components/app-shell/shell";
 import AlfazyThemeProvider from "@/components/games/AlfazyThemeProvider";
 import { GameRail } from "@/components/games/rail/GameRail";
@@ -19,7 +20,7 @@ function activeGame(pathname: string): GameKey | null {
 }
 
 export default async function GamesLayout({ children }: { children: React.ReactNode }) {
-  const [user, hdrs] = await Promise.all([getShellUser(), headers()]);
+  const [user, hdrs, now] = await Promise.all([getShellUser(), headers(), requestNow()]);
   const path = hdrs.get("x-pathname") ?? "";
   const game = activeGame(path);
   // The Alfazy theme lives on CSS vars set by this provider's wrapper div. It has
@@ -27,7 +28,7 @@ export default async function GamesLayout({ children }: { children: React.ReactN
   // is inside it too; otherwise the Guide card's example tiles resolve
   // var(--alfazy-correct-base) to nothing and render transparent.
   return (
-    <AlfazyThemeProvider now={Date.now()}>
+    <AlfazyThemeProvider now={now}>
       <AppShell user={user} rail={game ? <GameRail game={game} /> : undefined}>
         <div data-games className="py-8">{children}</div>
       </AppShell>
