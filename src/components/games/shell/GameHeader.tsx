@@ -7,9 +7,12 @@ import * as React from "react";
  */
 export function GameHeader({ title, actions }: { title: React.ReactNode; actions?: React.ReactNode }) {
   return (
-    <div className="flex w-full items-center justify-between">
+    // The title is centred on the column (which is what the board is centred on)
+    // rather than pushed to the far-left edge by justify-between — with the actions
+    // overlaid on the right so their width can't pull the title off-centre.
+    <div className="relative flex w-full items-center justify-center">
       <h1 className="font-display text-xl font-bold">{title}</h1>
-      {actions && <div className="flex items-center gap-1">{actions}</div>}
+      {actions && <div className="absolute right-0 flex items-center gap-1">{actions}</div>}
     </div>
   );
 }
