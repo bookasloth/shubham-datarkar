@@ -1,4 +1,5 @@
 import { buildMetadata } from "@/lib/seo";
+import { requestNow } from "@/lib/request-now";
 import { listArchive } from "@/lib/games/archive-queries";
 import { getMemberContext } from "@/lib/members/session";
 import { can } from "@/lib/members/capabilities";
@@ -8,7 +9,7 @@ import { ArchiveHeader } from "@/components/games/ArchiveHeader";
 export const metadata = buildMetadata({ title: "Hit and Blow Archive", path: "/games/hit-and-blow/archive", noIndex: true });
 
 export default async function HitAndBlowArchivePage() {
-  const now = Date.now();
+  const now = await requestNow();
   const [entries, ctx] = await Promise.all([
     listArchive("hit_and_blow", now),
     getMemberContext(),
