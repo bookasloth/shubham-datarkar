@@ -68,20 +68,20 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
       secondary: fmtTime(r.time_ms),
     }));
   } else if (board === "streak") {
-    const data = await getStreakBoard(game);
-    head = ["#", "Name", "Username", "Current", "Best"];
+    // Re-sort client-side by max_streak — RPC returns current-streak order, but the
+    // board now surfaces best-streak only.
+    const data = (await getStreakBoard(game)).slice().sort((a, b) => b.max_streak - a.max_streak);
+    head = ["#", "Name", "Username", "Best streak"];
     rows = data.map((r, i) => [
       i + 1,
       r.display_name ?? r.username,
       `@${r.username}`,
-      r.current_streak,
       r.max_streak,
     ]);
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
-      primary: `${r.current_streak} streak`,
-      secondary: `best ${r.max_streak}`,
+      primary: `best ${r.max_streak}`,
     }));
   } else {
     const { start, end } = board === "weekly" ? weekBoundsIST() : monthBoundsIST();
