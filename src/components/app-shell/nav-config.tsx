@@ -2,7 +2,13 @@ import {
   Compass, Gamepad2, Users, UserRound, type LucideIcon,
 } from "lucide-react";
 
-export type AppNavItem = { label: string; href: string; gated?: boolean };
+export type AppNavItem = {
+  label: string;
+  href: string;
+  gated?: boolean;
+  /** Sub-links rendered under the item (games: Play / Archive / Leaderboard). */
+  children?: AppNavItem[];
+};
 export type SectionKey = "community" | "membership" | "game" | "account";
 export type AppNavSection = {
   key: SectionKey;
@@ -41,9 +47,33 @@ export const APP_NAV: AppNavSection[] = [
     label: "Game",
     icon: Gamepad2,
     items: [
-      { label: "Alfazy", href: "/games/alfazy" },
-      { label: "Hit and Blow", href: "/games/hit-and-blow" },
-      { label: "Integra", href: "/games/integra" },
+      {
+        label: "Alfazy",
+        href: "/games/alfazy",
+        children: [
+          { label: "Play", href: "/games/alfazy" },
+          { label: "Archive", href: "/games/alfazy/archive" },
+          { label: "Leaderboard", href: "/games/alfazy/leaderboard" },
+        ],
+      },
+      {
+        label: "Hit and Blow",
+        href: "/games/hit-and-blow",
+        children: [
+          { label: "Play", href: "/games/hit-and-blow" },
+          { label: "Archive", href: "/games/hit-and-blow/archive" },
+          { label: "Leaderboard", href: "/games/hit-and-blow/leaderboard" },
+        ],
+      },
+      {
+        label: "Integra",
+        href: "/games/integra",
+        children: [
+          { label: "Play", href: "/games/integra" },
+          { label: "Archive", href: "/games/integra/archive" },
+          { label: "Leaderboard", href: "/games/integra/leaderboard" },
+        ],
+      },
     ],
   },
   {
@@ -76,7 +106,9 @@ export function activeSection(pathname: string): SectionKey | null {
   return hit ? hit[0] : null;
 }
 
-const ALL_ITEMS = APP_NAV.flatMap((s) => s.items);
+// Flatten to LEAF links: a game group's href duplicates its Play child, so matching
+// against groups would tie on length and make the highlight ambiguous.
+const ALL_ITEMS = APP_NAV.flatMap((s) => s.items.flatMap((i) => i.children ?? [i]));
 
 export function activeChildHref(pathname: string): string | null {
   const m = ALL_ITEMS.filter((i) => matches(pathname, i.href)).sort(

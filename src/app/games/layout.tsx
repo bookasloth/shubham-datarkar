@@ -13,8 +13,10 @@ export const metadata: Metadata = {
 };
 
 function activeGame(pathname: string): GameKey | null {
-  // /games/{slug}/... — the middleware sets x-pathname so a server layout
-  // can pick a rail based on the sub-route without splitting the shell.
+  // /games/{slug}/... — the middleware sets x-pathname so the layout can decide
+  // WHETHER a rail exists (the hub has none, and an empty <aside> would still
+  // reserve its 320px column). GameRail picks WHICH game itself, client-side from
+  // usePathname, so switching games doesn't wait on this server round-trip.
   const slug = pathname.split("/")[2];
   return GAMES.find((g) => g.slug === slug)?.key ?? null;
 }
@@ -29,7 +31,7 @@ export default async function GamesLayout({ children }: { children: React.ReactN
   // var(--alfazy-correct-base) to nothing and render transparent.
   return (
     <AlfazyThemeProvider now={now}>
-      <AppShell user={user} rail={game ? <GameRail game={game} /> : undefined}>
+      <AppShell user={user} rail={game ? <GameRail /> : undefined}>
         <div data-games className="py-8">{children}</div>
       </AppShell>
     </AlfazyThemeProvider>
