@@ -6,12 +6,13 @@ import { puzzleNumberFor, puzzleDateISO } from "@/lib/daily";
 export type ArchiveEntry = {
   puzzleNumber: number;
   dateISO: string;
-  played: boolean;
+  solved: boolean;
 };
 
 /**
  * Every puzzle from today back to #0, newest first, with the signed-in user's
- * played flag. `game` is the game_key enum value used by game_results.
+ * solved flag. `game` is the game_key enum value used by game_results.
+ * "Solved" = won (fire icon in the UI). Lost/in-progress puzzles look unsolved.
  */
 export async function listArchive(
   game: "alfazy" | "hit_and_blow" | "integra",
@@ -23,19 +24,20 @@ export async function listArchive(
     data: { user },
   } = await supabase.auth.getUser();
 
-  const played = new Set<number>();
+  const solved = new Set<number>();
   if (user) {
     const { data } = await supabase
       .from("game_results")
       .select("puzzle_number")
       .eq("user_id", user.id)
-      .eq("game", game);
-    for (const r of data ?? []) played.add(r.puzzle_number as number);
+      .eq("game", game)
+      .eq("status", "won");
+    for (const r of data ?? []) solved.add(r.puzzle_number as number);
   }
 
   const entries: ArchiveEntry[] = [];
   for (let n = today; n >= 0; n--) {
-    entries.push({ puzzleNumber: n, dateISO: puzzleDateISO(n), played: played.has(n) });
+    entries.push({ puzzleNumber: n, dateISO: puzzleDateISO(n), solved: solved.has(n) });
   }
   return entries;
 }
