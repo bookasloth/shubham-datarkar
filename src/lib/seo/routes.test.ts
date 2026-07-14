@@ -80,9 +80,9 @@ describe("pageTypeOf", () => {
     }
   });
 
-  it("classifies per-game archive, results, and leaderboard as app", () => {
+  it("classifies per-game archive and leaderboard as app", () => {
     expect(pageTypeOf("/games/alfazy/archive")).toBe("app");
-    expect(pageTypeOf("/games/hit-and-blow/results")).toBe("app");
+    expect(pageTypeOf("/games/hit-and-blow/leaderboard")).toBe("app");
     expect(pageTypeOf("/games/integra/leaderboard")).toBe("app");
   });
 
