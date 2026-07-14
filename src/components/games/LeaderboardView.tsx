@@ -64,8 +64,6 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
-      primary: `${r.guesses}/${maxGuesses} tries`,
-      secondary: fmtTime(r.time_ms),
     }));
   } else if (board === "streak") {
     // Re-sort client-side by max_streak — RPC returns current-streak order, but the
@@ -81,7 +79,6 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
-      primary: `best ${r.max_streak}`,
     }));
   } else {
     const { start, end } = board === "weekly" ? weekBoundsIST() : monthBoundsIST();
@@ -97,13 +94,11 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
-      primary: `${r.solved} solved`,
-      secondary: `${r.total_guesses} tries`,
     }));
   }
 
-  // Ranks 4+ go in the table; the podium already shows the top 3.
-  const tableRows = rows.slice(3);
+  // Podium shows the top-3 names only — every rank's stats live in the table.
+  const tableRows = rows;
 
   return (
     <div className="space-y-6">
