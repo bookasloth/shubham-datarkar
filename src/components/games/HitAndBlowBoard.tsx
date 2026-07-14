@@ -7,6 +7,7 @@ import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
+import { FireStreak } from "@/components/games/shell/FireStreak";
 import { WinBurst } from "@/components/games/board/WinBurst";
 import { triggerCls } from "@/components/games/modal-trigger";
 import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
@@ -99,7 +100,15 @@ export default function HitAndBlowBoard({
   return (
     <GameStage>
       <GameHeader
-        title={<>Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}</>}
+        title={
+          <span className="inline-flex items-center gap-2">
+            Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}
+            <FireStreak
+              count={stats?.currentStreak ?? 0}
+              justWon={!isArchive && status === "won"}
+            />
+          </span>
+        }
         actions={
           <>
             <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>

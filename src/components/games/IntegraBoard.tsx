@@ -7,6 +7,7 @@ import { submitResult } from "@/lib/games/submit-result";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
+import { FireStreak } from "@/components/games/shell/FireStreak";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst } from "@/components/games/board/WinBurst";
@@ -151,7 +152,15 @@ export default function IntegraBoard({
   return (
     <GameStage className={colorblind ? "integra-cb" : undefined}>
       <GameHeader
-        title={<>Integra #{puzzleNumber}{isArchive && " (archive)"}</>}
+        title={
+          <span className="inline-flex items-center gap-2">
+            Integra #{puzzleNumber}{isArchive && " (archive)"}
+            <FireStreak
+              count={stats?.currentStreak ?? 0}
+              justWon={!isArchive && status === "won"}
+            />
+          </span>
+        }
         actions={
           <>
             <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>

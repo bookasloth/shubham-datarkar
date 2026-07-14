@@ -6,6 +6,11 @@ import { createServerClient } from "@supabase/ssr";
  * Optimistic auth gate only — pages re-verify via requireAdmin().
  */
 export async function proxy(request: NextRequest) {
+  // Expose the incoming pathname to server components (via headers()) so a
+  // section layout can pick a rail based on the sub-route without splitting
+  // the shell. Set on the request headers so downstream RSC reads it.
+  request.headers.set("x-pathname", request.nextUrl.pathname);
+
   let response = NextResponse.next({ request });
 
   const supabase = createServerClient(
@@ -104,8 +109,7 @@ export const config = {
   matcher: [
     "/admin/:path*",
     "/community/p/:path*",
-    "/games/login",
-    "/games/profile/:path*",
+    "/games/:path*",
     "/members/:path*",
     "/tools/kalamai/:path*",
   ],
