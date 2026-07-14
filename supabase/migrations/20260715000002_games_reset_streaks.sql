@@ -1,0 +1,32 @@
+-- supabase/migrations/20260715000002_games_reset_streaks.sql
+--
+-- Follow-up to 20260715000001. That migration wiped game_results, alfazy_puzzles
+-- and integra_puzzles, but MISSED public.streaks — a denormalized aggregate that
+-- submit_result maintains alongside game_results, and that get_streak_board reads
+-- directly. So the streak leaderboard kept serving pre-reset streaks even though
+-- every underlying result row was gone.
+--
+-- Three ways the surviving rows are now wrong:
+--
+--   current_streak / max_streak   Pre-reset streaks, still shown on the streak
+--                                 leaderboard and in per-game stats.
+--
+--   total_played / total_won      Pre-reset counts. submit_result increments these,
+--                                 so they would keep climbing on top of an empty
+--                                 game_results — the hub would report plays that no
+--                                 longer exist anywhere.
+--
+--   last_solved_puzzle            Holds OLD GLOBAL puzzle numbers (~558). Streak
+--                                 continuity is `last_solved_puzzle = p_puzzle - 1`,
+--                                 and the new per-game numbers are small (Alfazy ~75),
+--                                 so continuity could never match again: the streak
+--                                 would reset to 1 on the next win while max_streak
+--                                 stayed inflated forever.
+--
+-- DESTRUCTIVE, no undo — but it is the other half of the reset you already ran.
+-- Without it, 20260715000001 leaves the games in an inconsistent state.
+--
+-- profiles is deliberately NOT touched: it is identity (usernames), not results.
+-- submit_result re-creates a streaks row on first play, so nothing needs seeding.
+
+delete from public.streaks;
