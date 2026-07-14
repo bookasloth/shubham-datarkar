@@ -1,10 +1,11 @@
 import "server-only";
 
 import Link from "next/link";
-import { HelpCircle, BarChart3, Gamepad2, ArrowRight } from "lucide-react";
+import { HelpCircle, BarChart3, Gamepad2, Settings, ArrowRight } from "lucide-react";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 import { HELP } from "@/lib/games/help-content";
 import { getMyGameStats, getMyAvgSolveTime } from "@/lib/games/profile-queries";
+import { GameSettingsCard } from "@/components/games/rail/GameSettingsCard";
 
 function Card({
   icon,
@@ -58,7 +59,7 @@ async function StatsCard({ game }: { game: GameKey }) {
 
   if (!stats) {
     return (
-      <Card icon={<BarChart3 className="size-4" />} title="Today's Stats">
+      <Card icon={<BarChart3 className="size-4" />} title="Stats">
         <p className="text-sm text-muted-foreground">
           Sign in to track your win rate, solve time, and streak.
         </p>
@@ -74,31 +75,30 @@ async function StatsCard({ game }: { game: GameKey }) {
 
   const winPct = stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
   return (
-    <Card icon={<BarChart3 className="size-4" />} title="Today's Stats">
+    <Card icon={<BarChart3 className="size-4" />} title="Stats">
       <div className="space-y-2">
         <StatRow label="Win percentage" value={`${winPct}%`} tone="green" />
         <StatRow label="Avg solve time" value={avgMs != null ? fmtMs(avgMs) : "—"} tone="purple" />
         <StatRow label="Games played" value={String(stats.played)} />
         <StatRow label="Current streak" value={String(stats.currentStreak)} tone="orange" />
+        <StatRow label="Best streak" value={String(stats.maxStreak)} />
       </div>
     </Card>
   );
 }
 
-function HowToPlayCard({ game }: { game: GameKey }) {
+function GuideCard({ game }: { game: GameKey }) {
   return (
-    <Card icon={<HelpCircle className="size-4" />} title="How to Play">
-      <div className="space-y-3 text-sm text-muted-foreground">
-        {HELP[game].intro}
-      </div>
+    <Card icon={<HelpCircle className="size-4" />} title="Guide">
+      {HELP[game].body}
     </Card>
   );
 }
 
-function TileGuideCard({ game }: { game: GameKey }) {
+function SettingsSection({ game }: { game: GameKey }) {
   return (
-    <Card icon={<span className="inline-block size-4 rounded-btn bg-brand" />} title="Tile Guide">
-      {HELP[game].tileGuide}
+    <Card icon={<Settings className="size-4" />} title="Settings">
+      <GameSettingsCard game={game} />
     </Card>
   );
 }
@@ -106,7 +106,7 @@ function TileGuideCard({ game }: { game: GameKey }) {
 function OtherGamesCard({ game }: { game: GameKey }) {
   const others = GAMES.filter((g) => g.key !== game);
   return (
-    <Card icon={<Gamepad2 className="size-4" />} title="Today's puzzles">
+    <Card icon={<Gamepad2 className="size-4" />} title="Other games">
       <ul className="space-y-2">
         {others.map((g) => (
           <li key={g.key}>
@@ -132,9 +132,9 @@ function OtherGamesCard({ game }: { game: GameKey }) {
 export async function GameRail({ game }: { game: GameKey }) {
   return (
     <div className="space-y-4">
-      <HowToPlayCard game={game} />
-      <TileGuideCard game={game} />
       <StatsCard game={game} />
+      <GuideCard game={game} />
+      <SettingsSection game={game} />
       <OtherGamesCard game={game} />
     </div>
   );

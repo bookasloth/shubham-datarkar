@@ -11,10 +11,7 @@ import { FireStreak } from "@/components/games/shell/FireStreak";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst } from "@/components/games/board/WinBurst";
-import { triggerCls } from "@/components/games/modal-trigger";
-import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
-import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
-import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
@@ -57,7 +54,6 @@ export default function IntegraBoard({
   const [shakeCount, setShakeCount] = useState(0);
   const [justWon, setJustWon] = useState(false);
   const [colorblind, setColorblind] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -68,8 +64,21 @@ export default function IntegraBoard({
       setGuesses(s.guesses);
       setStatus(s.status);
     }
-    if (typeof window !== "undefined") setColorblind(localStorage.getItem("integra:colorblind") === "1");
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("integra:colorblind");
+      setColorblind(saved === "1" || saved === "true");
+    }
   }, [storageKey]);
+
+  // Sync colour-blind toggle from the rail's Settings card in the same tab.
+  useEffect(() => {
+    function onSetting(e: Event) {
+      const d = (e as CustomEvent).detail as { key?: string; value?: string } | undefined;
+      if (d?.key === "integra:colorblind") setColorblind(d.value === "1" || d.value === "true");
+    }
+    window.addEventListener("game:setting", onSetting);
+    return () => window.removeEventListener("game:setting", onSetting);
+  }, []);
 
   useEffect(() => {
     if (guesses.length || status !== "playing")
@@ -86,11 +95,6 @@ export default function IntegraBoard({
   }, [isArchive, status, user, guesses, puzzleNumber]);
 
   const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
-
-  function setColorblindPref(v: boolean) {
-    setColorblind(v);
-    localStorage.setItem("integra:colorblind", v ? "1" : "0");
-  }
 
   function submit() {
     if (status !== "playing") return;
@@ -161,20 +165,12 @@ export default function IntegraBoard({
             />
           </span>
         }
-        actions={
-          <>
-            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
-            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/integra" />
-            <GameSettingsModal game="integra" colorblind={colorblind} onColorblindChange={setColorblindPref} />
-          </>
-        }
       />
 
       <GameWelcome
         game="integra"
         greeting="Welcome to Integra"
-        howto="Guess the hidden equation in six tries."
-        onHowTo={() => setHelpOpen(true)}
+        howto="Guess the hidden equation in six tries. See the Guide in the sidebar."
       />
 
       {/* grid — fluid so 7 tiles fit any phone width */}
@@ -245,7 +241,6 @@ export default function IntegraBoard({
         />
       )}
 
-      <GameHelpModal game="integra" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );

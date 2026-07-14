@@ -11,6 +11,14 @@ export type StatRow = {
   total_won: number;
 };
 
+/** Board-side stats shape, exposed for the game boards' prop typing. */
+export type GameStats = {
+  played: number;
+  won: number;
+  currentStreak: number;
+  maxStreak: number;
+};
+
 export async function getMyStats(): Promise<StatRow[]> {
   const user = await getGameUser();
   if (!user) return [];
@@ -27,7 +35,7 @@ export async function getMyStats(): Promise<StatRow[]> {
 /** One game's stats for the current user in the board/modal shape, or null if none/anon. */
 export async function getMyGameStats(
   game: StatRow["game"],
-): Promise<{ played: number; won: number; currentStreak: number; maxStreak: number } | null> {
+): Promise<GameStats | null> {
   const rows = await getMyStats();
   const r = rows.find((s) => s.game === game);
   if (!r) return null;

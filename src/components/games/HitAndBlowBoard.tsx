@@ -9,10 +9,7 @@ import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
 import { WinBurst } from "@/components/games/board/WinBurst";
-import { triggerCls } from "@/components/games/modal-trigger";
-import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
-import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
-import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
@@ -36,7 +33,6 @@ export default function HitAndBlowBoard({
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
   const [justWon, setJustWon] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -109,20 +105,12 @@ export default function HitAndBlowBoard({
             />
           </span>
         }
-        actions={
-          <>
-            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
-            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/hit-and-blow" />
-            <GameSettingsModal game="hit-and-blow" />
-          </>
-        }
       />
 
       <GameWelcome
         game="hit-and-blow"
         greeting="Welcome to Hit and Blow"
-        howto="Crack the 4-digit code in nine tries."
-        onHowTo={() => setHelpOpen(true)}
+        howto="Crack the 4-digit code in nine tries. See the Guide in the sidebar."
       />
 
       <div className="w-full max-w-xs space-y-1.5">
@@ -182,7 +170,6 @@ export default function HitAndBlowBoard({
         />
       )}
 
-      <GameHelpModal game="hit_and_blow" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );

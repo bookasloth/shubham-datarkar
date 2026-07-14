@@ -12,10 +12,7 @@ import { FireStreak } from "@/components/games/shell/FireStreak";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst } from "@/components/games/board/WinBurst";
-import { triggerCls } from "@/components/games/modal-trigger";
-import { GameHelpModal } from "@/components/games/shell/GameHelpModal";
-import { GameStatsModal, type GameStats } from "@/components/games/shell/GameStatsModal";
-import { GameSettingsModal } from "@/components/games/shell/GameSettingsModal";
+import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
 
@@ -43,7 +40,7 @@ export default function AlfazyBoard({
   stats: GameStats | null;
 }) {
   const storageKey = `alfazy:${puzzleNumber}`;
-  const { colorblind, setColorblind } = useAlfazyTheme();
+  const { colorblind } = useAlfazyTheme();
 
   const [guesses, setGuesses] = useState<string[]>([]);
   const [current, setCurrent] = useState("");
@@ -51,7 +48,6 @@ export default function AlfazyBoard({
   const [toast, setToast] = useState("");
   const [shakeCount, setShakeCount] = useState(0);
   const [justWon, setJustWon] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
@@ -152,20 +148,12 @@ export default function AlfazyBoard({
             />
           </span>
         }
-        actions={
-          <>
-            <button onClick={() => setHelpOpen(true)} className={triggerCls}>Help</button>
-            <GameStatsModal stats={stats} authed={!!user} loginNext="/games/alfazy" />
-            <GameSettingsModal game="alfazy" colorblind={colorblind} onColorblindChange={setColorblind} />
-          </>
-        }
       />
 
       <GameWelcome
         game="alfazy"
         greeting="Welcome to Alfazy"
-        howto="Guess the hidden 5-letter word in six tries."
-        onHowTo={() => setHelpOpen(true)}
+        howto="Guess the hidden 5-letter word in six tries. See the Guide in the sidebar."
       />
 
       {/* grid */}
@@ -231,7 +219,6 @@ export default function AlfazyBoard({
         />
       )}
 
-      <GameHelpModal game="alfazy" open={helpOpen} onOpenChange={setHelpOpen} />
       {justWon && <WinBurst />}
     </GameStage>
   );

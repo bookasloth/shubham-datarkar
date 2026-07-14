@@ -29,7 +29,13 @@ export default function AlfazyThemeProvider({
 
   useEffect(() => {
     const saved = localStorage.getItem("alfazy:colorblind");
-    if (saved === "true") setColorblind(true);
+    if (saved === "true" || saved === "1") setColorblind(true);
+    function onSetting(e: Event) {
+      const d = (e as CustomEvent).detail as { key?: string; value?: string } | undefined;
+      if (d?.key === "alfazy:colorblind") setColorblind(d.value === "1" || d.value === "true");
+    }
+    window.addEventListener("game:setting", onSetting);
+    return () => window.removeEventListener("game:setting", onSetting);
   }, []);
 
   useEffect(() => {
