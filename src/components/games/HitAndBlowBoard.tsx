@@ -96,6 +96,7 @@ export default function HitAndBlowBoard({
   return (
     <GameStage>
       <GameHeader
+        slug="hit-and-blow"
         title={
           <span className="inline-flex items-center gap-2">
             Hit and Blow #{puzzleNumber}{isArchive && " (archive)"}

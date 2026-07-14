@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { ArrowRight, Flame } from "lucide-react";
+import { Flame } from "lucide-react";
 import { puzzleNumberFor } from "@/lib/daily";
-import { GAMES } from "@/lib/games/registry";
+import { GAMES, gameIcon } from "@/lib/games/registry";
 import { getMyStats } from "@/lib/games/profile-queries";
 import PuzzleCountdown from "@/components/games/PuzzleCountdown";
 
@@ -33,37 +33,47 @@ export default async function GamesHub() {
         </div>
       )}
 
-      <div className="grid gap-3">
+      <div className="grid gap-3 sm:grid-cols-2">
         {GAMES.map((g) => {
           const s = byGame.get(g.key);
           const streak = s?.current_streak ?? 0;
+          const played = s?.total_played ?? 0;
           return (
             <Link
               key={g.slug}
               href={`/games/${g.slug}`}
               data-game={g.slug}
-              className="group flex items-center gap-4 rounded-card border border-border bg-card p-5 transition-ui hover:border-brand hover:shadow-sm"
+              className="group flex items-stretch overflow-hidden rounded-card border border-border bg-card transition-ui hover:border-brand hover:shadow-sm"
             >
-              <span className="size-2.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
-              <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 p-4">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  {streak > 0 ? (
+                    <span className="inline-flex items-center gap-1" aria-label={`${streak}-day streak`}>
+                      <Flame className="size-3.5 text-brand" aria-hidden="true" />
+                      <span className="tabular-nums">{streak}-day streak</span>
+                    </span>
+                  ) : (
+                    <span>{played > 0 ? `${played} played` : g.tag}</span>
+                  )}
+                </div>
                 <div className="font-display text-lg font-semibold">
                   {g.name}{" "}
-                  <span className="text-sm font-normal text-muted-foreground tabular-nums">
+                  <span className="font-normal text-muted-foreground tabular-nums">
                     #{puzzleNumberFor(g.key)}
                   </span>
                 </div>
-                <div className="text-sm text-muted-foreground">{g.tag}</div>
               </div>
-              {streak > 0 && (
-                <span
-                  className="inline-flex items-center gap-1 rounded-btn bg-muted px-2 py-0.5 text-xs font-medium text-foreground"
-                  aria-label={`${streak}-day streak`}
-                >
-                  <Flame className="size-3.5 text-brand" aria-hidden="true" />
-                  <span className="tabular-nums">{streak}</span>
-                </span>
-              )}
-              <ArrowRight className="size-4 shrink-0 text-muted-foreground transition-ui group-hover:translate-x-0.5 group-hover:text-foreground" />
+              <div className={`flex w-24 shrink-0 items-center justify-center ${g.tint}`}>
+                {/* plain <img>: CDN host is CSP-allowed but not a next/image remote pattern */}
+                <img
+                  src={gameIcon(g.slug)}
+                  alt=""
+                  aria-hidden="true"
+                  width={48}
+                  height={48}
+                  className="size-12 rounded-btn transition-ui group-hover:scale-105"
+                />
+              </div>
             </Link>
           );
         })}

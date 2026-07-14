@@ -156,6 +156,7 @@ export default function IntegraBoard({
   return (
     <GameStage className={colorblind ? "integra-cb" : undefined}>
       <GameHeader
+        slug="integra"
         title={
           <span className="inline-flex items-center gap-2">
             Integra #{puzzleNumber}{isArchive && " (archive)"}
