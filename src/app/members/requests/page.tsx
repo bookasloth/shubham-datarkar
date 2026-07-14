@@ -7,11 +7,11 @@ import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({ title: "Requests", path: "/members/requests", noIndex: true });
 
+// No `declined` entry — getMyRequests filters those out, so they never render here.
 const STATUS_STYLES: Record<string, string> = {
   open: "bg-accent text-muted-foreground",
   planned: "bg-foreground/10 text-foreground",
   shipped: "bg-success/15 text-success",
-  declined: "bg-warning/15 text-warning",
 };
 
 export default async function RequestsPage() {
