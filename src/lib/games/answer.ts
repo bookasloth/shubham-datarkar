@@ -2,7 +2,10 @@ import "server-only";
 
 import { supabaseAnon } from "@/lib/supabase/server";
 import { secretFor } from "@/lib/games/hit-and-blow";
-import { answerFor as alfazyAnswerFor } from "@/lib/games/alfazy";
+import {
+  answerFor as alfazyAnswerFor,
+  themeWordFor as alfazyThemeWordFor,
+} from "@/lib/games/alfazy";
 import { answerFor as integraAnswerFor } from "@/lib/games/integra";
 import type { GameKey } from "@/lib/games/registry";
 
@@ -38,13 +41,15 @@ export async function resolveAnswers(
     return out;
   }
 
-  // alfazy: seed with the formula, then let DB overrides win.
+  // alfazy: seed with the formula (which already applies themed observance days),
+  // then let DB overrides win — except on a themed day, where the theme word wins.
   for (const n of puzzleNumbers) out.set(n, alfazyAnswerFor(n));
   const { data } = await supabaseAnon()
     .from("alfazy_puzzles")
     .select("puzzle_number, word")
     .in("puzzle_number", puzzleNumbers);
   for (const row of (data ?? []) as { puzzle_number: number; word: string }[]) {
+    if (alfazyThemeWordFor(row.puzzle_number)) continue;
     out.set(row.puzzle_number, row.word);
   }
   return out;
