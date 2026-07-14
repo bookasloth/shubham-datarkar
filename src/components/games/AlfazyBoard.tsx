@@ -139,6 +139,7 @@ export default function AlfazyBoard({
   return (
     <GameStage>
       <GameHeader
+        slug="alfazy"
         title={
           <span className="inline-flex items-center gap-2">
             Alfazy #{puzzleNumber}{isArchive && " (archive)"}
