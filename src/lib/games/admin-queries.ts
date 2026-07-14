@@ -32,7 +32,6 @@ export type StreakRow = {
  *  the page renders an explicit error state (never a misleading "0"). */
 export async function getGameStats(): Promise<GameStat[]> {
   const supabase = supabaseAdmin();
-  const today = puzzleNumberFor();
 
   const stats = await Promise.all(
     GAMES.map(async (g): Promise<GameStat> => {
@@ -65,7 +64,8 @@ export async function getGameStats(): Promise<GameStat[]> {
         players,
         plays: plays.count ?? 0,
         wins: wins.count ?? 0,
-        todayPuzzle: today,
+        // Each game numbers from its own launch day, so this differs per row.
+        todayPuzzle: puzzleNumberFor(g.key),
       };
     }),
   );
@@ -201,7 +201,7 @@ export type IntegraEquationRow = {
  *  has rows to edit even with an empty override table. */
 export async function getUpcomingIntegraEquations(days = 30): Promise<IntegraEquationRow[]> {
   const supabase = await supabaseAuthServer();
-  const today = puzzleNumberFor();
+  const today = puzzleNumberFor("integra");
   const { data, error } = await supabase.rpc("admin_list_integra_puzzles", { p_from: today });
   if (error) throw new Error(error.message);
   const overrides = new Map<number, string>();
@@ -226,7 +226,7 @@ export type AlfazyWordRow = { puzzleNumber: number; word: string; editable: bool
 /** Upcoming Alfazy puzzle words for the admin editor. Wraps the admin_list_alfazy_puzzles RPC. */
 export async function getUpcomingAlfazyWords(): Promise<AlfazyWordRow[]> {
   const supabase = await supabaseAuthServer();
-  const today = puzzleNumberFor();
+  const today = puzzleNumberFor("alfazy");
   const { data, error } = await supabase.rpc("admin_list_alfazy_puzzles", { p_from: today });
   if (error) throw new Error(error.message);
   return ((data as { puzzle_number: number; word: string }[]) ?? []).map((r) => ({

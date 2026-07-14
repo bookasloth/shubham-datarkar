@@ -4,7 +4,8 @@ import { puzzleNumberFor } from "@/lib/daily";
 import { answerFor } from "./alfazy";
 import { secretFor } from "./hit-and-blow";
 
-const today = puzzleNumberFor();
+const today = puzzleNumberFor("alfazy");
+const hbToday = puzzleNumberFor("hit_and_blow");
 
 describe("validateResult — alfazy", () => {
   it("accepts a genuine win on today's puzzle (last guess equals the answer)", () => {
@@ -80,23 +81,23 @@ describe("validateResult — alfazy", () => {
 });
 
 describe("validateResult — hit_and_blow", () => {
-  it("accepts a genuine win on today's puzzle (last guess equals the secret)", () => {
+  it("accepts a genuine win on hbToday's puzzle (last guess equals the secret)", () => {
     const r = validateResult({
       game: "hit_and_blow",
-      puzzleNumber: today,
+      puzzleNumber: hbToday,
       status: "won",
-      guesses: [secretFor(today)],
+      guesses: [secretFor(hbToday)],
       timeMs: 1000,
     });
     expect(r.valid).toBe(true);
   });
 
   it("rejects a claimed win whose guess never matches the secret", () => {
-    const secret = secretFor(today);
+    const secret = secretFor(hbToday);
     const guess = ["0123", "1234", "2345"].find((g) => g !== secret)!;
     const r = validateResult({
       game: "hit_and_blow",
-      puzzleNumber: today,
+      puzzleNumber: hbToday,
       status: "won",
       guesses: [guess],
       timeMs: 1000,
@@ -105,11 +106,11 @@ describe("validateResult — hit_and_blow", () => {
   });
 
   it("rejects a win-then-padded-loss (premature win hidden behind a later losing guess)", () => {
-    const secret = secretFor(today);
+    const secret = secretFor(hbToday);
     const filler = ["0123", "1234", "2345"].find((g) => g !== secret)!;
     const r = validateResult({
       game: "hit_and_blow",
-      puzzleNumber: today,
+      puzzleNumber: hbToday,
       status: "lost",
       guesses: [secret, filler],
       timeMs: 1000,

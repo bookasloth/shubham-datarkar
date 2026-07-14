@@ -19,7 +19,7 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
   const { error } = await supabase.rpc("submit_result", {
     p_game: input.game,
     p_puzzle: input.puzzleNumber,
-    p_date: puzzleDateISO(input.puzzleNumber),
+    p_date: puzzleDateISO(input.game, input.puzzleNumber),
     p_status: input.status,
     p_guesses: input.guesses.length,
     p_guess_data: input.guesses,

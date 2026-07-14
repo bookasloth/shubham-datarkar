@@ -1,11 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { resolveTheme } from "./themes";
 
-// Helper: convert IST date string to a UTC timestamp that the puzzle engine
-// will resolve to that IST date. IST = UTC+5:30, epoch = 2025-01-01 00:00 IST.
-const EPOCH_UTC_MS = Date.UTC(2024, 11, 31, 18, 30, 0);
-const DAY_MS = 86_400_000;
-
+// Helper: convert an IST date string to a UTC timestamp that the daily engine
+// resolves back to that IST date. IST = UTC+5:30. Themes key off the calendar
+// date (todayISO), not any game's puzzle number, so no epoch is involved.
 function istDateToTimestamp(iso: string): number {
   const [y, m, d] = iso.split("-").map(Number);
   const utcMs = Date.UTC(y, m - 1, d) - 5.5 * 60 * 60 * 1000;

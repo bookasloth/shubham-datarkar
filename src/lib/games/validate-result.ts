@@ -32,7 +32,8 @@ export function validateResult(input: SubmitInput): { valid: boolean } {
   // Only the live (today's) puzzle is submittable. Blocks a player from POSTing
   // past puzzle numbers with re-derived answers to farm/backfill streaks —
   // the client `isArchive` guard is UX only; this is the real boundary.
-  if (!isToday(puzzleNumber)) return { valid: false };
+  // Per-game: each game numbers from its own launch day, so "today" differs per game.
+  if (!isToday(game, puzzleNumber)) return { valid: false };
 
   if (guesses.length === 0) return { valid: false };
 

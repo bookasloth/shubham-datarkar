@@ -1,4 +1,4 @@
-import { puzzleDateISO, puzzleNumberFor } from "@/lib/daily";
+import { todayISO } from "@/lib/daily";
 
 /** Parse a YYYY-MM-DD as a UTC-midnight Date (calendar math only, no TZ drift). */
 function fromISO(iso: string): Date {
@@ -8,9 +8,10 @@ function toISO(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** Today's IST calendar date as YYYY-MM-DD. */
+/** Today's IST calendar date as YYYY-MM-DD. Leaderboard windows span all games,
+ *  so this is deliberately game-agnostic — not any one game's puzzle numbering. */
 function todayIST(now: number): string {
-  return puzzleDateISO(puzzleNumberFor(now));
+  return todayISO(now);
 }
 
 /** Monday–Sunday (YYYY-MM-DD) of the IST week containing `now`. */

@@ -1,3 +1,4 @@
+import { seededShuffle } from "../daily";
 import { ANSWER_LIST } from "./word-list";
 import { VALID_GUESSES } from "./valid-guesses";
 
@@ -5,10 +6,22 @@ export const ALFAZY = { length: 5, maxGuesses: 6 } as const;
 
 export type Tile = "correct" | "present" | "absent";
 
-/** Deterministic answer for a puzzle number. List is pre-frozen; modulo cycles. */
+/**
+ * ANSWER_LIST is stored alphabetically, so indexing it directly served the daily
+ * word in alphabetical order — trivially predictable from one day to the next.
+ * Shuffle once at load with a fixed seed: deterministic (same word for everyone,
+ * server and client) but unguessable from yesterday's answer.
+ *
+ * Changing SHUFFLE_SEED re-scrambles every future puzzle. Only do that alongside
+ * a results wipe — it changes the answer for already-played puzzle numbers.
+ */
+const SHUFFLE_SEED = 0x5f3a91c7;
+const ANSWERS = seededShuffle(ANSWER_LIST, SHUFFLE_SEED);
+
+/** Deterministic answer for a puzzle number. Modulo cycles once the list runs out. */
 export function answerFor(puzzleNumber: number): string {
-  const n = ANSWER_LIST.length;
-  return ANSWER_LIST[((puzzleNumber % n) + n) % n];
+  const n = ANSWERS.length;
+  return ANSWERS[((puzzleNumber % n) + n) % n];
 }
 
 /**

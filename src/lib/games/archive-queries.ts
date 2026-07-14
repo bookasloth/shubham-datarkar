@@ -18,7 +18,7 @@ export async function listArchive(
   game: "alfazy" | "hit_and_blow" | "integra",
   now: number = Date.now(),
 ): Promise<ArchiveEntry[]> {
-  const today = puzzleNumberFor(now);
+  const today = puzzleNumberFor(game, now);
   const supabase = await supabaseAuthServer();
   const {
     data: { user },
@@ -37,7 +37,7 @@ export async function listArchive(
 
   const entries: ArchiveEntry[] = [];
   for (let n = today; n >= 0; n--) {
-    entries.push({ puzzleNumber: n, dateISO: puzzleDateISO(n), solved: solved.has(n) });
+    entries.push({ puzzleNumber: n, dateISO: puzzleDateISO(game, n), solved: solved.has(n) });
   }
   return entries;
 }

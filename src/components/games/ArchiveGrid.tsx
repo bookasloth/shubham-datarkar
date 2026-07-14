@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Flame, Lock, Search } from "lucide-react";
 import { isTodayOrYesterday } from "@/lib/daily";
+import { gameBySlug } from "@/lib/games/registry";
 import { cn } from "@/lib/utils";
 import type { ArchiveEntry } from "@/lib/games/archive-queries";
 
@@ -31,6 +32,9 @@ export function ArchiveGrid({
   canViewArchive: boolean;
   now: number;
 }) {
+  // `game` is the URL slug ("hit-and-blow"); the daily engine keys off the enum
+  // value ("hit_and_blow"), so map through the registry rather than hand-rolling it.
+  const gameKey = gameBySlug(game)!.key;
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
   const [visible, setVisible] = useState(PAGE);
@@ -91,7 +95,7 @@ export function ArchiveGrid({
       ) : (
         <div className="grid grid-cols-3 gap-2 sm:grid-cols-5 lg:grid-cols-7">
           {shown.map((e) => {
-            const free = isTodayOrYesterday(e.puzzleNumber, now);
+            const free = isTodayOrYesterday(gameKey, e.puzzleNumber, now);
             const open = free || canViewArchive;
             const href = `/games/${game}/${e.puzzleNumber}`;
             const label = e.dateISO.slice(5); // MM-DD

@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function IntegraToday() {
-  const p = puzzleNumberFor();
+  const p = puzzleNumberFor("integra");
   const [answer, stats] = await Promise.all([equationForPuzzle(p), getMyGameStats("integra")]);
   return <IntegraBoard puzzleNumber={p} isArchive={false} answer={answer} stats={stats} />;
 }
