@@ -34,6 +34,29 @@ export async function getMyGameStats(
   return { played: r.total_played, won: r.total_won, currentStreak: r.current_streak, maxStreak: r.max_streak };
 }
 
+/**
+ * Average solve time (ms) for the current user's wins in this game.
+ * Returns null when there are no wins (or the caller is anon).
+ */
+export async function getMyAvgSolveTime(
+  game: StatRow["game"],
+): Promise<number | null> {
+  const user = await getGameUser();
+  if (!user) return null;
+  const supabase = await supabaseAuthServer();
+  const { data } = await supabase
+    .from("game_results")
+    .select("time_ms")
+    .eq("user_id", user.id)
+    .eq("game", game)
+    .eq("status", "won")
+    .not("time_ms", "is", null);
+  const rows = (data ?? []) as { time_ms: number | null }[];
+  const valid = rows.map((r) => r.time_ms).filter((v): v is number => v != null);
+  if (!valid.length) return null;
+  return Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
+}
+
 export async function getMyRecent(limit = 10) {
   const user = await getGameUser();
   if (!user) return [];
