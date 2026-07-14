@@ -6,7 +6,6 @@ import { getMyStats } from "@/lib/games/profile-queries";
 import PuzzleCountdown from "@/components/games/PuzzleCountdown";
 
 export default async function GamesHub() {
-  const today = puzzleNumberFor();
   const stats = await getMyStats(); // [] when signed out or no games played yet
   const byGame = new Map(stats.map((s) => [s.game, s]));
   const hasHistory = stats.length > 0;
@@ -19,8 +18,9 @@ export default async function GamesHub() {
     <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="font-display text-2xl font-bold">Daily Games</h1>
+        {/* No single puzzle number here any more — each game numbers from its own
+            launch day, so the number lives on each card. The reset is shared. */}
         <p className="text-sm text-muted-foreground">
-          Puzzle <span className="font-semibold text-foreground">#{today}</span> ·{" "}
           <PuzzleCountdown />
         </p>
       </div>
@@ -46,7 +46,12 @@ export default async function GamesHub() {
             >
               <span className="size-2.5 shrink-0 rounded-full bg-brand" aria-hidden="true" />
               <div className="min-w-0 flex-1">
-                <div className="font-display text-lg font-semibold">{g.name}</div>
+                <div className="font-display text-lg font-semibold">
+                  {g.name}{" "}
+                  <span className="text-sm font-normal text-muted-foreground tabular-nums">
+                    #{puzzleNumberFor(g.key)}
+                  </span>
+                </div>
                 <div className="text-sm text-muted-foreground">{g.tag}</div>
               </div>
               {streak > 0 && (

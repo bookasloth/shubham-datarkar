@@ -15,7 +15,7 @@ export default async function HitAndBlowArchive({ params }: { params: Promise<{ 
   const n = Number(puzzle);
   if (!Number.isInteger(n) || n < 0) notFound();
 
-  if (!isTodayOrYesterday(n)) {
+  if (!isTodayOrYesterday("hit_and_blow", n)) {
     await requireGameUser(`/games/hit-and-blow/${n}`);
     const { capabilities } = await getMemberContext();
     if (!can(capabilities, "view_archive")) {
@@ -23,5 +23,5 @@ export default async function HitAndBlowArchive({ params }: { params: Promise<{ 
     }
   }
   const stats = await getMyGameStats("hit_and_blow");
-  return <HitAndBlowBoard puzzleNumber={n} isArchive={!isToday(n)} stats={stats} />;
+  return <HitAndBlowBoard puzzleNumber={n} isArchive={!isToday("hit_and_blow", n)} stats={stats} />;
 }

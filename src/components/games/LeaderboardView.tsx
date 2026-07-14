@@ -52,7 +52,7 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
   let podium: PodiumEntry[] = [];
 
   if (board === "daily") {
-    const data = await getDailyBoard(game, puzzleNumberFor());
+    const data = await getDailyBoard(game, puzzleNumberFor(game));
     head = ["#", "Name", "Username", "Time", "Tries"];
     rows = data.map((r, i) => [
       i + 1,

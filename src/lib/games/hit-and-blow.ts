@@ -1,4 +1,4 @@
-import { seededRng } from "../daily";
+import { seededShuffle } from "../daily";
 
 // Classic rules. Knobs left as constants so you can spin variants later.
 export const HIT_AND_BLOW = { length: 4, maxGuesses: 9, uniqueDigits: true } as const;
@@ -6,6 +6,8 @@ export const HIT_AND_BLOW = { length: 4, maxGuesses: 9, uniqueDigits: true } as 
 // Every 4-digit code with distinct digits and a non-zero first digit:
 // 9 (first: 1-9) * 9 * 8 * 7 = 4536.
 const CODE_SPACE = 4536;
+
+const SHUFFLE_SEED = 0x7e42d05b;
 
 /** Build all 4536 valid codes, then shuffle once with a fixed seed so the daily
  *  sequence is deterministic but not guessable from one day to the next. */
@@ -23,12 +25,9 @@ function buildCodes(): string[] {
       }
     }
   // Deterministic Fisher-Yates — identical result on server and client.
-  const rng = seededRng(0x1234abcd);
-  for (let i = codes.length - 1; i > 0; i--) {
-    const j = Math.floor(rng() * (i + 1));
-    [codes[i], codes[j]] = [codes[j], codes[i]];
-  }
-  return codes;
+  // Changing SHUFFLE_SEED re-scrambles every future code. Only do that alongside a
+  // results wipe: it changes the secret for already-played puzzle numbers.
+  return seededShuffle(codes, SHUFFLE_SEED);
 }
 
 // Built once at module load (~4536 strings, negligible).

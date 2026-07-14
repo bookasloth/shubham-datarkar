@@ -41,7 +41,7 @@ export default async function LeaderboardPage({
   let rows: (string | number)[][] = [];
 
   if (board === "daily") {
-    const data = await getDailyBoard(game, puzzleNumberFor());
+    const data = await getDailyBoard(game, puzzleNumberFor(game));
     head = ["#", "Player", "Guesses", "Time"];
     rows = data.map((r, i) => [i + 1, r.username, r.guesses, r.time_ms != null ? `${Math.round(r.time_ms / 1000)}s` : "—"]);
   } else if (board === "streak") {

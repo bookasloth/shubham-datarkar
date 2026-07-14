@@ -1,4 +1,4 @@
-import { puzzleDateISO, puzzleNumberFor } from "@/lib/daily";
+import { todayISO } from "@/lib/daily";
 
 // -- Palette types ----------------------------------------------------------
 
@@ -178,8 +178,9 @@ export function resolveTheme(
 ): string {
   if (override && THEMES[override]) return override;
 
-  const puzzleNum = puzzleNumberFor(now);
-  const dateISO = puzzleDateISO(puzzleNum);
+  // Festivals and birthdays are calendar events, not puzzle events — so this reads
+  // the IST date directly rather than routing through any one game's numbering.
+  const dateISO = todayISO(now);
 
   if (user?.birthday) {
     const [, bMonth, bDay] = user.birthday.split("-");

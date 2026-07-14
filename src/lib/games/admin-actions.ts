@@ -37,7 +37,7 @@ export async function upsertAlfazyWord(formData: FormData): Promise<void> {
   await requireAdmin();
   const { puzzleNumber, word } = parseAlfazyWordForm(formData);
   // Guard: never rewrite a past/current puzzle — that would change a played answer.
-  if (!Number.isFinite(puzzleNumber) || puzzleNumber <= puzzleNumberFor()) {
+  if (!Number.isFinite(puzzleNumber) || puzzleNumber <= puzzleNumberFor("alfazy")) {
     throw new Error("Can only edit future puzzles.");
   }
   const check = validateAlfazyWord(word);
@@ -47,7 +47,7 @@ export async function upsertAlfazyWord(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("admin_upsert_alfazy_puzzle", {
     p_puzzle: puzzleNumber,
     p_word: check.word,
-    p_today: puzzleNumberFor(),
+    p_today: puzzleNumberFor("alfazy"),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/admin/games/words");
@@ -57,7 +57,7 @@ export async function upsertIntegraEquation(formData: FormData): Promise<void> {
   await requireAdmin();
   const { puzzleNumber, equation } = parseIntegraEquationForm(formData);
   // Guard: never rewrite a past/current puzzle — that would change a played answer.
-  if (!Number.isFinite(puzzleNumber) || puzzleNumber <= puzzleNumberFor()) {
+  if (!Number.isFinite(puzzleNumber) || puzzleNumber <= puzzleNumberFor("integra")) {
     throw new Error("Can only edit future puzzles.");
   }
   const check = validateIntegraEquation(equation);
@@ -67,7 +67,7 @@ export async function upsertIntegraEquation(formData: FormData): Promise<void> {
   const { error } = await supabase.rpc("admin_upsert_integra_puzzle", {
     p_puzzle: puzzleNumber,
     p_equation: check.equation,
-    p_today: puzzleNumberFor(),
+    p_today: puzzleNumberFor("integra"),
   });
   if (error) throw new Error(error.message);
   revalidatePath("/admin/games/integra-equations");

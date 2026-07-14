@@ -4,7 +4,7 @@
 import { answerFor } from "@/lib/games/alfazy";
 import { puzzleNumberFor } from "@/lib/daily";
 
-const today = puzzleNumberFor();
+const today = puzzleNumberFor("alfazy");
 const end = today + 60;
 
 const values: string[] = [];

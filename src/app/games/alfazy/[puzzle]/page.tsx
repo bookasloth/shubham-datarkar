@@ -16,7 +16,7 @@ export default async function AlfazyArchive({ params }: { params: Promise<{ puzz
   const n = Number(puzzle);
   if (!Number.isInteger(n) || n < 0) notFound();
 
-  if (!isTodayOrYesterday(n)) {
+  if (!isTodayOrYesterday("alfazy", n)) {
     // Older than the free window → require sign-in, then the view_archive capability.
     await requireGameUser(`/games/alfazy/${n}`);
     const { capabilities } = await getMemberContext();
@@ -26,5 +26,5 @@ export default async function AlfazyArchive({ params }: { params: Promise<{ puzz
   }
   const [answer, stats] = await Promise.all([wordForPuzzle(n), getMyGameStats("alfazy")]);
   // AlfazyThemeProvider is hoisted to the games layout so the rail gets the CSS vars too.
-  return <AlfazyBoard puzzleNumber={n} isArchive={!isToday(n)} answer={answer} stats={stats} />;
+  return <AlfazyBoard puzzleNumber={n} isArchive={!isToday("alfazy", n)} answer={answer} stats={stats} />;
 }

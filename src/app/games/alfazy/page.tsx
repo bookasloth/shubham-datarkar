@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AlfazyToday() {
-  const p = puzzleNumberFor(Date.now());
+  const p = puzzleNumberFor("alfazy");
   const [answer, stats] = await Promise.all([wordForPuzzle(p), getMyGameStats("alfazy")]);
   // AlfazyThemeProvider is hoisted to the games layout so the rail gets the CSS vars too.
   return <AlfazyBoard puzzleNumber={p} isArchive={false} answer={answer} stats={stats} />;

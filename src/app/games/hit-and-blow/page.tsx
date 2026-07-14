@@ -10,5 +10,5 @@ export const metadata: Metadata = {
 
 export default async function HitAndBlowToday() {
   const stats = await getMyGameStats("hit_and_blow");
-  return <HitAndBlowBoard puzzleNumber={puzzleNumberFor()} isArchive={false} stats={stats} />;
+  return <HitAndBlowBoard puzzleNumber={puzzleNumberFor("hit_and_blow")} isArchive={false} stats={stats} />;
 }

@@ -2,7 +2,6 @@ import { describe, it, expect } from "vitest";
 import { EQUATION_LIST } from "./integra-equations";
 import {
   INTEGRA,
-  INTEGRA_LAUNCH,
   answerFor,
   evaluate,
   isValidGuess,
@@ -104,13 +103,26 @@ describe("scoreGuess", () => {
 });
 
 describe("answerFor", () => {
-  it("serves the easiest equation on launch day and ramps", () => {
-    expect(answerFor(INTEGRA_LAUNCH)).toBe(EQUATION_LIST[0]);
-    expect(answerFor(INTEGRA_LAUNCH + 1)).toBe(EQUATION_LIST[1]);
+  // Puzzle #0 is launch day (2026-06-01) — no launch offset any more. The list is
+  // shuffled, so the ramp is gone: assert membership + determinism, not order.
+  it("always serves an equation from the list", () => {
+    for (const n of [0, 1, 2, 41, 200]) {
+      expect(EQUATION_LIST).toContain(answerFor(n));
+    }
   });
 
-  it("is deterministic and wraps by modulo", () => {
-    expect(answerFor(INTEGRA_LAUNCH + EQUATION_LIST.length)).toBe(EQUATION_LIST[0]);
-    expect(answerFor(INTEGRA_LAUNCH - 1)).toBe(EQUATION_LIST[EQUATION_LIST.length - 1]);
+  it("is deterministic for a given puzzle number", () => {
+    expect(answerFor(0)).toBe(answerFor(0));
+    expect(answerFor(41)).toBe(answerFor(41));
+  });
+
+  it("wraps by modulo, including negatives", () => {
+    expect(answerFor(EQUATION_LIST.length)).toBe(answerFor(0));
+    expect(answerFor(-1)).toBe(answerFor(EQUATION_LIST.length - 1));
+  });
+
+  it("is actually shuffled — not served in list order", () => {
+    const inOrder = [0, 1, 2, 3, 4].every((n) => answerFor(n) === EQUATION_LIST[n]);
+    expect(inOrder).toBe(false);
   });
 });

@@ -16,7 +16,7 @@ export default async function IntegraArchive({ params }: { params: Promise<{ puz
   const n = Number(puzzle);
   if (!Number.isInteger(n) || n < 0) notFound();
 
-  if (!isTodayOrYesterday(n)) {
+  if (!isTodayOrYesterday("integra", n)) {
     // Older than the free window → require sign-in, then the view_archive capability.
     await requireGameUser(`/games/integra/${n}`);
     const { capabilities } = await getMemberContext();
@@ -25,5 +25,5 @@ export default async function IntegraArchive({ params }: { params: Promise<{ puz
     }
   }
   const [answer, stats] = await Promise.all([equationForPuzzle(n), getMyGameStats("integra")]);
-  return <IntegraBoard puzzleNumber={n} isArchive={!isToday(n)} answer={answer} stats={stats} />;
+  return <IntegraBoard puzzleNumber={n} isArchive={!isToday("integra", n)} answer={answer} stats={stats} />;
 }

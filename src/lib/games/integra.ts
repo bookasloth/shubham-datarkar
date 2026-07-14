@@ -1,3 +1,4 @@
+import { seededShuffle } from "../daily";
 import { EQUATION_LIST } from "./integra-equations";
 
 export const INTEGRA = { length: 7, maxGuesses: 6 } as const;
@@ -8,22 +9,26 @@ const ALLOWED_RE = /^[0-9+\-*/=]+$/;
 const LHS_RE = /^[0-9+\-*/]+$/;
 
 /**
- * Puzzle number on Integra's launch day. Difficulty ramps from here (not from the
- * platform epoch of 2025-01-01), so live players get the gentle first ~100
- * equations from day one. 555 = the build day (2026-07-10).
- * ponytail: bump to the real launch-day puzzle number if launch slips >100 days.
+ * EQUATION_LIST is authored easy→hard, and used to be served in that order off a
+ * launch offset. It is now shuffled, so difficulty no longer ramps with the day —
+ * a division / order-of-operations equation can land on day 1. That was the
+ * explicit call; if the onboarding ramp is ever wanted back, drop the shuffle and
+ * index EQUATION_LIST directly (puzzle #0 is launch day now, so no offset needed).
+ *
+ * Changing SHUFFLE_SEED re-scrambles every future puzzle. Only do that alongside a
+ * results wipe — it changes the answer for already-played puzzle numbers.
  */
-export const INTEGRA_LAUNCH = 555;
+const SHUFFLE_SEED = 0x2c9be14d;
+const ANSWERS = seededShuffle(EQUATION_LIST, SHUFFLE_SEED);
 
 /**
- * Deterministic answer for a puzzle number. The list is pre-frozen and ordered
- * easy→hard; indexing off (n − launch) means the ramp tracks days-since-launch and
- * modulo cycles once the list is exhausted. Same equation for everyone on a given day.
+ * Deterministic answer for a puzzle number. Puzzle #0 is Integra's launch day
+ * (2026-06-01 IST), so no launch offset — modulo cycles once the list is exhausted.
+ * Same equation for everyone on a given day.
  */
 export function answerFor(puzzleNumber: number): string {
-  const L = EQUATION_LIST.length;
-  const idx = puzzleNumber - INTEGRA_LAUNCH;
-  return EQUATION_LIST[((idx % L) + L) % L];
+  const L = ANSWERS.length;
+  return ANSWERS[((puzzleNumber % L) + L) % L];
 }
 
 /**
