@@ -1,11 +1,14 @@
 import "server-only";
 
 import { supabaseAnon } from "@/lib/supabase/server";
-import { answerFor } from "@/lib/games/alfazy";
+import { answerFor, themeWordFor } from "@/lib/games/alfazy";
 
-/** The Alfazy answer for a puzzle: DB row if present, else the frozen code
- *  formula. Never throws — a DB hiccup must not break gameplay. */
+/** The Alfazy answer for a puzzle: themed observance day if the date has one, else
+ *  the DB row if present, else the frozen code formula. Never throws — a DB hiccup
+ *  must not break gameplay. */
 export async function wordForPuzzle(puzzleNumber: number): Promise<string> {
+  const theme = themeWordFor(puzzleNumber);
+  if (theme) return theme;
   try {
     const { data, error } = await supabaseAnon()
       .from("alfazy_puzzles")

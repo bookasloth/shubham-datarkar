@@ -7,7 +7,38 @@ import { cn } from "@/lib/utils";
 import {
   Accordion, AccordionItem, AccordionTrigger, AccordionContent,
 } from "@/components/ui/accordion";
-import { APP_NAV, activeSection, activeChildHref } from "./nav-config";
+import { APP_NAV, activeSection, activeChildHref, type AppNavItem } from "./nav-config";
+
+function SidebarLink({
+  item,
+  activeHref,
+  signedIn,
+  onNavigate,
+}: {
+  item: AppNavItem;
+  activeHref: string | null;
+  signedIn: boolean;
+  onNavigate?: () => void;
+}) {
+  const active = item.href === activeHref;
+  const href =
+    !signedIn && item.gated ? `/login?next=${encodeURIComponent(item.href)}` : item.href;
+  return (
+    <Link
+      href={href}
+      onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
+      className={cn(
+        "block rounded-input px-3 py-1.5 text-sm transition-ui",
+        active
+          ? "bg-accent font-medium text-foreground"
+          : "text-muted-foreground hover:bg-accent hover:text-foreground",
+      )}
+    >
+      {item.label}
+    </Link>
+  );
+}
 
 export function AppSidebar({
   signedIn, onNavigate,
@@ -54,29 +85,37 @@ export function AppSidebar({
             </AccordionTrigger>
             <AccordionContent className="pb-1 pl-4">
               <nav className="space-y-0.5">
-                {s.items.map((item) => {
-                  const active = item.href === activeHref;
-                  const href =
-                    !signedIn && item.gated
-                      ? `/login?next=${encodeURIComponent(item.href)}`
-                      : item.href;
-                  return (
-                    <Link
+                {s.items.map((item) =>
+                  // A group (each game) renders as a heading with its Play /
+                  // Archive / Leaderboard links nested under it. The heading is not
+                  // a link — its href duplicates Play, so two rows would highlight.
+                  item.children ? (
+                    <div key={item.label + item.href} className="pt-1.5 first:pt-0">
+                      <p className="px-3 py-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                        {item.label}
+                      </p>
+                      <div className="space-y-0.5 pl-2">
+                        {item.children.map((child) => (
+                          <SidebarLink
+                            key={child.label + child.href}
+                            item={child}
+                            activeHref={activeHref}
+                            signedIn={signedIn}
+                            onNavigate={onNavigate}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <SidebarLink
                       key={item.label + item.href}
-                      href={href}
-                      onClick={onNavigate}
-                      aria-current={active ? "page" : undefined}
-                      className={cn(
-                        "block rounded-input px-3 py-1.5 text-sm transition-ui",
-                        active
-                          ? "bg-accent font-medium text-foreground"
-                          : "text-muted-foreground hover:bg-accent hover:text-foreground",
-                      )}
-                    >
-                      {item.label}
-                    </Link>
-                  );
-                })}
+                      item={item}
+                      activeHref={activeHref}
+                      signedIn={signedIn}
+                      onNavigate={onNavigate}
+                    />
+                  ),
+                )}
               </nav>
             </AccordionContent>
           </AccordionItem>
