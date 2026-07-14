@@ -25,9 +25,16 @@ function Card({
   );
 }
 
+// Per-game accent, matching each board's tile palette.
+const ACCENT: Record<GameKey, string> = {
+  alfazy: "text-emerald-600 dark:text-emerald-400",
+  hit_and_blow: "text-sky-600 dark:text-sky-400",
+  integra: "text-violet-600 dark:text-violet-400",
+};
+
 function GuideCard({ game }: { game: GameKey }) {
   return (
-    <Card icon={<HelpCircle className="size-4" />} title="Guide">
+    <Card icon={<HelpCircle className={`size-4 ${ACCENT[game]}`} />} title="How to play">
       {HELP[game].body}
     </Card>
   );
