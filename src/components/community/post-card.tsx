@@ -34,7 +34,7 @@ export async function PostCard({
     tokens.flatMap((t) => (t.type === "link" ? [t.href] : [])),
   );
   return (
-    <article className="group relative border-b border-border px-4 py-3 transition-ui hover:bg-muted/40">
+    <article className="group relative mb-3 rounded-card border border-border bg-card p-4 transition-ui hover:bg-muted/30">
       {/* Whole-card click target → single post (Twitter-style). Absolutely
           positioned and z-10 so it paints over the static header/body/media
           (and the `relative` image cells) to catch clicks anywhere on the card.
@@ -61,15 +61,6 @@ export async function PostCard({
             <BadgeTick badge={post.badge} />
             <span className="truncate text-muted-foreground">@{post.username}</span>
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
-            <span className="relative z-10 ml-auto">
-              <PostMenu
-                postId={post.id}
-                publicId={post.publicId}
-                isLoggedIn={Boolean(viewerId)}
-                isOwner={viewerId === post.userId}
-                isAdmin={isAdmin}
-              />
-            </span>
           </div>
 
           {post.body && (
@@ -138,10 +129,18 @@ export async function PostCard({
             </div>
           ) : null}
 
-          {/* Action bar lives inside the content column so it starts flush with
-              the name and body (not under the avatar) and spreads across that
-              same width. */}
-          <EngagementBar post={post} />
+          <EngagementBar
+            post={post}
+            endSlot={
+              <PostMenu
+                postId={post.id}
+                publicId={post.publicId}
+                isLoggedIn={Boolean(viewerId)}
+                isOwner={viewerId === post.userId}
+                isAdmin={isAdmin}
+              />
+            }
+          />
         </div>
       </div>
     </article>

@@ -45,7 +45,7 @@ function reduce(s: Engagement, a: Action): Engagement {
   return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? s.reblogs - 1 : s.reblogs + 1 };
 }
 
-export function EngagementBar({ post }: { post: FeedPost }) {
+export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: React.ReactNode }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
@@ -120,6 +120,24 @@ export function EngagementBar({ post }: { post: FeedPost }) {
       {/* justify-between spreads the icons edge-to-edge with even gaps — no text
           labels, matching the compact icon+count spec. */}
       <div className="flex items-center justify-between">
+        <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments" title="Comments">
+          <MessagesSquare className="size-4" />
+          {compactNumber(post.replyCount)}
+        </Link>
+
+        <button
+          type="button"
+          disabled={pending}
+          onClick={onReblog}
+          aria-label="Reblog"
+          aria-pressed={state.reblogged}
+          title="Reblog"
+          className={cn(ITEM, state.reblogged && "text-brand")}
+        >
+          <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
+          {compactNumber(state.reblogs)}
+        </button>
+
         <button
           type="button"
           disabled={pending}
@@ -147,24 +165,6 @@ export function EngagementBar({ post }: { post: FeedPost }) {
           {compactNumber(state.up)}
         </button>
 
-        <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments" title="Comments">
-          <MessagesSquare className="size-4" />
-          {compactNumber(post.replyCount)}
-        </Link>
-
-        <button
-          type="button"
-          disabled={pending}
-          onClick={onReblog}
-          aria-label="Reblog"
-          aria-pressed={state.reblogged}
-          title="Reblog"
-          className={cn(ITEM, state.reblogged && "text-brand")}
-        >
-          <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
-          {compactNumber(state.reblogs)}
-        </button>
-
         <button
           type="button"
           disabled={pending}
@@ -181,6 +181,8 @@ export function EngagementBar({ post }: { post: FeedPost }) {
         <Link href="/support" className={ITEM} aria-label="Award this post" title="Award">
           <Medal className="size-4" />
         </Link>
+
+        {endSlot && <span className="ml-auto">{endSlot}</span>}
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
     </div>
