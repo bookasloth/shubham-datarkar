@@ -4,21 +4,18 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-/** Tabs available per game base. Integra has archive only today. */
+/** Tabs available per game base. */
 const TABS: Record<string, { label: string; seg: string }[]> = {
   "/games/alfazy": [
     { label: "Archive", seg: "archive" },
-    { label: "Results", seg: "results" },
     { label: "Leaderboard", seg: "leaderboard" },
   ],
   "/games/hit-and-blow": [
     { label: "Archive", seg: "archive" },
-    { label: "Results", seg: "results" },
     { label: "Leaderboard", seg: "leaderboard" },
   ],
   "/games/integra": [
     { label: "Archive", seg: "archive" },
-    { label: "Results", seg: "results" },
     { label: "Leaderboard", seg: "leaderboard" },
   ],
 };
@@ -30,7 +27,7 @@ export function GameSubnav({ base }: { base: keyof typeof TABS | string }) {
   // other tabs live on named segments, so a numeric tail never collides.
   const playActive = pathname === base || new RegExp(`^${base}/\\d+$`).test(pathname);
   return (
-    <div className="mx-auto flex max-w-md items-center gap-1 px-4 pt-4">
+    <div className="mx-auto flex items-center justify-center gap-1 px-4 pt-4">
       <Link
         href={base}
         className={cn(
