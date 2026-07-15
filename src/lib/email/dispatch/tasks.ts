@@ -7,8 +7,16 @@ import { introduction, weMissYou, inactiveAccount, festival } from "@/lib/email/
 import { renewalReminder, memberDigest } from "@/lib/email/templates/membership";
 import { newBlogs, monthlyRoundup } from "@/lib/email/templates/newsletter";
 import { communityDigest, firstPostNudge } from "@/lib/email/templates/community";
+import { weeklyLeaderboard, streakReminder } from "@/lib/email/templates/games";
+import { getPeriodBoard, type GameKey } from "@/lib/games/leaderboard-queries";
 
 const SITE = "https://shubhamdatarkar.com";
+
+const GAMES: { key: GameKey; label: string; slug: string }[] = [
+  { key: "alfazy", label: "Alfazy", slug: "alfazy" },
+  { key: "hit_and_blow", label: "Hit & Blow", slug: "hit-and-blow" },
+  { key: "integra", label: "Integra", slug: "integra" },
+];
 
 /** Introduction — users created 24-48h ago, once ever. */
 export async function runIntroductions(): Promise<number> {
@@ -244,5 +252,71 @@ export async function runMemberDigest(t: { dom: number; ym: string }): Promise<n
       if ((await sendTemplate(to, email)).ok) sent++;
     }
   } catch (e) { console.warn("[dispatch] member-digest:", (e as Error).message); }
+  return sent;
+}
+
+/** Mondays: per-game top-5 weekly leaderboard → everyone who played that game in the last 7 days. */
+export async function runWeeklyLeaderboard(t: { dow: number; date: string; iso: string }): Promise<number> {
+  if (t.dow !== 1) return 0;
+  let sent = 0;
+  try {
+    const admin = supabaseAdmin();
+    const start = new Date(Date.now() - 7 * 86400e3).toISOString().slice(0, 10);
+    const end = t.date;
+    for (const { key, label, slug } of GAMES) {
+      try {
+        const board = await getPeriodBoard(key, start, end);
+        if (!board.length) continue;
+        const rows = board.slice(0, 5).map((r, i) => ({ rank: i + 1, name: r.display_name || r.username, score: `${r.solved} solved` }));
+        const email = weeklyLeaderboard({ gameName: label, rows, href: `${SITE}/games/${slug}/leaderboard` });
+        const { data: results } = await admin
+          .from("game_results")
+          .select("user_id")
+          .eq("game", key)
+          .gte("puzzle_date", start)
+          .lte("puzzle_date", end);
+        const userIds = new Set((results ?? []).map((r) => r.user_id));
+        for (const userId of userIds) {
+          const to = await getUserEmail(userId);
+          if (!to) continue;
+          if (!(await claim(to, "weeklyLeaderboard", `${key}-${t.iso}`))) continue;
+          if ((await sendTemplate(to, email)).ok) sent++;
+        }
+      } catch (e) { console.warn(`[dispatch] weekly-leaderboard (${key}):`, (e as Error).message); }
+    }
+  } catch (e) { console.warn("[dispatch] weekly-leaderboard:", (e as Error).message); }
+  return sent;
+}
+
+/** Daily: streak >= 3 who haven't played today yet, per game. */
+export async function runStreakReminders(t: { date: string }): Promise<number> {
+  let sent = 0;
+  try {
+    const admin = supabaseAdmin();
+    for (const { key, label, slug } of GAMES) {
+      try {
+        const { data: streakRows } = await admin
+          .from("streaks")
+          .select("user_id, current_streak")
+          .eq("game", key)
+          .gte("current_streak", 3);
+        for (const s of streakRows ?? []) {
+          try {
+            const { count } = await admin
+              .from("game_results")
+              .select("id", { count: "exact", head: true })
+              .eq("user_id", s.user_id)
+              .eq("game", key)
+              .eq("puzzle_date", t.date);
+            if ((count ?? 0) > 0) continue;
+            const to = await getUserEmail(s.user_id);
+            if (!to) continue;
+            if (!(await claim(to, "streakReminder", `${key}-${t.date}`))) continue;
+            if ((await sendTemplate(to, streakReminder({ streak: s.current_streak, gameName: label, href: `${SITE}/games/${slug}` }))).ok) sent++;
+          } catch (e) { console.warn(`[dispatch] streak-reminder (${key}, ${s.user_id}):`, (e as Error).message); }
+        }
+      } catch (e) { console.warn(`[dispatch] streak-reminder (${key}):`, (e as Error).message); }
+    }
+  } catch (e) { console.warn("[dispatch] streak-reminders:", (e as Error).message); }
   return sent;
 }
