@@ -34,6 +34,7 @@ export function firstPostNudge(a: { name?: string | null }): RenderedEmail {
       preheader: "Your first post is the hardest. It's also two minutes of work.",
       headerTagline: "Community",
       title: "Say your first thing.",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.firstPost, "A blank page and a blinking cursor") +
         p(`Hey ${esc(first)}, you've been reading — which is great — but the feed is better with you in it.`) +
