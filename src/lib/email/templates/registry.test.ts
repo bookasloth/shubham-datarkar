@@ -50,7 +50,7 @@ describe("email catalog", () => {
       "contactConfirmation", "projectInquiry", "communityWelcome", "postPublished",
       "newComment", "birthday", "festival", "weMissYou", "inactiveAccount",
       "achievementUnlocked", "streakReminder", "newGame",
-      "firstPostNudge", "newMemberResource",
+      "firstPostNudge", "newMemberResource", "introduction",
     ];
     for (const key of txnKeys) {
       const e = EMAIL_CATALOG.find((x) => x.key === key)!;

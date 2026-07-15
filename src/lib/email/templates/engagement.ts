@@ -4,6 +4,29 @@ import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
+/** Introduction — auto-sent ~24h after signup/subscription. A proper hello from
+ *  Shubham once the confetti of the welcome email has settled. Humour: High. */
+export function introduction(a: { name?: string | null }): RenderedEmail {
+  const first = firstName(a.name);
+  return {
+    subject: "So, hi — properly this time",
+    html: renderEmail({
+      preheader: "A day in. Here's who's behind all this, and where to start.",
+      headerTagline: "Shubham Datarkar",
+      title: `A proper hello, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
+      bodyHtml:
+        emailGif(EMAIL_GIFS.introduction, "A friendly hello, hand extended") +
+        p("You signed up yesterday, got the welcome note, and probably clicked around a bit. So now that the dust has settled — hi, I'm Shubham. This whole place is mine: the writing, the games, the community, the occasionally-strong opinions.") +
+        p("If you only do three things: read something on the blog, say one thing in the community, and lose ten minutes to a game. That's the tour.") +
+        p("Reply to this any time — it comes to a real inbox, and I read it.") +
+        `<p style="margin:0; font-size:14px; color:#2d2d2d; line-height:1.7;">— Shubham</p>`,
+      cta: { label: "Start with what's new", href: SITE },
+    }),
+    text: `A proper hello, ${first}. I'm Shubham — the writing, games, and community here are all mine. If you do three things: read something on the blog, post one thing in the community, lose ten minutes to a game. Reply any time, I read it. — Shubham  ${SITE}`,
+  };
+}
+
 /** We miss you (dormant a while). Humour: Subtle — warm, not needy. */
 export function weMissYou(a: { name?: string | null }): RenderedEmail {
   const first = firstName(a.name);

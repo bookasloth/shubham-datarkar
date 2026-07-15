@@ -90,6 +90,7 @@ export const EMAIL_CATALOG: CatalogEntry[] = [
   { key: "requestDeclined", category: "Requests", label: "Request declined", recipient: "Member", trigger: "Admin declines request", humour: "None", gifKey: "requestDeclined", render: () => requests.requestDeclined({ name: NAME, title: "Cold email teardown template", reason: "It overlaps heavily with the outreach guide already in the library." }) },
 
   // Engagement
+  { key: "introduction", category: "Engagement", label: "Introduction (24h after signup)", recipient: "New user/subscriber", trigger: "Cron ~24h after account/subscription created (SP4 dispatcher)", humour: "High", gifKey: "introduction", render: () => engagement.introduction({ name: NAME }) },
   { key: "weMissYou", category: "Engagement", label: "We miss you", recipient: "Dormant user", trigger: "Cron (no sign-in ~30d)", humour: "Subtle", gifKey: "weMissYou", render: () => engagement.weMissYou({ name: NAME }) },
   { key: "inactiveAccount", category: "Engagement", label: "Inactive account reminder", recipient: "Never-activated user", trigger: "Cron (unverified / setup incomplete)", humour: "Subtle", gifKey: "inactiveAccount", render: () => engagement.inactiveAccount({ name: NAME }) },
   { key: "birthday", category: "Engagement", label: "Birthday wishes", recipient: "User on their birthday", trigger: "Daily cron (birthday, IST)", humour: "High", gifKey: "birthday", render: () => engagement.birthday({ name: NAME }) },

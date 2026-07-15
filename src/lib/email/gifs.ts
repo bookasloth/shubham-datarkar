@@ -49,6 +49,7 @@ export const EMAIL_GIFS = {
   requestDeclined: `${G}/request-declined.gif`,
 
   // Engagement
+  introduction: `${G}/introduction.gif`,
   weMissYou: `${G}/we-miss-you.gif`,
   inactiveAccount: `${G}/finish-setup.gif`,
   birthday: `${G}/birthday.gif`,

@@ -64,6 +64,7 @@ connects.
 | 21 | Requests | Request received (`requestReceived`) | Member | createRequest | requestReceived | Subtle |
 | 22 | Requests | Request approved (`requestApproved`) | Member | Admin status change | requestApproved | High |
 | 23 | Requests | Request declined (`requestDeclined`) | Member | Admin status change | requestDeclined | None |
+| 23b | Engagement | Introduction (`introduction`) | New user/subscriber | Cron ~24h after signup (SP4) | introduction | High |
 | 24 | Engagement | We miss you (`weMissYou`) | Dormant user | Cron | weMissYou | Subtle |
 | 25 | Engagement | Inactive account (`inactiveAccount`) | Never-activated | Cron | inactiveAccount | Subtle |
 | 26 | Engagement | Birthday (`birthday`) | User (birthday) | Daily cron | birthday | High |
@@ -108,6 +109,7 @@ loop cleanly.
 | Request received | requestReceived | request-received.gif | /images/sd/email/gifs/request-received.gif | A note dropping into an inbox tray |
 | Request approved | requestApproved | request-approved.gif | /images/sd/email/gifs/request-approved.gif | A green light switching on |
 | Request declined | requestDeclined | request-declined.gif | /images/sd/email/gifs/request-declined.gif | A respectful, gentle nod |
+| Introduction (24h after signup) | introduction | introduction.gif | /images/sd/email/gifs/introduction.gif | A friendly hello, hand extended |
 | We miss you | weMissYou | we-miss-you.gif | /images/sd/email/gifs/we-miss-you.gif | A chair waiting by an open door |
 | Inactive account | inactiveAccount | finish-setup.gif | /images/sd/email/gifs/finish-setup.gif | A checklist with one box left |
 | Birthday | birthday | birthday.gif | /images/sd/email/gifs/birthday.gif | A little cake with a candle |
