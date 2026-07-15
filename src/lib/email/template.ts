@@ -27,6 +27,11 @@ export const EMAIL_BRAND = {
 
 export type EmailCta = { label: string; href: string };
 
+/** Preheaders are always plain text — escape centrally so callers can't forget. */
+function escText(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
 /**
  * Inline GIF block for the body. Responsive (width:100% up to maxWidth), rounded,
  * centred. `alt` is REQUIRED and acts as the fallback if the GIF is blocked.
@@ -154,7 +159,7 @@ export function renderEmail(opts: RenderEmailOptions): string {
   </style>
 </head>
 <body style="background:#f3f5f7; font-family:Poppins, Arial, Helvetica, sans-serif; margin:0; padding:0;">
-  <div class="preheader">${opts.preheader}</div>
+  <div class="preheader">${escText(opts.preheader)}</div>
   <center style="width:100%; padding:30px 0; background:#f3f5f7;">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
       <tr>

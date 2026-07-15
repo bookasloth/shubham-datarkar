@@ -64,9 +64,14 @@ export async function POST(request: Request) {
       await syncMembershipFromWebhook(subscriptionId, "cancelled");
       break;
     case "subscription.halted":
-    case "subscription.paused":
+      // Payment retries exhausted — this is a real payment failure, email the member.
       await syncMembershipFromWebhook(subscriptionId, "expired");
       await notifyMembershipEvent(subscriptionId, "failed");
+      break;
+    case "subscription.paused":
+      // A pause is not a payment failure (no "payment didn't go through" email);
+      // access still lapses so we sync the status only.
+      await syncMembershipFromWebhook(subscriptionId, "expired");
       break;
     default:
       break; // authenticated but unhandled — ack

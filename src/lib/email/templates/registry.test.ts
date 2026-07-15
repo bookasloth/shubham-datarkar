@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import { EMAIL_CATALOG } from "./index";
 import { EMAIL_GIFS } from "../gifs";
 import { accountWelcome } from "./auth";
+import { newComment } from "./community";
 
 describe("email catalog", () => {
   it("every entry renders a complete, non-empty email", () => {
@@ -31,6 +32,14 @@ describe("email catalog", () => {
     const html = accountWelcome({ name: "<script>alert(1)</script>" }).html;
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&lt;script&gt;");
+
+    const commentHtml = newComment({
+      author: "<script>alert(1)</script>",
+      excerpt: "<b>x</b>",
+      href: "https://x.com",
+    }).html;
+    expect(commentHtml).not.toContain("<script>alert(1)</script>");
+    expect(commentHtml).toContain("&lt;script&gt;");
   });
 
   it("transactional emails do not claim a newsletter subscription", () => {
