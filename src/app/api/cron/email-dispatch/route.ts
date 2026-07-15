@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { istParts } from "@/lib/email/dispatch/dedupe";
-import { runIntroductions, runDiwali, runRenewalReminders, runWeMissYou, runInactive, runNewBlogs, runMonthlyRoundup } from "@/lib/email/dispatch/tasks";
+import { runIntroductions, runDiwali, runRenewalReminders, runWeMissYou, runInactive, runNewBlogs, runMonthlyRoundup, runCommunityDigest, runFirstPostNudge, runMemberDigest } from "@/lib/email/dispatch/tasks";
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -19,5 +19,8 @@ export async function GET(request: Request) {
   ran.inactive = await runInactive();
   ran.newBlogs = await runNewBlogs(t);
   ran.monthlyRoundup = await runMonthlyRoundup(t);
+  ran.communityDigest = await runCommunityDigest(t);
+  ran.firstPostNudge = await runFirstPostNudge();
+  ran.memberDigest = await runMemberDigest(t);
   return NextResponse.json({ ok: true, ist: t.date, ran });
 }

@@ -4,8 +4,9 @@ import { getUserEmail } from "@/lib/email/user-email";
 import { sendTemplate } from "@/lib/email/send-template";
 import { claim } from "./dedupe";
 import { introduction, weMissYou, inactiveAccount, festival } from "@/lib/email/templates/engagement";
-import { renewalReminder } from "@/lib/email/templates/membership";
+import { renewalReminder, memberDigest } from "@/lib/email/templates/membership";
 import { newBlogs, monthlyRoundup } from "@/lib/email/templates/newsletter";
+import { communityDigest, firstPostNudge } from "@/lib/email/templates/community";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -156,5 +157,91 @@ export async function runMonthlyRoundup(t: { dom: number; ym: string }): Promise
       if ((await sendTemplate(to, email)).ok) sent++;
     }
   } catch (e) { console.warn("[dispatch] monthly-roundup:", (e as Error).message); }
+  return sent;
+}
+
+/** Mondays: top 5 root community posts (by upvotes) from the last 7 days → active subscribers. */
+export async function runCommunityDigest(t: { dow: number; iso: string }): Promise<number> {
+  if (t.dow !== 1) return 0;
+  let sent = 0;
+  try {
+    const since = new Date(Date.now() - 7 * 86400e3).toISOString();
+    const { data } = await supabaseAdmin()
+      .from("community_posts")
+      .select("body, public_id, up_count, created_at")
+      .is("parent_id", null)
+      .is("reblog_of", null)
+      .gte("created_at", since)
+      .order("up_count", { ascending: false })
+      .limit(5);
+    const items = (data ?? [])
+      .filter((p) => p.public_id != null)
+      .map((p) => ({ title: (p.body || "A post").slice(0, 80), href: `${SITE}/community/p/${p.public_id}` }));
+    if (!items.length) return 0;
+    const email = communityDigest({ items });
+    for (const to of await activeSubscribers()) {
+      if (!(await claim(to, "communityDigest", t.iso))) continue;
+      if ((await sendTemplate(to, email)).ok) sent++;
+    }
+  } catch (e) { console.warn("[dispatch] community-digest:", (e as Error).message); }
+  return sent;
+}
+
+/** Nudge: joined 3-14 days ago, confirmed email, zero root posts, once ever. */
+export async function runFirstPostNudge(): Promise<number> {
+  let sent = 0;
+  try {
+    const admin = supabaseAdmin();
+    const now = Date.now();
+    const { data } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    for (const u of data?.users ?? []) {
+      if (!u.email || !u.email_confirmed_at || !u.created_at) continue;
+      const age = now - new Date(u.created_at).getTime();
+      if (age < 3 * 86400e3 || age > 14 * 86400e3) continue;
+      const { count } = await admin
+        .from("community_posts")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", u.id)
+        .is("parent_id", null)
+        .is("reblog_of", null);
+      if ((count ?? 0) > 0) continue;
+      if (!(await claim(u.email, "firstPostNudge", "once"))) continue;
+      const name = (u.user_metadata?.full_name as string) || null;
+      if ((await sendTemplate(u.email, firstPostNudge({ name }))).ok) sent++;
+    }
+  } catch (e) { console.warn("[dispatch] first-post-nudge:", (e as Error).message); }
+  return sent;
+}
+
+/** 1st of month: resources published in the last 31 days → active members. */
+export async function runMemberDigest(t: { dom: number; ym: string }): Promise<number> {
+  if (t.dom !== 1) return 0;
+  let sent = 0;
+  try {
+    const since = new Date(Date.now() - 31 * 86400e3).toISOString();
+    const { data } = await supabaseAdmin()
+      .from("resources")
+      .select("title, published_at")
+      .eq("status", "published")
+      .gte("published_at", since)
+      .order("published_at", { ascending: false });
+    const items = (data ?? []).map((r) => ({ title: r.title, href: `${SITE}/members` }));
+    if (!items.length) return 0;
+    const prev = new Date(); prev.setUTCDate(1); prev.setUTCMonth(prev.getUTCMonth() - 1);
+    const monthLabel = ["January","February","March","April","May","June","July","August","September","October","November","December"][prev.getUTCMonth()];
+    const email = memberDigest({ monthLabel, items });
+
+    const admin = supabaseAdmin();
+    const { data: memberships } = await admin.from("memberships").select("user_id").eq("status", "active");
+    const emails = new Set<string>();
+    for (const m of memberships ?? []) {
+      const addr = await getUserEmail(m.user_id);
+      if (addr) emails.add(addr);
+    }
+    for (const to of emails) {
+      if (!(await claim(to, "memberDigest", t.ym))) continue;
+      if ((await sendTemplate(to, email)).ok) sent++;
+    }
+  } catch (e) { console.warn("[dispatch] member-digest:", (e as Error).message); }
   return sent;
 }
