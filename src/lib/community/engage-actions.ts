@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
+import { notifyReply } from "./community-notify";
 
 export type EngageResult = { ok: true } | { error: string };
 
@@ -188,6 +189,7 @@ export async function createReply(postId: string, body: string): Promise<EngageR
     body: valid.body,
   });
   if (err) return { error: err.message };
+  await notifyReply(postId, user.id, valid.body ?? "");
   revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");
   return { ok: true };

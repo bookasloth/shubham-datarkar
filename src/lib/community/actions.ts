@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { validatePost } from "./validate";
+import { notifyPostCreated } from "./community-notify";
 
 const BUCKET = "community-media";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -62,15 +63,24 @@ export async function createPost(
   }
 
   // Insert as the user: the community_posts_insert RLS policy is the final gate.
-  const { error } = await sb.from("community_posts").insert({
-    user_id: user.id,
-    type: valid.type,
-    body: valid.body,
-    images: imageUrls,
-    youtube_id: valid.youtubeId,
-    poll: valid.poll,
-  });
+  const { data: inserted, error } = await sb
+    .from("community_posts")
+    .insert({
+      user_id: user.id,
+      type: valid.type,
+      body: valid.body,
+      images: imageUrls,
+      youtube_id: valid.youtubeId,
+      poll: valid.poll,
+    })
+    .select("public_id")
+    .maybeSingle();
   if (error) return { error: error.message };
+
+  const href = inserted?.public_id
+    ? `https://shubhamdatarkar.com/community/p/${inserted.public_id}`
+    : "https://shubhamdatarkar.com/community";
+  await notifyPostCreated(user.id, href);
 
   revalidatePath("/community");
   return { ok: true };

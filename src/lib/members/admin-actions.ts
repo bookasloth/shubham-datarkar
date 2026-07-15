@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { requireAdmin } from "@/lib/auth/session";
 import { createPlan } from "@/lib/razorpay/subscriptions";
+import { notifyRequestStatus } from "./request-notify";
 
 /* ---- announcements ---- */
 
@@ -161,5 +162,6 @@ export async function updateRequestStatus(formData: FormData): Promise<void> {
   const supabase = await supabaseAuthServer();
   const { error } = await supabase.from("member_requests").update({ status }).eq("id", id);
   if (error) throw new Error(error.message);
+  await notifyRequestStatus(id, status);
   revalidatePath("/admin/requests");
 }
