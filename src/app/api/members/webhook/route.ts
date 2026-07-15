@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { verifyWebhookSignature } from "@/lib/razorpay/subscription-verify";
 import { syncMembershipFromWebhook } from "@/lib/members/membership-server";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { classifyChargeKind, notifyMembershipEvent } from "@/lib/members/membership-notify";
 
 type WebhookPayload = {
   event?: string;
@@ -41,10 +43,21 @@ export async function POST(request: Request) {
   if (!subscriptionId) return NextResponse.json({ ok: true });
 
   switch (payload.event) {
-    case "subscription.activated":
-    case "subscription.charged":
+    case "subscription.activated": {
       await syncMembershipFromWebhook(subscriptionId, "active", sub?.current_end ?? undefined);
+      await notifyMembershipEvent(subscriptionId, "activated");
       break;
+    }
+    case "subscription.charged": {
+      const { data: prior } = await supabaseAdmin()
+        .from("memberships")
+        .select("current_period_end")
+        .eq("razorpay_subscription_id", subscriptionId)
+        .maybeSingle();
+      await syncMembershipFromWebhook(subscriptionId, "active", sub?.current_end ?? undefined);
+      await notifyMembershipEvent(subscriptionId, classifyChargeKind(prior?.current_period_end ?? null));
+      break;
+    }
     case "subscription.cancelled":
     case "subscription.completed":
       // Access continues until current_period_end; only the status flips.
@@ -53,6 +66,7 @@ export async function POST(request: Request) {
     case "subscription.halted":
     case "subscription.paused":
       await syncMembershipFromWebhook(subscriptionId, "expired");
+      await notifyMembershipEvent(subscriptionId, "failed");
       break;
     default:
       break; // authenticated but unhandled — ack
