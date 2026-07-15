@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { istParts } from "@/lib/email/dispatch/dedupe";
+import { runIntroductions, runDiwali, runRenewalReminders, runWeMissYou, runInactive } from "@/lib/email/dispatch/tasks";
 
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
@@ -11,5 +12,10 @@ export async function GET(request: Request) {
   const t = istParts(now);
   const ran: Record<string, unknown> = {};
   // Sub-tasks (Tasks 2–3) are invoked here, each wrapped so one failure can't abort the run.
+  ran.introductions = await runIntroductions();
+  ran.diwali = await runDiwali(t);
+  ran.renewals = await runRenewalReminders();
+  ran.weMissYou = await runWeMissYou(t);
+  ran.inactive = await runInactive();
   return NextResponse.json({ ok: true, ist: t.date, ran });
 }
