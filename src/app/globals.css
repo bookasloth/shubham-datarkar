@@ -161,6 +161,47 @@
   animation: diya-aura 3s ease-in-out infinite;
   will-change: transform, opacity;
 }
+/* Subtle warm smear that lags behind the diya — leftover warmth. Positioned at
+   the live cursor var, but transitioned so it drifts in behind the flame. */
+.diya-trail {
+  position: absolute;
+  width: 220px;
+  height: 220px;
+  margin-left: -110px;
+  margin-top: -110px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--trail-color, rgba(255, 150, 50, 0.1)), transparent 60%);
+  transition: left 0.45s ease-out, top 0.45s ease-out;
+}
+/* Snuffed diya: a breathing ember + a wisp of smoke rising off the wick. */
+.diya-ember {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+  animation: diya-ember 1.6s ease-in-out infinite;
+}
+.diya-smoke {
+  transform-box: fill-box;
+  animation: diya-smoke 2.4s ease-out infinite;
+}
+@keyframes diya-ember {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@keyframes diya-smoke {
+  0% {
+    opacity: 0.5;
+    transform: translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
 @keyframes diya-flame {
   0% {
     transform: scaleY(1) scaleX(1) skewX(0deg);
@@ -204,8 +245,13 @@
 @media (prefers-reduced-motion: reduce) {
   .diya-flame,
   .diya-jyoti,
-  .diya-aura {
+  .diya-aura,
+  .diya-ember,
+  .diya-smoke {
     animation: none;
+  }
+  .diya-trail {
+    transition: none;
   }
 }
 
