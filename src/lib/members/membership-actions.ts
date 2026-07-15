@@ -6,9 +6,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/session";
 import { cancelSubscription } from "@/lib/razorpay/subscriptions";
 import { giftMembership, revokeGift } from "@/lib/members/membership-server";
-import { getEmailCredentials } from "@/lib/email/store";
-import { sendEmail } from "@/lib/email/smtp";
-import { renderEmail } from "@/lib/email/template";
+import { sendTemplate } from "@/lib/email/send-template";
+import { membershipGift } from "@/lib/email/templates/membership";
 
 export type CancelState = { error?: string; ok?: boolean } | undefined;
 
@@ -99,22 +98,7 @@ export async function giftMembershipByEmail(
 /** Branded "you've been gifted a membership" email. Fail-safe; no-ops without SMTP. */
 async function sendGiftEmail(email: string, planName: string): Promise<boolean> {
   try {
-    const creds = await getEmailCredentials();
-    if (!creds) return false;
-    const res = await sendEmail(creds, {
-      to: email,
-      subject: `You've been gifted ${planName}`,
-      text: `Congratulations! You've been gifted ${planName} — lifetime access to all premium member resources. Sign in at https://shubhamdatarkar.com/members to start.`,
-      html: renderEmail({
-        preheader: `You've been gifted ${planName} — lifetime premium access.`,
-        headerTagline: "A gift for you",
-        title: "Congratulations — you've been gifted premium.",
-        bodyHtml:
-          `<p style="margin:0 0 18px;font-size:14px;color:#2d2d2d;line-height:1.7">You've been gifted <strong>${planName}</strong> — lifetime access to every premium resource, template, download, and tool in the members library.</p>` +
-          `<p style="margin:0 0 22px;font-size:14px;color:#2d2d2d;line-height:1.7">Sign in with this email to unlock it. Nothing to pay, now or ever.</p>`,
-        cta: { label: "Open Members", href: "https://shubhamdatarkar.com/members" },
-      }),
-    });
+    const res = await sendTemplate(email, membershipGift({ planName }));
     return res.ok;
   } catch (e) {
     console.warn("[members] gift email threw:", (e as Error).message);

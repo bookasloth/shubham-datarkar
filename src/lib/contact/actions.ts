@@ -6,6 +6,8 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { getEmailCredentials } from "@/lib/email/store";
 import { sendEmail } from "@/lib/email/smtp";
 import { renderEmail } from "@/lib/email/template";
+import { sendTemplate } from "@/lib/email/send-template";
+import { contactConfirmation } from "@/lib/email/templates/contact";
 import { toAttributionRow, type FirstTouch } from "@/lib/attribution";
 import { EMAIL_RE } from "@/lib/validation/email";
 import { allow, clientIp } from "@/lib/rate-limit";
@@ -116,18 +118,7 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
       }
 
       // Auto-reply to the sender.
-      const firstName = name.split(" ")[0] || "there";
-      const reply = await sendEmail(creds, {
-        to: email,
-        subject: "Thanks — I got your message",
-        text: `Hi ${firstName},\n\nThanks for reaching out — I read every message and reply within one business day, usually sooner.\n\n— Shubham`,
-        html: renderEmail({
-          preheader: "Thanks for reaching out — I'll reply within a business day.",
-          headerTagline: "<strong>Shubham Datarkar</strong>",
-          title: `Thanks, ${esc(firstName)}`,
-          bodyHtml: `<p style="margin:0 0 18px;font-size:14px;color:#2d2d2d;line-height:1.7">Thanks for reaching out — I read every message and reply within one business day, usually sooner.</p><p style="margin:0;font-size:14px;color:#2d2d2d;line-height:1.7">— Shubham</p>`,
-        }),
-      });
+      const reply = await sendTemplate(email, contactConfirmation({ name }));
       if (!reply.ok) console.warn("[contact] auto-reply failed:", reply.error);
     }
   } catch (e) {

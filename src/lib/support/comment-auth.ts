@@ -4,8 +4,8 @@ import { cookies } from "next/headers";
 import { randomInt } from "node:crypto";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getEmailCredentials } from "@/lib/email/store";
-import { sendEmail } from "@/lib/email/smtp";
-import { renderEmail } from "@/lib/email/template";
+import { sendTemplate } from "@/lib/email/send-template";
+import { commentOtp } from "@/lib/email/templates/auth";
 import { signIdentity, verifyToken, hashOtp, type CommenterIdentity } from "./comment-auth-crypto";
 import { EMAIL_RE } from "@/lib/validation/email";
 
@@ -56,17 +56,7 @@ export async function requestOtp(emailRaw: string): Promise<OtpState> {
     return { ok: false, message: "Could not start verification. Try again." };
   }
 
-  const send = await sendEmail(creds, {
-    to: email,
-    subject: `Your comment verification code: ${code}`,
-    text: `Your verification code is ${code}. It expires in 10 minutes.`,
-    html: renderEmail({
-      preheader: "Your comment verification code",
-      headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: "Verify your email",
-      bodyHtml: `<p style="margin:0 0 12px;font-size:14px;color:#2d2d2d;line-height:1.7">Enter this code to post your comment:</p><p style="margin:0 0 18px;font-size:28px;font-weight:700;letter-spacing:4px;color:#2d2d2d">${code}</p><p style="margin:0;font-size:13px;color:#5f6368">It expires in 10 minutes. If you didn't request this, ignore this email.</p>`,
-    }),
-  });
+  const send = await sendTemplate(email, commentOtp({ code }));
   if (!send.ok) {
     console.warn("[comment-auth] otp email failed:", send.error);
     return { ok: false, message: "Could not send the code. Check the email and try again." };
