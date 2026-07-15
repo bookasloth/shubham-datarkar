@@ -16,7 +16,7 @@ export function ExampleTile({
 }) {
   return (
     <span
-      className={`${prefix}-tile ${prefix}-tile--${state} inline-flex h-8 w-8 items-center justify-center rounded-btn text-sm font-bold uppercase`}
+      className={`${prefix}-tile ${prefix}-tile--${state} inline-flex h-6 w-6 items-center justify-center rounded-btn text-xs font-bold uppercase`}
     >
       {children}
     </span>
@@ -39,7 +39,7 @@ function LegendRow({
       <ExampleTile prefix={prefix} state={state}>
         {letter}
       </ExampleTile>
-      <span className="text-sm text-muted-foreground">{label}</span>
+      <span className="text-xs text-muted-foreground">{label}</span>
     </div>
   );
 }
@@ -55,7 +55,7 @@ export const HELP: Record<GameKey, Help> = {
   alfazy: {
     desc: `Guess the hidden ${ALFAZY.length}-letter word in ${ALFAZY.maxGuesses} tries.`,
     body: (
-      <div className="space-y-4 text-sm">
+      <div className="space-y-3 text-xs leading-snug">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Example</p>
           <div className="flex gap-1.5">
@@ -90,7 +90,7 @@ export const HELP: Record<GameKey, Help> = {
   hit_and_blow: {
     desc: `Crack the ${HIT_AND_BLOW.length}-digit code in ${HIT_AND_BLOW.maxGuesses} tries.`,
     body: (
-      <div className="space-y-4 text-sm">
+      <div className="space-y-3 text-xs leading-snug">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Example</p>
           <p className="text-muted-foreground">
@@ -143,7 +143,7 @@ export const HELP: Record<GameKey, Help> = {
   integra: {
     desc: `Guess the hidden equation in ${INTEGRA.maxGuesses} tries.`,
     body: (
-      <div className="space-y-4 text-sm">
+      <div className="space-y-3 text-xs leading-snug">
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Example</p>
           <div className="flex flex-wrap gap-1.5">

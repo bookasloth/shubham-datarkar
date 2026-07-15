@@ -98,7 +98,12 @@ export function AppShell({
             <AppSidebar signedIn={signedIn} />
           </div>
         </aside>
-        <main className="min-w-0 w-full max-w-[600px] pb-24 lg:pb-10">{children}</main>
+        <main className="min-w-0 w-full max-w-[600px] pb-24 lg:pb-10">
+          {children}
+          {/* Below xl the rail column is hidden, so stack it under the board —
+              otherwise these panels are unreachable on tablet/phone widths. */}
+          {rail && <div className="mt-8 xl:hidden">{rail}</div>}
+        </main>
         {rail && (
           <aside className="hidden w-80 shrink-0 py-4 xl:block">
             <div className="sticky top-[4.5rem]">{rail}</div>
