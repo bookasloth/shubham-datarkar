@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { notifyRequestReceived } from "./request-notify";
 
 export type RequestState = { error?: string; ok?: boolean } | undefined;
 
@@ -31,6 +32,8 @@ export async function createRequest(
     details: details.slice(0, 2000) || null,
   });
   if (error) return { error: error.message };
+
+  if (user.email) await notifyRequestReceived(user.email, kind, title.slice(0, 200));
 
   revalidatePath("/members/requests");
   return { ok: true };
