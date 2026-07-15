@@ -27,6 +27,52 @@ export const EMAIL_BRAND = {
 
 export type EmailCta = { label: string; href: string };
 
+/**
+ * Inline GIF block for the body. Responsive (width:100% up to maxWidth), rounded,
+ * centred. `alt` is REQUIRED and acts as the fallback if the GIF is blocked.
+ * A max-width + auto height keeps it from dominating; email clients that block
+ * images fall back to the alt text, so make it meaningful.
+ */
+export function emailGif(url: string, alt: string, maxWidth = 460): string {
+  return `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 20px;">
+                <tr><td align="center">
+                  <img src="${url}" alt="${alt.replace(/"/g, "&quot;")}" style="width:100%; max-width:${maxWidth}px; border-radius:12px;">
+                </td></tr>
+              </table>`;
+}
+
+/** A label/value details card — receipts, request summaries, booking-style info. */
+export function emailDetails(rows: { label: string; value: string }[]): string {
+  const body = rows
+    .map(
+      (r) =>
+        `<tr><td style="padding:6px 16px 6px 0; font-size:13px; color:#80868b; white-space:nowrap;">${r.label}</td><td style="padding:6px 0; font-size:14px; color:#202124; font-weight:500;">${r.value}</td></tr>`,
+    )
+    .join("");
+  return `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 22px; background:#f6f8fa; border:1px solid #edf0f2; border-radius:10px;">
+                <tr><td style="padding:8px 18px;">
+                  <table role="presentation" cellpadding="0" cellspacing="0">${body}</table>
+                </td></tr>
+              </table>`;
+}
+
+/** A linked list of items — used by digests (new blogs, weekly roundups). */
+export function emailPostList(items: { title: string; href: string; meta?: string }[]): string {
+  const rows = items
+    .map(
+      (it) =>
+        `<tr><td style="padding:10px 0; border-bottom:1px solid #edf0f2;">
+          <a href="${it.href}" style="font-size:15px; font-weight:600; color:#202124; text-decoration:none;">${it.title}</a>
+          ${it.meta ? `<div style="font-size:12px; color:#80868b; margin-top:2px;">${it.meta}</div>` : ""}
+        </td></tr>`,
+    )
+    .join("");
+  return `
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:4px 0 22px;">${rows}</table>`;
+}
+
 export type RenderEmailOptions = {
   /** Hidden inbox-preview text. */
   preheader: string;
