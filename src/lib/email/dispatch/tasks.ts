@@ -169,6 +169,7 @@ export async function runCommunityDigest(t: { dow: number; iso: string }): Promi
     const { data } = await supabaseAdmin()
       .from("community_posts")
       .select("body, public_id, up_count, created_at")
+      .eq("hidden", false)
       .is("parent_id", null)
       .is("reblog_of", null)
       .gte("created_at", since)

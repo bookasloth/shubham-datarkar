@@ -69,8 +69,8 @@ export function emailPostList(items: { title: string; href: string; meta?: strin
     .map(
       (it) =>
         `<tr><td style="padding:10px 0; border-bottom:1px solid #edf0f2;">
-          <a href="${it.href}" style="font-size:15px; font-weight:600; color:#202124; text-decoration:none;">${it.title}</a>
-          ${it.meta ? `<div style="font-size:12px; color:#80868b; margin-top:2px;">${it.meta}</div>` : ""}
+          <a href="${escText(it.href)}" style="font-size:15px; font-weight:600; color:#202124; text-decoration:none;">${escText(it.title)}</a>
+          ${it.meta ? `<div style="font-size:12px; color:#80868b; margin-top:2px;">${escText(it.meta)}</div>` : ""}
         </td></tr>`,
     )
     .join("");
