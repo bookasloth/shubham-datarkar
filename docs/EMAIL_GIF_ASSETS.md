@@ -6,8 +6,8 @@ Foundation of the branded-email system. All templates live in
 `src/lib/email/gifs.ts` (`EMAIL_GIFS`) — never hardcode a CDN path in a template.
 
 - **CDN base:** `https://company-assets.bookasloth.in/images/sd/email`
-- **New GIF directory:** `…/images/sd/email/gifs/`
-- **Public URL pattern:** `https://company-assets.bookasloth.in/images/sd/email/gifs/<file>.gif`
+- **New GIF directory:** `…/images/sd/email/`
+- **Public URL pattern:** `https://company-assets.bookasloth.in/images/sd/email/<file>.gif`
 - Two GIFs already exist at the folder **root** and are reused: `welcome.gif`,
   `unsubscribe.gif`.
 
@@ -87,39 +87,39 @@ loop cleanly.
 | Email | GIF Key | Required Filename | CDN Path | Recommended Scene |
 |---|---|---|---|---|
 | Welcome / account created | accountWelcome | welcome.gif *(exists)* | /images/sd/email/welcome.gif | Friendly wave / hello |
-| Forgot password | forgotPassword | password-reset.gif | /images/sd/email/gifs/password-reset.gif | A key turning in a lock |
-| Password changed | passwordChanged | password-changed.gif | /images/sd/email/gifs/password-changed.gif | A padlock clicking shut |
-| Comment OTP | otp | otp.gif | /images/sd/email/gifs/otp.gif | A code being typed in / secret |
-| Builders List confirmed | newsletterWelcome | newsletter-welcome.gif | /images/sd/email/gifs/newsletter-welcome.gif | Mailbox flag popping up |
-| New blogs this week | newBlogs | new-blogs.gif | /images/sd/email/gifs/new-blogs.gif | A stack of fresh articles |
-| Monthly roundup | monthlyRoundup | monthly-roundup.gif | /images/sd/email/gifs/monthly-roundup.gif | Calendar month flipping / wrap-up |
+| Forgot password | forgotPassword | password-reset.gif | /images/sd/email/password-reset.gif | A key turning in a lock |
+| Password changed | passwordChanged | password-changed.gif | /images/sd/email/password-changed.gif | A padlock clicking shut |
+| Comment OTP | otp | otp.gif | /images/sd/email/otp.gif | A code being typed in / secret |
+| Builders List confirmed | newsletterWelcome | newsletter-welcome.gif | /images/sd/email/newsletter-welcome.gif | Mailbox flag popping up |
+| New blogs this week | newBlogs | new-blogs.gif | /images/sd/email/new-blogs.gif | A stack of fresh articles |
+| Monthly roundup | monthlyRoundup | monthly-roundup.gif | /images/sd/email/monthly-roundup.gif | Calendar month flipping / wrap-up |
 | Unsubscribe confirm | unsubscribe | unsubscribe.gif *(exists)* | /images/sd/email/unsubscribe.gif | Friendly goodbye wave |
-| Welcome to community | communityWelcome | community-welcome.gif | /images/sd/email/gifs/community-welcome.gif | A crowd waving hello |
-| Create first post | firstPost | first-post.gif | /images/sd/email/gifs/first-post.gif | Blank page, blinking cursor |
-| Post published | postPublished | post-published.gif | /images/sd/email/gifs/post-published.gif | Small confetti burst |
-| Someone commented | newComment | new-comment.gif | /images/sd/email/gifs/new-comment.gif | A speech bubble popping up |
-| Weekly community digest | communityDigest | community-digest.gif | /images/sd/email/gifs/community-digest.gif | A lively, buzzing feed |
-| Membership activated | membershipActivated | membership-activated.gif | /images/sd/email/gifs/membership-activated.gif | A member badge lighting up |
-| Renewal reminder | renewalReminder | renewal-reminder.gif | /images/sd/email/gifs/renewal-reminder.gif | Calendar page + gentle clock |
-| Renewed | membershipRenewed | membership-renewed.gif | /images/sd/email/gifs/membership-renewed.gif | A checkmark landing softly |
-| Payment failed | paymentFailed | payment-failed.gif | /images/sd/email/gifs/payment-failed.gif | Card + subtle retry prompt (calm) |
-| New member resource | newResource | new-resource.gif | /images/sd/email/gifs/new-resource.gif | A gift being unwrapped |
-| Monthly member digest | memberDigest | member-digest.gif | /images/sd/email/gifs/member-digest.gif | A shelf of resources filling up |
-| Gifted membership | membershipGift | membership-gift.gif | /images/sd/email/gifs/membership-gift.gif | A wrapped gift with a bow |
-| Request received | requestReceived | request-received.gif | /images/sd/email/gifs/request-received.gif | A note dropping into an inbox tray |
-| Request approved | requestApproved | request-approved.gif | /images/sd/email/gifs/request-approved.gif | A green light switching on |
-| Request declined | requestDeclined | request-declined.gif | /images/sd/email/gifs/request-declined.gif | A respectful, gentle nod |
-| Introduction (24h after signup) | introduction | introduction.gif | /images/sd/email/gifs/introduction.gif | A friendly hello, hand extended |
-| We miss you | weMissYou | we-miss-you.gif | /images/sd/email/gifs/we-miss-you.gif | A chair waiting by an open door |
-| Inactive account | inactiveAccount | finish-setup.gif | /images/sd/email/gifs/finish-setup.gif | A checklist with one box left |
-| Birthday | birthday | birthday.gif | /images/sd/email/gifs/birthday.gif | A little cake with a candle |
-| Festival greeting | festival | festival.gif | /images/sd/email/gifs/festival.gif | Warm celebration lights (generic) |
-| Contact confirmation | contactConfirmation | contact-received.gif | /images/sd/email/gifs/contact-received.gif | A message arriving with a soft ping |
-| Project inquiry response | projectInquiry | project-inquiry.gif | /images/sd/email/gifs/project-inquiry.gif | Two hands meeting in a handshake |
-| New game released | newGame | new-game.gif | /images/sd/email/gifs/new-game.gif | A game controller powering up |
-| Weekly leaderboard | weeklyLeaderboard | weekly-leaderboard.gif | /images/sd/email/gifs/weekly-leaderboard.gif | A trophy on a winner's podium |
-| Achievement unlocked | achievementUnlocked | achievement-unlocked.gif | /images/sd/email/gifs/achievement-unlocked.gif | A badge unlocking with a shine |
-| Streak reminder | streakReminder | streak-reminder.gif | /images/sd/email/gifs/streak-reminder.gif | A small flame flickering |
+| Welcome to community | communityWelcome | community-welcome.gif | /images/sd/email/community-welcome.gif | A crowd waving hello |
+| Create first post | firstPost | first-post.gif | /images/sd/email/first-post.gif | Blank page, blinking cursor |
+| Post published | postPublished | post-published.gif | /images/sd/email/post-published.gif | Small confetti burst |
+| Someone commented | newComment | new-comment.gif | /images/sd/email/new-comment.gif | A speech bubble popping up |
+| Weekly community digest | communityDigest | community-digest.gif | /images/sd/email/community-digest.gif | A lively, buzzing feed |
+| Membership activated | membershipActivated | membership-activated.gif | /images/sd/email/membership-activated.gif | A member badge lighting up |
+| Renewal reminder | renewalReminder | renewal-reminder.gif | /images/sd/email/renewal-reminder.gif | Calendar page + gentle clock |
+| Renewed | membershipRenewed | membership-renewed.gif | /images/sd/email/membership-renewed.gif | A checkmark landing softly |
+| Payment failed | paymentFailed | payment-failed.gif | /images/sd/email/payment-failed.gif | Card + subtle retry prompt (calm) |
+| New member resource | newResource | new-resource.gif | /images/sd/email/new-resource.gif | A gift being unwrapped |
+| Monthly member digest | memberDigest | member-digest.gif | /images/sd/email/member-digest.gif | A shelf of resources filling up |
+| Gifted membership | membershipGift | membership-gift.gif | /images/sd/email/membership-gift.gif | A wrapped gift with a bow |
+| Request received | requestReceived | request-received.gif | /images/sd/email/request-received.gif | A note dropping into an inbox tray |
+| Request approved | requestApproved | request-approved.gif | /images/sd/email/request-approved.gif | A green light switching on |
+| Request declined | requestDeclined | request-declined.gif | /images/sd/email/request-declined.gif | A respectful, gentle nod |
+| Introduction (24h after signup) | introduction | introduction.gif | /images/sd/email/introduction.gif | A friendly hello, hand extended |
+| We miss you | weMissYou | we-miss-you.gif | /images/sd/email/we-miss-you.gif | A chair waiting by an open door |
+| Inactive account | inactiveAccount | finish-setup.gif | /images/sd/email/finish-setup.gif | A checklist with one box left |
+| Birthday | birthday | birthday.gif | /images/sd/email/birthday.gif | A little cake with a candle |
+| Festival greeting | festival | festival.gif | /images/sd/email/festival.gif | Warm celebration lights (generic) |
+| Contact confirmation | contactConfirmation | contact-received.gif | /images/sd/email/contact-received.gif | A message arriving with a soft ping |
+| Project inquiry response | projectInquiry | project-inquiry.gif | /images/sd/email/project-inquiry.gif | Two hands meeting in a handshake |
+| New game released | newGame | new-game.gif | /images/sd/email/new-game.gif | A game controller powering up |
+| Weekly leaderboard | weeklyLeaderboard | weekly-leaderboard.gif | /images/sd/email/weekly-leaderboard.gif | A trophy on a winner's podium |
+| Achievement unlocked | achievementUnlocked | achievement-unlocked.gif | /images/sd/email/achievement-unlocked.gif | A badge unlocking with a shine |
+| Streak reminder | streakReminder | streak-reminder.gif | /images/sd/email/streak-reminder.gif | A small flame flickering |
 
 **Fallback:** the email shell uses meaningful `alt` text on every GIF, so if a
 client blocks images the reader still gets the context. (Animated GIFs can't use

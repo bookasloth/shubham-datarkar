@@ -3,16 +3,16 @@
  * single source of truth so templates never hardcode a CDN path.
  *
  * CDN base matches the existing brand assets in `template.ts` (EMAIL_BRAND logos
- * live under the same `/images/sd/email` folder). Two GIFs already exist at the
- * folder root (welcome.gif, unsubscribe.gif) — reused here; everything new lives
- * under `/gifs/` so uploads are one tidy directory.
+ * live under the same `/images/sd/email` folder). All GIFs live flat in that
+ * folder (welcome.gif / unsubscribe.gif already existed) — one tidy directory.
  *
  * Pure constants — no secrets, no server-only deps (safe to import anywhere,
  * including the admin preview page).
  */
 
 export const EMAIL_CDN = "https://company-assets.bookasloth.in/images/sd/email";
-const G = `${EMAIL_CDN}/gifs`;
+// All email GIFs live flat in this folder (not a /gifs subfolder).
+const G = EMAIL_CDN;
 
 export const EMAIL_GIFS = {
   // Auth
