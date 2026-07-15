@@ -3,7 +3,11 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { loginDestination, safeNext } from "@/lib/auth/redirect";
+import { buildConfirmUrl } from "@/lib/auth/confirm-url";
+import { sendTemplate } from "@/lib/email/send-template";
+import { accountWelcome, forgotPassword, passwordChanged } from "@/lib/email/templates/auth";
 
 export type SignInState = { error: string } | undefined;
 export type MagicLinkState = { ok: true } | { error: string } | undefined;
@@ -62,6 +66,12 @@ export async function signUp(
   const { data, error } = await supabase.auth.signUp({ email, password });
   if (error) return { error: error.message };
 
+  try {
+    await sendTemplate(email, accountWelcome({}));
+  } catch {
+    // Best-effort — signup must succeed even if mail fails.
+  }
+
   redirect(loginDestination(next, data.user?.email));
 }
 
@@ -91,9 +101,10 @@ export async function signInWithMagicLink(
 }
 
 /**
- * Send a password-reset email. Always reports success — Supabase does not error
- * on an unknown address, and we must not leak whether an account exists. The
- * link lands on /reset-password?code=…; that route's form calls updatePassword.
+ * Send a branded password-reset email via admin.generateLink. Always reports
+ * success — we must not leak whether an account exists — so every failure is
+ * swallowed. The link lands on /auth/confirm, which verifies the token_hash
+ * and forwards to /reset-password; that route's form calls updatePassword.
  */
 export async function requestPasswordReset(
   _prev: ResetRequestState,
@@ -102,10 +113,21 @@ export async function requestPasswordReset(
   const email = String(formData.get("email") ?? "").trim();
   if (!email) return { error: "Enter your email." };
 
-  const supabase = await supabaseAuthServer();
-  await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: `${await origin()}/reset-password`,
-  });
+  try {
+    const origin_ = await origin();
+    const { data, error } = await supabaseAdmin().auth.admin.generateLink({
+      type: "recovery",
+      email,
+      options: { redirectTo: `${origin_}/reset-password` },
+    });
+    const tokenHash = data?.properties?.hashed_token;
+    if (!error && tokenHash) {
+      const resetUrl = buildConfirmUrl(origin_, tokenHash, "recovery", "/reset-password");
+      await sendTemplate(email, forgotPassword({ resetUrl }));
+    }
+  } catch {
+    // Swallow — never reveal whether the address exists (no enumeration).
+  }
   return { ok: true };
 }
 
@@ -131,6 +153,13 @@ export async function updatePassword(
 
   const { error } = await supabase.auth.updateUser({ password });
   if (error) return { error: "Could not update password. Request a new reset link." };
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user?.email) await sendTemplate(user.email, passwordChanged({}));
+  } catch {
+    // Best-effort — password change must succeed even if mail fails.
+  }
 
   redirect("/login?reset=1");
 }
