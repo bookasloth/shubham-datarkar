@@ -8,23 +8,26 @@ const SITE = "https://shubhamdatarkar.com";
 export function requestReceived(a: { name?: string | null; kind: string; title: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "Got it — your request is in",
+    subject: "Got it. It reached me.",
     html: renderEmail({
-      preheader: "Landed safely. It's on the list.",
+      preheader: "Your request is in. A human will actually read it.",
       headerTagline: "Requests",
-      title: "Your request is in",
+      title: "Got it. It reached me.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.requestReceived, "A note dropping into an inbox tray", 340) +
-        p(`Thanks ${esc(first)} — your request landed and it's on the list. I go through these personally, so it won't disappear into a void.`) +
+        p(`Hey ${esc(first)},`) +
+        p("Got your request.") +
         emailDetails([
           { label: "Type", value: esc(a.kind) },
           { label: "Request", value: esc(a.title) },
         ]) +
-        p("You'll hear from me when there's an update. No need to send it again."),
-      cta: { label: "See your requests", href: `${SITE}/members/requests` },
+        p("I go through these myself, so it may not magically happen tomorrow morning.") +
+        p("But it is on the list.") +
+        p("If anything changes, you'll hear from me."),
+      cta: { label: "See my requests", href: `${SITE}/members/requests` },
+      afterCta: emailGif(EMAIL_GIFS.requestReceived, "A note dropping into an inbox tray", 340),
     }),
-    text: `Thanks ${first} — your ${a.kind} request "${a.title}" is in and on the list. You'll hear from me with any update. ${SITE}/members/requests`,
+    text: `Hey ${first}, got your ${a.kind} request "${a.title}". I go through these myself — it's on the list, and you'll hear from me if anything changes. ${SITE}/members/requests`,
   };
 }
 
@@ -32,19 +35,24 @@ export function requestReceived(a: { name?: string | null; kind: string; title: 
 export function requestApproved(a: { name?: string | null; title: string; note?: string; href?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `Approved: ${a.title}`,
+    subject: "Fine. You convinced me.",
     html: renderEmail({
-      preheader: "Green light. Your request made the cut.",
+      preheader: "Your request has officially made the cut.",
       headerTagline: "Requests",
-      title: "Good news — it's approved",
+      title: "Fine. You convinced me.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.requestApproved, "A green light switching on", 340) +
-        p(`Hey ${esc(first)}, your request <strong>"${esc(a.title)}"</strong> got the green light.`) +
-        (a.note ? p(esc(a.note)) : p("Keep an eye out — it'll show up where you'd expect it.")),
-      cta: a.href ? { label: "Take a look", href: a.href } : { label: "See your requests", href: `${SITE}/members/requests` },
+        p(`Hey ${esc(first)},`) +
+        p("Remember this?") +
+        `<p style="margin:0 0 16px; font-size:16px; font-weight:600; color:#202124;">${esc(a.title)}</p>` +
+        p("Good news.") +
+        p("I liked the idea enough to actually do something about it.") +
+        (a.note ? p(esc(a.note)) : "") +
+        p("Your request is officially approved."),
+      cta: { label: "See what happened", href: a.href || `${SITE}/members/requests` },
+      afterCta: emailGif(EMAIL_GIFS.requestApproved, "A green light switching on", 340),
     }),
-    text: `Hey ${first}, your request "${a.title}" is approved.${a.note ? ` ${a.note}` : ""} ${a.href || `${SITE}/members/requests`}`,
+    text: `Hey ${first}, your request "${a.title}" is officially approved.${a.note ? ` ${a.note}` : ""} See what happened: ${a.href || `${SITE}/members/requests`}`,
   };
 }
 
@@ -52,19 +60,25 @@ export function requestApproved(a: { name?: string | null; title: string; note?:
 export function requestDeclined(a: { name?: string | null; title: string; reason?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `Update on your request: ${a.title}`,
+    subject: "About that thing you requested",
     html: renderEmail({
-      preheader: "An honest update on where this one landed.",
+      preheader: "Not every idea makes it through. Here's where this one landed.",
       headerTagline: "Requests",
-      title: "An update on your request",
+      title: "About that thing you requested",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.requestDeclined, "A gentle, respectful nod", 340) +
-        p(`Hi ${esc(first)}, I looked at your request <strong>"${esc(a.title)}"</strong> and it's not something I can take on right now.`) +
-        (a.reason ? p(esc(a.reason)) : p("It's not a no forever — priorities shift, and you're welcome to send it again down the line.")) +
-        p("Thanks for taking the time to ask. It genuinely helps me see what people want."),
-      cta: { label: "Send another request", href: `${SITE}/members/requests` },
+        p(`Hey ${esc(first)},`) +
+        p("I looked at your request:") +
+        `<p style="margin:0 0 16px; font-size:16px; font-weight:600; color:#202124;">${esc(a.title)}</p>` +
+        p("I'm not taking this one forward right now.") +
+        (a.reason ? p(esc(a.reason)) : "") +
+        p("That doesn't necessarily mean \"never.\"") +
+        p("It just means it doesn't make sense for me to build it today.") +
+        p("Still glad you asked.") +
+        p("Seriously, keep sending things."),
+      cta: { label: "Send me another idea", href: `${SITE}/members/requests` },
+      afterCta: emailGif(EMAIL_GIFS.requestDeclined, "A gentle, respectful nod", 340),
     }),
-    text: `Hi ${first}, your request "${a.title}" isn't something I can take on right now.${a.reason ? ` ${a.reason}` : ""} Thanks for asking — you're welcome to send another anytime: ${SITE}/members/requests`,
+    text: `Hey ${first}, I looked at your request "${a.title}" and I'm not taking it forward right now.${a.reason ? ` ${a.reason}` : ""} Not "never" — just not today. Keep sending ideas: ${SITE}/members/requests`,
   };
 }

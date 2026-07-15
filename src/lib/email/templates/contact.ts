@@ -8,18 +8,26 @@ const SITE = "https://shubhamdatarkar.com";
 export function contactConfirmation(a: { name?: string | null }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "Got your message.",
+    subject: "Yep. I got it.",
     html: renderEmail({
-      preheader: "It reached a human. Reply's coming.",
+      preheader: "Your message reached an actual human.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: `Thanks, ${esc(first)} — got it.`,
+      title: "Yep. I got it.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.contactConfirmation, "A message arriving with a soft ping", 340) +
-        p("Your message reached me — a real person, not a ticket number. I read every one and usually reply within a business day, often sooner.") +
-        p("No need to send it twice. I'm on it."),
+        p(`Hey ${esc(first)},`) +
+        p("Got your message.") +
+        p("It did not disappear into a mysterious support ticket dimension.") +
+        p("It reached me.") +
+        p("I read every message myself and usually reply within one business day.") +
+        p("Sometimes faster.") +
+        p("Sometimes I'm staring at the reply for 20 minutes trying to make one sentence sound normal.") +
+        p("Either way, you'll hear back.") +
+        p("No need to send it twice."),
+      cta: { label: "Go do something else", href: SITE },
+      afterCta: emailGif(EMAIL_GIFS.contactConfirmation, "A message arriving with a soft ping", 340),
     }),
-    text: `Thanks ${first} — got your message. I read every one and reply within a business day, usually sooner. — Shubham`,
+    text: `Hey ${first}, got your message — it reached a real human, not a support ticket dimension. I read every one myself and usually reply within a business day. You'll hear back; no need to send it twice.`,
   };
 }
 
@@ -29,16 +37,20 @@ export function projectInquiry(a: { name?: string | null; message: string }): Re
   return {
     subject: "About your project",
     html: renderEmail({
-      preheader: "A reply on the project you asked about.",
+      preheader: "I read what you sent. Here's what I think.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: `Hi ${esc(first)},`,
+      title: "About your project",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.projectInquiry, "Two hands meeting in a handshake", 340) +
-        `<p style="margin:0 0 18px; font-size:14px; color:#2d2d2d; line-height:1.7; white-space:pre-wrap;">${esc(a.message)}</p>` +
-        `<p style="margin:0; font-size:14px; color:#2d2d2d; line-height:1.7;">— Shubham</p>`,
-      cta: { label: "Book a call", href: `${SITE}/contact` },
+        p(`Hey ${esc(first)},`) +
+        `<p style="margin:0 0 16px; font-size:14px; color:#2d2d2d; line-height:1.7; white-space:pre-wrap;">${esc(a.message)}</p>` +
+        p("If this sounds like something worth talking through properly, pick a time that works for you.") +
+        p("We'll talk.") +
+        p("No 48-slide sales deck involved.") +
+        `<p style="margin:0 0 16px; font-size:14px; color:#2d2d2d; line-height:1.7;">Shubham</p>`,
+      cta: { label: "Let's talk", href: `${SITE}/contact` },
+      afterCta: emailGif(EMAIL_GIFS.projectInquiry, "Two hands meeting in a handshake", 340),
     }),
-    text: `Hi ${first},\n\n${a.message}\n\n— Shubham\n\nBook a call: ${SITE}/contact`,
+    text: `Hey ${first},\n\n${a.message}\n\nIf it's worth talking through properly, pick a time that works — no 48-slide sales deck. — Shubham\n\n${SITE}/contact`,
   };
 }

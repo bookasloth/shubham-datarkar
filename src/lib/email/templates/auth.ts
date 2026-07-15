@@ -8,19 +8,23 @@ const SITE = "https://shubhamdatarkar.com";
 export function accountWelcome(a: { name?: string | null }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "You're in. Welcome aboard.",
+    subject: "You're in. That was easy.",
     html: renderEmail({
       preheader: "Account created. One less password to invent tonight.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: `Hey ${esc(first)}, you're in.`,
+      title: "You're in. That was easy.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.accountWelcome, "A friendly hello wave") +
-        p("Your account is live. No confetti cannon here — just a clean space to read, play, and build alongside a few thousand other people who care about doing good work.") +
-        p("Have a look around whenever you're ready. That's the whole onboarding."),
-      cta: { label: "Take a look around", href: SITE },
+        p(`Hey ${esc(first)},`) +
+        p("You're in.") +
+        p("Your account is officially alive, which sounds much more dramatic than what actually happened.") +
+        p("No 17-step onboarding. No mandatory product tour. No person from sales appearing in your inbox asking for 15 minutes.") +
+        p("Just come in, look around, read something, play something, build something.") +
+        p("You'll figure the rest out."),
+      cta: { label: "Have a look around", href: SITE },
+      afterCta: emailGif(EMAIL_GIFS.accountWelcome, "A friendly hello wave"),
     }),
-    text: `Hey ${first}, you're in.\n\nYour account is live. Have a look around whenever you're ready: ${SITE}\n\n— Shubham`,
+    text: `Hey ${first},\n\nYou're in. Your account is alive. No 17-step onboarding, no product tour, no sales call. Just come in, look around, read something, play something, build something.\n\nHave a look around: ${SITE}`,
   };
 }
 
@@ -28,19 +32,23 @@ export function accountWelcome(a: { name?: string | null }): RenderedEmail {
 export function forgotPassword(a: { name?: string | null; resetUrl: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "Reset your password",
+    subject: "Forgot your password? Happens.",
     html: renderEmail({
-      preheader: "A link to set a new password. Expires soon.",
+      preheader: "Here's your way back in. This link expires soon.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: "Reset your password",
+      title: "Forgot your password? Happens.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.forgotPassword, "A key turning in a lock") +
-        p(`Hi ${esc(first)}, we got a request to reset your password. Click below to set a new one — the link expires in an hour.`) +
-        p('If you didn\'t ask for this, you can ignore this email. Your password stays exactly as it is.'),
-      cta: { label: "Set a new password", href: a.resetUrl },
+        p(`Hey ${esc(first)},`) +
+        p("Someone asked us to reset your password.") +
+        p("Hopefully, that someone was you.") +
+        p("Click the button below, pick a new password, and maybe make this one slightly more memorable.") +
+        p("The link expires in one hour.") +
+        p("If you didn't request this, ignore the email. Nothing changes."),
+      cta: { label: "Reset my password", href: a.resetUrl },
+      afterCta: emailGif(EMAIL_GIFS.forgotPassword, "A key turning in a lock"),
     }),
-    text: `Hi ${first},\n\nReset your password using this link (expires in 1 hour):\n${a.resetUrl}\n\nDidn't request it? Ignore this email — nothing changes.`,
+    text: `Hey ${first},\n\nSomeone asked to reset your password — hopefully you. Set a new one (link expires in 1 hour):\n${a.resetUrl}\n\nDidn't request it? Ignore this email. Nothing changes.`,
   };
 }
 
@@ -50,35 +58,41 @@ export function passwordChanged(a: { name?: string | null }): RenderedEmail {
   return {
     subject: "New password. Same you.",
     html: renderEmail({
-      preheader: "Your password was just changed.",
+      preheader: "Your password has officially been changed.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: "Your password was changed",
+      title: "New password. Same you.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.passwordChanged, "A padlock clicking shut") +
-        p(`Hi ${esc(first)}, your password was just updated. Your old one has officially retired.`) +
-        p("If this was you, you're all set — no action needed. If it wasn't, reset your password immediately and get in touch."),
+        p(`Hey ${esc(first)},`) +
+        p("Your password was just changed.") +
+        p("The old one has now been respectfully retired.") +
+        p("If that was you, lovely. Nothing else to do.") +
+        p("If it wasn't you, that's considerably less lovely. Reset your password immediately and get in touch with us."),
       cta: { label: "Secure my account", href: `${SITE}/forgot-password` },
+      afterCta: emailGif(EMAIL_GIFS.passwordChanged, "A padlock clicking shut"),
     }),
-    text: `Hi ${first},\n\nYour password was just changed. If this was you, nothing to do. If not, reset it right away: ${SITE}/forgot-password`,
+    text: `Hey ${first},\n\nYour password was just changed. If that was you, nothing to do. If it wasn't, reset it immediately and get in touch: ${SITE}/forgot-password`,
   };
 }
 
-/** Comment email-verification OTP. Humour: None (extremely short + clear). */
-export function commentOtp(a: { code: string }): RenderedEmail {
+/** Comment email-verification OTP. Humour: None (short + clear). */
+export function commentOtp(a: { code: string; returnUrl?: string }): RenderedEmail {
   return {
-    subject: `Your verification code: ${a.code}`,
+    subject: `Your code is ${a.code}`,
     html: renderEmail({
-      preheader: "Your one-time code. Expires in 10 minutes.",
+      preheader: "Six digits. Ten minutes. Try not to overthink it.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
-      title: "Verify your email",
+      title: "Here's your verification code",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.otp, "A code being entered", 320) +
-        p("Enter this code to post your comment:") +
+        p("Here's your verification code:") +
         `<p style="margin:0 0 16px; font-size:30px; font-weight:700; letter-spacing:6px; color:#202124;">${esc(a.code)}</p>` +
-        `<p style="margin:0; font-size:13px; color:#5f6368;">Expires in 10 minutes. Didn't request it? Ignore this email.</p>`,
+        p("It expires in 10 minutes.") +
+        p("Use it to post your comment.") +
+        p("If you didn't request this, you can safely ignore this email and continue with your day."),
+      cta: { label: "Go back to my comment", href: a.returnUrl || SITE },
+      afterCta: emailGif(EMAIL_GIFS.otp, "A code being entered", 320),
     }),
-    text: `Your verification code is ${a.code}. It expires in 10 minutes.`,
+    text: `Your verification code is ${a.code}. It expires in 10 minutes. Use it to post your comment. Didn't request it? Ignore this email.`,
   };
 }

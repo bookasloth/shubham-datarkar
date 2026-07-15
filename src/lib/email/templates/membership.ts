@@ -7,20 +7,26 @@ const SITE = "https://shubhamdatarkar.com";
 /** Membership activated. Humour: High. */
 export function membershipActivated(a: { name?: string | null; planName: string }): RenderedEmail {
   const first = firstName(a.name);
+  const plan = esc(a.planName);
   return {
-    subject: `You're a ${a.planName} member now.`,
+    subject: "The locks are gone.",
     html: renderEmail({
-      preheader: "Membership active. Every locked door just opened.",
+      preheader: `Your ${plan} membership is now active.`,
       headerTagline: "Membership",
-      title: `Welcome to ${esc(a.planName)}, ${esc(first)}.`,
+      title: "The locks are gone.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.membershipActivated, "A member badge lighting up") +
-        p("Your membership is active. Every template, download, and tool that used to have a little lock on it? Open now.") +
-        p("Best way in is the members library. Bookmark it — you'll be back."),
+        p(`Hey ${esc(first)},`) +
+        p(`You're officially a ${plan} member.`) +
+        p("Which means all those little locks you kept seeing?") +
+        p("Gone.") +
+        p("Templates, resources, downloads, tools, and everything else reserved for members are now yours to explore.") +
+        p("I'd start with the library.") +
+        p("Mostly because I spent an unreasonable amount of time putting things in there."),
       cta: { label: "Open the members library", href: `${SITE}/members` },
+      afterCta: emailGif(EMAIL_GIFS.membershipActivated, "A member badge lighting up"),
     }),
-    text: `Welcome to ${a.planName}, ${first}. Your membership is active — everything's unlocked: ${SITE}/members`,
+    text: `Hey ${first}, you're officially a ${a.planName} member — every lock is gone. Templates, resources, downloads, tools, all yours. Start with the library: ${SITE}/members`,
   };
 }
 
@@ -28,24 +34,27 @@ export function membershipActivated(a: { name?: string | null; planName: string 
 export function renewalReminder(a: { name?: string | null; planName: string; renewsOn: string; amount?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `Your membership renews ${a.renewsOn}`,
+    subject: "Tiny heads-up about your membership",
     html: renderEmail({
-      preheader: "Just a heads-up so it's never a surprise.",
+      preheader: `Your membership renews on ${esc(a.renewsOn)}. No surprises around here.`,
       headerTagline: "Membership",
-      title: "A quick heads-up",
+      title: "Tiny heads-up about your membership",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.renewalReminder, "A calendar page and a gentle clock", 360) +
-        p(`Hi ${esc(first)}, your ${esc(a.planName)} membership renews soon. Nothing you need to do — this is just so the charge is never a surprise.`) +
+        p(`Hey ${esc(first)},`) +
+        p("Quick heads-up.") +
+        p(`Your ${esc(a.planName)} membership renews on <strong>${esc(a.renewsOn)}</strong>${a.amount ? ` for <strong>${esc(a.amount)}</strong>` : ""}.`) +
+        p("You don't need to do anything.") +
+        p("I'm just telling you now because surprise charges are a terrible way to maintain a friendship.") +
         emailDetails([
           { label: "Plan", value: esc(a.planName) },
-          { label: "Renews on", value: esc(a.renewsOn) },
+          { label: "Renews", value: esc(a.renewsOn) },
           ...(a.amount ? [{ label: "Amount", value: esc(a.amount) }] : []),
-        ]) +
-        p("Want to make a change? You can manage everything from your account."),
-      cta: { label: "Manage membership", href: `${SITE}/members/account` },
+        ]),
+      cta: { label: "Manage my membership", href: `${SITE}/members/account` },
+      afterCta: emailGif(EMAIL_GIFS.renewalReminder, "A calendar page and a gentle clock", 360),
     }),
-    text: `Hi ${first}, your ${a.planName} membership renews on ${a.renewsOn}${a.amount ? ` (${a.amount})` : ""}. Manage it: ${SITE}/members/account`,
+    text: `Hey ${first}, quick heads-up: your ${a.planName} membership renews on ${a.renewsOn}${a.amount ? ` for ${a.amount}` : ""}. Nothing to do — just no surprise charges. Manage it: ${SITE}/members/account`,
   };
 }
 
@@ -53,23 +62,23 @@ export function renewalReminder(a: { name?: string | null; planName: string; ren
 export function membershipRenewed(a: { name?: string | null; planName: string; nextRenewal?: string; amount?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "Renewed. You're good to go.",
+    subject: "Another year. Still here.",
     html: renderEmail({
-      preheader: "Payment received, membership rolled over. Nothing changes.",
+      preheader: "Membership renewed. Nothing broke. Carry on.",
       headerTagline: "Membership",
-      title: "You're renewed.",
+      title: "Another year. Still here.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.membershipRenewed, "A checkmark landing softly", 340) +
-        p(`Thanks, ${esc(first)}. Your ${esc(a.planName)} membership just rolled over — same access, no interruptions.`) +
-        emailDetails([
-          { label: "Plan", value: esc(a.planName) },
-          ...(a.amount ? [{ label: "Charged", value: esc(a.amount) }] : []),
-          ...(a.nextRenewal ? [{ label: "Next renewal", value: esc(a.nextRenewal) }] : []),
-        ]),
-      cta: { label: "Back to the library", href: `${SITE}/members` },
+        p(`Hey ${esc(first)},`) +
+        p(`Your ${esc(a.planName)} membership has been renewed.`) +
+        p("No interruption. No doors suddenly locking behind you.") +
+        p(`${a.amount ? `You've been charged <strong>${esc(a.amount)}</strong>, and your` : "Your"} next renewal is${a.nextRenewal ? ` <strong>${esc(a.nextRenewal)}</strong>` : " a year away"}.`) +
+        p("That's the entire update.") +
+        p("Back to whatever you were doing."),
+      cta: { label: "Back to the good stuff", href: `${SITE}/members` },
+      afterCta: emailGif(EMAIL_GIFS.membershipRenewed, "A checkmark landing softly", 340),
     }),
-    text: `Thanks ${first} — your ${a.planName} membership renewed. Same access, no interruptions. ${SITE}/members`,
+    text: `Hey ${first}, your ${a.planName} membership renewed — no interruption.${a.amount ? ` Charged ${a.amount}.` : ""}${a.nextRenewal ? ` Next renewal ${a.nextRenewal}.` : ""} Back to the good stuff: ${SITE}/members`,
   };
 }
 
@@ -77,19 +86,22 @@ export function membershipRenewed(a: { name?: string | null; planName: string; n
 export function paymentFailed(a: { name?: string | null; planName: string; retryUrl?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "We couldn't process your payment",
+    subject: "Your payment did a small backflip",
     html: renderEmail({
-      preheader: "A payment didn't go through. Here's how to fix it.",
+      preheader: "It didn't go through. Usually an easy fix.",
       headerTagline: "Membership",
-      title: "Your payment didn't go through",
+      title: "Your payment did a small backflip",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.paymentFailed, "A card and a small retry prompt", 340) +
-        p(`Hi ${esc(first)}, we tried to process your ${esc(a.planName)} payment and it didn't go through. This happens — usually an expired card or a bank check.`) +
-        p("Your access is still on for now. To keep it that way, update your payment method and we'll retry."),
-      cta: { label: "Update payment method", href: a.retryUrl || `${SITE}/members/account` },
+        p(`Hey ${esc(first)},`) +
+        p(`Your ${esc(a.planName)} membership payment didn't go through.`) +
+        p("Usually, it's something boring. An expired card, a bank check, the financial system having one of its little moments.") +
+        p("Your access is still active for now.") +
+        p("Update your payment method and we'll try again."),
+      cta: { label: "Fix the payment thing", href: a.retryUrl || `${SITE}/members/account` },
+      afterCta: emailGif(EMAIL_GIFS.paymentFailed, "A card and a small retry prompt", 340),
     }),
-    text: `Hi ${first}, your ${a.planName} payment didn't go through — often an expired card. Access is still on for now. Update your payment method: ${a.retryUrl || `${SITE}/members/account`}`,
+    text: `Hey ${first}, your ${a.planName} payment didn't go through — usually an expired card. Access is still active for now. Update your payment method: ${a.retryUrl || `${SITE}/members/account`}`,
   };
 }
 
@@ -97,38 +109,47 @@ export function paymentFailed(a: { name?: string | null; planName: string; retry
 export function newMemberResource(a: { name?: string | null; title: string; href: string; kind?: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `New in the members library: ${a.title}`,
+    subject: "I added something new behind the lock",
     html: renderEmail({
-      preheader: "Fresh drop, members only. That's you.",
+      preheader: `${esc(a.title)} is now in the members library.`,
       headerTagline: "Members only",
-      title: "Something new just dropped",
+      title: "I added something new behind the lock",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.newResource, "A gift being unwrapped", 340) +
-        p(`Hi ${esc(first)}, there's a new ${esc(a.kind || "resource")} in the members library — the kind of thing that's behind the lock for everyone else, but not for you.`) +
-        `<p style="margin:0 0 18px; font-size:16px; font-weight:600; color:#202124;">${esc(a.title)}</p>`,
-      cta: { label: "Grab it now", href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p("I just added something new to the members library:") +
+        `<p style="margin:0 0 18px; font-size:16px; font-weight:600; color:#202124;">${esc(a.title)}</p>` +
+        p("Everyone else gets a little lock icon.") +
+        p("You get the actual thing.") +
+        p("Membership has its moments."),
+      cta: { label: "Give me the thing", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.newResource, "A gift being unwrapped", 340),
     }),
-    text: `Hi ${first}, new in the members library: ${a.title}. Grab it: ${a.href}`,
+    text: `Hey ${first}, new in the members library: ${a.title}. Everyone else gets a lock icon; you get the actual thing. Grab it: ${a.href}`,
   };
 }
 
 /** Monthly member digest. Humour: Subtle. */
 export function memberDigest(a: { monthLabel: string; items: { title: string; href: string; meta?: string }[] }): RenderedEmail {
   return {
-    subject: `Members: your ${a.monthLabel} drop`,
+    subject: `Your ${a.monthLabel} member drop has landed`,
     html: renderEmail({
-      preheader: "Everything that landed in the library this month.",
+      preheader: "Everything new I added this month, minus the searching.",
       headerTagline: "Monthly member digest",
-      title: `${esc(a.monthLabel)} in the members library`,
+      title: `Your ${esc(a.monthLabel)} member drop has landed`,
       bodyHtml:
-        emailGif(EMAIL_GIFS.memberDigest, "A shelf of resources filling up", 380) +
-        p("Everything new behind the members lock this month, gathered in one place so nothing slips past you.") +
-        emailPostList(a.items),
-      cta: { label: "Open the library", href: `${SITE}/members` },
+        p("Hey there,") +
+        p("I added a bunch of things to the members library this month.") +
+        p("Rather than making you hunt for them, here they are:") +
+        emailPostList(a.items) +
+        p("Download what you need.") +
+        p("Ignore what you don't.") +
+        p("Come back when future-you suddenly needs that one template you skipped."),
+      cta: { label: "See everything new", href: `${SITE}/members` },
+      afterCta: emailGif(EMAIL_GIFS.memberDigest, "A shelf of resources filling up", 380),
     }),
     text:
-      `${a.monthLabel} in the members library:\n\n` +
+      `Your ${a.monthLabel} member drop:\n\n` +
       a.items.map((x) => `• ${x.title} — ${x.href}`).join("\n") +
       `\n\n${SITE}/members`,
   };
@@ -136,19 +157,25 @@ export function memberDigest(a: { monthLabel: string; items: { title: string; hr
 
 /** Gifted membership. Humour: High. */
 export function membershipGift(a: { planName: string }): RenderedEmail {
+  const plan = esc(a.planName);
   return {
-    subject: `Someone gifted you ${a.planName}.`,
+    subject: "Someone likes you enough to pay for this",
     html: renderEmail({
-      preheader: "A membership, on the house. No catch.",
+      preheader: `You've been gifted a ${plan} membership.`,
       headerTagline: "A gift for you",
-      title: "You've been gifted premium.",
+      title: "Someone likes you enough to pay for this",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.membershipGift, "A wrapped gift with a bow") +
-        p(`You've been gifted <strong>${esc(a.planName)}</strong> — lifetime access to every premium resource, template, download, and tool in the members library.`) +
-        p("Sign in with this email to unlock it. Nothing to pay, now or ever. Genuinely, that's the whole email."),
-      cta: { label: "Unlock my gift", href: `${SITE}/members` },
+        p("Hey there,") +
+        p(`Someone just gifted you a <strong>${plan} membership</strong>.`) +
+        p("Very nice of them, frankly.") +
+        p("You now have access to the members library, premium resources, templates, downloads, tools, and everything else hiding behind the lock.") +
+        p("Nothing to pay.") +
+        p("No card required.") +
+        p("Just sign in with this email and enjoy your suspiciously good fortune."),
+      cta: { label: "Unwrap my membership", href: `${SITE}/members` },
+      afterCta: emailGif(EMAIL_GIFS.membershipGift, "A wrapped gift with a bow"),
     }),
-    text: `You've been gifted ${a.planName} — lifetime premium access. Sign in with this email to unlock it, nothing to pay: ${SITE}/members`,
+    text: `Someone gifted you a ${a.planName} membership — the whole members library, premium resources, templates, downloads, tools. Nothing to pay, no card. Sign in with this email: ${SITE}/members`,
   };
 }

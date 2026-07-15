@@ -7,21 +7,27 @@ const SITE = "https://shubhamdatarkar.com";
 /** Welcome to the community. Humour: High. */
 export function communityWelcome(a: { name?: string | null; username?: string | null }): RenderedEmail {
   const first = firstName(a.name);
-  const handle = a.username ? ` You're <strong>@${esc(a.username)}</strong> around here.` : "";
+  const handle = a.username ? `@${esc(a.username)}` : "one of us";
   return {
-    subject: "Welcome to the community.",
+    subject: "Welcome. You can lurk first.",
     html: renderEmail({
-      preheader: "You've got a seat. Pull it up.",
+      preheader: "Your seat is ready. Participation remains suspiciously optional.",
       headerTagline: "Community",
-      title: `Welcome in, ${esc(first)}.`,
+      title: "Welcome. You can lurk first.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.communityWelcome, "A crowd waving hello") +
-        p(`You're officially part of the community.${handle}`) +
-        p("It's a feed of builders sharing what they're working on, what broke, and what actually worked. Lurk for a bit if you like — then say something when you're ready."),
-      cta: { label: "Jump into the feed", href: `${SITE}/community` },
+        p(`Hey ${esc(first)},`) +
+        p("Welcome to the community.") +
+        p(`Around here, you're <strong>${handle}</strong>.`) +
+        p("People share what they're building, what worked, what absolutely did not work, and the occasional thing they probably should've Googled first.") +
+        p("You don't need an introduction post.") +
+        p("You don't need a clever first comment.") +
+        p("Lurk for three weeks if you want.") +
+        p("But when you have something to say, say it."),
+      cta: { label: "Enter the community", href: `${SITE}/community` },
+      afterCta: emailGif(EMAIL_GIFS.communityWelcome, "A crowd waving hello"),
     }),
-    text: `Welcome in, ${first}. You're part of the community now. Jump into the feed: ${SITE}/community`,
+    text: `Hey ${first}, welcome to the community. You're ${a.username ? `@${a.username}` : "one of us"} now. No intro post, no clever first comment — lurk if you like, then say something when you're ready. Enter: ${SITE}/community`,
   };
 }
 
@@ -29,19 +35,24 @@ export function communityWelcome(a: { name?: string | null; username?: string | 
 export function firstPostNudge(a: { name?: string | null }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "The feed's waiting for you",
+    subject: "You've been suspiciously quiet",
     html: renderEmail({
-      preheader: "Your first post is the hardest. It's also two minutes of work.",
+      preheader: "Your first post does not need to change the internet.",
       headerTagline: "Community",
-      title: "Say your first thing.",
+      title: "You've been suspiciously quiet",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.firstPost, "A blank page and a blinking cursor") +
-        p(`Hey ${esc(first)}, you've been reading — which is great — but the feed is better with you in it.`) +
-        p("It doesn't have to be profound. What you're building, what you're stuck on, a small win from today. That's a post."),
-      cta: { label: "Write your first post", href: `${SITE}/community` },
+        p(`Hey ${esc(first)},`) +
+        p("You've been reading.") +
+        p("Which is perfectly legal.") +
+        p("But at some point, you should probably say something too.") +
+        p("Tell us what you're building. Ask a question. Share something that worked. Complain about something that didn't.") +
+        p("It doesn't need to be profound.") +
+        p("This is the internet. The bar has survived worse."),
+      cta: { label: "Write something", href: `${SITE}/community` },
+      afterCta: emailGif(EMAIL_GIFS.firstPost, "A blank page and a blinking cursor"),
     }),
-    text: `Hey ${first}, the feed's better with you in it. Write your first post — what you're building, or what's stuck: ${SITE}/community`,
+    text: `Hey ${first}, you've been reading — which is legal — but say something too. What you're building, a question, a win, a complaint. Doesn't need to be profound. Write something: ${SITE}/community`,
   };
 }
 
@@ -49,19 +60,22 @@ export function firstPostNudge(a: { name?: string | null }): RenderedEmail {
 export function postPublished(a: { name?: string | null; href: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: "Your post is live.",
+    subject: "Look at you. Publishing things.",
     html: renderEmail({
-      preheader: "Out in the wild. Go see how it looks.",
+      preheader: "Your post is live and other humans can now have opinions about it.",
       headerTagline: "Community",
-      title: "It's live.",
+      title: "Look at you. Publishing things.",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.postPublished, "A small burst of confetti") +
-        p(`Nicely done, ${esc(first)}. Your post is out in the feed for everyone to see.`) +
-        p("Keep an eye on it — replies and reactions have a way of showing up when you least expect them."),
-      cta: { label: "View your post", href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p("Your post is live.") +
+        p("It has officially left the safety of your draft box and entered the internet.") +
+        p("People can now read it, react to it, reply to it, or silently agree without clicking anything.") +
+        p("Go have a look."),
+      cta: { label: "View my post", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.postPublished, "A small burst of confetti"),
     }),
-    text: `Your post is live, ${first}. View it: ${a.href}`,
+    text: `Hey ${first}, your post is live — out of the draft box and into the internet. Go have a look: ${a.href}`,
   };
 }
 
@@ -69,35 +83,43 @@ export function postPublished(a: { name?: string | null; href: string }): Render
 export function newComment(a: { name?: string | null; author: string; excerpt: string; href: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `${a.author} replied to you`,
+    subject: `${a.author} had something to say`,
     html: renderEmail({
-      preheader: `${a.author} left a comment on your post.`,
+      preheader: "Someone replied to your post. The internet is working.",
       headerTagline: "Community",
-      title: "You've got a reply.",
+      title: `${esc(a.author)} had something to say`,
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.newComment, "A speech bubble popping up", 340) +
-        p(`Hi ${esc(first)}, <strong>${esc(a.author)}</strong> just responded to your post:`) +
-        `<p style="margin:0 0 18px; padding:12px 16px; background:#f6f8fa; border-radius:10px; font-size:14px; color:#2d2d2d; line-height:1.6;">${esc(a.excerpt)}</p>`,
-      cta: { label: "Read the reply", href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p(`<strong>${esc(a.author)}</strong> replied to your post.`) +
+        `<p style="margin:0 0 18px; padding:12px 16px; background:#f6f8fa; border-radius:10px; font-size:14px; color:#2d2d2d; line-height:1.6;">"${esc(a.excerpt)}"</p>` +
+        p("That's all I'm showing you here.") +
+        p("You'll have to click if you want the rest.") +
+        p("Yes, I understand what I'm doing."),
+      cta: { label: "Read the full reply", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.newComment, "A speech bubble popping up", 340),
     }),
-    text: `${a.author} replied to your post:\n\n"${a.excerpt}"\n\nRead it: ${a.href}`,
+    text: `Hey ${first}, ${a.author} replied to your post:\n\n"${a.excerpt}"\n\nRead the full reply: ${a.href}`,
   };
 }
 
 /** Weekly community digest. Humour: Subtle. */
 export function communityDigest(a: { items: { title: string; href: string; meta?: string }[] }): RenderedEmail {
   return {
-    subject: "This week in the community",
+    subject: "The community was busy while you were doing actual work",
     html: renderEmail({
-      preheader: "The posts people actually reacted to this week.",
+      preheader: "Here's what people couldn't stop talking about this week.",
       headerTagline: "Weekly community digest",
-      title: "What happened this week",
+      title: "The community was busy",
       bodyHtml:
-        emailGif(EMAIL_GIFS.communityDigest, "A lively buzzing feed", 380) +
-        p("The posts that got people talking over the last seven days. Caught up in one scroll.") +
-        emailPostList(a.items),
-      cta: { label: "Open the community", href: `${SITE}/community` },
+        p("Hey there,") +
+        p("A lot happened in the community this week.") +
+        p("Thankfully, you do not need to scroll through all of it.") +
+        p("These are the posts that got people talking:") +
+        emailPostList(a.items) +
+        p("Consider this your shortcut."),
+      cta: { label: "See what happened", href: `${SITE}/community` },
+      afterCta: emailGif(EMAIL_GIFS.communityDigest, "A lively buzzing feed", 380),
     }),
     text:
       `This week in the community:\n\n` +

@@ -5,43 +5,57 @@ import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 /** New game released. Humour: High. */
 export function newGame(a: { name?: string | null; gameName: string; href: string; blurb?: string }): RenderedEmail {
   const first = firstName(a.name);
+  const game = esc(a.gameName);
   return {
-    subject: `New game: ${a.gameName}`,
+    subject: "I made another way to waste your time",
     html: renderEmail({
-      preheader: "A new way to lose track of ten minutes.",
+      preheader: `New game: ${game}. Productivity was nice while it lasted.`,
       headerTagline: "Games",
-      title: `${esc(a.gameName)} is live.`,
+      title: "I made another way to waste your time",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.newGame, "A game controller powering up") +
-        p(`Hey ${esc(first)}, there's a new game in the arcade — ${esc(a.gameName)}. ${esc(a.blurb || "Easy to learn, mildly infuriating to master. You know the drill.")}`) +
-        p("First round's the hardest. Go set a score before everyone else does."),
-      cta: { label: `Play ${esc(a.gameName)}`, href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p("I made a new game.") +
+        p(`It's called <strong>${game}</strong>.`) +
+        (a.blurb ? p(esc(a.blurb)) : "") +
+        p("It looks easy.") +
+        p("This is intentional deception.") +
+        p("Your first attempt will probably be terrible.") +
+        p("Your second attempt will happen immediately after.") +
+        p("Sorry in advance."),
+      cta: { label: "Fine, let me play", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.newGame, "A game controller powering up"),
     }),
-    text: `Hey ${first}, new game in the arcade: ${a.gameName}. ${a.blurb || ""} Play it: ${a.href}`,
+    text: `Hey ${first}, I made a new game — ${a.gameName}. ${a.blurb || ""} It looks easy; this is intentional deception. Play it: ${a.href}`,
   };
 }
 
 /** Weekly leaderboard. Humour: Subtle. */
 export function weeklyLeaderboard(a: { gameName: string; rows: { rank: number; name: string; score: string }[]; yourRank?: number; href: string }): RenderedEmail {
+  const game = esc(a.gameName);
   return {
-    subject: `This week's ${a.gameName} leaderboard`,
+    subject: a.yourRank ? `You finished #${a.yourRank}. We need to talk.` : `This week's ${a.gameName} leaderboard`,
     html: renderEmail({
-      preheader: "The standings are in. Bragging rights included.",
+      preheader: `The ${game} leaderboard is in. Evidence has been collected.`,
       headerTagline: "Weekly leaderboard",
-      title: `${esc(a.gameName)} — this week's top players`,
+      title: "The leaderboard is in",
       bodyHtml:
-        emailGif(EMAIL_GIFS.weeklyLeaderboard, "A trophy on a winner's podium", 360) +
-        p("The week's standings are settled. Here's who topped the board:") +
+        p("Hey there,") +
+        p(`The weekly ${game} leaderboard is settled.`) +
         emailDetails(a.rows.map((r) => ({ label: `#${r.rank}`, value: `${esc(r.name)} — ${esc(r.score)}` }))) +
-        (a.yourRank ? p(`You landed at <strong>#${a.yourRank}</strong> this week. A fresh board opens now — plenty of room to climb.`) : p("A fresh board opens now. Your move.")),
-      cta: { label: "Take your shot", href: a.href },
+        (a.yourRank
+          ? p(`You finished at <strong>#${a.yourRank}</strong>.`) +
+            p("Whether that deserves celebration or immediate revenge depends entirely on where you landed.")
+          : p("A fresh board opens now.")) +
+        p("Conveniently, there's a fresh board waiting."),
+      cta: { label: "I can do better than that", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.weeklyLeaderboard, "A trophy on a winner's podium", 360),
     }),
     text:
       `This week's ${a.gameName} leaderboard:\n\n` +
       a.rows.map((r) => `#${r.rank}  ${r.name} — ${r.score}`).join("\n") +
       (a.yourRank ? `\n\nYou: #${a.yourRank}` : "") +
-      `\n\nPlay: ${a.href}`,
+      `\n\nA fresh board's open: ${a.href}`,
   };
 }
 
@@ -49,20 +63,25 @@ export function weeklyLeaderboard(a: { gameName: string; rows: { rank: number; n
 export function achievementUnlocked(a: { name?: string | null; achievement: string; detail?: string; href: string }): RenderedEmail {
   const first = firstName(a.name);
   return {
-    subject: `Achievement unlocked: ${a.achievement}`,
+    subject: "Look at you, achieving things",
     html: renderEmail({
-      preheader: "You earned this one. Take the little dopamine hit.",
+      preheader: `You just unlocked ${esc(a.achievement)}.`,
       headerTagline: "Games",
-      title: "Achievement unlocked",
+      title: "Look at you, achieving things",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.achievementUnlocked, "A badge unlocking with a shine", 340) +
-        p(`Nice one, ${esc(first)}. You just earned:`) +
-        `<p style="margin:0 0 12px; font-size:18px; font-weight:700; color:#202124;">${esc(a.achievement)}</p>` +
-        (a.detail ? p(esc(a.detail)) : p("Small thing, real thing. Go chase the next one.")),
-      cta: { label: "Keep playing", href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p("You just unlocked:") +
+        `<p style="margin:0 0 16px; font-size:18px; font-weight:700; color:#202124;">${esc(a.achievement)}</p>` +
+        (a.detail ? p(esc(a.detail)) : "") +
+        p("Does this materially improve your life?") +
+        p("Probably not.") +
+        p("Does the tiny dopamine hit still count?") +
+        p("Absolutely."),
+      cta: { label: "Chase another one", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.achievementUnlocked, "A badge unlocking with a shine", 340),
     }),
-    text: `Nice one, ${first}. Achievement unlocked: ${a.achievement}.${a.detail ? ` ${a.detail}` : ""} Keep playing: ${a.href}`,
+    text: `Hey ${first}, you just unlocked: ${a.achievement}.${a.detail ? ` ${a.detail}` : ""} Does it improve your life? Probably not. Does the dopamine count? Absolutely. Chase another: ${a.href}`,
   };
 }
 
@@ -71,18 +90,24 @@ export function streakReminder(a: { name?: string | null; streak: number; gameNa
   const first = firstName(a.name);
   const where = a.gameName ? ` in ${esc(a.gameName)}` : "";
   return {
-    subject: `Your ${a.streak}-day streak is on the line`,
+    subject: "I'm not saying you'll lose your streak, but…",
     html: renderEmail({
-      preheader: "One quick round keeps it alive.",
+      preheader: `${a.streak} days of work disappear at midnight. Just mentioning it.`,
       headerTagline: "Games",
-      title: `Don't drop the streak, ${esc(first)}`,
+      title: "I'm not saying you'll lose your streak, but…",
       footerNote: TXN_FOOTER,
       bodyHtml:
-        emailGif(EMAIL_GIFS.streakReminder, "A small flame flickering", 300) +
-        p(`You're on a <strong>${a.streak}-day</strong> run${where}. That's a real thing you built one day at a time — and it resets at midnight if today's round goes unplayed.`) +
-        p("One quick game keeps it alive. Then you're free."),
-      cta: { label: "Play today's round", href: a.href },
+        p(`Hey ${esc(first)},`) +
+        p(`You currently have a <strong>${a.streak}-day streak</strong>${where}.`) +
+        p("Very nice.") +
+        p("It also resets at midnight if you don't play today.") +
+        p("Less nice.") +
+        p("One game.") +
+        p("That's all.") +
+        p("Then you may return to pretending you're a responsible adult."),
+      cta: { label: "Save my streak", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.streakReminder, "A small flame flickering", 300),
     }),
-    text: `${first}, your ${a.streak}-day streak${where} resets at midnight. One quick round keeps it alive: ${a.href}`,
+    text: `Hey ${first}, you have a ${a.streak}-day streak${where}. It resets at midnight if you don't play today. One game — that's all. Save it: ${a.href}`,
   };
 }

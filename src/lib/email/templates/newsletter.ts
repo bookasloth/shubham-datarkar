@@ -11,36 +11,42 @@ export function newsletterWelcome(): RenderedEmail {
   return {
     subject: "You're on the Builders List.",
     html: renderEmail({
-      preheader: "Ad breakdowns, growth frameworks, and the odd hard truth.",
-      title: "Welcome to the Builders List.",
+      preheader: "Good stuff. Bad jokes. Useful things. Mostly in that order.",
+      title: "You're on the Builders List.",
       bodyHtml:
-        emailGif(EMAIL_GIFS.newsletterWelcome, "A mailbox flag popping up") +
-        p("You just joined a small crowd of builders and marketers who'd rather learn what actually works than read another thread of recycled advice.") +
-        p("Here's the deal: ad breakdowns, SEO and growth frameworks you can use the same day, build logs from real projects, and the occasional opinion I probably shouldn't say out loud.") +
-        p("As a subscriber you also get resources I don't share anywhere else. Grab them below."),
-      cta: { label: "Open the subscriber vault", href: `${SITE}/subscriber-assets` },
+        p("Hey there,") +
+        p("You're officially on the Builders List.") +
+        p("This means I'll occasionally appear in your inbox with things I found useful, built, broke, learned, or spent an unreasonable amount of time thinking about.") +
+        p("Expect ad breakdowns, SEO and growth experiments, build logs, useful resources, and opinions I probably could've kept to myself.") +
+        p("I won't email you just because Tuesday exists.") +
+        p("Deal?"),
+      cta: { label: "See what you've joined", href: `${SITE}/subscriber-assets` },
+      afterCta: emailGif(EMAIL_GIFS.newsletterWelcome, "A mailbox flag popping up"),
     }),
-    text: `You're on the Builders List.\n\nExpect ad breakdowns, growth frameworks, build logs, and subscriber-only resources. Your goodies live here: ${SITE}/subscriber-assets`,
+    text: `You're on the Builders List. Ad breakdowns, SEO and growth experiments, build logs, useful resources, and the odd strong opinion — never just because it's Tuesday. See what you've joined: ${SITE}/subscriber-assets`,
   };
 }
 
-/** Weekly "new blogs this week" digest (Tue→Mon). Humour: Subtle. */
+/** Weekly "new blogs this week" digest. Humour: Subtle. */
 export function newBlogs(a: { posts: Post[] }): RenderedEmail {
-  const count = a.posts.length;
   return {
-    subject: count === 1 ? "One new read this week" : `${count} new reads this week`,
+    subject: "I wrote some things this week",
     html: renderEmail({
-      preheader: "Fresh from the week. Pick one, ignore the rest — no pressure.",
+      preheader: "Read one. Read all. Pretend you'll read them later. All valid options.",
       headerTagline: "This week's writing",
-      title: count === 1 ? "One thing worth reading" : `${count} things worth reading`,
+      title: "I wrote some things this week",
       bodyHtml:
-        emailGif(EMAIL_GIFS.newBlogs, "A stack of fresh articles", 380) +
-        p("Everything I published since last Tuesday, in one place. Read what catches your eye and skip the rest — I won't know.") +
-        emailPostList(a.posts),
-      cta: { label: "Read on the blog", href: `${SITE}/blog` },
+        p("Hey there,") +
+        p("Apparently, I had thoughts again.") +
+        p("Here's everything I published this week.") +
+        emailPostList(a.posts) +
+        p("Pick whatever catches your eye.") +
+        p("Or open seven tabs and read none of them. I know how the internet works."),
+      cta: { label: "See this week's writing", href: `${SITE}/blog` },
+      afterCta: emailGif(EMAIL_GIFS.newBlogs, "A stack of fresh articles", 380),
     }),
     text:
-      `New this week:\n\n` +
+      `I wrote some things this week:\n\n` +
       a.posts.map((x) => `• ${x.title} — ${x.href}`).join("\n") +
       `\n\nMore at ${SITE}/blog`,
   };
@@ -49,19 +55,24 @@ export function newBlogs(a: { posts: Post[] }): RenderedEmail {
 /** Monthly roundup. Humour: Subtle. */
 export function monthlyRoundup(a: { monthLabel: string; posts: Post[] }): RenderedEmail {
   return {
-    subject: `${a.monthLabel}, wrapped`,
+    subject: `${a.monthLabel}, in case you missed half of it`,
     html: renderEmail({
-      preheader: "The month's best bits, so you don't have to scroll for them.",
+      preheader: "The good bits from the month. The rest can stay buried.",
       headerTagline: "Monthly roundup",
-      title: `${esc(a.monthLabel)}, in one scroll`,
+      title: `${esc(a.monthLabel)}, in case you missed half of it`,
       bodyHtml:
-        emailGif(EMAIL_GIFS.monthlyRoundup, "Pages flipping through a calendar month", 380) +
-        p("A whole month happened. Here are the pieces worth your time, saved from the scroll.") +
-        emailPostList(a.posts),
-      cta: { label: "See everything", href: `${SITE}/blog` },
+        p("Hey there,") +
+        p("Another month disappeared suspiciously quickly.") +
+        p("I wrote things. Built things. Probably changed my mind about a few things.") +
+        p("Here are the bits actually worth coming back to:") +
+        emailPostList(a.posts) +
+        p("That should save you approximately 47 minutes of scrolling.") +
+        p("You're welcome."),
+      cta: { label: `Catch up on ${esc(a.monthLabel)}`, href: `${SITE}/blog` },
+      afterCta: emailGif(EMAIL_GIFS.monthlyRoundup, "Pages flipping through a calendar month", 380),
     }),
     text:
-      `${a.monthLabel}, wrapped:\n\n` +
+      `${a.monthLabel}, in case you missed half of it:\n\n` +
       a.posts.map((x) => `• ${x.title} — ${x.href}`).join("\n") +
       `\n\n${SITE}/blog`,
   };
@@ -70,17 +81,20 @@ export function monthlyRoundup(a: { monthLabel: string; posts: Post[] }): Render
 /** Unsubscribe confirmation. Humour: Subtle (graceful exit). */
 export function unsubscribed(): RenderedEmail {
   return {
-    subject: "Done. You're unsubscribed.",
+    subject: "You escaped.",
     html: renderEmail({
-      preheader: "You're off the list. The door stays unlocked.",
+      preheader: "You're off the list. No dramatic breakup email, promise.",
       headerTagline: "Subscription updated",
-      title: "You're unsubscribed.",
+      title: "You escaped.",
       bodyHtml:
-        emailGif(EMAIL_GIFS.unsubscribe, "A friendly goodbye wave") +
-        p("No more build logs, breakdowns, or growth frameworks landing in your inbox. No hard feelings, honestly.") +
-        p("If it turns out you miss us, the door's unlocked — re-subscribe anytime."),
-      cta: { label: "Actually, take me back", href: `${SITE}/subscribe` },
+        p("You're unsubscribed.") +
+        p("No more emails from the Builders List.") +
+        p("No guilt trip. No \"before you go\" questionnaire with 14 required fields.") +
+        p("If you ever change your mind, the door will still be there.") +
+        p("Probably unlocked."),
+      cta: { label: "I changed my mind", href: `${SITE}/subscribe` },
+      afterCta: emailGif(EMAIL_GIFS.unsubscribe, "A friendly goodbye wave"),
     }),
-    text: `You're unsubscribed — no more newsletter. No hard feelings. Changed your mind? ${SITE}/subscribe`,
+    text: `You're unsubscribed — no more emails from the Builders List. No guilt trip. Changed your mind? The door's unlocked: ${SITE}/subscribe`,
   };
 }
