@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HelpCircle, Gamepad2 } from "lucide-react";
-import { GAMES, gameBySlug, type GameKey } from "@/lib/games/registry";
+import { HelpCircle, Gamepad2, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { GAMES, gameBySlug, gameIcon, type GameKey } from "@/lib/games/registry";
 import { HELP } from "@/lib/games/help-content";
 
 /**
@@ -34,8 +35,8 @@ function Card({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-card border border-border bg-card p-4 shadow-sm">
-      <header className="mb-3 flex items-center gap-2 text-sm font-semibold">
+    <section className="rounded-card border border-border bg-card p-3 shadow-sm">
+      <header className="mb-2 flex items-center gap-2 text-sm font-semibold">
         {icon}
         <span>{title}</span>
       </header>
@@ -63,24 +64,27 @@ function OtherGamesCard({ game }: { game: GameKey }) {
   const others = GAMES.filter((g) => g.key !== game);
   return (
     <Card icon={<Gamepad2 className="size-4" />} title="Other games">
-      <ul className="space-y-2">
+      <ul>
         {others.map((g) => (
           <li key={g.key}>
             <Link
               href={`/games/${g.slug}`}
-              className="group flex items-center justify-between rounded-input px-2 py-1.5 text-sm transition-ui hover:bg-accent"
+              className="group flex items-center gap-3 rounded-input px-2 py-2 transition-ui hover:bg-accent"
             >
-              <span className="font-medium">{g.name}</span>
-              <span className="text-xs text-muted-foreground group-hover:text-foreground">
-                {g.tag}
+              <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-[8px]", g.tint)}>
+                {/* plain <img>: CDN host is CSP-allowed but not a next/image remote pattern */}
+                <img src={gameIcon(g.slug)} alt="" aria-hidden="true" width={24} height={24} className="size-6" />
               </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-sm font-semibold leading-tight">{g.name}</span>
+                <span className="block truncate text-xs text-muted-foreground">{g.tag}</span>
+              </span>
+              <ChevronRight className="size-4 shrink-0 text-muted-foreground transition-ui group-hover:translate-x-0.5 group-hover:text-foreground" />
             </Link>
           </li>
         ))}
-        <li className="rounded-input px-2 py-1.5 text-xs text-muted-foreground">
-          More games coming soon.
-        </li>
       </ul>
+      <p className="px-2 pt-1.5 text-xs text-muted-foreground">More games coming soon.</p>
     </Card>
   );
 }
