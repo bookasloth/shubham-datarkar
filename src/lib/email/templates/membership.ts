@@ -1,6 +1,6 @@
 import { renderEmail, emailGif, emailDetails, emailPostList } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -13,6 +13,7 @@ export function membershipActivated(a: { name?: string | null; planName: string 
       preheader: "Membership active. Every locked door just opened.",
       headerTagline: "Membership",
       title: `Welcome to ${esc(a.planName)}, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.membershipActivated, "A member badge lighting up") +
         p("Your membership is active. Every template, download, and tool that used to have a little lock on it? Open now.") +
@@ -32,6 +33,7 @@ export function renewalReminder(a: { name?: string | null; planName: string; ren
       preheader: "Just a heads-up so it's never a surprise.",
       headerTagline: "Membership",
       title: "A quick heads-up",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.renewalReminder, "A calendar page and a gentle clock", 360) +
         p(`Hi ${esc(first)}, your ${esc(a.planName)} membership renews soon. Nothing you need to do — this is just so the charge is never a surprise.`) +
@@ -56,6 +58,7 @@ export function membershipRenewed(a: { name?: string | null; planName: string; n
       preheader: "Payment received, membership rolled over. Nothing changes.",
       headerTagline: "Membership",
       title: "You're renewed.",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.membershipRenewed, "A checkmark landing softly", 340) +
         p(`Thanks, ${esc(first)}. Your ${esc(a.planName)} membership just rolled over — same access, no interruptions.`) +
@@ -79,6 +82,7 @@ export function paymentFailed(a: { name?: string | null; planName: string; retry
       preheader: "A payment didn't go through. Here's how to fix it.",
       headerTagline: "Membership",
       title: "Your payment didn't go through",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.paymentFailed, "A card and a small retry prompt", 340) +
         p(`Hi ${esc(first)}, we tried to process your ${esc(a.planName)} payment and it didn't go through. This happens — usually an expired card or a bank check.`) +
@@ -98,6 +102,7 @@ export function newMemberResource(a: { name?: string | null; title: string; href
       preheader: "Fresh drop, members only. That's you.",
       headerTagline: "Members only",
       title: "Something new just dropped",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.newResource, "A gift being unwrapped", 340) +
         p(`Hi ${esc(first)}, there's a new ${esc(a.kind || "resource")} in the members library — the kind of thing that's behind the lock for everyone else, but not for you.`) +
@@ -137,6 +142,7 @@ export function membershipGift(a: { planName: string }): RenderedEmail {
       preheader: "A membership, on the house. No catch.",
       headerTagline: "A gift for you",
       title: "You've been gifted premium.",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.membershipGift, "A wrapped gift with a bow") +
         p(`You've been gifted <strong>${esc(a.planName)}</strong> — lifetime access to every premium resource, template, download, and tool in the members library.`) +

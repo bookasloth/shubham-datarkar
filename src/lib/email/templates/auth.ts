@@ -1,6 +1,6 @@
 import { renderEmail, emailGif } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -13,6 +13,7 @@ export function accountWelcome(a: { name?: string | null }): RenderedEmail {
       preheader: "Account created. One less password to invent tonight.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: `Hey ${esc(first)}, you're in.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.accountWelcome, "A friendly hello wave") +
         p("Your account is live. No confetti cannon here — just a clean space to read, play, and build alongside a few thousand other people who care about doing good work.") +
@@ -32,6 +33,7 @@ export function forgotPassword(a: { name?: string | null; resetUrl: string }): R
       preheader: "A link to set a new password. Expires soon.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: "Reset your password",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.forgotPassword, "A key turning in a lock") +
         p(`Hi ${esc(first)}, we got a request to reset your password. Click below to set a new one — the link expires in an hour.`) +
@@ -51,6 +53,7 @@ export function passwordChanged(a: { name?: string | null }): RenderedEmail {
       preheader: "Your password was just changed.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: "Your password was changed",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.passwordChanged, "A padlock clicking shut") +
         p(`Hi ${esc(first)}, your password was just updated. Your old one has officially retired.`) +
@@ -69,6 +72,7 @@ export function commentOtp(a: { code: string }): RenderedEmail {
       preheader: "Your one-time code. Expires in 10 minutes.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: "Verify your email",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.otp, "A code being entered", 320) +
         p("Enter this code to post your comment:") +

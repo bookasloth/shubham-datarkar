@@ -32,4 +32,19 @@ describe("email catalog", () => {
     expect(html).not.toContain("<script>alert(1)</script>");
     expect(html).toContain("&lt;script&gt;");
   });
+
+  it("transactional emails do not claim a newsletter subscription", () => {
+    const txnKeys = [
+      "accountWelcome", "forgotPassword", "passwordChanged", "commentOtp",
+      "membershipActivated", "renewalReminder", "membershipRenewed", "paymentFailed",
+      "membershipGift", "requestReceived", "requestApproved", "requestDeclined",
+      "contactConfirmation", "projectInquiry", "communityWelcome", "postPublished",
+      "newComment", "birthday", "festival", "weMissYou", "inactiveAccount",
+      "achievementUnlocked", "streakReminder", "newGame",
+    ];
+    for (const key of txnKeys) {
+      const e = EMAIL_CATALOG.find((x) => x.key === key)!;
+      expect(e.render().html, `${key} footer`).not.toContain("subscribed to Shubham Datarkar's Newsletter");
+    }
+  });
 });

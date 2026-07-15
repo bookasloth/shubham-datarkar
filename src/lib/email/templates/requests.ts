@@ -1,6 +1,6 @@
 import { renderEmail, emailGif, emailDetails } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -13,6 +13,7 @@ export function requestReceived(a: { name?: string | null; kind: string; title: 
       preheader: "Landed safely. It's on the list.",
       headerTagline: "Requests",
       title: "Your request is in",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.requestReceived, "A note dropping into an inbox tray", 340) +
         p(`Thanks ${esc(first)} — your request landed and it's on the list. I go through these personally, so it won't disappear into a void.`) +
@@ -36,6 +37,7 @@ export function requestApproved(a: { name?: string | null; title: string; note?:
       preheader: "Green light. Your request made the cut.",
       headerTagline: "Requests",
       title: "Good news — it's approved",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.requestApproved, "A green light switching on", 340) +
         p(`Hey ${esc(first)}, your request <strong>"${esc(a.title)}"</strong> got the green light.`) +
@@ -55,6 +57,7 @@ export function requestDeclined(a: { name?: string | null; title: string; reason
       preheader: "An honest update on where this one landed.",
       headerTagline: "Requests",
       title: "An update on your request",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.requestDeclined, "A gentle, respectful nod", 340) +
         p(`Hi ${esc(first)}, I looked at your request <strong>"${esc(a.title)}"</strong> and it's not something I can take on right now.`) +

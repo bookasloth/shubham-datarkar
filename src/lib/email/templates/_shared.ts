@@ -24,3 +24,7 @@ export function firstName(full?: string | null, fallback = "there"): string {
 export function p(html: string): string {
   return `<p style="margin:0 0 16px; font-size:14px; color:#2d2d2d; line-height:1.7;">${html}</p>`;
 }
+
+/** Footer note for transactional / lifecycle emails (not newsletter). */
+export const TXN_FOOTER =
+  "This is a service email about your account or activity on shubhamdatarkar.com. The address and links below are here if you need them.";

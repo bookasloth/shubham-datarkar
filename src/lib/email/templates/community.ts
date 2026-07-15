@@ -1,6 +1,6 @@
 import { renderEmail, emailGif, emailPostList } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -14,6 +14,7 @@ export function communityWelcome(a: { name?: string | null; username?: string | 
       preheader: "You've got a seat. Pull it up.",
       headerTagline: "Community",
       title: `Welcome in, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.communityWelcome, "A crowd waving hello") +
         p(`You're officially part of the community.${handle}`) +
@@ -52,6 +53,7 @@ export function postPublished(a: { name?: string | null; href: string }): Render
       preheader: "Out in the wild. Go see how it looks.",
       headerTagline: "Community",
       title: "It's live.",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.postPublished, "A small burst of confetti") +
         p(`Nicely done, ${esc(first)}. Your post is out in the feed for everyone to see.`) +
@@ -71,6 +73,7 @@ export function newComment(a: { name?: string | null; author: string; excerpt: s
       preheader: `${a.author} left a comment on your post.`,
       headerTagline: "Community",
       title: "You've got a reply.",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.newComment, "A speech bubble popping up", 340) +
         p(`Hi ${esc(first)}, <strong>${esc(a.author)}</strong> just responded to your post:`) +

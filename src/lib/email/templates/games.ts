@@ -1,6 +1,6 @@
 import { renderEmail, emailGif, emailDetails } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 /** New game released. Humour: High. */
 export function newGame(a: { name?: string | null; gameName: string; href: string; blurb?: string }): RenderedEmail {
@@ -11,6 +11,7 @@ export function newGame(a: { name?: string | null; gameName: string; href: strin
       preheader: "A new way to lose track of ten minutes.",
       headerTagline: "Games",
       title: `${esc(a.gameName)} is live.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.newGame, "A game controller powering up") +
         p(`Hey ${esc(first)}, there's a new game in the arcade — ${esc(a.gameName)}. ${esc(a.blurb || "Easy to learn, mildly infuriating to master. You know the drill.")}`) +
@@ -53,6 +54,7 @@ export function achievementUnlocked(a: { name?: string | null; achievement: stri
       preheader: "You earned this one. Take the little dopamine hit.",
       headerTagline: "Games",
       title: "Achievement unlocked",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.achievementUnlocked, "A badge unlocking with a shine", 340) +
         p(`Nice one, ${esc(first)}. You just earned:`) +
@@ -74,6 +76,7 @@ export function streakReminder(a: { name?: string | null; streak: number; gameNa
       preheader: "One quick round keeps it alive.",
       headerTagline: "Games",
       title: `Don't drop the streak, ${esc(first)}`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.streakReminder, "A small flame flickering", 300) +
         p(`You're on a <strong>${a.streak}-day</strong> run${where}. That's a real thing you built one day at a time — and it resets at midnight if today's round goes unplayed.`) +

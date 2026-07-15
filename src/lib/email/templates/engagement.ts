@@ -1,6 +1,6 @@
 import { renderEmail, emailGif } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -13,6 +13,7 @@ export function weMissYou(a: { name?: string | null }): RenderedEmail {
       preheader: "No guilt trip. Just a note that the door's open.",
       headerTagline: "Shubham Datarkar",
       title: `It's been a while, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.weMissYou, "A chair waiting by an open door") +
         p("Not here to guilt-trip you — life gets full. Just a note to say a fair bit has happened since you last dropped by: new writing, new posts in the community, and a couple of games worth losing ten minutes to.") +
@@ -32,6 +33,7 @@ export function inactiveAccount(a: { name?: string | null }): RenderedEmail {
       preheader: "You started something. Two minutes to finish it.",
       headerTagline: "Shubham Datarkar",
       title: "Let's finish setting you up",
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.inactiveAccount, "A checklist with one box left") +
         p(`Hi ${esc(first)}, you created an account but never quite finished the setup — so right now it's a bit like a house with no furniture.`) +
@@ -51,6 +53,7 @@ export function birthday(a: { name?: string | null }): RenderedEmail {
       preheader: "One quick note on your day.",
       headerTagline: "Shubham Datarkar",
       title: `Happy birthday, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.birthday, "A little birthday cake with a candle") +
         p("Just a quick note to wish you a genuinely good one. No offer attached, no fine print — that would be a strange birthday gift.") +
@@ -70,6 +73,7 @@ export function festival(a: { name?: string | null; festival: string; message?: 
       preheader: `A little ${a.festival} note from my side.`,
       headerTagline: "Shubham Datarkar",
       title: `Happy ${esc(a.festival)}, ${esc(first)}.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.festival, `Warm ${esc(a.festival)} celebration lights`) +
         p(a.message ? esc(a.message) : `Wishing you and yours a bright, warm ${esc(a.festival)}. Whatever the day looks like for you, I hope it's a good one.`) +

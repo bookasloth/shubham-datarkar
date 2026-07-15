@@ -1,6 +1,6 @@
 import { renderEmail, emailGif } from "../template";
 import { EMAIL_GIFS } from "../gifs";
-import { type RenderedEmail, esc, firstName, p } from "./_shared";
+import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -13,6 +13,7 @@ export function contactConfirmation(a: { name?: string | null }): RenderedEmail 
       preheader: "It reached a human. Reply's coming.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: `Thanks, ${esc(first)} — got it.`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.contactConfirmation, "A message arriving with a soft ping", 340) +
         p("Your message reached me — a real person, not a ticket number. I read every one and usually reply within a business day, often sooner.") +
@@ -31,6 +32,7 @@ export function projectInquiry(a: { name?: string | null; message: string }): Re
       preheader: "A reply on the project you asked about.",
       headerTagline: "<strong>Shubham Datarkar</strong>",
       title: `Hi ${esc(first)},`,
+      footerNote: TXN_FOOTER,
       bodyHtml:
         emailGif(EMAIL_GIFS.projectInquiry, "Two hands meeting in a handshake", 340) +
         `<p style="margin:0 0 18px; font-size:14px; color:#2d2d2d; line-height:1.7; white-space:pre-wrap;">${esc(a.message)}</p>` +
