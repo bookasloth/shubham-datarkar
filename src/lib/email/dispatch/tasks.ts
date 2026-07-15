@@ -5,6 +5,9 @@ import { sendTemplate } from "@/lib/email/send-template";
 import { claim } from "./dedupe";
 import { introduction, weMissYou, inactiveAccount, festival } from "@/lib/email/templates/engagement";
 import { renewalReminder } from "@/lib/email/templates/membership";
+import { newBlogs, monthlyRoundup } from "@/lib/email/templates/newsletter";
+
+const SITE = "https://shubhamdatarkar.com";
 
 /** Introduction — users created 24-48h ago, once ever. */
 export async function runIntroductions(): Promise<number> {
@@ -101,5 +104,57 @@ export async function runInactive(): Promise<number> {
       if ((await sendTemplate(u.email, inactiveAccount({ name }))).ok) sent++;
     }
   } catch (e) { console.warn("[dispatch] inactive:", (e as Error).message); }
+  return sent;
+}
+
+async function activeSubscribers(): Promise<string[]> {
+  const { data } = await supabaseAdmin().from("subscribers").select("email").eq("status", "active");
+  return (data ?? []).map((s) => s.email).filter(Boolean);
+}
+
+async function publishedPostsSince(sinceIso: string): Promise<{ title: string; href: string; meta?: string }[]> {
+  const nowIso = new Date().toISOString();
+  const { data } = await supabaseAdmin().from("posts")
+    .select("title, slug, published_at")
+    .eq("status", "published")
+    .gte("published_at", sinceIso).lte("published_at", nowIso)
+    .order("published_at", { ascending: false });
+  return (data ?? []).map((p) => ({ title: p.title, href: `${SITE}/blog/${p.slug}` }));
+}
+
+/** Mondays: everything published in the last 7 days → active subscribers. */
+export async function runNewBlogs(t: { dow: number; iso: string }): Promise<number> {
+  if (t.dow !== 1) return 0; // 1 = Monday
+  let sent = 0;
+  try {
+    const since = new Date(Date.now() - 7 * 86400e3).toISOString();
+    const posts = await publishedPostsSince(since);
+    if (!posts.length) return 0;
+    const email = newBlogs({ posts });
+    for (const to of await activeSubscribers()) {
+      if (!(await claim(to, "newBlogs", t.iso))) continue;
+      if ((await sendTemplate(to, email)).ok) sent++;
+    }
+  } catch (e) { console.warn("[dispatch] new-blogs:", (e as Error).message); }
+  return sent;
+}
+
+/** 1st of month: previous calendar month's posts → active subscribers. */
+export async function runMonthlyRoundup(t: { dom: number; ym: string }): Promise<number> {
+  if (t.dom !== 1) return 0;
+  let sent = 0;
+  try {
+    const since = new Date(Date.now() - 31 * 86400e3).toISOString();
+    const posts = await publishedPostsSince(since);
+    if (!posts.length) return 0;
+    // Label = previous month name.
+    const prev = new Date(); prev.setUTCDate(1); prev.setUTCMonth(prev.getUTCMonth() - 1);
+    const monthLabel = ["January","February","March","April","May","June","July","August","September","October","November","December"][prev.getUTCMonth()];
+    const email = monthlyRoundup({ monthLabel, posts });
+    for (const to of await activeSubscribers()) {
+      if (!(await claim(to, "monthlyRoundup", t.ym))) continue;
+      if ((await sendTemplate(to, email)).ok) sent++;
+    }
+  } catch (e) { console.warn("[dispatch] monthly-roundup:", (e as Error).message); }
   return sent;
 }
