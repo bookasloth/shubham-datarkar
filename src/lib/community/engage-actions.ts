@@ -189,7 +189,7 @@ export async function createReply(postId: string, body: string): Promise<EngageR
     body: valid.body,
   });
   if (err) return { error: err.message };
-  await notifyReply(postId, user.id);
+  await notifyReply(postId, user.id, valid.body ?? "");
   revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");
   return { ok: true };

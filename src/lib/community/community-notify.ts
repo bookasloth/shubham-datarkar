@@ -33,7 +33,7 @@ export async function notifyPostCreated(userId: string, postHref: string): Promi
 }
 
 /** Fire after a successful reply insert. Emails the parent author (not self). */
-export async function notifyReply(parentPostId: string, replierUserId: string): Promise<void> {
+export async function notifyReply(parentPostId: string, replierUserId: string, replyBody: string): Promise<void> {
   try {
     const admin = supabaseAdmin();
     const { data: parent } = await admin
@@ -53,7 +53,9 @@ export async function notifyReply(parentPostId: string, replierUserId: string): 
       .maybeSingle();
     const author = replier?.display_name || (replier?.username ? `@${replier.username}` : "Someone");
     const href = `${SITE}/community/p/${parent.public_id}`;
-    await sendTemplate(email, newComment({ author, excerpt: "", href }));
+    const trimmedBody = replyBody.trim();
+    const excerpt = trimmedBody.slice(0, 140) + (trimmedBody.length > 140 ? "…" : "");
+    await sendTemplate(email, newComment({ author, excerpt, href }));
   } catch (e) {
     console.warn("[community] reply email failed:", (e as Error).message);
   }
