@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { ALFAZY, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/alfazy";
 import { submitResult } from "@/lib/games/submit-result";
+import { startPuzzle } from "@/lib/games/start-puzzle";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { useAlfazyTheme } from "@/components/games/AlfazyThemeProvider";
 import { GameStage } from "@/components/games/shell/GameStage";
@@ -52,6 +53,7 @@ export default function AlfazyBoard({
   const [justWon, setJustWon] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
+  const clockStarted = useRef(false);
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
@@ -74,13 +76,7 @@ export default function AlfazyBoard({
     if (!user) return;
     if (submitted.current) return;
     submitted.current = true;
-    void submitResult({
-      game: "alfazy",
-      puzzleNumber,
-      status,
-      guesses,
-      timeMs: null,
-    });
+    void submitResult({ game: "alfazy", puzzleNumber, status, guesses });
   }, [isArchive, status, user, guesses, puzzleNumber]);
 
   const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
@@ -94,6 +90,12 @@ export default function AlfazyBoard({
     if (status !== "playing") return;
     if (current.length !== ALFAZY.length) { setShakeCount((n) => n + 1); return flash("Not enough letters"); }
     if (!isValidGuess(current)) { setShakeCount((n) => n + 1); return flash("Not a valid word"); }
+    // First accepted guess starts the server's clock — not page open, so a tab
+    // left sitting on the puzzle doesn't record an hours-long "solve".
+    if (!clockStarted.current && guesses.length === 0 && user) {
+      clockStarted.current = true;
+      void startPuzzle("alfazy", puzzleNumber);
+    }
     const next = [...guesses, current];
     const tiles = scoreGuess(current, answer);
     setGuesses(next);

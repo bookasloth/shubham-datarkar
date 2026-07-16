@@ -17,7 +17,6 @@ export type SubmitInput = {
   puzzleNumber: number;
   status: "won" | "lost";
   guesses: string[];
-  timeMs: number | null;
 };
 
 export type ValidationResult =

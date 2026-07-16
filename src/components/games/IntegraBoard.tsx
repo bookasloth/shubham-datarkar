@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { INTEGRA, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/integra";
 import { submitResult } from "@/lib/games/submit-result";
+import { startPuzzle } from "@/lib/games/start-puzzle";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
@@ -58,6 +59,7 @@ export default function IntegraBoard({
   // its own window — unmounting WinBurst cancels the burst mid-flight.
   const [justWon, setJustWon] = useState(false);
   const [burst, setBurst] = useState(false);
+  const clockStarted = useRef(false);
   const [colorblind, setColorblind] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
@@ -97,7 +99,7 @@ export default function IntegraBoard({
     if (!user) return;
     if (submitted.current) return;
     submitted.current = true;
-    void submitResult({ game: "integra", puzzleNumber, status, guesses, timeMs: null });
+    void submitResult({ game: "integra", puzzleNumber, status, guesses });
   }, [isArchive, status, user, guesses, puzzleNumber]);
 
   const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
@@ -111,6 +113,12 @@ export default function IntegraBoard({
     if (status !== "playing") return;
     if (current.length !== INTEGRA.length) { setShakeCount((n) => n + 1); return flash(`Fill all ${INTEGRA.length} tiles`); }
     if (!isValidGuess(current)) { setShakeCount((n) => n + 1); return flash("Not a valid equation"); }
+    // First accepted guess starts the server's clock — not page open, so a tab
+    // left sitting on the puzzle doesn't record an hours-long "solve".
+    if (!clockStarted.current && guesses.length === 0 && user) {
+      clockStarted.current = true;
+      void startPuzzle("integra", puzzleNumber);
+    }
     const next = [...guesses, current];
     const tiles = scoreGuess(current, answer);
     setGuesses(next);

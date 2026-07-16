@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { HIT_AND_BLOW, secretFor, scoreGuess, isWin, isValidGuess, shareSummary } from "@/lib/games/hit-and-blow";
 import { submitResult } from "@/lib/games/submit-result";
+import { startPuzzle } from "@/lib/games/start-puzzle";
 import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
@@ -37,6 +38,7 @@ export default function HitAndBlowBoard({
   const [justWon, setJustWon] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
+  const clockStarted = useRef(false);
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
@@ -65,7 +67,6 @@ export default function HitAndBlowBoard({
       puzzleNumber,
       status,
       guesses: history.map((r) => r.guess),
-      timeMs: null,
     });
   }, [isArchive, status, user, history, puzzleNumber]);
 
@@ -77,6 +78,12 @@ export default function HitAndBlowBoard({
   function submit() {
     if (status !== "playing") return;
     if (!isValidGuess(current)) return flash(`${HIT_AND_BLOW.length} unique digits, no leading 0`);
+    // First accepted guess starts the server's clock — not page open, so a tab
+    // left sitting on the puzzle doesn't record an hours-long "solve".
+    if (!clockStarted.current && history.length === 0 && user) {
+      clockStarted.current = true;
+      void startPuzzle("hit_and_blow", puzzleNumber);
+    }
     const { hits, blows } = scoreGuess(current, secret);
     const next = [...history, { guess: current, hits, blows }];
     setHistory(next);
