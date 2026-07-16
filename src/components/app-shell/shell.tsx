@@ -27,6 +27,7 @@ export function AppShell({
   const pathname = usePathname() ?? "/";
   const [drawer, setDrawer] = React.useState(false);
   const signedIn = !!user;
+  const isPremium = !!user?.isPremium;
   const currentSection = activeSection(pathname);
 
   return (
@@ -44,7 +45,7 @@ export function AppShell({
             <SheetContent>
               <SheetHeader><SheetTitle onClick={() => setDrawer(false)}><Logo /></SheetTitle></SheetHeader>
               <SheetBody>
-                <AppSidebar signedIn={signedIn} onNavigate={() => setDrawer(false)} />
+                <AppSidebar signedIn={signedIn} isPremium={isPremium} onNavigate={() => setDrawer(false)} />
               </SheetBody>
             </SheetContent>
           </Sheet>
@@ -95,7 +96,7 @@ export function AppShell({
         {/* Desktop sidebar — floating card, glued to the middle column */}
         <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 py-4 lg:block">
           <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
-            <AppSidebar signedIn={signedIn} />
+            <AppSidebar signedIn={signedIn} isPremium={isPremium} />
           </div>
         </aside>
         <main className="min-w-0 w-full max-w-[600px] pb-24 lg:pb-10">
