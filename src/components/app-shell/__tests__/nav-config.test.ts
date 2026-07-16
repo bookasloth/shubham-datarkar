@@ -37,7 +37,14 @@ describe("activeChildHref", () => {
   it("picks the longest matching item", () => {
     expect(activeChildHref("/community")).toBe("/community");
     expect(activeChildHref("/community/bookmarks")).toBe("/community/bookmarks");
-    expect(activeChildHref("/games/alfazy/archive")).toBe("/games/alfazy");
+  });
+
+  // A game's sub-links are leaf items, so standing on Archive must highlight
+  // Archive — not the game's Play href, which ties on prefix but is shorter.
+  it("highlights a game sub-link over the game's own href", () => {
+    expect(activeChildHref("/games/alfazy/archive")).toBe("/games/alfazy/archive");
+    expect(activeChildHref("/games/alfazy/leaderboard")).toBe("/games/alfazy/leaderboard");
+    expect(activeChildHref("/games/alfazy")).toBe("/games/alfazy");
   });
   it("returns null off-shell", () => {
     expect(activeChildHref("/blog")).toBeNull();
