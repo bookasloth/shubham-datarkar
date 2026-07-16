@@ -122,6 +122,30 @@ Rule of thumb: if the decoration was the *first* thing you noticed about the cha
 probably real. If you went hunting for one after the sentence was already written, it is
 probably a stretch. Ship the plain line and keep your dignity.
 
+## Rough edges
+
+The failure mode after everything above sinks in: every post arrives with a perfect setup
+and a landed punchline, and the feed starts sounding like a comedy writer doing a founder,
+not a founder typing. A person's actual feed has texture — some posts are funny, some are
+brutally short, some are technical, and some are just "fixed this stupid thing."
+
+Write in the natural voice: first person, conversational, specific, slightly chaotic,
+quietly funny. The default shape is a tiny story — what happened, what was stupid or
+interesting about it, what changed — but do not force that structure every time either.
+The humour comes out of what actually happened: self-roast, an absurd comparison, a dry
+observation. Found in the event, never manufactured onto it.
+
+Keep the real details when they make the story better — numbers, timings, error text,
+technical terms. "570 of the failures were the dashboard's" beats any metaphor for the
+same fact.
+
+Avoid: polished changelog language, overly literary metaphors, motivational endings, and
+AI-sounding punchlines. "Funniest word last" applies when the line IS a joke — a plain
+update is allowed to just end.
+
+If every update is quotable, none of them sound like a person anymore. Let some be 6/10
+on purpose.
+
 ## The register
 
 Post like a person with no comms team, not a brand with a voice guide.
