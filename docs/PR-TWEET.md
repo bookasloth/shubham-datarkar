@@ -146,6 +146,16 @@ update is allowed to just end.
 If every update is quotable, none of them sound like a person anymore. Let some be 6/10
 on purpose.
 
+Do not invent a clever phrase for the technology. "Serverless amnesia" is a coinage
+looking for applause; "the rate limiter forgot everything on every cold start" is the
+same fact, funnier, because it is just what happened. When the situation is already
+funny, tell it straight — naming it kills it.
+
+Technical entries stay legible to a non-developer: they should get what went wrong and
+why it mattered, without the post turning into a lecture. One clause of context is
+usually enough; if the reader needs a second, the entry is about the wrong part of the
+story. Don't explain it to death.
+
 ## The register
 
 Post like a person with no comms team, not a brand with a voice guide.
