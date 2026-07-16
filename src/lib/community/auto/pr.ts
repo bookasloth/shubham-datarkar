@@ -6,6 +6,23 @@
 const ANNOUNCE_TYPES = new Set(["feat", "fix", "perf", "chore"]);
 const SKIP_SCOPES = new Set(["deps", "ci", "build", "test", "docs", "refactor", "style"]);
 
+/**
+ * Repos allowed to auto-post, mapped to the project name used in the copy.
+ * Allowlist, not just a lookup: a repo absent here can never post, so a leaked
+ * webhook secret alone is not enough to write to the public feed.
+ */
+// Map, not an object literal: a plain-object lookup returns inherited members
+// for keys like "constructor", which would read as an allowlist hit.
+const PR_REPOS = new Map<string, string>([
+  ["bookasloth/shubham-datarkar", "the site"],
+  ["bookasloth/book-a-sloth", "Book A Sloth"],
+]);
+
+/** Project label for an allowlisted repo `full_name`, or null if not allowed. */
+export function projectFor(repoFullName: string | null | undefined): string | null {
+  return PR_REPOS.get((repoFullName ?? "").toLowerCase()) ?? null;
+}
+
 export function parsePrTitle(title: string): { type: string | null; scope: string | null; subject: string } {
   const m = title.trim().match(/^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/);
   if (!m) return { type: null, scope: null, subject: title.trim() };

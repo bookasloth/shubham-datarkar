@@ -73,25 +73,26 @@ const SUPPORTER_MILESTONE: readonly string[] = [
 ] as const;
 
 // Not corporate. Solo-founder voice: self-roasting, gaslighting, ragebait,
-// the occasional dig. {title} is the humanized PR subject.
+// the occasional dig. {title} is the humanized PR subject, {project} the repo's
+// project name — the feed spans more than one repo, so it has to say which.
 const PR: readonly string[] = [
   // self-roast
-  "Shipped {title}. Only took me embarrassingly long to admit it needed doing.",
-  "{title} is live. Past me left this for future me. Future me is not thrilled.",
-  "Fixed {title}. Was it broken this whole time? Yes. Did anyone notice but me? No.",
+  "Shipped {title} on {project}. Only took me embarrassingly long to admit it needed doing.",
+  "{title} is live on {project}. Past me left this for future me. Future me is not thrilled.",
+  "Fixed {title} on {project}. Was it broken this whole time? Yes. Did anyone notice but me? No.",
   // gaslighting
-  "{title} is live. It's always been like this. You must be misremembering.",
-  "Pushed {title}. This was never a bug. It was a feature you weren't ready for.",
-  "{title}. Nothing changed. Everything changed. You'll be fine.",
+  "{title} is live on {project}. It's always been like this. You must be misremembering.",
+  "Pushed {title} to {project}. This was never a bug. It was a feature you weren't ready for.",
+  "{title}, now on {project}. Nothing changed. Everything changed. You'll be fine.",
   // ragebait
-  "Shipped {title} solo while your favourite platform is still 'gathering requirements'.",
-  "{title}. If the agency you're paying still can't do this in 2026, ask for the invoice back.",
-  "Just shipped {title}. No standup, no ticket, no permission. Try that at your job.",
+  "Shipped {title} on {project} solo while your favourite platform is still 'gathering requirements'.",
+  "{title} is live on {project}. If the agency you're paying still can't do this in 2026, ask for the invoice back.",
+  "Just shipped {title} on {project}. No standup, no ticket, no permission. Try that at your job.",
   // dig / flex
-  "{title} — done before most SaaS finishes loading its cookie banner.",
-  "Shipped {title}. The big platforms will 'innovate' this next year and want applause.",
+  "{title} on {project} — done before most SaaS finishes loading its cookie banner.",
+  "Shipped {title} on {project}. The big platforms will 'innovate' this next year and want applause.",
   // dry
-  "{title} is live. Clap if you must.",
+  "{title} is live on {project}. Clap if you must.",
 ] as const;
 
 const POOLS: Record<AutoKind, readonly string[]> = {
@@ -104,11 +105,15 @@ const POOLS: Record<AutoKind, readonly string[]> = {
 };
 
 /** Random template for `kind`, placeholders filled. Trimmed, never > 500 chars. */
-export function pick(kind: AutoKind, vars: { title?: string; url?: string; n?: number } = {}): string {
+export function pick(
+  kind: AutoKind,
+  vars: { title?: string; url?: string; n?: number; project?: string } = {},
+): string {
   const pool = POOLS[kind];
   const out = pool[randomInt(0, pool.length)]
     .replaceAll("{title}", vars.title ?? "")
     .replaceAll("{url}", vars.url ?? "")
+    .replaceAll("{project}", vars.project ?? "")
     .replaceAll("{n}", vars.n === undefined ? "" : String(vars.n))
     .trim();
   return out.slice(0, 500);

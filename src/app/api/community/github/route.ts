@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifyGithubSignature } from "@/lib/community/auto/github-verify";
-import { parsePrTitle, shouldAnnounce, humanizeSubject } from "@/lib/community/auto/pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor } from "@/lib/community/auto/pr";
 import { autoPost } from "@/lib/community/auto/post";
 import { pick } from "@/lib/community/auto/templates";
 
@@ -10,9 +10,10 @@ export const dynamic = "force-dynamic";
 const SECRET = process.env.GITHUB_WEBHOOK_SECRET;
 
 /**
- * GitHub `pull_request` webhook. On a merged PR whose title passes the
- * user-facing heuristic (and lacks a `no-announce` label), post a "just shipped"
- * line to /community. HMAC-verified; idempotent per PR number.
+ * GitHub `pull_request` webhook, shared by every repo on the allowlist in
+ * `pr.ts`. On a merged PR whose title passes the user-facing heuristic (and
+ * lacks a `no-announce` label), post a "just shipped" line to /community.
+ * HMAC-verified; idempotent per repo + PR number.
  */
 export async function POST(request: Request) {
   const raw = await request.text(); // raw body needed for HMAC
@@ -26,6 +27,7 @@ export async function POST(request: Request) {
 
   let payload: {
     action?: string;
+    repository?: { full_name?: string };
     pull_request?: { merged?: boolean; number?: number; title?: string; labels?: { name?: string }[] };
   };
   try {
@@ -36,6 +38,12 @@ export async function POST(request: Request) {
 
   if (typeof payload !== "object" || payload === null) {
     return NextResponse.json({ ok: false }, { status: 400 });
+  }
+
+  const repo = (payload.repository?.full_name ?? "").toLowerCase();
+  const project = projectFor(repo);
+  if (!project) {
+    return NextResponse.json({ ok: true, ignored: "repo" });
   }
 
   const pr = payload.pull_request;
@@ -50,6 +58,8 @@ export async function POST(request: Request) {
   }
 
   const subject = humanizeSubject(parsePrTitle(title).subject);
-  await autoPost({ sourceKey: `pr:${pr.number}`, body: pick("pr", { title: subject }) });
+  // Key includes the repo: PR #5 exists in every repo, and a bare `pr:5` would
+  // make the second repo's PR #5 dedupe against the first and never post.
+  await autoPost({ sourceKey: `pr:${repo}#${pr.number}`, body: pick("pr", { title: subject, project }) });
   return NextResponse.json({ ok: true, posted: true });
 }
