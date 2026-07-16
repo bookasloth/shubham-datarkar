@@ -1,0 +1,36 @@
+# Every PR that will announce to /community must say what it announces.
+#
+# The rule lived only in docs/PR-TWEET.md and in whoever remembered it, and it
+# broke on #221/#222 — both merged without a Tweet: line, so the fallback pool
+# fired twice and posted the same sentence to the public feed 20 minutes apart.
+# The pool stays (a PR can genuinely have nothing to say); needing it is the bug,
+# so the bug fails here instead of on the timeline.
+name: PR tweet
+
+on:
+  pull_request:
+    # edited/labeled matter as much as opened: adding the line, or reaching for
+    # the no-announce label, must clear the check without pushing a commit.
+    types: [opened, edited, reopened, synchronize, labeled, unlabeled]
+
+permissions:
+  contents: read
+
+jobs:
+  tweet-line:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # No npm ci: the check runs through Node's type stripping and pr.ts has no
+      # imports, so this is a checkout and one process.
+      - name: Require a Tweet: line on announce-worthy PRs
+        run: node --experimental-strip-types scripts/check-pr-tweet.mts
+        env:
+          # Passed as env, never interpolated into the shell — PR titles and
+          # bodies are attacker-controlled text.
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+          PR_LABELS: ${{ toJSON(github.event.pull_request.labels.*.name) }}
