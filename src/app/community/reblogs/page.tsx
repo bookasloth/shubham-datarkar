@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
 import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
+import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
 
 export const metadata = buildMetadata({ title: "Reblogs", path: "/community/reblogs", noIndex: true });
 
@@ -12,11 +13,21 @@ export default async function ReblogsPage() {
 
   const [canPost, posts] = await Promise.all([
     viewerCanPost(),
-    listFeed({ sort: "new", window: "all", reblogged: true, limit: 50 }),
+    listFeed({ sort: "new", window: "all", reblogged: true, limit: FEED_PAGE }),
   ]);
   const pollResults = await listPollResults(
     posts.filter((p) => p.type === "poll").map((p) => p.id),
   );
+
+  const cards = posts.map((post) => (
+    <PostCard
+      key={post.rowId}
+      post={post}
+      pollResult={pollResults[post.id]}
+      canVote={canPost}
+      viewerId={user.id}
+    />
+  ));
 
   return (
     <div>
@@ -26,15 +37,9 @@ export default async function ReblogsPage() {
           Nothing reblogged yet.
         </p>
       ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post.rowId}
-            post={post}
-            pollResult={pollResults[post.id]}
-            canVote={canPost}
-            viewerId={user.id}
-          />
-        ))
+        <FeedStream query={{ reblogged: true }} initialCount={posts.length}>
+          {cards}
+        </FeedStream>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import type { FeedSort, FeedWindow } from "@/lib/community/types";
 import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { SignInWall } from "@/components/community/sign-in-wall";
+import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
 import { ComposerFab } from "@/components/community/composer-fab";
 
 const SORTS = new Set<FeedSort>(["new", "hot", "top"]);
@@ -35,12 +36,23 @@ export default async function CommunityPage({
   // feed's job — a sort menu over three random posts is furniture.
   const [canPost, posts, shellUser] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    user ? listFeed({ sort, window, limit: 30 }) : listRandomFeed(PREVIEW),
+    user ? listFeed({ sort, window, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
     user ? getShellUser() : Promise.resolve(null),
   ]);
   const pollResults = await listPollResults(
     posts.filter((p) => p.type === "poll").map((p) => p.id),
   );
+
+  // The first page, rendered here; FeedStream appends the rest around it.
+  const cards = posts.map((post) => (
+    <PostCard
+      key={post.rowId}
+      post={post}
+      pollResult={pollResults[post.id]}
+      canVote={canPost}
+      viewerId={user?.id ?? null}
+    />
+  ));
 
   return (
     <div>
@@ -59,16 +71,12 @@ export default async function CommunityPage({
         <p className="px-4 py-16 text-center text-sm text-muted-foreground">
           No posts yet. Be the first once posting opens.
         </p>
+      ) : user ? (
+        <FeedStream query={{ sort, window }} initialCount={posts.length}>
+          {cards}
+        </FeedStream>
       ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post.rowId}
-            post={post}
-            pollResult={pollResults[post.id]}
-            canVote={canPost}
-            viewerId={user?.id ?? null}
-          />
-        ))
+        cards
       )}
 
       {!user && posts.length > 0 && <SignInWall returnPath="/community" />}
