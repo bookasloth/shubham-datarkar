@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useActionState } from "react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,11 @@ export function ForgotPasswordForm() {
     requestPasswordReset,
     undefined,
   );
+  const errRef = React.useRef<HTMLParagraphElement>(null);
+
+  React.useEffect(() => {
+    if (state && "error" in state) errRef.current?.focus();
+  }, [state]);
 
   if (state && "ok" in state) {
     return (
@@ -31,13 +37,14 @@ export function ForgotPasswordForm() {
           name="email"
           type="email"
           autoComplete="email"
-          placeholder="you@company.com"
+          placeholder="you@example.com"
           required
+          autoFocus
         />
       </div>
 
       {state?.error && (
-        <p className="text-sm text-destructive" role="alert">
+        <p ref={errRef} tabIndex={-1} className="text-sm text-destructive outline-none" role="alert">
           {state.error}
         </p>
       )}
