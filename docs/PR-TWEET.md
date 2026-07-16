@@ -82,6 +82,23 @@ The joke is carried by word choice, not by structure. Fewer words, harder words.
 - **No throat-clearing.** No "just", "basically", "honestly", "I know this sounds like".
   Start on the hit.
 
+## Decoration
+
+Where the change hands you one, take it: a rhyme, an internal echo, a pun that is actually
+about the feature, a line with a beat to it, alliteration that makes the sentence walk. A
+tweet that sounds good gets read twice, and read twice is how a thing spreads. The seam
+between two meanings of one word is free real estate — a caching PR, a streak PR, a login
+PR each carry a second meaning in the noun itself. Find it before you settle for prose.
+
+But: the opportunity has to exist. A pun bent out of a word that does not fit is worse than
+the plain sentence, because now the reader can see you reaching. Forced rhyme reads as a
+greeting card. If the wordplay needs the fact stretched to land, the fact wins and the joke
+dies — every time, no exceptions.
+
+Rule of thumb: if the decoration was the *first* thing you noticed about the change, it is
+probably real. If you went hunting for one after the sentence was already written, it is
+probably a stretch. Ship the plain line and keep your dignity.
+
 ## The register
 
 Post like a person with no comms team, not a brand with a voice guide.
@@ -106,11 +123,40 @@ product claim. See hard limits — those do not bend for the bit.
    them share an opening word, you wrote one draft five times.
 3. Score each: which bands does it hit (more than one is stronger), and would a stranger
    with no context stop, laugh, or argue? Arguing counts.
-4. Ship the one that hits multiple bands *and* is legible cold. Discard the other four
+4. **Interrogate each draft** (below). Anything that fails, rewrite — do not promote a
+   survivor just because it was the least bad of five.
+5. Ship the one that hits multiple bands *and* is legible cold. Discard the other four
    — they are not saved anywhere and should not be.
-5. Put the winner on the `Tweet:` line. One line, ≤500 chars, no emojis (house style).
+6. Put the winner on the `Tweet:` line. One line, ≤500 chars, no emojis (house style).
 
 Legible cold beats clever: a joke that needs the diff to land is a joke for four people.
+
+## The interrogation
+
+Writing five drafts is not the work. Refusing to ship four of them is. Take each draft and
+ask it, honestly — the honesty is the whole gate, because you wrote it and you want it to
+be good:
+
+- Does it fit the change, or could it be about any PR this month?
+- Which band does it actually hit, not which band did I intend?
+- Is a single word here one I have read on this feed before?
+- Would a stranger who has never heard of the project stop on it?
+- If I saw this posted by someone else, would I laugh — or scroll?
+- Is the funniest word last? If not, why is it not?
+- Is the decoration real, or did I reach?
+- Strip the joke: is the claim underneath still true?
+
+Any answer that is a wince means rewrite. Not "tweak the wording" — go back and find a
+different angle on the change, because a draft that fails these usually fails at the idea,
+and no amount of polish saves a bad idea. Five new drafts is a fine outcome. So is a sixth
+round.
+
+**Quality over shipping it now. Always.** No deadline exists here — the PR merges when it
+merges, and a mediocre tweet is worse than a late one, because the boring one still posts
+under the owner's name and still teaches the feed that this account is skippable. If the
+line is not there yet, keep writing. If it is genuinely not in the change, say so and let
+the pool take it — that is an honest fallback, not a failure. What is never acceptable is
+shipping a line you already know is flat.
 
 ## Hard limits
 
