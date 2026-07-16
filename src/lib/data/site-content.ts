@@ -312,10 +312,10 @@ export const roadmap: RoadmapItem[] = [
   { title: "Component library", description: "A public, reusable design system.", status: "Shipped", quarter: "Q2 2026" },
   { title: "Command palette", description: "Keyboard-first navigation everywhere.", status: "Shipped", quarter: "Q2 2026" },
   { title: "KalamAI", description: "SEO, AEO and GEO research and writing, gated to members. Research engine live; writing engine next.", status: "In Progress", quarter: "Q3 2026" },
-  { title: "Ask Shubham (AI)", description: "A chatbot trained on all published content.", status: "In Progress", quarter: "Q4 2026" },
   { title: "Semantic search", description: "Intent-based search across articles and tools.", status: "Planned", quarter: "Q4 2026" },
   { title: "Glossary (200 terms)", description: "An interlinked marketing & SaaS glossary.", status: "Planned", quarter: "Q4 2026" },
   { title: "Frameworks library", description: "Named, original frameworks as standalone pages.", status: "Planned", quarter: "Q4 2026" },
+  { title: "Ask Shubham (AI)", description: "A chatbot trained on all published content, answering with citations.", status: "Exploring", quarter: "TBD" },
   { title: "Cohort course", description: "A practical course on compounding growth systems.", status: "Exploring", quarter: "2027" },
 ];
 

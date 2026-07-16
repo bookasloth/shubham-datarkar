@@ -24,23 +24,23 @@ export const metadata = buildMetadata({
 const experiments = [
   {
     title: "Ask Shubham",
-    status: "Building",
+    status: "Exploring",
     description: "A chatbot trained on every article, case study, and framework — answering in my voice, with citations.",
-    result: "RAG pipeline over published content. Private beta in Q3 2026.",
+    result: "An idea, not a build. The content is there; the pipeline isn't started yet.",
     icon: Bot,
   },
   {
     title: "Semantic site search",
-    status: "Building",
+    status: "Planned",
     description: "Intent-based search that understands 'growing SaaS on a small budget' and surfaces the right five pieces.",
-    result: "Vector index across all content. Early results: 3x better relevance than keyword search.",
+    result: "Not started. Site search is keyword matching today — that's the bar to beat.",
     icon: Search,
   },
   {
     title: "AI content QA rubric",
     status: "Live",
     description: "An automated editorial rubric that pre-checks drafts against a quality bar before a human ever sees them.",
-    result: "Cut editing time 40% while raising the average quality score.",
+    result: "In daily use on drafts for this site. Editing time is down; I haven't measured by how much.",
     icon: Sparkles,
   },
   {
@@ -64,7 +64,7 @@ export default function AiExperimentsPage() {
       />
       <Section>
         <Container>
-          <SectionHeading eyebrow="Experiments" title="What's running in the lab" />
+          <SectionHeading eyebrow="Experiments" title="What's in the lab" />
           <Stagger className="mt-10 grid gap-4 md:grid-cols-2">
             {experiments.map((e) => {
               const ExpIcon = e.icon;
