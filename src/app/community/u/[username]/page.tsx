@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { getMemberContext } from "@/lib/members/session";
@@ -14,6 +13,7 @@ import { PostCard } from "@/components/community/post-card";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { BadgeTick } from "@/components/community/badge-tick";
 import { SignInWall } from "@/components/community/sign-in-wall";
+import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
 
 /** Posts a logged-out visitor sees before the wall — matches /community. */
 const PREVIEW = 3;
@@ -39,21 +39,14 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 
 export default async function CommunityProfilePage({
   params,
-  searchParams,
 }: {
   params: Promise<{ username: string }>;
-  searchParams: Promise<{ shown?: string }>;
 }) {
-  const [{ username }, sp] = await Promise.all([params, searchParams]);
+  const { username } = await params;
   // An unknown handle 404s rather than rendering an empty feed — a mistyped
   // @mention should look broken, not like a real member with nothing to say.
   const profile = await getProfileByUsername(username);
   if (!profile) notFound();
-
-  // ?shown= grows by PAGE per "Show more" click; the clamp keeps a crafted URL
-  // from asking the RPC for an unbounded page.
-  const PAGE = 50;
-  const shown = Math.min(Math.max(Number(sp.shown) || PAGE, PAGE), 1000);
 
   const { user } = await getMemberContext();
   // Logged out, a profile is gated exactly like the feed — it IS a feed, just
@@ -61,7 +54,7 @@ export default async function CommunityProfilePage({
   const [canPost, posts, total] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
     user
-      ? listFeed({ sort: "new", window: "all", author: profile.username, limit: shown })
+      ? listFeed({ sort: "new", window: "all", author: profile.username, limit: FEED_PAGE })
       : listRandomFeed(PREVIEW, { author: profile.username }),
     countAuthorPosts(profile.id),
   ]);
@@ -69,6 +62,16 @@ export default async function CommunityProfilePage({
     posts.filter((p) => p.type === "poll").map((p) => p.id),
   );
   const name = profile.displayName ?? `@${profile.username}`;
+
+  const cards = posts.map((post) => (
+    <PostCard
+      key={post.rowId}
+      post={post}
+      pollResult={pollResults[post.id]}
+      canVote={canPost}
+      viewerId={user?.id ?? null}
+    />
+  ));
 
   return (
     <div>
@@ -90,31 +93,16 @@ export default async function CommunityProfilePage({
         <p className="px-4 py-16 text-center text-sm text-muted-foreground">
           No posts yet.
         </p>
+      ) : user ? (
+        <FeedStream query={{ author: profile.username }} initialCount={posts.length}>
+          {cards}
+        </FeedStream>
       ) : (
-        posts.map((post) => (
-          <PostCard
-            key={post.rowId}
-            post={post}
-            pollResult={pollResults[post.id]}
-            canVote={canPost}
-            viewerId={user?.id ?? null}
-          />
-        ))
+        cards
       )}
 
       {!user && posts.length > 0 && (
         <SignInWall returnPath={`/community/u/${profile.username}`} />
-      )}
-
-      {user && posts.length < total && (
-        <div className="border-t border-border px-4 py-3 text-center">
-          <Link
-            href={`/community/u/${profile.username}?shown=${shown + PAGE}`}
-            className="text-sm font-medium text-muted-foreground transition-ui hover:text-foreground"
-          >
-            Show more ({total - posts.length} older)
-          </Link>
-        </div>
       )}
     </div>
   );
