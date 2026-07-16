@@ -7,11 +7,17 @@ describe("auto templates", () => {
   it("fills placeholders and leaves none behind", () => {
     for (const kind of KINDS) {
       for (let i = 0; i < 40; i++) {
-        const out = pick(kind, { title: "My Title", url: "https://x.test/y", n: 50 });
+        const out = pick(kind, { title: "My Title", url: "https://x.test/y", n: 50, project: "Book A Sloth" });
         expect(out.length).toBeGreaterThan(0);
-        expect(out).not.toMatch(/\{(title|url|n)\}/);
+        expect(out).not.toMatch(/\{(title|url|n|project)\}/);
         expect(out.length).toBeLessThanOrEqual(500);
       }
+    }
+  });
+
+  it("every pr template names the project, so the feed says which repo shipped", () => {
+    for (let i = 0; i < 60; i++) {
+      expect(pick("pr", { title: "My Title", project: "Book A Sloth" })).toContain("Book A Sloth");
     }
   });
 
