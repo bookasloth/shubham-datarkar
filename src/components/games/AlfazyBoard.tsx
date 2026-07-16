@@ -68,7 +68,8 @@ export default function AlfazyBoard({
   }, [guesses, status, storageKey]);
 
   useEffect(() => {
-    if (isArchive) return;
+    // Archive replays submit too — the server routes them to a write path that
+    // records the solve without touching streaks.
     if (status === "playing") return;
     if (!user) return;
     if (submitted.current) return;

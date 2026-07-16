@@ -54,7 +54,8 @@ export default function HitAndBlowBoard({
 
   // submit result once per finished game, only when authed
   useEffect(() => {
-    if (isArchive) return; // never persist replays of past puzzles (would corrupt streaks)
+    // Archive replays submit too — the server routes them to a write path that
+    // records the solve without touching streaks.
     if (status === "playing") return;
     if (!user) return;
     if (submitted.current) return;

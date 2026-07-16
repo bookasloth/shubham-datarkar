@@ -43,6 +43,28 @@ export async function getMyGameStats(
 }
 
 /**
+ * Every puzzle the user has won in this game — daily AND archive.
+ *
+ * Deliberately not `streaks.total_won`: that counter is only bumped by the
+ * daily write path, so it undercounts anyone who solves from the archive with a
+ * membership. Streak and Win Rate keep reading `streaks` — those are meant to be
+ * daily-only, and recounting them here would make Win Rate inflatable by
+ * replaying easy archive puzzles.
+ */
+export async function getMySolvedCount(game: StatRow["game"]): Promise<number> {
+  const user = await getGameUser();
+  if (!user) return 0;
+  const supabase = await supabaseAuthServer();
+  const { count } = await supabase
+    .from("game_results")
+    .select("*", { count: "exact", head: true })
+    .eq("user_id", user.id)
+    .eq("game", game)
+    .eq("status", "won");
+  return count ?? 0;
+}
+
+/**
  * Average solve time (ms) for the current user's wins in this game.
  * Returns null when there are no wins (or the caller is anon).
  */
