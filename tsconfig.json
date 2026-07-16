@@ -6,6 +6,10 @@
     "skipLibCheck": true,
     "strict": true,
     "noEmit": true,
+    // scripts/check-pr-tweet.mts runs under `node --experimental-strip-types`,
+    // which requires the explicit .ts on its import. Safe with noEmit: it only
+    // permits the extension, and nothing here is compiled to JS.
+    "allowImportingTsExtensions": true,
     "esModuleInterop": true,
     "module": "esnext",
     "moduleResolution": "bundler",

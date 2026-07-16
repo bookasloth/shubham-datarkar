@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet } from "./pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, missingTweet } from "./pr";
 import { pick } from "./templates";
 
 describe("parsePrTitle", () => {
@@ -117,5 +117,28 @@ describe("projectFor", () => {
   it("is not fooled by prototype keys", () => {
     expect(projectFor("constructor")).toBeNull();
     expect(projectFor("__proto__")).toBeNull();
+  });
+});
+
+describe("missingTweet", () => {
+  it("flags an announce-worthy PR with no Tweet line", () => {
+    expect(missingTweet("fix(games): streak reset", [], "## The bug\n\nIt reset.")).toBe(true);
+  });
+
+  it("passes when the Tweet line is there", () => {
+    expect(missingTweet("fix(games): streak reset", [], "Tweet: Your streak died.")).toBe(false);
+  });
+
+  it("ignores PRs that never announce", () => {
+    // docs: isn't an announce type; no-announce is a hard kill switch; a docs
+    // scope is skipped. None of them owe the feed a line.
+    expect(missingTweet("docs: update readme", [], "")).toBe(false);
+    expect(missingTweet("feat: big thing", ["no-announce"], "")).toBe(false);
+    expect(missingTweet("chore(docs): tidy", [], "")).toBe(false);
+  });
+
+  it("treats an empty or missing body as missing", () => {
+    expect(missingTweet("feat: thing", [], null)).toBe(true);
+    expect(missingTweet("feat: thing", [], "")).toBe(true);
   });
 });

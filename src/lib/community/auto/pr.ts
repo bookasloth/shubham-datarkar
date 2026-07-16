@@ -75,3 +75,17 @@ export function humanizeSubject(subject: string): string {
   const s = subject.trim().replace(/(^|\s)@(?=[a-z0-9])/gi, "$1");
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }
+
+/**
+ * A PR that will announce but carries no `Tweet:` line — i.e. one that will post
+ * to the public feed in words nobody chose.
+ *
+ * The fallback pool is deliberately kept (a PR really can have nothing to say),
+ * but it is ~14 lines, so every missed line is a coin-flip on the feed showing
+ * the same sentence twice under the owner's name. That happened on #221/#222.
+ * The pool is the safety net; needing it is the bug. CI calls this so the
+ * omission fails at review time instead of surfacing as a duplicate post.
+ */
+export function missingTweet(title: string, labels: string[], body: string | null | undefined): boolean {
+  return shouldAnnounce(title, labels) && extractTweet(body) === null;
+}
