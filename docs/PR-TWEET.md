@@ -166,6 +166,16 @@ how long", "past me strikes again" — are shared property; every dev feed has t
 they carry no voice. And an update that already has personality does not need a closing
 joke bolted on for an ending — if the middle landed, stopping is the punchline.
 
+Trust the update itself. A one-word landing appended after the facts — "Fair.",
+"Unstuck.", "Finally." — usually only manufactures an ending the update didn't need; cut
+it and the sentence before it lands harder. Implementation details earn their place when
+they reveal something about the decision or the problem, not because they exist. Keep the
+rhythm varied: one sharp sentence, a tiny story, or plainly technical. Never explain the
+site's personality twice — the reader was there the first time.
+
+And once the voice is working, stop tuning it. Making it more "the owner" makes it less —
+the voice is already there.
+
 ## The register
 
 Post like a person with no comms team, not a brand with a voice guide.
