@@ -69,7 +69,9 @@ export async function GET(
   // feed exactly; a mid-text link gets moved to the bottom — fine for a card.
   const tokens = post.body ? tokenizeLinks(post.body) : [];
   const short = await ensureShortLinks(tokens.flatMap((t) => (t.type === "link" ? [t.href] : [])));
-  const text = tokens.flatMap((t) => (t.type === "text" ? [t.value] : [])).join("").replace(/\s+/g, " ").trim();
+  // `!== "link"` (not `=== "text"`) so a mention keeps its literal "@handle" in the
+  // card body — every non-link token carries `value`.
+  const text = tokens.flatMap((t) => (t.type !== "link" ? [t.value] : [])).join("").replace(/\s+/g, " ").trim();
   const links = tokens.flatMap((t) => {
     if (t.type !== "link") return [];
     const slug = short.get(t.href);

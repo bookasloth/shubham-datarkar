@@ -103,6 +103,33 @@ export function newComment(a: { name?: string | null; author: string; excerpt: s
   };
 }
 
+/** Someone @mentioned you in a post or reply. Humour: Subtle.
+ *  ponytail: reuses the newComment GIF — same "someone is talking to you" beat,
+ *  and it saves adding a 32nd asset to the upload list. Give it its own key if the
+ *  two ever want different art. */
+export function mentioned(a: { name?: string | null; author: string; excerpt: string; href: string }): RenderedEmail {
+  const first = firstName(a.name);
+  return {
+    subject: `${a.author} mentioned you`,
+    html: renderEmail({
+      preheader: "Your name came up. In a good way, probably.",
+      headerTagline: "Community",
+      title: `${esc(a.author)} mentioned you`,
+      footerNote: TXN_FOOTER,
+      bodyHtml:
+        p(`Hey ${esc(first)},`) +
+        p(`<strong>${esc(a.author)}</strong> tagged you in the community.`) +
+        `<p style="margin:0 0 18px; padding:12px 16px; background:#f6f8fa; border-radius:10px; font-size:14px; color:#2d2d2d; line-height:1.6;">"${esc(a.excerpt)}"</p>` +
+        p("Someone wanted you specifically in this one.") +
+        p("Which is either flattering or a trap.") +
+        p("Only one way to find out."),
+      cta: { label: "See the mention", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.newComment, "A speech bubble popping up", 340),
+    }),
+    text: `Hey ${first}, ${a.author} mentioned you in the community:\n\n"${a.excerpt}"\n\nSee it: ${a.href}`,
+  };
+}
+
 /** Weekly community digest. Humour: Subtle. */
 export function communityDigest(a: { items: { title: string; href: string; meta?: string }[] }): RenderedEmail {
   return {

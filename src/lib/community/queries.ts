@@ -139,6 +139,27 @@ export async function viewerCanPost(): Promise<boolean> {
   return Boolean(data);
 }
 
+/** Look up a public profile by handle — the mention/profile-page resolver.
+ *  `profiles` is `select using (true)` (usernames are public), so this needs no
+ *  RPC. Returns null for an unknown handle, which is what 404s a bad mention
+ *  instead of rendering an empty feed for a user who doesn't exist. */
+export async function getProfileByUsername(
+  username: string,
+): Promise<{ id: string; username: string; displayName: string | null } | null> {
+  const sb = await supabaseAuthServer();
+  const { data } = await sb
+    .from("profiles")
+    .select("id, username, display_name")
+    .eq("username", username.toLowerCase())
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    id: data.id as string,
+    username: data.username as string,
+    displayName: (data.display_name as string) ?? null,
+  };
+}
+
 /** The signed-in viewer's community handle, or null. */
 export async function viewerHandle(): Promise<string | null> {
   const sb = await supabaseAuthServer();
