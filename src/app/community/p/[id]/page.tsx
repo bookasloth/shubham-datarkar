@@ -4,6 +4,7 @@ import { getShellUser } from "@/lib/app-shell/user";
 import { getPostByPublicId, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
+import { ReplyPrompt } from "@/components/community/reply-prompt";
 import { MeterGate } from "@/components/community/meter-gate";
 import { buildMetadata } from "@/lib/seo";
 
@@ -68,6 +69,9 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         />
 
         {canPost && <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />}
+        {/* Logged out, the pill stays and opens the join modal — the post used to
+            simply end, with no sign the conversation was open to anyone. */}
+        {!user && <ReplyPrompt />}
 
         {replies.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>

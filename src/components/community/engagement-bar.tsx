@@ -6,6 +6,8 @@ import { ThumbsUp, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react
 import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
+import { JoinModal } from "@/components/community/join-modal";
+import { GATE } from "@/lib/community/gate-messages";
 
 // `relative` anchors the like-burst overlay; `active:scale-90` gives every
 // action a tactile press that transition-ui eases back on release.
@@ -51,6 +53,14 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [joining, setJoining] = useState(false);
+
+  // A logged-out tap is the one "error" worth acting on rather than reporting:
+  // it means someone wanted in. Everything else still renders as text below.
+  function report(message: string) {
+    if (message === GATE.SIGNED_OUT) setJoining(true);
+    else setError(message);
+  }
 
   // Base comes straight from props, so a router.refresh() (or any re-render with
   // fresh server data) is what resets the optimistic overlay. Seeding useState
@@ -75,7 +85,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     start(async () => {
       addOptimistic({ kind: "vote", value });
       const r = await toggleVote(post.id, value);
-      if ("error" in r) setError(r.error);
+      if ("error" in r) report(r.error);
       else {
         setError(null);
         router.refresh();
@@ -87,7 +97,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     start(async () => {
       addOptimistic({ kind: "bookmark" });
       const r = await toggleBookmark(post.id);
-      if ("error" in r) setError(r.error);
+      if ("error" in r) report(r.error);
       else {
         setError(null);
         router.refresh();
@@ -101,7 +111,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     start(async () => {
       addOptimistic({ kind: "reblog" });
       const r = await toggleReblog(post.id);
-      if ("error" in r) setError(r.error);
+      if ("error" in r) report(r.error);
       else {
         setError(null);
         router.refresh();
@@ -185,6 +195,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
         {endSlot && <span className="ml-auto">{endSlot}</span>}
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
+      <JoinModal open={joining} onOpenChange={setJoining} />
     </div>
   );
 }
