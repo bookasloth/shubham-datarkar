@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenizeLinks, prettyLabel } from "./linkify";
+import { tokenizeLinks, prettyLabel, mentionedHandles } from "./linkify";
 
 describe("tokenizeLinks", () => {
   it("passes through text with no URL as a single token", () => {
@@ -29,6 +29,70 @@ describe("tokenizeLinks", () => {
     expect(tokenizeLinks("visit example.com today")).toEqual([
       { type: "text", value: "visit example.com today" },
     ]);
+  });
+});
+
+describe("tokenizeLinks — mentions", () => {
+  it("splits a mention out of surrounding text", () => {
+    expect(tokenizeLinks("hey @sam nice one")).toEqual([
+      { type: "text", value: "hey " },
+      { type: "mention", handle: "sam", value: "@sam" },
+      { type: "text", value: " nice one" },
+    ]);
+  });
+
+  it("matches a mention at the very start of the body", () => {
+    expect(tokenizeLinks("@sam hi")[0]).toEqual({ type: "mention", handle: "sam", value: "@sam" });
+  });
+
+  it("keeps the whole auto-provisioned dotted handle", () => {
+    // handle_new_user mints lower(email-local) || '_' || md5 — dots included.
+    expect(tokenizeLinks("cc @shubham.datarkar_a1b2")[1]).toEqual({
+      type: "mention",
+      handle: "shubham.datarkar_a1b2",
+      value: "@shubham.datarkar_a1b2",
+    });
+  });
+
+  it("does not treat an email address as a mention", () => {
+    expect(tokenizeLinks("mail me at foo@bar.com ok")).toEqual([
+      { type: "text", value: "mail me at foo@bar.com ok" },
+    ]);
+  });
+
+  it("does not find a mention inside a URL", () => {
+    const t = tokenizeLinks("https://x.com/@sam");
+    expect(t.filter((x) => x.type === "mention")).toHaveLength(0);
+    expect(t[0]).toEqual({ type: "link", href: "https://x.com/@sam", text: "https://x.com/@sam" });
+  });
+
+  it("leaves trailing sentence punctuation out of the handle", () => {
+    const t = tokenizeLinks("ping @sam.");
+    expect(t[1]).toEqual({ type: "mention", handle: "sam", value: "@sam" });
+    expect(t[2]).toEqual({ type: "text", value: "." });
+  });
+
+  it("lowercases the handle but renders the text as typed", () => {
+    expect(tokenizeLinks("yo @Sam")[1]).toEqual({ type: "mention", handle: "sam", value: "@Sam" });
+  });
+
+  it("ignores a too-short handle", () => {
+    expect(tokenizeLinks("a @ab b")).toEqual([{ type: "text", value: "a @ab b" }]);
+  });
+
+  it("handles a mention and a link in one body", () => {
+    const t = tokenizeLinks("@sam see https://x.com/a");
+    expect(t.map((x) => x.type)).toEqual(["mention", "text", "link"]);
+  });
+});
+
+describe("mentionedHandles", () => {
+  it("returns distinct lowercased handles", () => {
+    expect(mentionedHandles("@sam and @Sam and @meera")).toEqual(["sam", "meera"]);
+  });
+
+  it("returns nothing for a body with no mentions", () => {
+    expect(mentionedHandles("just words and foo@bar.com")).toEqual([]);
   });
 });
 

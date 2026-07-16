@@ -2,7 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
-import { notifyReply } from "./community-notify";
+import { notifyReply, notifyMentions } from "./community-notify";
 
 export type EngageResult = { ok: true } | { error: string };
 
@@ -176,7 +176,7 @@ export async function createReply(postId: string, body: string): Promise<EngageR
   // 1-level threading: you may only reply to a root post.
   const { data: parent } = await sb
     .from("community_posts")
-    .select("id, parent_id")
+    .select("id, parent_id, user_id, public_id")
     .eq("id", postId)
     .maybeSingle();
   if (!parent) return { error: "That post no longer exists." };
@@ -190,6 +190,14 @@ export async function createReply(postId: string, body: string): Promise<EngageR
   });
   if (err) return { error: err.message };
   await notifyReply(postId, user.id, valid.body ?? "");
+  // Exclude the parent author: notifyReply already emailed them about this same
+  // reply, and mentioning them in it shouldn't earn a second copy.
+  await notifyMentions(
+    valid.body ?? "",
+    user.id,
+    `https://shubhamdatarkar.com/community/p/${parent.public_id}`,
+    [parent.user_id as string],
+  );
   revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");
   return { ok: true };

@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { validatePost } from "./validate";
-import { notifyPostCreated } from "./community-notify";
+import { notifyPostCreated, notifyMentions } from "./community-notify";
 
 const BUCKET = "community-media";
 const MAX_BYTES = 5 * 1024 * 1024;
@@ -81,6 +81,7 @@ export async function createPost(
     ? `https://shubhamdatarkar.com/community/p/${inserted.public_id}`
     : "https://shubhamdatarkar.com/community";
   await notifyPostCreated(user.id, href);
+  await notifyMentions(valid.body ?? "", user.id, href);
 
   revalidatePath("/community");
   return { ok: true };

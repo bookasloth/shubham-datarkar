@@ -2,9 +2,15 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getUserEmail } from "@/lib/email/user-email";
 import { sendTemplate } from "@/lib/email/send-template";
-import { communityWelcome, postPublished, newComment } from "@/lib/email/templates/community";
+import { communityWelcome, postPublished, newComment, mentioned } from "@/lib/email/templates/community";
+import { mentionedHandles } from "@/lib/community/linkify";
 
 const SITE = "https://shubhamdatarkar.com";
+
+// One post can't email more than this many people, however many handles it packs.
+// Without it, a single body is an email-fanout amplifier pointed at the same SMTP
+// box that carries password resets.
+const MAX_MENTION_EMAILS = 10;
 
 /** First root post welcomes; subsequent posts get a publish notice. */
 export function postEmailKind(priorPostCount: number): "welcome" | "published" {
@@ -29,6 +35,51 @@ export async function notifyPostCreated(userId: string, postHref: string): Promi
     else await sendTemplate(email, postPublished({ href: postHref }));
   } catch (e) {
     console.warn("[community] post email failed:", (e as Error).message);
+  }
+}
+
+/** Fire after a post/reply insert that may contain @handles. Emails each mentioned
+ *  member. Best-effort: a bad handle, a missing email, or a dead SMTP box must
+ *  never fail the post that's already committed.
+ *
+ *  `excludeUserIds` keeps someone who's already getting a notify for this same
+ *  insert (the parent author of a reply) from receiving two emails about it. */
+export async function notifyMentions(
+  body: string,
+  actorId: string,
+  href: string,
+  excludeUserIds: string[] = [],
+): Promise<void> {
+  try {
+    const handles = mentionedHandles(body);
+    if (handles.length === 0) return;
+
+    const admin = supabaseAdmin();
+    const { data: targets } = await admin
+      .from("profiles")
+      .select("id, username")
+      .in("username", handles.slice(0, MAX_MENTION_EMAILS));
+    if (!targets?.length) return;
+
+    const skip = new Set([actorId, ...excludeUserIds]);
+    const { data: actor } = await admin
+      .from("profiles")
+      .select("display_name, username")
+      .eq("id", actorId)
+      .maybeSingle();
+    const author = actor?.display_name || (actor?.username ? `@${actor.username}` : "Someone");
+    const trimmed = body.trim();
+    const excerpt = trimmed.slice(0, 140) + (trimmed.length > 140 ? "…" : "");
+
+    for (const t of targets) {
+      const targetId = t.id as string;
+      if (skip.has(targetId)) continue;
+      const email = await getUserEmail(targetId);
+      if (!email) continue;
+      await sendTemplate(email, mentioned({ author, excerpt, href }));
+    }
+  } catch (e) {
+    console.warn("[community] mention email failed:", (e as Error).message);
   }
 }
 

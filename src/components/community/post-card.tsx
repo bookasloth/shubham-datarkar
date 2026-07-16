@@ -66,6 +66,17 @@ export async function PostCard({
           {post.body && (
             <p className="mt-1 whitespace-pre-wrap break-words text-sm">
               {tokens.map((t, i) => {
+                if (t.type === "mention") {
+                  return (
+                    <Link
+                      key={i}
+                      href={`/community/u/${t.handle}`}
+                      className="relative z-10 font-medium text-foreground hover:underline"
+                    >
+                      {t.value}
+                    </Link>
+                  );
+                }
                 if (t.type !== "link") return <span key={i}>{t.value}</span>;
                 const slug = short.get(t.href);
                 return (
