@@ -16,6 +16,7 @@ const G = EMAIL_CDN;
 
 export const EMAIL_GIFS = {
   // Auth
+  confirmEmail: `${G}/confirm-email.gif`,
   accountWelcome: `${EMAIL_CDN}/welcome.gif`, // reuse existing
   forgotPassword: `${G}/password-reset.gif`,
   passwordChanged: `${G}/password-changed.gif`,

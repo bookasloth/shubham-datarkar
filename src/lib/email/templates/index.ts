@@ -57,13 +57,14 @@ const samplePosts = [
 
 export const EMAIL_CATALOG: CatalogEntry[] = [
   // Authentication
-  { key: "accountWelcome", category: "Authentication", label: "Welcome / Account created", recipient: "New user", trigger: "Signup confirmed (Supabase hook)", humour: "High", gifKey: "accountWelcome", render: () => auth.accountWelcome({ name: NAME }) },
+  { key: "confirmEmail", category: "Authentication", label: "Confirm your email address", recipient: "New signup", trigger: "Signup (before account is active)", humour: "Subtle", gifKey: "confirmEmail", render: () => auth.confirmEmail({ name: NAME, confirmUrl: `${SITE}/auth/confirm?token_hash=sample&type=signup` }) },
+  { key: "accountWelcome", category: "Authentication", label: "Welcome / Account created", recipient: "New user", trigger: "Signup confirmed (email verified)", humour: "High", gifKey: "accountWelcome", render: () => auth.accountWelcome({ name: NAME }) },
   { key: "forgotPassword", category: "Authentication", label: "Forgot password", recipient: "User", trigger: "Password recovery (Supabase hook)", humour: "None", gifKey: "forgotPassword", render: () => auth.forgotPassword({ name: NAME, resetUrl: `${SITE}/reset-password?token=sample` }) },
   { key: "passwordChanged", category: "Authentication", label: "Password changed", recipient: "User", trigger: "Password updated", humour: "Subtle", gifKey: "passwordChanged", render: () => auth.passwordChanged({ name: NAME }) },
   { key: "commentOtp", category: "Authentication", label: "Comment verification code", recipient: "Guest commenter", trigger: "Guest requests a comment OTP", humour: "None", gifKey: "otp", render: () => auth.commentOtp({ code: "482913" }) },
 
   // Newsletter
-  { key: "newsletterWelcome", category: "Newsletter", label: "Builders List confirmed", recipient: "New subscriber", trigger: "Newsletter subscribe", humour: "High", gifKey: "newsletterWelcome", render: () => newsletter.newsletterWelcome() },
+  { key: "newsletterWelcome", category: "Newsletter", label: "Builders List confirmed", recipient: "New subscriber", trigger: "Newsletter subscribe", humour: "High", gifKey: "newsletterWelcome", render: () => newsletter.newsletterWelcome({ email: "aarav@example.com" }) },
   { key: "newBlogs", category: "Newsletter", label: "New blogs this week", recipient: "Subscribers", trigger: "Weekly cron (Mon)", humour: "Subtle", gifKey: "newBlogs", render: () => newsletter.newBlogs({ posts: samplePosts }) },
   { key: "monthlyRoundup", category: "Newsletter", label: "Monthly roundup", recipient: "Subscribers", trigger: "Monthly cron (1st)", humour: "Subtle", gifKey: "monthlyRoundup", render: () => newsletter.monthlyRoundup({ monthLabel: "June", posts: samplePosts }) },
   { key: "unsubscribed", category: "Newsletter", label: "Unsubscribe confirmation", recipient: "Ex-subscriber", trigger: "Unsubscribe", humour: "Subtle", gifKey: "unsubscribe", render: () => newsletter.unsubscribed() },

@@ -4,6 +4,29 @@ import { type RenderedEmail, esc, firstName, p, TXN_FOOTER } from "./_shared";
 
 const SITE = "https://shubhamdatarkar.com";
 
+/** Confirm email address (signup). Humour: Subtle (it's a gate — clarity first). */
+export function confirmEmail(a: { name?: string | null; confirmUrl: string }): RenderedEmail {
+  const first = firstName(a.name);
+  return {
+    subject: "Confirm your email — one click and you're in",
+    html: renderEmail({
+      preheader: "Quick tap to confirm it's really you. Then the door opens.",
+      headerTagline: "<strong>Shubham Datarkar</strong>",
+      title: "Confirm your email address",
+      footerNote: TXN_FOOTER,
+      bodyHtml:
+        p(`Hey ${esc(first)},`) +
+        p("Almost there. I just need to know this inbox is actually yours.") +
+        p("Tap the button below and your account is confirmed — that's the whole task.") +
+        p("The link expires in 24 hours.") +
+        p("If you didn't sign up, ignore this email. Nothing happens and no account gets created without this click."),
+      cta: { label: "Confirm my email", href: a.confirmUrl },
+      afterCta: emailGif(EMAIL_GIFS.confirmEmail, "An envelope being ticked as confirmed"),
+    }),
+    text: `Hey ${first},\n\nConfirm your email to finish signing up (link expires in 24 hours):\n${a.confirmUrl}\n\nDidn't sign up? Ignore this — nothing happens without the click.`,
+  };
+}
+
 /** Account created / welcome. Humour: High. */
 export function accountWelcome(a: { name?: string | null }): RenderedEmail {
   const first = firstName(a.name);

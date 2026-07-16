@@ -7,7 +7,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { loginDestination, safeNext } from "@/lib/auth/redirect";
 import { buildConfirmUrl } from "@/lib/auth/confirm-url";
 import { sendTemplate } from "@/lib/email/send-template";
-import { accountWelcome, forgotPassword, passwordChanged } from "@/lib/email/templates/auth";
+import { confirmEmail, forgotPassword, passwordChanged } from "@/lib/email/templates/auth";
 
 export type SignInState = { error: string } | undefined;
 export type MagicLinkState = { ok: true } | { error: string } | undefined;
@@ -62,17 +62,32 @@ export async function signUp(
     return { error: "Password must be at least 8 characters." };
   }
 
-  const supabase = await supabaseAuthServer();
-  const { data, error } = await supabase.auth.signUp({ email, password });
+  // Mint the confirmation link ourselves (like password reset) so we can send a
+  // branded "Confirm your email" instead of Supabase's default template. The link
+  // lands on /auth/confirm, which verifies it and — on a signup type — fires the
+  // welcome email. accountWelcome deliberately moves to confirm-time, not now.
+  const origin_ = await origin();
+  const safe = safeNext(next);
+  const dest = loginDestination(safe, email);
+  const { data, error } = await supabaseAdmin().auth.admin.generateLink({
+    type: "signup",
+    email,
+    password,
+    options: { redirectTo: `${origin_}${dest}` },
+  });
   if (error) return { error: error.message };
 
-  try {
-    await sendTemplate(email, accountWelcome({}));
-  } catch {
-    // Best-effort — signup must succeed even if mail fails.
+  const tokenHash = data?.properties?.hashed_token;
+  if (tokenHash) {
+    try {
+      const confirmUrl = buildConfirmUrl(origin_, tokenHash, "signup", dest);
+      await sendTemplate(email, confirmEmail({ confirmUrl }));
+    } catch {
+      // Best-effort — the account exists even if mail fails.
+    }
   }
 
-  redirect(loginDestination(next, data.user?.email));
+  redirect(`/login?check=1${safe ? `&next=${encodeURIComponent(safe)}` : ""}`);
 }
 
 /**

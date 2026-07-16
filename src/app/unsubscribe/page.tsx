@@ -10,7 +10,12 @@ export const metadata = buildMetadata({
   noIndex: true,
 });
 
-export default function UnsubscribePage() {
+export default async function UnsubscribePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ email?: string }>;
+}) {
+  const { email } = await searchParams;
   return (
     <>
       <PageHero
@@ -21,7 +26,7 @@ export default function UnsubscribePage() {
       />
       <Section>
         <Container size="narrow">
-          <UnsubscribeForm />
+          <UnsubscribeForm defaultEmail={email} />
         </Container>
       </Section>
     </>
