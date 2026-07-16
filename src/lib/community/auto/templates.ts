@@ -72,17 +72,26 @@ const SUPPORTER_MILESTONE: readonly string[] = [
   "{n} supporters in. This community is something else. {url}",
 ] as const;
 
+// Not corporate. Solo-founder voice: self-roasting, gaslighting, ragebait,
+// the occasional dig. {title} is the humanized PR subject.
 const PR: readonly string[] = [
-  "Just shipped: {title}.",
-  "New on the site: {title}.",
-  "Shipped something: {title}.",
-  "Just pushed live: {title}.",
-  "New update to the platform: {title}.",
-  "Improved something today: {title}.",
-  "Just landed: {title}.",
-  "Fresh change is live: {title}.",
-  "Shipped an update: {title}.",
-  "New: {title}.",
+  // self-roast
+  "Shipped {title}. Only took me embarrassingly long to admit it needed doing.",
+  "{title} is live. Past me left this for future me. Future me is not thrilled.",
+  "Fixed {title}. Was it broken this whole time? Yes. Did anyone notice but me? No.",
+  // gaslighting
+  "{title} is live. It's always been like this. You must be misremembering.",
+  "Pushed {title}. This was never a bug. It was a feature you weren't ready for.",
+  "{title}. Nothing changed. Everything changed. You'll be fine.",
+  // ragebait
+  "Shipped {title} solo while your favourite platform is still 'gathering requirements'.",
+  "{title}. If the agency you're paying still can't do this in 2026, ask for the invoice back.",
+  "Just shipped {title}. No standup, no ticket, no permission. Try that at your job.",
+  // dig / flex
+  "{title} — done before most SaaS finishes loading its cookie banner.",
+  "Shipped {title}. The big platforms will 'innovate' this next year and want applause.",
+  // dry
+  "{title} is live. Clap if you must.",
 ] as const;
 
 const POOLS: Record<AutoKind, readonly string[]> = {
