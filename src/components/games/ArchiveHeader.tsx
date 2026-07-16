@@ -1,5 +1,5 @@
 import { Flame, Target, Timer, Trophy } from "lucide-react";
-import { getMyGameStats, getMyAvgSolveTime } from "@/lib/games/profile-queries";
+import { getMyGameStats, getMyAvgSolveTime, getMySolvedCount } from "@/lib/games/profile-queries";
 import type { GameKey } from "@/lib/games/registry";
 
 function fmtMs(ms: number | null): string {
@@ -33,7 +33,11 @@ function Tile({
 }
 
 export async function ArchiveHeader({ game }: { game: GameKey }) {
-  const [stats, avgMs] = await Promise.all([getMyGameStats(game), getMyAvgSolveTime(game)]);
+  const [stats, avgMs, solved] = await Promise.all([
+    getMyGameStats(game),
+    getMyAvgSolveTime(game),
+    getMySolvedCount(game),
+  ]);
   const winPct = stats && stats.played > 0 ? Math.round((stats.won / stats.played) * 100) : 0;
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -54,7 +58,7 @@ export async function ArchiveHeader({ game }: { game: GameKey }) {
       />
       <Tile
         icon={<Trophy className="size-5" />}
-        value={String(stats?.won ?? 0)}
+        value={String(solved)}
         label="Puzzles Solved"
       />
     </div>

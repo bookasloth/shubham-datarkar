@@ -8,7 +8,7 @@ const today = puzzleNumberFor("alfazy");
 const hbToday = puzzleNumberFor("hit_and_blow");
 
 describe("validateResult — alfazy", () => {
-  it("accepts a genuine win on today's puzzle (last guess equals the answer)", () => {
+  it("accepts a genuine win on today's puzzle, as a streak-bearing daily result", () => {
     const r = validateResult({
       game: "alfazy",
       puzzleNumber: today,
@@ -16,7 +16,7 @@ describe("validateResult — alfazy", () => {
       guesses: [answerFor(today)],
       timeMs: 1000,
     });
-    expect(r.valid).toBe(true);
+    expect(r).toEqual({ valid: true, source: "daily" });
   });
 
   it("rejects a claimed win whose guess never reaches the answer", () => {
@@ -32,13 +32,48 @@ describe("validateResult — alfazy", () => {
     expect(r.valid).toBe(false);
   });
 
-  it("rejects a genuine-looking win submitted for a NON-today (archive) puzzle", () => {
-    // Puzzle 0 is in the past; even with its real answer, only today is submittable.
+  it("accepts a past puzzle but marks it archive, so it can never reach the streak path", () => {
     const r = validateResult({
       game: "alfazy",
       puzzleNumber: 0,
       status: "won",
       guesses: [answerFor(0)],
+      timeMs: 1000,
+    });
+    expect(r).toEqual({ valid: true, source: "archive" });
+  });
+
+  it("marks yesterday archive too — it is free to play, but must not extend a streak", () => {
+    const y = today - 1;
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: y,
+      status: "won",
+      guesses: [answerFor(y)],
+      timeMs: 1000,
+    });
+    expect(r).toEqual({ valid: true, source: "archive" });
+  });
+
+  it("rejects a future puzzle (re-deriving it would hand out tomorrow's answer)", () => {
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: today + 1,
+      status: "won",
+      guesses: [answerFor(today + 1)],
+      timeMs: 1000,
+    });
+    expect(r.valid).toBe(false);
+  });
+
+  it("still re-derives the answer for archive puzzles — a forged archive win is rejected", () => {
+    const answer = answerFor(0);
+    const guess = answer === "zzzzz" ? "qqqqq" : "zzzzz";
+    const r = validateResult({
+      game: "alfazy",
+      puzzleNumber: 0,
+      status: "won",
+      guesses: [guess],
       timeMs: 1000,
     });
     expect(r.valid).toBe(false);

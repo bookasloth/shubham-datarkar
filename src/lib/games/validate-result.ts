@@ -1,4 +1,4 @@
-import { isToday } from "@/lib/daily";
+import { isToday, puzzleNumberFor } from "@/lib/daily";
 import { ALFAZY, answerFor, isValidGuess as isValidAlfazy } from "@/lib/games/alfazy";
 import {
   INTEGRA,
@@ -20,20 +20,29 @@ export type SubmitInput = {
   timeMs: number | null;
 };
 
+export type ValidationResult =
+  | { valid: false }
+  /** Which write path may persist this: `daily` touches streaks, `archive` never does. */
+  | { valid: true; source: "daily" | "archive" };
+
 /**
  * Pure server-side re-derivation of truth. Never trust the client's claim.
  * This is the anti-cheat boundary — `submitResult` persists only what passes here.
+ *
+ * A past puzzle is now submittable, but only ever as `archive`, which routes to a
+ * write path that cannot touch streaks. That split is what lets a membership solve
+ * count as Solved without letting anyone backfill a streak.
  */
-export function validateResult(input: SubmitInput): { valid: boolean } {
+export function validateResult(input: SubmitInput, now: number = Date.now()): ValidationResult {
   const { game, puzzleNumber, status, guesses } = input;
 
   if (!Number.isInteger(puzzleNumber) || puzzleNumber < 0) return { valid: false };
 
-  // Only the live (today's) puzzle is submittable. Blocks a player from POSTing
-  // past puzzle numbers with re-derived answers to farm/backfill streaks —
-  // the client `isArchive` guard is UX only; this is the real boundary.
-  // Per-game: each game numbers from its own launch day, so "today" differs per game.
-  if (!isToday(game, puzzleNumber)) return { valid: false };
+  // A future puzzle has no legitimate answer yet — re-deriving one here would hand
+  // out tomorrow's word. Per-game: each numbers from its own launch day.
+  if (puzzleNumber > puzzleNumberFor(game, now)) return { valid: false };
+
+  const source: "daily" | "archive" = isToday(game, puzzleNumber, now) ? "daily" : "archive";
 
   if (guesses.length === 0) return { valid: false };
 
@@ -57,7 +66,7 @@ export function validateResult(input: SubmitInput): { valid: boolean } {
     // No earlier guess may already equal the answer (that would be an extra guess after a win).
     const wonEarlier = guesses.slice(0, -1).some((g) => g === answer);
     if (wonEarlier) return { valid: false };
-    return { valid: status === "won" ? won : !won };
+    return (status === "won" ? won : !won) ? { valid: true, source } : { valid: false };
   }
 
   const secret = secretFor(puzzleNumber);
@@ -68,5 +77,5 @@ export function validateResult(input: SubmitInput): { valid: boolean } {
   if (wonEarlier) return { valid: false };
   const last = scoreHitAndBlow(guesses[guesses.length - 1], secret);
   const won = last.hits === HIT_AND_BLOW.length; // hit-and-blow scoreGuess returns { hits, blows }
-  return { valid: status === "won" ? won : !won };
+  return (status === "won" ? won : !won) ? { valid: true, source } : { valid: false };
 }
