@@ -1,4 +1,7 @@
+"use client";
+
 import * as React from "react";
+import { useAlfazyTheme } from "@/components/games/AlfazyThemeProvider";
 import { ALFAZY } from "@/lib/games/alfazy";
 import { INTEGRA } from "@/lib/games/integra";
 import { HIT_AND_BLOW } from "@/lib/games/hit-and-blow";
@@ -27,11 +30,14 @@ function LegendRow({
   prefix,
   state,
   letter,
+  color,
   label,
 }: {
   prefix: string;
   state: "correct" | "present" | "absent";
   letter: string;
+  /** Colour name for the tile, e.g. "Green". Omit to show the label alone. */
+  color?: string;
   label: string;
 }) {
   return (
@@ -39,7 +45,43 @@ function LegendRow({
       <ExampleTile prefix={prefix} state={state}>
         {letter}
       </ExampleTile>
-      <span className="text-xs text-muted-foreground">{label}</span>
+      <span className="text-xs text-muted-foreground">
+        {color ? <span className="font-medium text-foreground">{color} — </span> : null}
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Alfazy tile legend.
+ *
+ * The colour names track the colourblind setting on purpose. That palette swaps
+ * correct/present from green/yellow to blue/orange, so naming them statically
+ * would caption a blue tile "Green" for exactly the users the setting exists for.
+ * Every theme (default, holi, diwali, christmas, birthday) stays in the same
+ * green/yellow/grey family in normal mode, so one flag covers all of them.
+ */
+function AlfazyLegend() {
+  const { colorblind } = useAlfazyTheme();
+  return (
+    <div className="space-y-1.5">
+      <p className="font-medium text-foreground">Tile colours</p>
+      <LegendRow
+        prefix="alfazy"
+        state="correct"
+        letter="s"
+        color={colorblind ? "Blue" : "Green"}
+        label="Right letter, right spot."
+      />
+      <LegendRow
+        prefix="alfazy"
+        state="present"
+        letter="o"
+        color={colorblind ? "Orange" : "Yellow"}
+        label="Right letter, wrong spot."
+      />
+      <LegendRow prefix="alfazy" state="absent" letter="l" color="Grey" label="Not in the word." />
     </div>
   );
 }
@@ -67,17 +109,12 @@ export const HELP: Record<GameKey, Help> = {
           </div>
           <p className="text-muted-foreground">
             <span className="font-medium text-foreground">S</span> is in the right spot.{" "}
-            <span className="font-medium text-foreground">O</span> is in the word but the wrong spot.
-            The rest aren&apos;t in the word.
+            <span className="font-medium text-foreground">O</span>{" "}
+            is in the word but the wrong spot. The rest aren&apos;t in the word.
           </p>
         </div>
 
-        <div className="space-y-1.5">
-          <p className="font-medium text-foreground">Tile colours</p>
-          <LegendRow prefix="alfazy" state="correct" letter="a" label="Right letter, right spot." />
-          <LegendRow prefix="alfazy" state="present" letter="a" label="Right letter, wrong spot." />
-          <LegendRow prefix="alfazy" state="absent" letter="a" label="Not in the word." />
-        </div>
+        <AlfazyLegend />
 
         <p className="text-muted-foreground">
           Every guess must be a real {ALFAZY.length}-letter word. You get {ALFAZY.maxGuesses} tries.
@@ -111,8 +148,8 @@ export const HELP: Record<GameKey, Help> = {
             The <span className="font-medium text-foreground">1</span> is a{" "}
             <span className="font-medium text-foreground">Hit</span> — right digit, right spot. The{" "}
             <span className="font-medium text-foreground">3</span> is a{" "}
-            <span className="font-medium text-foreground">Blow</span> — right digit, wrong spot. The
-            2 and 4 aren&apos;t in the code.
+            <span className="font-medium text-foreground">Blow</span>{" "}
+            — right digit, wrong spot. The 2 and 4 aren&apos;t in the code.
           </p>
         </div>
 
@@ -158,8 +195,8 @@ export const HELP: Record<GameKey, Help> = {
           <p className="text-muted-foreground">
             The first <span className="font-medium text-foreground">1</span> and the{" "}
             <span className="font-medium text-foreground">=</span> are in the right spot. The{" "}
-            <span className="font-medium text-foreground">+</span> belongs in the equation but in a
-            different spot. The rest don&apos;t appear.
+            <span className="font-medium text-foreground">+</span>{" "}
+            belongs in the equation but in a different spot. The rest don&apos;t appear.
           </p>
         </div>
 
