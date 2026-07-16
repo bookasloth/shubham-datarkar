@@ -1,7 +1,7 @@
 # Open Items — shubhamdatarkar.com
 
 > Living handoff doc. Each workstream is written to be actioned cold by a fresh
-> Claude session (or a human). Last updated 2026-06-18.
+> Claude session (or a human). Last updated 2026-07-16.
 >
 > **Status at last update:** all 5 `/support/updates` social sub-projects built +
 > merged (PRs #24, #31). SEO Phase 1 code complete (6/6). DB activated (3

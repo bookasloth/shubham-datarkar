@@ -8,6 +8,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BurgerMenu } from "./burger-menu";
 import { MoreMenu } from "./more-menu";
+import { useHeaderUser } from "./use-header-user";
 
 function useScrolled() {
   const [scrolled, setScrolled] = React.useState(false);
@@ -27,6 +28,7 @@ function useScrolled() {
  */
 export function Header() {
   const scrolled = useScrolled();
+  const { name, ready } = useHeaderUser();
 
   return (
     <header
@@ -47,15 +49,30 @@ export function Header() {
         </div>
 
         <div className="flex items-center gap-1 justify-self-end">
-          <Link
-            href="/membership"
-            className={cn(
-              buttonVariants({ size: "sm" }),
-              "mr-1 hidden sm:inline-flex",
-            )}
-          >
-            Join Community
-          </Link>
+          {ready && name ? (
+            <Link
+              href="/members"
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "welcome-ripple relative mr-1 hidden max-w-[12rem] overflow-hidden sm:inline-flex",
+              )}
+            >
+              <span className="ripple" aria-hidden />
+              <span className="ripple" aria-hidden />
+              <span className="ripple" aria-hidden />
+              <span className="relative z-10 truncate">Welcome, {name}</span>
+            </Link>
+          ) : (
+            <Link
+              href="/membership"
+              className={cn(
+                buttonVariants({ size: "sm" }),
+                "mr-1 hidden sm:inline-flex",
+              )}
+            >
+              Join Community
+            </Link>
+          )}
           <ThemeToggle />
           <MoreMenu />
         </div>
