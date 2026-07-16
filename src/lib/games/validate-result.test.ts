@@ -14,7 +14,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today,
       status: "won",
       guesses: [answerFor(today)],
-      timeMs: 1000,
     });
     expect(r).toEqual({ valid: true, source: "daily" });
   });
@@ -27,7 +26,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today,
       status: "won",
       guesses: [guess],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });
@@ -38,7 +36,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: 0,
       status: "won",
       guesses: [answerFor(0)],
-      timeMs: 1000,
     });
     expect(r).toEqual({ valid: true, source: "archive" });
   });
@@ -50,7 +47,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: y,
       status: "won",
       guesses: [answerFor(y)],
-      timeMs: 1000,
     });
     expect(r).toEqual({ valid: true, source: "archive" });
   });
@@ -61,7 +57,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today + 1,
       status: "won",
       guesses: [answerFor(today + 1)],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });
@@ -74,7 +69,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: 0,
       status: "won",
       guesses: [guess],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });
@@ -85,7 +79,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today,
       status: "lost",
       guesses: Array(7).fill("aaaaa"),
-      timeMs: null,
     });
     expect(r.valid).toBe(false);
   });
@@ -96,7 +89,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today,
       status: "won",
       guesses: ["12345"],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });
@@ -109,7 +101,6 @@ describe("validateResult — alfazy", () => {
       puzzleNumber: today,
       status: "lost",
       guesses: Array(3).fill(filler),
-      timeMs: null,
     });
     expect(r.valid).toBe(false);
   });
@@ -122,7 +113,6 @@ describe("validateResult — hit_and_blow", () => {
       puzzleNumber: hbToday,
       status: "won",
       guesses: [secretFor(hbToday)],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(true);
   });
@@ -135,7 +125,6 @@ describe("validateResult — hit_and_blow", () => {
       puzzleNumber: hbToday,
       status: "won",
       guesses: [guess],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });
@@ -148,7 +137,6 @@ describe("validateResult — hit_and_blow", () => {
       puzzleNumber: hbToday,
       status: "lost",
       guesses: [secret, filler],
-      timeMs: 1000,
     });
     expect(r.valid).toBe(false);
   });

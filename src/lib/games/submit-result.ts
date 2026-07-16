@@ -30,6 +30,8 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
   const supabase = await supabaseAuthServer();
   // Two RPCs, not one flagged RPC: only `submit_result` touches streaks, so the
   // archive path cannot farm one even if this call site is wrong.
+  // No time is passed: the server derives it from started_at, because time_ms is
+  // the daily board's tiebreak and a client-supplied duration would be forgeable.
   const { error } = await supabase.rpc(
     check.source === "archive" ? "submit_archive_result" : "submit_result",
     {
@@ -39,7 +41,6 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
       p_status: input.status,
       p_guesses: input.guesses.length,
       p_guess_data: input.guesses,
-      p_time_ms: input.timeMs,
     },
   );
 
