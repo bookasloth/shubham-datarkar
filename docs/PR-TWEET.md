@@ -68,6 +68,29 @@ before, it has no voltage left.
 The test: could this line have been written by someone who never opened the diff? Then it
 is a phrase, not a joke. Delete it.
 
+When writing in bulk — a backfill, a batch — the do-not-repeat list grows as you go. Keep
+a ledger of every shipped opening, angle, and landing word, and check new drafts against
+it. A joke used once on this feed is used up; the tenth Schrödinger is worth less than the
+plain sentence.
+
+## Say which project — softly
+
+The feed spans more than one product. A reader landing cold on one tweet has to know what
+it is about without being told, so each line carries its world in its vocabulary:
+
+- **Book A Sloth** tweets live in that product's nouns — the Sloth, Book A Sloth, the
+  booking engine, a host, a booking. The product name appearing naturally in the sentence
+  IS the context.
+- **The site** speaks first person — I, me, the site, SD. No label needed; the absence of
+  a product name means it is about here.
+
+Subtle where it is needed, never hardpushed. "on Book A Sloth" bolted to the end of a
+sentence is a label; a booking that shows up as the subject of the joke is context. If the
+noun is doing comedic work anyway, it is free.
+
+Gate question before shipping: would a random reader know which project this is about? No
+→ rework until they would.
+
 ## Word craft
 
 The joke is carried by word choice, not by structure. Fewer words, harder words.
@@ -145,6 +168,7 @@ be good:
 - Is the funniest word last? If not, why is it not?
 - Is the decoration real, or did I reach?
 - Strip the joke: is the claim underneath still true?
+- Would a random reader know which project this is about?
 
 Any answer that is a wince means rewrite. Not "tweak the wording" — go back and find a
 different angle on the change, because a draft that fails these usually fails at the idea,
@@ -173,3 +197,7 @@ These are the only rules; everything above is taste.
   emailed. Write one only when you intend to notify that person.
 - **Security/privacy PRs get the boring voice.** No joke is worth narrating the shape of
   a hole to the feed. Say it is fixed, move on.
+- **The owner typed this.** Every post reads as the owner writing, first person, in the
+  moment. The pipeline is invisible: never "auto-posted", never a webhook, a template, a
+  bot, or when any of it went live. The reader sees a person, because a person wrote the
+  line — the plumbing only delivers it.
