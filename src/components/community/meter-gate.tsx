@@ -9,9 +9,12 @@ const KEY = "community_meter";
 // metering only if abuse shows up.
 export function MeterGate({
   isLoggedIn,
+  returnPath = "/community",
   children,
 }: {
   isLoggedIn: boolean;
+  /** Where signing in should land them — the post they were reading, not the feed. */
+  returnPath?: string;
   children: React.ReactNode;
 }) {
   const [walled, setWalled] = useState(false);
@@ -51,7 +54,7 @@ export function MeterGate({
             Sign in to keep reading the community — it&apos;s free.
           </p>
           <Link
-            href="/members/login?next=/community"
+            href={`/login?next=${encodeURIComponent(returnPath)}`}
             className="mt-3 inline-flex rounded-btn bg-brand px-4 py-2 text-sm font-medium text-brand-foreground transition-ui hover:opacity-90"
           >
             Sign in — free

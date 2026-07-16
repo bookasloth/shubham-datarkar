@@ -13,7 +13,6 @@ const SORTS: { key: FeedSort; label: string }[] = [
   { key: "new", label: "New" },
   { key: "hot", label: "Hot" },
   { key: "top", label: "Top" },
-  { key: "controversial", label: "Controversial" },
 ];
 const WINDOWS: { key: FeedWindow; label: string }[] = [
   { key: "today", label: "Today" },

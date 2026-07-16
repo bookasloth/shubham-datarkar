@@ -7,10 +7,16 @@ import {
   getProfileByUsername,
   listFeed,
   listPollResults,
+  listRandomFeed,
   viewerCanPost,
 } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { CommunityAvatar } from "@/components/community/community-avatar";
+import { BadgeTick } from "@/components/community/badge-tick";
+import { SignInWall } from "@/components/community/sign-in-wall";
+
+/** Posts a logged-out visitor sees before the wall — matches /community. */
+const PREVIEW = 3;
 
 /**
  * Public profile — the thing an @mention points at. `noIndex` for the same reason
@@ -50,9 +56,13 @@ export default async function CommunityProfilePage({
   const shown = Math.min(Math.max(Number(sp.shown) || PAGE, PAGE), 1000);
 
   const { user } = await getMemberContext();
+  // Logged out, a profile is gated exactly like the feed — it IS a feed, just
+  // filtered to one author. Leaving it open would be the hole around /community.
   const [canPost, posts, total] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    listFeed({ sort: "new", window: "all", author: profile.username, limit: shown }),
+    user
+      ? listFeed({ sort: "new", window: "all", author: profile.username, limit: shown })
+      : listRandomFeed(PREVIEW, { author: profile.username }),
     countAuthorPosts(profile.id),
   ]);
   const pollResults = await listPollResults(
@@ -62,10 +72,14 @@ export default async function CommunityProfilePage({
 
   return (
     <div>
-      <header className="flex items-center gap-3 border-b border-border px-4 py-4">
+      {/* mb-2 so the rule reads as the header's edge, not the first post's. */}
+      <header className="mb-2 flex items-center gap-3 border-b border-border px-4 py-4">
         <CommunityAvatar seed={profile.username} size={48} />
         <div>
-          <h1 className="font-display text-lg font-bold">{name}</h1>
+          <h1 className="flex items-center gap-1.5 font-display text-lg font-bold">
+            {name}
+            <BadgeTick badge={profile.badge} />
+          </h1>
           <p className="text-sm text-muted-foreground">
             @{profile.username} · {total} {total === 1 ? "post" : "posts"}
           </p>
@@ -88,7 +102,11 @@ export default async function CommunityProfilePage({
         ))
       )}
 
-      {posts.length < total && (
+      {!user && posts.length > 0 && (
+        <SignInWall returnPath={`/community/u/${profile.username}`} />
+      )}
+
+      {user && posts.length < total && (
         <div className="border-t border-border px-4 py-3 text-center">
           <Link
             href={`/community/u/${profile.username}?shown=${shown + PAGE}`}

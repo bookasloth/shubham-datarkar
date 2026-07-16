@@ -4,6 +4,7 @@ import { getShellUser } from "@/lib/app-shell/user";
 import { getPostByPublicId, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
+import { MeterGate } from "@/components/community/meter-gate";
 import { buildMetadata } from "@/lib/seo";
 
 /** First `max` chars of the post body, whitespace-collapsed, ellipsised. */
@@ -54,24 +55,28 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
   return (
     <div>
       <h1 className="border-b border-border px-4 py-3 font-display text-lg font-bold">Post</h1>
-      <PostCard
-        post={post}
-        pollResult={pollResults[post.id]}
-        canVote={canPost}
-        viewerId={user?.id ?? null}
-      />
 
-      {canPost && (
-        <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />
-      )}
+      {/* The daily read meter lives here, not on the feed. A single post is the
+          thing that gets shared and linked, so it's what a stranger arrives at;
+          the feed gates logged-out visitors outright with its random preview. */}
+      <MeterGate isLoggedIn={Boolean(user)} returnPath={`/community/p/${post.publicId}`}>
+        <PostCard
+          post={post}
+          pollResult={pollResults[post.id]}
+          canVote={canPost}
+          viewerId={user?.id ?? null}
+        />
 
-      {replies.length === 0 ? (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>
-      ) : (
-        replies.map((reply) => (
-          <PostCard key={reply.rowId} post={reply} viewerId={user?.id ?? null} />
-        ))
-      )}
+        {canPost && <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />}
+
+        {replies.length === 0 ? (
+          <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>
+        ) : (
+          replies.map((reply) => (
+            <PostCard key={reply.rowId} post={reply} viewerId={user?.id ?? null} />
+          ))
+        )}
+      </MeterGate>
     </div>
   );
 }
