@@ -52,6 +52,53 @@ Bands the copy can hit — a description of what has worked, not a menu to pick 
 Bands blend. The best line is usually two at once — self-roast that is also a dig,
 gaslighting that is also ragebait.
 
+## Never recycle the phrasing
+
+The template pool in `src/lib/community/auto/templates.ts` is the fallback. Read it once
+to know what the feed already sounds like, then never say those words again. "You must be
+misremembering." "Ask for the invoice back." "Only took me embarrassingly long." "It was
+never a bug, it was a feature." Those lines are spent. Anything that rhymes with them is
+spent. The band is *gaslight*; "you're misremembering" is just the first joke anyone
+writes in that band, which is exactly why it is dead.
+
+The same applies to the internet's stock cuts — "rent free", "built different", "let that
+sink in", "just shipped", "so this happened", "it's giving". If you have read the phrase
+before, it has no voltage left.
+
+The test: could this line have been written by someone who never opened the diff? Then it
+is a phrase, not a joke. Delete it.
+
+## Word craft
+
+The joke is carried by word choice, not by structure. Fewer words, harder words.
+
+- **Specific nouns beat adjectives.** Not "a big bloated dashboard" — name the thing,
+  the loading spinner, the cookie banner, the 400ms.
+- **Verbs do the work.** If a sentence needs an adverb to be funny, it is not funny.
+- **Funniest word last.** Rewrite the sentence until the landing word is the one that hurts.
+- **Cut every word that survives its own deletion.** Then cut one more.
+- **Say the quiet thing plainly.** The strongest line is usually the most obvious
+  observation nobody was willing to type.
+- **No throat-clearing.** No "just", "basically", "honestly", "I know this sounds like".
+  Start on the hit.
+
+## The register
+
+Post like a person with no comms team, not a brand with a voice guide.
+
+Short. Brutally short. Sometimes one word is the whole tweet — a flat "Concerning." under
+a thing that is genuinely concerning does more than a paragraph. Confidence without
+argument. Non-sequitur delivered with a straight face. Deadpan overclaim so obviously
+oversized it reads as a joke, never as a spec. A single period doing the work of a punchline.
+Replying to the room like you are already in the argument.
+
+Range matters more than any one mode: a one-word tweet, then a savage two-liner, then a
+dead-serious sentence about why the thing existed. A feed where every post is the same
+intensity is a feed nobody reads. Vary it PR to PR, on purpose.
+
+What does not transfer: cruelty at real people, and the overclaim becoming an actual
+product claim. See hard limits — those do not bend for the bit.
+
 ## Process
 
 1. Read the PR: diff, body, linked issue, why it exists.
