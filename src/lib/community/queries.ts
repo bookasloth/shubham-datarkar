@@ -160,6 +160,22 @@ export async function getProfileByUsername(
   };
 }
 
+/** How many posts an author actually has — a HEAD count, no rows shipped.
+ *  Mirrors what the author feed shows: root posts (replies live under their
+ *  parent, and a reblog row has parent_id null so it counts), minus moderated
+ *  ones, which community_feed hides from everyone. */
+export async function countAuthorPosts(userId: string): Promise<number> {
+  const sb = await supabaseAuthServer();
+  const { count } = await sb
+    .from("community_posts")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .is("parent_id", null)
+    .eq("hidden", false)
+    .eq("demoted", false);
+  return count ?? 0;
+}
+
 /** The signed-in viewer's community handle, or null. */
 export async function viewerHandle(): Promise<string | null> {
   const sb = await supabaseAuthServer();
