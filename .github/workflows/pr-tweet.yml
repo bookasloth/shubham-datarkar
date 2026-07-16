@@ -26,7 +26,9 @@ jobs:
           node-version: 24
       # No npm ci: the check runs through Node's type stripping and pr.ts has no
       # imports, so this is a checkout and one process.
-      - name: Require a Tweet: line on announce-worthy PRs
+      # Quoted: an unquoted colon in a YAML scalar makes this a mapping, which
+      # silently invalidates the whole workflow — it fails to parse and never runs.
+      - name: "Require a Tweet: line on announce-worthy PRs"
         run: node --experimental-strip-types scripts/check-pr-tweet.mts
         env:
           # Passed as env, never interpolated into the shell — PR titles and
