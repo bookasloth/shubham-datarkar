@@ -60,16 +60,18 @@ returns int language sql stable set search_path = public as $$
 $$;
 
 -- ---------- ignore the client's time_ms on both write paths ----------
--- `p_time_ms` is KEPT, defaulted, and deliberately ignored — this is a rollout
--- concern, not indecision. Dropping it would change the signature, and there is
--- always a window where the running site and the database disagree: whichever
--- lands first, the other one's calls resolve to a function that doesn't exist
+-- `p_time_ms` is KEPT and deliberately ignored — a rollout concern, not
+-- indecision. Dropping it would change the signature, and there is always a
+-- window where the running site and the database disagree: whichever lands
+-- first, the other one's calls resolve to a function that doesn't exist
 -- (PGRST202) and every result submission fails until the deploy catches up.
+-- Keeping the parameter means the old and new code both call the same function.
 --
--- With a default, the currently-deployed code (which still sends p_time_ms) and
--- the new code (which sends 6 args) both resolve to this same function, so the
--- migration can be run before OR after the deploy with no broken window.
--- Follow-up: drop the parameter once the old code is gone.
+-- The DEFAULT is decoration: verified against prod that PostgREST resolves an
+-- overload by the exact set of keys POSTed, so omitting p_time_ms 404s anyway
+-- despite the default. Callers must pass it explicitly (submit-result.ts does,
+-- as null). Follow-up: drop the parameter and its call-site once no old code
+-- can call it.
 create or replace function public.submit_result(
   p_game       game_key,
   p_puzzle     int,

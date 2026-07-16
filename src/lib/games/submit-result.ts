@@ -41,6 +41,11 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
       p_status: input.status,
       p_guesses: input.guesses.length,
       p_guess_data: input.guesses,
+      // Vestigial and ignored by both RPCs — the server derives the time from
+      // started_at. Passed explicitly because PostgREST resolves an overload by
+      // the exact set of keys sent: omitting it 404s (PGRST202) despite the
+      // parameter having a DEFAULT. Drop once the parameter is dropped.
+      p_time_ms: null,
     },
   );
 
