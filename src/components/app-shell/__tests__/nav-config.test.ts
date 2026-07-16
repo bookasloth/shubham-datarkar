@@ -1,18 +1,45 @@
 import { describe, it, expect } from "vitest";
 import {
-  APP_NAV, activeSection, activeChildHref, sectionHref,
+  APP_NAV, accountItems, activeSection, activeChildHref, sectionHref,
 } from "@/components/app-shell/nav-config";
 
 describe("APP_NAV", () => {
   it("has the four sections in order", () => {
     expect(APP_NAV.map((s) => s.key)).toEqual(["community", "membership", "game", "account"]);
   });
+  it("names community links Home / Likes / Shares / Saved", () => {
+    const community = APP_NAV.find((s) => s.key === "community")!;
+    expect(community.items.map((i) => [i.label, i.href])).toEqual([
+      ["Home", "/community"],
+      ["Likes", "/community/likes"],
+      ["Shares", "/community/reblogs"],
+      ["Saved", "/community/bookmarks"],
+    ]);
+  });
   it("marks member-only items gated", () => {
     const all = APP_NAV.flatMap((s) => s.items);
     const downloads = all.find((i) => i.href === "/members/downloads");
     expect(downloads?.gated).toBe(true);
-    const explore = all.find((i) => i.href === "/community");
-    expect(explore?.gated).toBeFalsy();
+    const home = all.find((i) => i.href === "/community");
+    expect(home?.gated).toBeFalsy();
+  });
+});
+
+describe("accountItems", () => {
+  it("offers Become Member to non-members", () => {
+    expect(accountItems(false)[0]).toEqual({
+      label: "Become Member", href: "/members/upgrade",
+    });
+  });
+  it("offers Support the Cause to members", () => {
+    expect(accountItems(true)[0]).toEqual({
+      label: "Support the Cause", href: "/support",
+    });
+  });
+  it("marks the booking link external", () => {
+    const book = accountItems(false).find((i) => i.label === "Book a Call with SD")!;
+    expect(book.external).toBe(true);
+    expect(book.href).toMatch(/^https:\/\//);
   });
 });
 
@@ -52,10 +79,10 @@ describe("activeChildHref", () => {
 });
 
 describe("sectionHref", () => {
-  it("returns each section's first child", () => {
+  it("returns each section's landing page", () => {
     expect(sectionHref("community")).toBe("/community");
     expect(sectionHref("membership")).toBe("/members/explore");
-    expect(sectionHref("game")).toBe("/games/alfazy");
+    expect(sectionHref("game")).toBe("/games"); // hub via `home`, not first game
     expect(sectionHref("account")).toBe("/members/account");
   });
 });

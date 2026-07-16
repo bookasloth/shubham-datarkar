@@ -6,6 +6,8 @@ export type AppNavItem = {
   label: string;
   href: string;
   gated?: boolean;
+  /** Opens in a new tab (off-site links like the booking page). */
+  external?: boolean;
   /** Sub-links rendered under the item (games: Play / Archive / Leaderboard). */
   children?: AppNavItem[];
 };
@@ -14,6 +16,8 @@ export type AppNavSection = {
   key: SectionKey;
   label: string;
   icon: LucideIcon;
+  /** Section landing page when it differs from the first item (games hub). */
+  home?: string;
   items: AppNavItem[];
 };
 
@@ -23,10 +27,10 @@ export const APP_NAV: AppNavSection[] = [
     label: "Community",
     icon: Users,
     items: [
-      { label: "Explore", href: "/community" },
-      { label: "Bookmarks", href: "/community/bookmarks", gated: true },
-      { label: "Reblogs", href: "/community/reblogs", gated: true },
+      { label: "Home", href: "/community" },
       { label: "Likes", href: "/community/likes", gated: true },
+      { label: "Shares", href: "/community/reblogs", gated: true },
+      { label: "Saved", href: "/community/bookmarks", gated: true },
     ],
   },
   {
@@ -44,8 +48,9 @@ export const APP_NAV: AppNavSection[] = [
   },
   {
     key: "game",
-    label: "Game",
+    label: "Games",
     icon: Gamepad2,
+    home: "/games",
     items: [
       {
         label: "Alfazy",
@@ -80,12 +85,25 @@ export const APP_NAV: AppNavSection[] = [
     key: "account",
     label: "Account",
     icon: UserRound,
-    items: [
-      { label: "Profile", href: "/members/account", gated: true },
-      { label: "Membership", href: "/members/account", gated: true },
-    ],
+    // Single item so sectionHref/activeChildHref keep working; the sidebar
+    // renders accountItems() + Logout instead of this list.
+    items: [{ label: "Account", href: "/members/account", gated: true }],
   },
 ];
+
+export const BOOK_CALL_URL =
+  "https://bookasloth.com/sndatarkar/talk-about-shubham-datarkar-dot-com";
+
+/** Account submenu — first entry flips on membership status. */
+export function accountItems(isPremium: boolean): AppNavItem[] {
+  return [
+    isPremium
+      ? { label: "Support the Cause", href: "/support" }
+      : { label: "Become Member", href: "/members/upgrade" },
+    { label: "Raise a Complain", href: "/contact" },
+    { label: "Book a Call with SD", href: BOOK_CALL_URL, external: true },
+  ];
+}
 
 /** Section roots ordered so a longer prefix wins (account before membership). */
 const ROOTS: [SectionKey, string][] = [
@@ -95,7 +113,7 @@ const ROOTS: [SectionKey, string][] = [
   ["game", "/games"],
 ];
 
-function matches(pathname: string, prefix: string): boolean {
+export function matches(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(prefix + "/");
 }
 
@@ -118,5 +136,6 @@ export function activeChildHref(pathname: string): string | null {
 }
 
 export function sectionHref(key: SectionKey): string {
-  return APP_NAV.find((s) => s.key === key)!.items[0].href;
+  const s = APP_NAV.find((sec) => sec.key === key)!;
+  return s.home ?? s.items[0].href;
 }
