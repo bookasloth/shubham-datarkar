@@ -11,7 +11,9 @@ import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
-import { WinBurst } from "@/components/games/board/WinBurst";
+import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
+import { ShareBlock } from "@/components/games/shell/ShareCard";
+import { buildShareText, gameShareUrl } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -82,10 +84,15 @@ export default function AlfazyBoard({
 
   const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
 
+  function flash(m: string) {
+    setToast(m);
+    setTimeout(() => setToast(""), 1200);
+  }
+
   function submit() {
     if (status !== "playing") return;
     if (current.length !== ALFAZY.length) { setShakeCount((n) => n + 1); return flash("Not enough letters"); }
-    if (!isValidGuess(current)) { setShakeCount((n) => n + 1); return flash("Letters only"); }
+    if (!isValidGuess(current)) { setShakeCount((n) => n + 1); return flash("Not a valid word"); }
     const next = [...guesses, current];
     const tiles = scoreGuess(current, answer);
     setGuesses(next);
@@ -93,7 +100,7 @@ export default function AlfazyBoard({
     if (isWin(tiles)) {
       setStatus("won");
       setJustWon(true);
-      setTimeout(() => setJustWon(false), 1500);
+      setTimeout(() => setJustWon(false), WIN_BURST_MS);
     } else if (next.length >= ALFAZY.maxGuesses) {
       setStatus("lost");
     }
@@ -116,11 +123,6 @@ export default function AlfazyBoard({
     return () => window.removeEventListener("keydown", h);
   });
 
-  function flash(m: string) {
-    setToast(m);
-    setTimeout(() => setToast(""), 1200);
-  }
-
   const keyState: Record<string, TileState> = {};
   const rankMap: Record<TileState, number> = { correct: 3, present: 2, absent: 1 };
   guesses.forEach((g, r) =>
@@ -130,11 +132,15 @@ export default function AlfazyBoard({
     })
   );
 
-  function share() {
-    const head = `shubhamdatarkar.com/games · Alfazy #${puzzleNumber} ${status === "won" ? `${guesses.length}/6` : "X/6"}`;
-    navigator.clipboard.writeText(`${head}\n${shareGrid(rows)}`);
-    flash("Copied!");
-  }
+  const shareText = buildShareText({
+    game: "alfazy",
+    puzzleNumber,
+    status: status === "won" ? "won" : "lost",
+    tries: guesses.length,
+    maxGuesses: ALFAZY.maxGuesses,
+    grid: shareGrid(rows),
+  });
+  const shareUrl = gameShareUrl("alfazy");
 
   return (
     <GameStage>
@@ -195,9 +201,7 @@ export default function AlfazyBoard({
           <p className="font-semibold">
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.toUpperCase()}`}
           </p>
-          <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
-            Share
-          </button>
+          <ShareBlock text={shareText} url={shareUrl} />
           {!user && (
             <p className="text-sm text-muted-foreground">
               <Link href="/games/login?next=/games/alfazy" className="underline underline-offset-4 hover:text-foreground">
@@ -216,7 +220,8 @@ export default function AlfazyBoard({
           slug="alfazy"
           status={status}
           resultLine={status === "won" ? `Solved in ${guesses.length}!` : `The word was ${answer.toUpperCase()}.`}
-          onShare={share}
+          shareText={shareText}
+          shareUrl={shareUrl}
         />
       )}
 

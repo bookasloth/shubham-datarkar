@@ -26,6 +26,12 @@ export function weekBoundsIST(now: number = Date.now()): { start: string; end: s
   return { start: toISO(start), end: toISO(end) };
 }
 
+/** Every day on record, up to and including today (IST). The start predates every
+ *  game epoch, so the period board degenerates into a lifetime board. */
+export function allTimeBoundsIST(now: number = Date.now()): { start: string; end: string } {
+  return { start: "1970-01-01", end: todayIST(now) };
+}
+
 /** First–last day (YYYY-MM-DD) of the IST month containing `now`. */
 export function monthBoundsIST(now: number = Date.now()): { start: string; end: string } {
   const d = fromISO(todayIST(now));

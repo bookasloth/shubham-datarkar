@@ -24,13 +24,16 @@ export function Composer({
   name,
   username,
   onPosted,
+  initialBody,
 }: {
   name?: string | null;
   username?: string | null;
   onPosted?: () => void;
+  /** Seeds the box — used by /community?compose=, e.g. a shared game result. */
+  initialBody?: string;
 }) {
   const [type, setType] = useState<(typeof TABS)[number]["key"]>("text");
-  const [body, setBody] = useState("");
+  const [body, setBody] = useState(initialBody ?? "");
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [quiz, setQuiz] = useState(false);
   const [correct, setCorrect] = useState<number | null>(null);

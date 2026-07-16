@@ -59,15 +59,15 @@ export const HELP: Record<GameKey, Help> = {
         <div className="space-y-2">
           <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Example</p>
           <div className="flex gap-1.5">
-            <ExampleTile prefix="alfazy" state="correct">c</ExampleTile>
-            <ExampleTile prefix="alfazy" state="absent">r</ExampleTile>
-            <ExampleTile prefix="alfazy" state="present">a</ExampleTile>
-            <ExampleTile prefix="alfazy" state="absent">n</ExampleTile>
-            <ExampleTile prefix="alfazy" state="absent">e</ExampleTile>
+            <ExampleTile prefix="alfazy" state="correct">s</ExampleTile>
+            <ExampleTile prefix="alfazy" state="absent">l</ExampleTile>
+            <ExampleTile prefix="alfazy" state="present">o</ExampleTile>
+            <ExampleTile prefix="alfazy" state="absent">t</ExampleTile>
+            <ExampleTile prefix="alfazy" state="absent">h</ExampleTile>
           </div>
           <p className="text-muted-foreground">
-            <span className="font-medium text-foreground">C</span> is in the right spot.{" "}
-            <span className="font-medium text-foreground">A</span> is in the word but the wrong spot.
+            <span className="font-medium text-foreground">S</span> is in the right spot.{" "}
+            <span className="font-medium text-foreground">O</span> is in the word but the wrong spot.
             The rest aren&apos;t in the word.
           </p>
         </div>

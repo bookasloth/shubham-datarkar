@@ -108,7 +108,10 @@ function path(ctx: CanvasRenderingContext2D, p: Particle) {
  * cross. Coffee & toffee icons ride along, and 5–10 pieces stick to the page
  * (drawn on a never-cleared layer) until the next refresh.
  */
-export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiBurst(_props, ref) {
+export const ConfettiBurst = React.forwardRef<ConfettiHandle, { timeScale?: number }>(function ConfettiBurst(
+  { timeScale = 1 },
+  ref,
+) {
   const animRef = React.useRef<HTMLCanvasElement>(null);
   const stuckRef = React.useRef<HTMLCanvasElement>(null);
   const fireRef = React.useRef<() => void>(() => {});
@@ -152,9 +155,9 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
         // gym-rat energy: hard launch toward top-center, but with strong gravity
         // so the arc PEAKS near the top edge (they reach the top, hang, then rain
         // back down hard) instead of overshooting off-screen.
-        const speed = rand(28, 46) * (reduce ? 0.5 : 1);
+        const speed = rand(28, 46) * (reduce ? 0.5 : 1) * timeScale;
         const floaty = Math.random() < 0.22;
-        const maxLife = rand(200, 340);
+        const maxLife = rand(200, 340) / timeScale;
         const sticky = stickBudget > 0 && Math.random() < 0.06;
         if (sticky) stickBudget -= 1;
         particles.push({
@@ -163,17 +166,18 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
           vx: Math.cos(ang) * speed * (floaty ? 0.8 : 1),
           vy: Math.sin(ang) * speed * (floaty ? 0.85 : 1),
           rot: rand(0, Math.PI * 2),
-          vrot: rand(-0.2, 0.2),
+          vrot: rand(-0.2, 0.2) * timeScale,
           size: rand(6, 14),
           color: pick(PALETTE),
           shape: pick(SHAPES),
-          grav: floaty ? rand(0.14, 0.22) : rand(0.44, 0.64),
+          // v scaled by t and g by t² traces the SAME arc, just walked slower.
+          grav: (floaty ? rand(0.14, 0.22) : rand(0.44, 0.64)) * timeScale * timeScale,
           drag: floaty ? rand(0.995, 0.999) : rand(0.995, 0.999),
-          wob: rand(0.5, 1.8),
+          wob: rand(0.5, 1.8) * timeScale,
           wobOff: rand(0, Math.PI * 2),
           life: maxLife,
           maxLife,
-          spin3d: rand(0.04, 0.12),
+          spin3d: rand(0.04, 0.12) * timeScale,
           sticky,
           stuck: false,
         });
@@ -196,7 +200,7 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
         const f = flashes[i];
         f.t -= 1;
         if (f.t <= 0) { flashes.splice(i, 1); continue; }
-        const a = f.t / 16;
+        const a = (f.t * timeScale) / 16;
         const grad = ctx.createRadialGradient(f.x, f.y, 0, f.x, f.y, 170);
         grad.addColorStop(0, `rgba(255,255,255,${0.5 * a})`);
         grad.addColorStop(0.4, `rgba(253,224,71,${0.35 * a})`);
@@ -212,7 +216,7 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
         p.vy += p.grav;
         p.vx *= p.drag;
         p.vy *= p.drag;
-        p.x += p.vx + Math.sin(p.life * 0.08 + p.wobOff) * p.wob;
+        p.x += p.vx + Math.sin(p.life * 0.08 * timeScale + p.wobOff) * p.wob;
         p.y += p.vy;
         p.rot += p.vrot;
         p.life -= 1;
@@ -229,9 +233,9 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
           continue;
         }
 
-        const alpha = Math.min(1, p.life / 30);
+        const alpha = Math.min(1, (p.life * timeScale) / 30);
         ctx.save();
-        ctx.globalAlpha = Math.max(0, alpha) * (p.color === "#ffffff" ? 0.7 + 0.3 * Math.sin(p.life * 0.4) : 1);
+        ctx.globalAlpha = Math.max(0, alpha) * (p.color === "#ffffff" ? 0.7 + 0.3 * Math.sin(p.life * 0.4 * timeScale) : 1);
         ctx.translate(p.x, p.y);
         ctx.rotate(p.rot);
         ctx.scale(Math.cos(p.life * p.spin3d), 1); // fake 3D flip
@@ -260,7 +264,7 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
       const tx = w / 2; // both cannons aim at the middle of the top edge (navbar center)
       const aim = (Math.atan2(-oy, tx - ox) * 180) / Math.PI;
       spawn(ox, oy, aim, reduce ? 26 : 16, reduce ? 40 : 160);
-      flashes.push({ x: ox, y: oy, t: 16 });
+      flashes.push({ x: ox, y: oy, t: 16 / timeScale });
       ensureRunning();
     }
 
@@ -274,7 +278,7 @@ export const ConfettiBurst = React.forwardRef<ConfettiHandle>(function ConfettiB
       window.removeEventListener("resize", resize);
       cancelAnimationFrame(raf);
     };
-  }, []);
+  }, [timeScale]);
 
   return (
     <>

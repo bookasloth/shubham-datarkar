@@ -11,6 +11,15 @@ import type { ArchiveEntry } from "@/lib/games/archive-queries";
 type Filter = "all" | "solved" | "unsolved";
 const PAGE = 15;
 
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** "2026-06-03" -> "3 Jun". Split rather than Date-parse: the ISO is already an IST
+ *  calendar date, and constructing a Date would drag it back through a timezone. */
+function fmtDay(dateISO: string): string {
+  const [, m, d] = dateISO.split("-");
+  return `${Number(d)} ${MONTHS[Number(m) - 1]}`;
+}
+
 function pill(active: boolean) {
   return cn(
     "rounded-btn px-3 py-1.5 text-sm font-medium transition-ui",
@@ -46,7 +55,9 @@ export function ArchiveGrid({
       if (filter === "unsolved" && e.solved) return false;
       if (q) {
         const num = `#${e.puzzleNumber}`.toLowerCase();
-        if (!num.includes(q) && !e.dateISO.toLowerCase().includes(q)) return false;
+        // Match what's printed on the card ("3 Jun") as well as the raw ISO.
+        const day = fmtDay(e.dateISO).toLowerCase();
+        if (!num.includes(q) && !day.includes(q) && !e.dateISO.toLowerCase().includes(q)) return false;
       }
       return true;
     });
@@ -98,21 +109,20 @@ export function ArchiveGrid({
             const free = isTodayOrYesterday(gameKey, e.puzzleNumber, now);
             const open = free || canViewArchive;
             const href = `/games/${game}/${e.puzzleNumber}`;
-            const label = e.dateISO.slice(5); // MM-DD
             return (
               <Link
                 key={e.puzzleNumber}
                 href={href}
                 className={cn(
-                  "flex flex-col items-center gap-1 rounded-card border p-3 transition-ui",
+                  "flex aspect-square flex-col items-center justify-center gap-1 rounded-[6px] border p-2 transition-ui",
                   open
                     ? "border-border bg-card hover:border-foreground/30"
                     : "border-dashed border-border bg-muted/40 opacity-80 hover:opacity-100",
                   free && "ring-1 ring-brand/40",
                 )}
               >
+                <span className="text-[11px] text-muted-foreground">{fmtDay(e.dateISO)}</span>
                 <span className="text-xs font-medium">#{e.puzzleNumber}</span>
-                <span className="text-[11px] text-muted-foreground">{label}</span>
                 {e.solved ? (
                   <Flame className="size-3.5 fill-brand text-brand" />
                 ) : open ? (

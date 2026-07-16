@@ -10,7 +10,9 @@ import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
 import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
-import { WinBurst } from "@/components/games/board/WinBurst";
+import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
+import { ShareBlock } from "@/components/games/shell/ShareCard";
+import { buildShareText, gameShareUrl } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -52,7 +54,10 @@ export default function IntegraBoard({
   const [status, setStatus] = useState<Saved["status"]>("playing");
   const [toast, setToast] = useState("");
   const [shakeCount, setShakeCount] = useState(0);
+  // `justWon` drives the 1.5s win-row bounce; the confetti outlives it, so it gets
+  // its own window — unmounting WinBurst cancels the burst mid-flight.
   const [justWon, setJustWon] = useState(false);
+  const [burst, setBurst] = useState(false);
   const [colorblind, setColorblind] = useState(false);
   const { user } = useGameAuth();
   const submitted = useRef(false);
@@ -96,6 +101,11 @@ export default function IntegraBoard({
 
   const rows: TileState[][] = guesses.map((g) => scoreGuess(g, answer));
 
+  function flash(m: string) {
+    setToast(m);
+    setTimeout(() => setToast(""), 1400);
+  }
+
   function submit() {
     if (status !== "playing") return;
     if (current.length !== INTEGRA.length) { setShakeCount((n) => n + 1); return flash(`Fill all ${INTEGRA.length} tiles`); }
@@ -107,7 +117,9 @@ export default function IntegraBoard({
     if (isWin(tiles)) {
       setStatus("won");
       setJustWon(true);
+      setBurst(true);
       setTimeout(() => setJustWon(false), 1500);
+      setTimeout(() => setBurst(false), WIN_BURST_MS);
     } else if (next.length >= INTEGRA.maxGuesses) {
       setStatus("lost");
     }
@@ -133,11 +145,6 @@ export default function IntegraBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, current]);
 
-  function flash(m: string) {
-    setToast(m);
-    setTimeout(() => setToast(""), 1400);
-  }
-
   const keyState: Record<string, TileState> = {};
   const rankMap: Record<TileState, number> = { correct: 3, present: 2, absent: 1 };
   guesses.forEach((g, r) =>
@@ -147,11 +154,15 @@ export default function IntegraBoard({
     }),
   );
 
-  function share() {
-    const head = `shubhamdatarkar.com/games · Integra #${puzzleNumber} ${status === "won" ? `${guesses.length}/6` : "X/6"}`;
-    navigator.clipboard.writeText(`${head}\n${shareGrid(rows)}`);
-    flash("Copied!");
-  }
+  const shareText = buildShareText({
+    game: "integra",
+    puzzleNumber,
+    status: status === "won" ? "won" : "lost",
+    tries: guesses.length,
+    maxGuesses: INTEGRA.maxGuesses,
+    grid: shareGrid(rows),
+  });
+  const shareUrl = gameShareUrl("integra");
 
   return (
     <GameStage className={colorblind ? "integra-cb" : undefined}>
@@ -213,9 +224,7 @@ export default function IntegraBoard({
           <p className="font-semibold">
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.split("").map(show).join("")}`}
           </p>
-          <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
-            Share
-          </button>
+          <ShareBlock text={shareText} url={shareUrl} />
           {!user && (
             <p className="text-sm text-muted-foreground">
               <Link href="/games/login?next=/games/integra" className="underline underline-offset-4 hover:text-foreground">
@@ -238,11 +247,12 @@ export default function IntegraBoard({
               ? `Solved in ${guesses.length}!`
               : `The equation was ${answer.split("").map(show).join("")}.`
           }
-          onShare={share}
+          shareText={shareText}
+          shareUrl={shareUrl}
         />
       )}
 
-      {justWon && <WinBurst />}
+      {burst && <WinBurst />}
     </GameStage>
   );
 }

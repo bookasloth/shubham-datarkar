@@ -8,7 +8,9 @@ import { useGameAuth } from "@/components/games/use-game-auth";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
-import { WinBurst } from "@/components/games/board/WinBurst";
+import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
+import { ShareBlock } from "@/components/games/shell/ShareCard";
+import { buildShareText, gameShareUrl } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -81,17 +83,21 @@ export default function HitAndBlowBoard({
     if (isWin(hits)) {
       setStatus("won");
       setJustWon(true);
-      setTimeout(() => setJustWon(false), 1500);
+      setTimeout(() => setJustWon(false), WIN_BURST_MS);
     } else if (next.length >= HIT_AND_BLOW.maxGuesses) {
       setStatus("lost");
     }
   }
 
-  function share() {
-    const head = `shubhamdatarkar.com/games · Hit and Blow #${puzzleNumber} ${status === "won" ? `${history.length}/${HIT_AND_BLOW.maxGuesses}` : `X/${HIT_AND_BLOW.maxGuesses}`}`;
-    navigator.clipboard.writeText(`${head}\n${shareSummary(history)}`);
-    flash("Copied!");
-  }
+  const shareText = buildShareText({
+    game: "hit_and_blow",
+    puzzleNumber,
+    status: status === "won" ? "won" : "lost",
+    tries: history.length,
+    maxGuesses: HIT_AND_BLOW.maxGuesses,
+    grid: shareSummary(history),
+  });
+  const shareUrl = gameShareUrl("hit_and_blow");
 
   return (
     <GameStage>
@@ -133,9 +139,7 @@ export default function HitAndBlowBoard({
           <p className="font-semibold">
             {status === "won" ? `Cracked in ${history.length}!` : `Code was ${secret}`}
           </p>
-          <button onClick={share} className="rounded-btn bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground transition-ui hover:opacity-90">
-            Share
-          </button>
+          <ShareBlock text={shareText} url={shareUrl} />
           {!user && (
             <p className="text-sm text-muted-foreground">
               <Link href="/games/login?next=/games/hit-and-blow" className="underline underline-offset-4 hover:text-foreground">
@@ -167,7 +171,8 @@ export default function HitAndBlowBoard({
           slug="hit-and-blow"
           status={status}
           resultLine={status === "won" ? `Cracked in ${history.length}!` : `The code was ${secret}.`}
-          onShare={share}
+          shareText={shareText}
+          shareUrl={shareUrl}
         />
       )}
 

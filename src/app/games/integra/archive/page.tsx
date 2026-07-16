@@ -15,7 +15,7 @@ export default async function IntegraArchivePage() {
 
   return (
     <div className="space-y-6">
-      <header>
+      <header className="text-center">
         <h1 className="font-display text-2xl font-bold tracking-tight">Integra Archive</h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Today and yesterday are free.{" "}
