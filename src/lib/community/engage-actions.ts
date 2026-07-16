@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
 import { notifyReply, notifyMentions } from "./community-notify";
+import { GATE } from "./gate-messages";
 
 export type EngageResult = { ok: true } | { error: string };
 
@@ -12,15 +13,15 @@ async function gate() {
   const {
     data: { user },
   } = await sb.auth.getUser();
-  if (!user) return { sb, user: null, error: "Sign in first." as const };
+  if (!user) return { sb, user: null, error: GATE.SIGNED_OUT };
   const { data: canPost } = await sb.rpc("community_can_post");
-  if (!canPost) return { sb, user: null, error: "Verify your email first." as const };
+  if (!canPost) return { sb, user: null, error: GATE.UNVERIFIED };
   return { sb, user, error: null };
 }
 
 export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageResult> {
   const { sb, user, error } = await gate();
-  if (error || !user) return { error: error ?? "Sign in first." };
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
     .from("community_votes")
@@ -55,7 +56,7 @@ export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageR
 
 export async function toggleBookmark(postId: string): Promise<EngageResult> {
   const { sb, user, error } = await gate();
-  if (error || !user) return { error: error ?? "Sign in first." };
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
     .from("community_bookmarks")
@@ -75,7 +76,7 @@ export async function toggleBookmark(postId: string): Promise<EngageResult> {
 
 export async function toggleReblog(postId: string): Promise<EngageResult> {
   const { sb, user, error } = await gate();
-  if (error || !user) return { error: error ?? "Sign in first." };
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
     .from("community_posts")
@@ -122,7 +123,7 @@ export async function deleteOwnPost(postId: string): Promise<EngageResult> {
   const {
     data: { user },
   } = await sb.auth.getUser();
-  if (!user) return { error: "Sign in first." };
+  if (!user) return { error: GATE.SIGNED_OUT };
 
   const { error } = await sb
     .from("community_posts")
@@ -136,7 +137,7 @@ export async function deleteOwnPost(postId: string): Promise<EngageResult> {
 
 export async function voteOnPoll(postId: string, optionIndex: number): Promise<EngageResult> {
   const { sb, user, error } = await gate();
-  if (error || !user) return { error: error ?? "Sign in first." };
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: post } = await sb
     .from("community_posts")
@@ -168,7 +169,7 @@ export async function voteOnPoll(postId: string, optionIndex: number): Promise<E
 
 export async function createReply(postId: string, body: string): Promise<EngageResult> {
   const { sb, user, error } = await gate();
-  if (error || !user) return { error: error ?? "Sign in first." };
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const valid = validatePost({ type: "text", body, imageCount: 0, youtubeUrl: "" });
   if (!valid.ok) return { error: valid.error };

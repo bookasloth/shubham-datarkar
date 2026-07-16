@@ -46,33 +46,34 @@ export async function signIn(
   redirect(loginDestination(next, data.user?.email));
 }
 
-/** Create a password account, then route to the return path or identity default. */
-export async function signUp(
-  _prev: SignInState,
-  formData: FormData,
-): Promise<SignInState> {
-  const email = String(formData.get("email") ?? "").trim();
-  const password = String(formData.get("password") ?? "");
-  const confirm = String(formData.get("password2") ?? "");
-  const name = String(formData.get("name") ?? "").trim();
-  const next = String(formData.get("next") ?? "");
+/**
+ * Everything signup does except decide where the user ends up: validate, mint the
+ * account and its confirmation link, send the branded email.
+ *
+ * Split out because the account can be created from two places that need
+ * different endings — the /login page redirects, the community join modal stays
+ * put and shows "check your email" over the post being read. The rules (min
+ * length, matching confirmation, branded mail) live here so the two can't drift.
+ */
+async function createAccount(fields: {
+  email: string;
+  password: string;
+  confirm: string;
+  name: string;
+  next: string;
+}): Promise<{ error: string } | { ok: true; safe: string | null }> {
+  const { email, password, confirm, name } = fields;
 
-  if (!email || !password) {
-    return { error: "Email and password are required." };
-  }
-  if (password.length < 8) {
-    return { error: "Password must be at least 8 characters." };
-  }
-  if (confirm && confirm !== password) {
-    return { error: "Passwords don't match." };
-  }
+  if (!email || !password) return { error: "Email and password are required." };
+  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+  if (confirm && confirm !== password) return { error: "Passwords don't match." };
 
   // Mint the confirmation link ourselves (like password reset) so we can send a
   // branded "Confirm your email" instead of Supabase's default template. The link
   // lands on /auth/confirm, which verifies it and — on a signup type — fires the
   // welcome email. accountWelcome deliberately moves to confirm-time, not now.
   const origin_ = await origin();
-  const safe = safeNext(next);
+  const safe = safeNext(fields.next);
   const dest = loginDestination(safe, email);
   const { data, error } = await supabaseAdmin().auth.admin.generateLink({
     type: "signup",
@@ -96,8 +97,59 @@ export async function signUp(
       // Best-effort — the account exists even if mail fails.
     }
   }
+  return { ok: true, safe };
+}
 
-  redirect(`/login?check=1${safe ? `&next=${encodeURIComponent(safe)}` : ""}`);
+/** Create a password account, then route to the return path or identity default. */
+export async function signUp(
+  _prev: SignInState,
+  formData: FormData,
+): Promise<SignInState> {
+  const result = await createAccount({
+    email: String(formData.get("email") ?? "").trim(),
+    password: String(formData.get("password") ?? ""),
+    confirm: String(formData.get("password2") ?? ""),
+    name: String(formData.get("name") ?? "").trim(),
+    next: String(formData.get("next") ?? ""),
+  });
+  if ("error" in result) return result;
+
+  // redirect() throws to perform the redirect — keep it outside try/catch.
+  redirect(`/login?check=1${result.safe ? `&next=${encodeURIComponent(result.safe)}` : ""}`);
+}
+
+export type JoinState = { error: string } | { ok: true; email: string } | undefined;
+
+/**
+ * Signup that stays on the page — the community join modal's action.
+ *
+ * Returns instead of redirecting, so the modal can swap to "check your email"
+ * without navigating away from the post someone was reading. The account is
+ * unconfirmed until they click the link, so this does NOT sign them in: the
+ * caller gets `ok` to change what the modal shows, never a session.
+ */
+export async function joinFromCommunity(
+  _prev: JoinState,
+  formData: FormData,
+): Promise<JoinState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("password2") ?? "");
+
+  // The modal always renders both password fields, so — unlike the login page,
+  // where the confirm field is optional — a missing match here is a real mismatch.
+  if (!confirm) return { error: "Confirm your password." };
+  if (confirm !== password) return { error: "Passwords don't match." };
+
+  const result = await createAccount({
+    email,
+    password,
+    confirm,
+    name: String(formData.get("name") ?? "").trim(),
+    next: String(formData.get("next") ?? ""),
+  });
+  if ("error" in result) return result;
+  return { ok: true, email };
 }
 
 /**
