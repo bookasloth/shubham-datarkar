@@ -156,6 +156,16 @@ why it mattered, without the post turning into a lecture. One clause of context 
 usually enough; if the reader needs a second, the entry is about the wrong part of the
 story. Don't explain it to death.
 
+Vary the way updates begin. "X now does Y" and "You can now" are the changelog's default
+grammar, and a feed full of them reads generated. Open from wherever the story actually
+starts: sometimes the bug, sometimes the decision, sometimes what you noticed, sometimes
+just the thing that shipped, stated flat.
+
+Two more traps. Generic developer punchlines — "took longer than I'll admit", "don't ask
+how long", "past me strikes again" — are shared property; every dev feed has them, so
+they carry no voice. And an update that already has personality does not need a closing
+joke bolted on for an ending — if the middle landed, stopping is the punchline.
+
 ## The register
 
 Post like a person with no comms team, not a brand with a voice guide.
