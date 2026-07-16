@@ -43,9 +43,9 @@ export const caseStudies: CaseStudy[] = [
     // ponytail: no client quote provided — quote is optional; add a real one via /admin, never invent one.
     featured: true,
     seo: {
-      title: "SEO Case Study: D2C Strength Gear (3x Organic Traffic)",
+      title: "SEO Case Study: D2C Gear (3x Traffic)",
       description:
-        "How a powerlifting-gear brand tripled organic traffic (292 → 889/mo) and grew from 100 to 887 ranking keywords with a content-led SEO engine and product-page optimisation.",
+        "How a powerlifting-gear brand tripled organic traffic (292 → 889/mo) and grew from 100 to 887 ranking keywords with a content-led SEO engine.",
     },
   },
   {

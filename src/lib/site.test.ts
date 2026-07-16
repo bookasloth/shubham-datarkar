@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { socials, sameAs } from "@/lib/site";
+import { site, socials, sameAs } from "@/lib/site";
 
 describe("social links / sameAs", () => {
   it("every href is a full profile URL, not a bare domain root", () => {
@@ -9,7 +9,15 @@ describe("social links / sameAs", () => {
     }
   });
 
-  it("sameAs mirrors the social hrefs exactly", () => {
-    expect(sameAs).toEqual(socials.map((s) => s.href));
+  // sameAs feeds JSON-LD identity profiles, so it is deliberately NOT a mirror of
+  // `socials` — the Book A Sloth booking page is a service, not a profile of the
+  // person, and asserting an exact mirror would forbid that distinction.
+  it("sameAs lists every social profile", () => {
+    const profiles = socials.filter((s) => s.href !== site.bookingUrl).map((s) => s.href);
+    expect(sameAs).toEqual(profiles);
+  });
+
+  it("sameAs excludes the booking page, which is not an identity profile", () => {
+    expect(sameAs).not.toContain(site.bookingUrl);
   });
 });
