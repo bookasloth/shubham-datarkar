@@ -37,7 +37,41 @@ export function shouldAnnounce(title: string, labels: string[]): boolean {
   return true;
 }
 
+/**
+ * An author-written, public-facing tweet from the PR body — a single line:
+ *
+ *   Tweet: You can now tag people in the community with @.
+ *
+ * A PR title is written for a reviewer ("feat(community): @mentions with profile
+ * links and notify email"); a tweet is written for a reader. No template pool can
+ * bridge that, because the dev subject itself is the problem. So when the author
+ * has said what the public should hear, use their words verbatim — the person who
+ * wrote the PR has more context than any rewrite of its title could recover.
+ *
+ * Absent (the common case for quick PRs), the caller falls back to the pools.
+ * Returns null for a missing/blank line so the caller's `??` reads naturally.
+ */
+export function extractTweet(body: string | null | undefined): string | null {
+  if (!body) return null;
+  const m = body.match(/^[ \t]*Tweet:[ \t]*(\S.*)$/im);
+  if (!m) return null;
+  // Trailing \r: GitHub bodies are CRLF, and `.` in a non-dotall regex stops at \n
+  // but happily eats \r — which would otherwise ride into the post body.
+  const line = m[1].trim();
+  return line ? line.slice(0, 500) : null;
+}
+
+/**
+ * `@` is stripped where it would start a word, because {title} is a PR subject
+ * echoed into a public post and the feed linkifies @handles. A title like
+ * "@mentions with profile links" would otherwise mint a link to a member that
+ * doesn't exist — or, worse, a title naming a real handle would email them.
+ *
+ * Only the word-initial `@` goes (the same rule the tokenizer matches on), so
+ * "fix foo@bar.com parsing" survives intact. The Tweet: line is NOT sanitized:
+ * a human writing "@sam" there means it.
+ */
 export function humanizeSubject(subject: string): string {
-  const s = subject.trim();
+  const s = subject.trim().replace(/(^|\s)@(?=[a-z0-9])/gi, "$1");
   return s ? s.charAt(0).toUpperCase() + s.slice(1) : s;
 }

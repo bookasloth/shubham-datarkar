@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifyGithubSignature } from "@/lib/community/auto/github-verify";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor } from "@/lib/community/auto/pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet } from "@/lib/community/auto/pr";
 import { autoPost } from "@/lib/community/auto/post";
 import { pick } from "@/lib/community/auto/templates";
 
@@ -28,7 +28,10 @@ export async function POST(request: Request) {
   let payload: {
     action?: string;
     repository?: { full_name?: string };
-    pull_request?: { merged?: boolean; number?: number; title?: string; labels?: { name?: string }[] };
+    pull_request?: {
+      merged?: boolean; number?: number; title?: string; body?: string | null;
+      labels?: { name?: string }[];
+    };
   };
   try {
     payload = JSON.parse(raw);
@@ -57,9 +60,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: "filtered" });
   }
 
-  const subject = humanizeSubject(parsePrTitle(title).subject);
+  // An author-written `Tweet:` line wins: the PR title is reviewer-facing and no
+  // template can un-write dev-speak. Absent one, fall back to the pools as before.
+  // `shouldAnnounce` stays the only gate — a Tweet: line changes the wording, not
+  // whether a PR is worth announcing.
+  const body =
+    extractTweet(pr.body) ??
+    pick("pr", { title: humanizeSubject(parsePrTitle(title).subject), project });
   // Key includes the repo: PR #5 exists in every repo, and a bare `pr:5` would
   // make the second repo's PR #5 dedupe against the first and never post.
-  await autoPost({ sourceKey: `pr:${repo}#${pr.number}`, body: pick("pr", { title: subject, project }) });
+  await autoPost({ sourceKey: `pr:${repo}#${pr.number}`, body });
   return NextResponse.json({ ok: true, posted: true });
 }
