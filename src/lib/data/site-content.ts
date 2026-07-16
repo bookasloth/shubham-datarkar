@@ -306,13 +306,16 @@ export const changelog: ChangelogEntry[] = [
 ];
 
 export const roadmap: RoadmapItem[] = [
+  { title: "Community", description: "A space for founders building distribution — feed, polls, replies, moderation.", status: "Shipped", quarter: "Q3 2026" },
+  { title: "Daily games", description: "Alfazy, Integra and Hit and Blow — three daily puzzles on one engine.", status: "Shipped", quarter: "Q3 2026" },
+  { title: "Members platform", description: "Gated resources, subscriptions, and a capability engine behind them.", status: "Shipped", quarter: "Q3 2026" },
   { title: "Component library", description: "A public, reusable design system.", status: "Shipped", quarter: "Q2 2026" },
   { title: "Command palette", description: "Keyboard-first navigation everywhere.", status: "Shipped", quarter: "Q2 2026" },
-  { title: "Ask Shubham (AI)", description: "A chatbot trained on all published content.", status: "In Progress", quarter: "Q3 2026" },
-  { title: "Semantic search", description: "Intent-based search across articles and tools.", status: "In Progress", quarter: "Q3 2026" },
+  { title: "KalamAI", description: "SEO, AEO and GEO research and writing, gated to members. Research engine live; writing engine next.", status: "In Progress", quarter: "Q3 2026" },
+  { title: "Ask Shubham (AI)", description: "A chatbot trained on all published content.", status: "In Progress", quarter: "Q4 2026" },
+  { title: "Semantic search", description: "Intent-based search across articles and tools.", status: "Planned", quarter: "Q4 2026" },
   { title: "Glossary (200 terms)", description: "An interlinked marketing & SaaS glossary.", status: "Planned", quarter: "Q4 2026" },
   { title: "Frameworks library", description: "Named, original frameworks as standalone pages.", status: "Planned", quarter: "Q4 2026" },
-  { title: "Community", description: "A space for founders building distribution.", status: "Exploring", quarter: "2027" },
   { title: "Cohort course", description: "A practical course on compounding growth systems.", status: "Exploring", quarter: "2027" },
 ];
 
