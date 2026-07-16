@@ -152,10 +152,11 @@ export default function AlfazyBoard({
         title={
           <span className="inline-flex items-center gap-2">
             Alfazy #{puzzleNumber}{isArchive && " (archive)"}
-            <FireStreak
-              count={stats?.currentStreak ?? 0}
-              justWon={!isArchive && status === "won"}
-            />
+            {/* Archive play never touches the streak, so showing the daily one
+                next to an archive puzzle just implies a win here would move it. */}
+            {!isArchive && (
+              <FireStreak count={stats?.currentStreak ?? 0} justWon={status === "won"} />
+            )}
           </span>
         }
       />
