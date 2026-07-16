@@ -84,6 +84,19 @@ export const faqs: Faq[] = [
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-07-17",
+    version: "v3.2",
+    title: "A feed worth landing on, and streaks that count right",
+    type: "Improved",
+    notes: [
+      "Logged-out visitors now land on three real posts instead of a wall — engage with any of them and a join modal picks up where the dead end used to be.",
+      "Every community surface scrolls forever, and profile pages finally show a post count that matches reality.",
+      "Fixed the streak: one flame instead of one per day, revisiting a solved puzzle no longer resets it, and archive boards stop implying a win extends it.",
+      "Games rework: sidebar nav, leaderboard tabs, archive grid and share card — with archive and membership solves counted and solve time measured on the server.",
+      "The app sidebar now follows the route, with Account pinned to the bottom.",
+    ],
+  },
+  {
     date: "2026-07-16",
     version: "v3.1",
     title: "Branded emails and an auth overhaul",
