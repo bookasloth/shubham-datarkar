@@ -1,7 +1,5 @@
 import { buildMetadata } from "@/lib/seo";
-import { LeaderboardView, type Board } from "@/components/games/LeaderboardView";
-
-const BOARDS = ["daily", "weekly", "monthly", "streak"] as const;
+import { LeaderboardView, BOARDS, type Board } from "@/components/games/LeaderboardView";
 
 export const metadata = buildMetadata({ title: "Hit and Blow — Leaderboard", path: "/games/hit-and-blow/leaderboard", noIndex: true });
 

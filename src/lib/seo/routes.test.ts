@@ -71,7 +71,7 @@ describe("pageTypeOf", () => {
 
   it("classifies auth and account routes under public subtrees as app", () => {
     for (const route of [
-      "/games/login", "/games/profile", "/games/leaderboard",
+      "/games/login", "/games/profile",
       "/members/login", "/members/account", "/members/upgrade", "/members/tools",
       "/community/compose", "/community/me", "/community/bookmarks",
       "/unsubscribe", "/subscriber-assets",

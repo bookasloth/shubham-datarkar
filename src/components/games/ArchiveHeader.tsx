@@ -20,13 +20,13 @@ function Tile({
   label: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-card border border-border bg-card p-4">
-      <div className="flex size-9 shrink-0 items-center justify-center rounded-btn bg-muted">
-        {icon}
-      </div>
-      <div className="min-w-0">
-        <div className="font-display text-xl font-bold leading-none">{value}</div>
-        <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+    <div className="rounded-card border border-border bg-card p-4">
+      <div className="text-xs font-medium text-muted-foreground">{label}</div>
+      <div className="mt-2.5 flex items-center gap-2.5">
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-btn bg-muted">
+          {icon}
+        </div>
+        <div className="min-w-0 truncate font-display text-xl font-bold leading-none">{value}</div>
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -13,6 +13,20 @@ export function ComposerFab({
   username?: string | null;
 }) {
   const [open, setOpen] = useState(false);
+  const [seed, setSeed] = useState("");
+
+  // ?compose=<text> opens the composer pre-filled — the games' "Share to SD
+  // Community" lands here. Read off `location` rather than useSearchParams(),
+  // which would drag a Suspense boundary onto the whole feed page.
+  useEffect(() => {
+    const text = new URLSearchParams(window.location.search).get("compose");
+    if (!text) return;
+    setSeed(text);
+    setOpen(true);
+    // Drop the param so a refresh (or a back-nav) doesn't re-open the sheet.
+    window.history.replaceState(null, "", window.location.pathname);
+  }, []);
+
   return (
     <>
       <button
@@ -35,7 +49,8 @@ export function ComposerFab({
           )}
         >
           <DialogTitle className="sr-only">Compose post</DialogTitle>
-          <Composer name={name} username={username} onPosted={() => setOpen(false)} />
+          {/* key: remount when the seed arrives so useState picks the new initial body up */}
+          <Composer key={seed} name={name} username={username} initialBody={seed} onPosted={() => setOpen(false)} />
         </DialogContent>
       </Dialog>
     </>

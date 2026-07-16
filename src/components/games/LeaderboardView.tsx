@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { puzzleNumberFor } from "@/lib/daily";
-import { weekBoundsIST, monthBoundsIST } from "@/lib/games/periods";
+import { weekBoundsIST, monthBoundsIST, allTimeBoundsIST } from "@/lib/games/periods";
 import {
   getDailyBoard,
   getPeriodBoard,
@@ -11,15 +11,26 @@ import { ALFAZY } from "@/lib/games/alfazy";
 import { HIT_AND_BLOW } from "@/lib/games/hit-and-blow";
 import { INTEGRA } from "@/lib/games/integra";
 import { Podium, type PodiumEntry } from "@/components/games/Podium";
-import { BoardSelect } from "@/components/games/BoardSelect";
 import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 
-const BOARDS = ["daily", "weekly", "monthly", "streak"] as const;
+export const BOARDS = ["daily", "weekly", "monthly", "alltime", "streak"] as const;
 export type Board = (typeof BOARDS)[number];
+
+const BOARD_TABS: { value: Board; label: string }[] = [
+  { value: "daily", label: "Today" },
+  { value: "weekly", label: "This week" },
+  { value: "monthly", label: "This month" },
+  { value: "alltime", label: "All time" },
+  { value: "streak", label: "Best streak" },
+];
 
 function slugFor(game: GameKey): string {
   return GAMES.find((g) => g.key === game)?.slug ?? "alfazy";
+}
+
+function nameFor(game: GameKey): string {
+  return GAMES.find((g) => g.key === game)?.name ?? "Game";
 }
 
 function maxGuessesFor(game: GameKey): number {
@@ -81,7 +92,8 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
       username: r.username,
     }));
   } else {
-    const { start, end } = board === "weekly" ? weekBoundsIST() : monthBoundsIST();
+    const { start, end } =
+      board === "weekly" ? weekBoundsIST() : board === "monthly" ? monthBoundsIST() : allTimeBoundsIST();
     const data = await getPeriodBoard(game, start, end);
     head = ["#", "Name", "Username", "Solved", "Total tries"];
     rows = data.map((r, i) => [
@@ -102,17 +114,17 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
 
   return (
     <div className="space-y-6">
-      <h1 className="text-center font-display text-2xl font-bold">Leaderboard</h1>
+      <header className="space-y-1 text-center">
+        <h1 className="font-display text-2xl font-bold tracking-tight">{nameFor(game)} Leaderboard</h1>
+        <p className="text-sm text-muted-foreground">See who is on top, and how you stack up.</p>
+      </header>
 
-      <div className="flex flex-col items-center gap-3">
-        <div className="inline-flex gap-1 rounded-input border border-border bg-muted/50 p-1">
-          {GAMES.map((g) => (
-            <Link key={g.key} href={`/games/${g.slug}/leaderboard?board=${board}`} className={tab(game === g.key)}>
-              {g.name}
-            </Link>
-          ))}
-        </div>
-        <BoardSelect slug={slug} board={board} />
+      <div className="flex flex-wrap justify-center gap-1 rounded-input border border-border bg-muted/50 p-1">
+        {BOARD_TABS.map((t) => (
+          <Link key={t.value} href={`/games/${slug}/leaderboard?board=${t.value}`} className={tab(board === t.value)}>
+            {t.label}
+          </Link>
+        ))}
       </div>
 
       {rows.length === 0 ? (

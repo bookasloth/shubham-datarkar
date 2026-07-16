@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Trophy, Lock, BarChart3, CalendarClock, Share2, ChevronRight } from "lucide-react";
+import { Trophy, Lock, BarChart3, CalendarClock, ChevronRight } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { ShareBlock } from "@/components/games/shell/ShareCard";
 
 function LockedStat({ label }: { label: string }) {
   return (
@@ -41,12 +42,14 @@ export function GameEndCard({
   slug,
   status,
   resultLine,
-  onShare,
+  shareText,
+  shareUrl,
 }: {
   slug: string;
   status: "won" | "lost";
   resultLine: string;
-  onShare: () => void;
+  shareText: string;
+  shareUrl: string;
 }) {
   const [open, setOpen] = useState(true);
   const next = `/games/${slug}`;
@@ -100,9 +103,7 @@ export function GameEndCard({
           />
         </div>
 
-        <Button variant="outline" onClick={onShare}>
-          <Share2 className="mr-2 size-4" /> Share
-        </Button>
+        <ShareBlock text={shareText} url={shareUrl} />
       </DialogContent>
     </Dialog>
   );
