@@ -1,7 +1,7 @@
 import "server-only";
 import { supabaseAnon } from "@/lib/supabase/server";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
-import type { AdSlot, FeedPost, FeedSort, FeedWindow, PollResult } from "./types";
+import type { AdSlot, Badge, FeedPost, FeedSort, FeedWindow, PollResult } from "./types";
 
 /** Every community_* RPC returns this row shape — map it in exactly one place. */
 function mapRow(r: Record<string, unknown>): FeedPost {
@@ -36,6 +36,39 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     viewerBookmarked: Boolean(r.viewer_bookmarked),
     viewerReblogged: Boolean(r.viewer_reblogged),
   };
+}
+
+/** Posts pulled for the logged-out preview to draw its random sample from. */
+const RANDOM_POOL = 300;
+
+/**
+ * A random handful of posts — what a logged-out visitor sees instead of the feed.
+ * Fresh on every request, so the preview is never the same three posts twice.
+ *
+ * ponytail: samples the newest RANDOM_POOL rows in JS rather than `order by
+ * random()`, which would mean recreating community_feed. The pool is ~1.5x the
+ * current post count, so today it IS the whole table. If the feed outgrows it
+ * the sample silently narrows to the newest 300 — nothing breaks, it just stops
+ * reaching the archive. Add a `random` sort to the RPC when that day comes.
+ */
+export async function listRandomFeed(
+  n: number,
+  opts: { author?: string } = {},
+): Promise<FeedPost[]> {
+  const pool = await listFeed({
+    sort: "new",
+    window: "all",
+    limit: RANDOM_POOL,
+    author: opts.author,
+  });
+  // Fisher-Yates over a copy — partial, since only the first n are read.
+  const out = [...pool];
+  const take = Math.min(n, out.length);
+  for (let i = 0; i < take; i++) {
+    const j = i + Math.floor(Math.random() * (out.length - i));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out.slice(0, take);
 }
 
 export async function listFeed(opts: {
@@ -145,7 +178,7 @@ export async function viewerCanPost(): Promise<boolean> {
  *  instead of rendering an empty feed for a user who doesn't exist. */
 export async function getProfileByUsername(
   username: string,
-): Promise<{ id: string; username: string; displayName: string | null } | null> {
+): Promise<{ id: string; username: string; displayName: string | null; badge: Badge } | null> {
   const sb = await supabaseAuthServer();
   const { data } = await sb
     .from("profiles")
@@ -153,10 +186,15 @@ export async function getProfileByUsername(
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!data) return null;
+  // Same badge the feed shows next to this handle — gold founder, orange
+  // supporter, grey verified. Falls back to grey if the RPC is unreachable,
+  // which under-claims rather than minting a badge nobody earned.
+  const { data: badge } = await sb.rpc("community_badge", { p_user: data.id });
   return {
     id: data.id as string,
     username: data.username as string,
     displayName: (data.display_name as string) ?? null,
+    badge: ((badge as Badge) ?? "grey") satisfies Badge,
   };
 }
 

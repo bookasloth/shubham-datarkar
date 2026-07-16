@@ -1,4 +1,7 @@
-export type FeedSort = "new" | "hot" | "top" | "controversial";
+// No "controversial" — the downvote button is gone (#162), so nothing can become
+// controversial. The RPC still implements the sort and its filter; both are inert
+// while down_count stays 0, and left in place for the day dislikes return.
+export type FeedSort = "new" | "hot" | "top";
 export type FeedWindow = "all" | "today" | "week" | "month" | "year";
 export type Badge = "grey" | "orange" | "gold";
 export type PostType = "text" | "image" | "poll" | "youtube";
