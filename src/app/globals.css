@@ -693,6 +693,32 @@
   .burger-anim { transform-origin: top; }
   .burger-anim[data-state="open"] { animation: curtain-in var(--dur-slow) var(--ease-out-quint); }
   .burger-anim[data-state="closed"] { animation: curtain-out var(--dur-base) ease-in; }
+
+  /* Logged-in "Welcome, name" CTA: rings ripple continuously from within the
+     pill (clipped by overflow-hidden), never behind it. Global reduced-motion
+     rule stills them. */
+  @keyframes welcome-ripple {
+    0% { transform: scale(0.15); opacity: 0; }
+    25% { opacity: 0.55; }
+    100% { transform: scale(2.8); opacity: 0; }
+  }
+  .welcome-ripple > .ripple {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 999px;
+    background: radial-gradient(
+      circle,
+      color-mix(in oklab, var(--primary-foreground) 50%, transparent),
+      transparent 70%
+    );
+    pointer-events: none;
+    animation: welcome-ripple 3s var(--ease-out-quint) infinite;
+  }
+  .welcome-ripple > .ripple:nth-child(2) { animation-delay: 1s; }
+  .welcome-ripple > .ripple:nth-child(3) { animation-delay: 2s; }
 }
 
 @media (prefers-reduced-motion: reduce) {
