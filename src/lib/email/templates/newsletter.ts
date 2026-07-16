@@ -7,7 +7,11 @@ const SITE = "https://shubhamdatarkar.com";
 type Post = { title: string; href: string; meta?: string };
 
 /** Builders List subscription confirmed. Humour: High. */
-export function newsletterWelcome(): RenderedEmail {
+export function newsletterWelcome(a: { email?: string } = {}): RenderedEmail {
+  // "Wasn't you?" escape hatch — prefills the address so it's one confirm click.
+  const unsubUrl = a.email
+    ? `${SITE}/unsubscribe?email=${encodeURIComponent(a.email)}`
+    : `${SITE}/unsubscribe`;
   return {
     subject: "You're on the Builders List.",
     html: renderEmail({
@@ -21,9 +25,13 @@ export function newsletterWelcome(): RenderedEmail {
         p("I won't email you just because Tuesday exists.") +
         p("Deal?"),
       cta: { label: "See what you've joined", href: `${SITE}/subscriber-assets` },
-      afterCta: emailGif(EMAIL_GIFS.newsletterWelcome, "A mailbox flag popping up"),
+      afterCta:
+        emailGif(EMAIL_GIFS.newsletterWelcome, "A mailbox flag popping up") +
+        p(
+          `Didn't sign up for this? No worries — someone may have typed your address by mistake. <a href="${unsubUrl}" style="color:#c43700; text-decoration:none;">Unsubscribe here</a> and you'll never hear from the list again.`,
+        ),
     }),
-    text: `You're on the Builders List. Ad breakdowns, SEO and growth experiments, build logs, useful resources, and the odd strong opinion — never just because it's Tuesday. See what you've joined: ${SITE}/subscriber-assets`,
+    text: `You're on the Builders List. Ad breakdowns, SEO and growth experiments, build logs, useful resources, and the odd strong opinion — never just because it's Tuesday. See what you've joined: ${SITE}/subscriber-assets\n\nDidn't sign up? Unsubscribe here: ${unsubUrl}`,
   };
 }
 

@@ -8,8 +8,8 @@ import { Label } from "@/components/ui/label";
 import { unsubscribe } from "@/lib/subscribers/actions";
 import { EMAIL_RE } from "@/lib/validation/email";
 
-export function UnsubscribeForm() {
-  const [email, setEmail] = React.useState("");
+export function UnsubscribeForm({ defaultEmail = "" }: { defaultEmail?: string }) {
+  const [email, setEmail] = React.useState(defaultEmail);
   const [error, setError] = React.useState<string>();
   const [loading, setLoading] = React.useState(false);
   const [done, setDone] = React.useState(false);

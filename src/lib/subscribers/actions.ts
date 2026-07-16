@@ -56,7 +56,7 @@ export async function subscribe(
 /** Branded newsletter welcome. Fires once on a fresh subscribe. Fail-safe; no-ops without SMTP. */
 async function sendWelcomeEmail(email: string): Promise<void> {
   try {
-    await sendTemplate(email, newsletterWelcome());
+    await sendTemplate(email, newsletterWelcome({ email }));
   } catch (e) {
     console.warn("[subscribers] welcome email threw:", (e as Error).message);
   }

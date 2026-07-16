@@ -18,9 +18,9 @@ export const metadata = buildMetadata({
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; error?: string; next?: string; view?: string }>;
+  searchParams: Promise<{ reset?: string; check?: string; error?: string; next?: string; view?: string }>;
 }) {
-  const { reset, error, next, view } = await searchParams;
+  const { reset, check, error, next, view } = await searchParams;
   const signup = view === "signup";
 
   // Already signed in? Skip the form and go straight to the destination. This
@@ -43,6 +43,14 @@ export default async function LoginPage({
               {signup ? "Join in a few seconds." : "Sign in to your account."}
             </p>
           </div>
+          {check === "1" && (
+            <div
+              className="mb-4 rounded-card border border-border bg-card p-3 text-center text-sm text-muted-foreground"
+              role="status"
+            >
+              Almost there — check your email and confirm your address to finish signing up.
+            </div>
+          )}
           {reset === "1" && (
             <div
               className="mb-4 rounded-card border border-border bg-card p-3 text-center text-sm text-muted-foreground"
