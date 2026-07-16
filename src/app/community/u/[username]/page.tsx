@@ -1,7 +1,9 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { getMemberContext } from "@/lib/members/session";
 import {
+  countAuthorPosts,
   getProfileByUsername,
   listFeed,
   listPollResults,
@@ -31,19 +33,27 @@ export async function generateMetadata({ params }: { params: Promise<{ username:
 
 export default async function CommunityProfilePage({
   params,
+  searchParams,
 }: {
   params: Promise<{ username: string }>;
+  searchParams: Promise<{ shown?: string }>;
 }) {
-  const { username } = await params;
+  const [{ username }, sp] = await Promise.all([params, searchParams]);
   // An unknown handle 404s rather than rendering an empty feed — a mistyped
   // @mention should look broken, not like a real member with nothing to say.
   const profile = await getProfileByUsername(username);
   if (!profile) notFound();
 
+  // ?shown= grows by PAGE per "Show more" click; the clamp keeps a crafted URL
+  // from asking the RPC for an unbounded page.
+  const PAGE = 50;
+  const shown = Math.min(Math.max(Number(sp.shown) || PAGE, PAGE), 1000);
+
   const { user } = await getMemberContext();
-  const [canPost, posts] = await Promise.all([
+  const [canPost, posts, total] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    listFeed({ sort: "new", window: "all", author: profile.username, limit: 50 }),
+    listFeed({ sort: "new", window: "all", author: profile.username, limit: shown }),
+    countAuthorPosts(profile.id),
   ]);
   const pollResults = await listPollResults(
     posts.filter((p) => p.type === "poll").map((p) => p.id),
@@ -57,7 +67,7 @@ export default async function CommunityProfilePage({
         <div>
           <h1 className="font-display text-lg font-bold">{name}</h1>
           <p className="text-sm text-muted-foreground">
-            @{profile.username} · {posts.length} {posts.length === 1 ? "post" : "posts"}
+            @{profile.username} · {total} {total === 1 ? "post" : "posts"}
           </p>
         </div>
       </header>
@@ -76,6 +86,17 @@ export default async function CommunityProfilePage({
             viewerId={user?.id ?? null}
           />
         ))
+      )}
+
+      {posts.length < total && (
+        <div className="border-t border-border px-4 py-3 text-center">
+          <Link
+            href={`/community/u/${profile.username}?shown=${shown + PAGE}`}
+            className="text-sm font-medium text-muted-foreground transition-ui hover:text-foreground"
+          >
+            Show more ({total - posts.length} older)
+          </Link>
+        </div>
       )}
     </div>
   );
