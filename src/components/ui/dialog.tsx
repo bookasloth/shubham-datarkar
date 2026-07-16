@@ -19,6 +19,7 @@ export const DialogContent = React.forwardRef<
       ref={ref}
       className={cn(
         "pop-anim fixed left-1/2 top-1/2 z-50 grid w-[calc(100%-2rem)] max-w-lg -translate-x-1/2 -translate-y-1/2 gap-4",
+        "max-h-[calc(100dvh-2rem)] overflow-y-auto",
         "rounded-card border border-border bg-popover p-6 text-popover-foreground shadow-lg",
         className,
       )}

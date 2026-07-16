@@ -2,32 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Trophy, Lock, BarChart3, CalendarClock, ChevronRight } from "lucide-react";
+import { Trophy, Lock, BarChart3, CalendarClock, RotateCcw } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ShareBlock } from "@/components/games/shell/ShareCard";
 
 function LockedStat({ label }: { label: string }) {
   return (
-    <div className="rounded-card border border-border bg-card p-3 text-center">
-      <div className="font-display text-xl font-bold text-muted-foreground/40">—</div>
-      <div className="mt-0.5 text-xs text-muted-foreground">{label}</div>
+    <div className="rounded-card border border-border bg-card px-2 py-1.5 text-center">
+      <div className="font-display text-base font-bold text-muted-foreground/40">—</div>
+      <div className="text-[11px] text-muted-foreground">{label}</div>
     </div>
   );
 }
 
-function PromoTile({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
+function PromoTile({ href, icon, title }: { href: string; icon: React.ReactNode; title: string }) {
   return (
     <Link
       href={href}
-      className="flex items-center gap-3 rounded-card border border-border bg-card px-4 py-3 transition-ui hover:border-foreground"
+      className="flex flex-1 items-center justify-center gap-2 rounded-card border border-border bg-card px-3 py-2 text-xs font-medium text-foreground transition-ui hover:border-foreground"
     >
       <span className="text-muted-foreground">{icon}</span>
-      <span className="flex-1">
-        <span className="block text-sm font-medium text-foreground">{title}</span>
-        <span className="block text-xs text-muted-foreground">{sub}</span>
-      </span>
-      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+      {title}
     </Link>
   );
 }
@@ -53,54 +49,53 @@ export function GameEndCard({
 }) {
   const [open, setOpen] = useState(true);
   const next = `/games/${slug}`;
+  const won = status === "won";
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="max-w-md">
-        <DialogHeader className="items-center text-center">
-          <span className="mb-1 inline-flex size-12 items-center justify-center rounded-card bg-primary text-primary-foreground">
-            <Trophy className="size-6" />
+      <DialogContent className="max-w-sm gap-3 p-5">
+        <DialogHeader className="flex-row items-center gap-3 pr-6">
+          <span
+            className={
+              won
+                ? "inline-flex size-9 shrink-0 items-center justify-center rounded-card bg-primary text-primary-foreground"
+                : "inline-flex size-9 shrink-0 items-center justify-center rounded-card border border-border bg-card text-muted-foreground"
+            }
+          >
+            {won ? <Trophy className="size-4" /> : <RotateCcw className="size-4" />}
           </span>
-          <DialogTitle className="text-center text-2xl">{status === "won" ? "Nice solve!" : "Good try!"}</DialogTitle>
-          <p className="text-sm text-muted-foreground">{resultLine}</p>
+          <div className="min-w-0">
+            <DialogTitle className="text-lg">{won ? "Nice solve!" : "Good try!"}</DialogTitle>
+            <p className="text-xs text-muted-foreground">{resultLine}</p>
+          </div>
         </DialogHeader>
 
-        <div className="flex flex-col gap-2">
-          <Button asChild>
-            <Link href={`/login?view=signup&next=${encodeURIComponent(next)}`}>Create a free account</Link>
-          </Button>
-          <Link
-            href={`/login?next=${encodeURIComponent(next)}`}
-            className="text-center text-sm font-medium underline underline-offset-4 hover:text-foreground"
-          >
-            Already registered? Log in
-          </Link>
-        </div>
-
         <div>
-          <div className="mb-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+          <div className="mb-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
             <Lock className="size-3" /> Sign up to start your streak
           </div>
-          <div className="grid grid-cols-3 gap-2">
+          <div className="grid grid-cols-3 gap-1.5">
             <LockedStat label="Played" />
             <LockedStat label="Win %" />
             <LockedStat label="Streak" />
           </div>
         </div>
 
-        <div className="flex flex-col gap-2">
-          <PromoTile
-            href={`/games/${slug}/leaderboard`}
-            icon={<BarChart3 className="size-5" />}
-            title="See the leaderboard"
-            sub="How you rank against other players."
-          />
-          <PromoTile
-            href={`/games/${slug}/archive`}
-            icon={<CalendarClock className="size-5" />}
-            title="Play past puzzles"
-            sub="Every previous puzzle in the archive."
-          />
+        <div className="flex flex-col gap-1.5">
+          <Button asChild size="sm">
+            <Link href={`/login?view=signup&next=${encodeURIComponent(next)}`}>Create a free account</Link>
+          </Button>
+          <Link
+            href={`/login?next=${encodeURIComponent(next)}`}
+            className="text-center text-xs font-medium text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Already registered? Log in
+          </Link>
+        </div>
+
+        <div className="flex gap-1.5">
+          <PromoTile href={`/games/${slug}/leaderboard`} icon={<BarChart3 className="size-3.5" />} title="Leaderboard" />
+          <PromoTile href={`/games/${slug}/archive`} icon={<CalendarClock className="size-3.5" />} title="Archive" />
         </div>
 
         <ShareBlock text={shareText} url={shareUrl} />
