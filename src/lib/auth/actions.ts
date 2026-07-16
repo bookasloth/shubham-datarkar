@@ -53,6 +53,8 @@ export async function signUp(
 ): Promise<SignInState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
+  const confirm = String(formData.get("password2") ?? "");
+  const name = String(formData.get("name") ?? "").trim();
   const next = String(formData.get("next") ?? "");
 
   if (!email || !password) {
@@ -60,6 +62,9 @@ export async function signUp(
   }
   if (password.length < 8) {
     return { error: "Password must be at least 8 characters." };
+  }
+  if (confirm && confirm !== password) {
+    return { error: "Passwords don't match." };
   }
 
   // Mint the confirmation link ourselves (like password reset) so we can send a
@@ -73,7 +78,12 @@ export async function signUp(
     type: "signup",
     email,
     password,
-    options: { redirectTo: `${origin_}${dest}` },
+    // full_name (when given) lands in user_metadata so the confirm-time welcome
+    // email and the profile row can greet the person by name.
+    options: {
+      redirectTo: `${origin_}${dest}`,
+      ...(name ? { data: { full_name: name } } : {}),
+    },
   });
   if (error) return { error: error.message };
 
