@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 export const metadata = buildMetadata({
   title: "AI Experiments & Prototypes",
   description:
-    "AI experiments run in the open — RAG chatbots, semantic search, content QA, and autonomous agents. What worked, what didn't, and the receipts.",
+    "AI experiments run in the open — an editorial QA rubric, a 30-day autonomous social test, and the ideas still on the bench. What worked, what didn't, and why.",
   ogTitle: "AI experiments, in the open",
   ogDescription:
     "AI is a multiplier, not a magic trick. The tests, the wins, the failures — documented with receipts, not hype.",
