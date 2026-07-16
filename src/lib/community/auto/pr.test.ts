@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor } from "./pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet } from "./pr";
+import { pick } from "./templates";
 
 describe("parsePrTitle", () => {
   it("splits type, scope, subject", () => {
@@ -36,6 +37,67 @@ describe("shouldAnnounce", () => {
 describe("humanizeSubject", () => {
   it("capitalizes the first letter", () => {
     expect(humanizeSubject("welcome header")).toBe("Welcome header");
+  });
+
+  // The live regression: PR #209's subject began "@mentions ...", the feed
+  // linkified it, and /community/u/mentions is nobody.
+  it("drops a word-initial @ so an echoed title can't mint a phantom mention", () => {
+    expect(humanizeSubject("@mentions with profile links and notify email")).toBe(
+      "Mentions with profile links and notify email",
+    );
+    expect(humanizeSubject("ping @sam about the thing")).toBe("Ping sam about the thing");
+  });
+
+  it("leaves an @ that is mid-word alone", () => {
+    expect(humanizeSubject("fix foo@bar.com parsing")).toBe("Fix foo@bar.com parsing");
+  });
+});
+
+// The composition the webhook route performs, kept honest here because `pick` is
+// random: no single sample proves the property, so assert it over the whole pool.
+describe("composed PR post (fallback path)", () => {
+  it("never mints a phantom mention, whichever template is drawn", () => {
+    const title = humanizeSubject(parsePrTitle("feat(community): @mentions with profile links").subject);
+    for (let i = 0; i < 200; i++) {
+      const body = pick("pr", { title, project: "the site" });
+      expect(body, `drew: ${body}`).not.toMatch(/(^|\s)@[a-z0-9]/i);
+    }
+  });
+});
+
+describe("extractTweet", () => {
+  it("returns the author's line", () => {
+    const body = "## What\nSome dev detail.\n\nTweet: You can now tag people with @.\n\n## Notes\nmore";
+    expect(extractTweet(body)).toBe("You can now tag people with @.");
+  });
+
+  it("is case-insensitive and tolerates indentation", () => {
+    expect(extractTweet("   tweet:   Shipped a thing.  ")).toBe("Shipped a thing.");
+  });
+
+  it("survives CRLF bodies (GitHub sends them)", () => {
+    expect(extractTweet("intro\r\nTweet: Hello there.\r\nrest")).toBe("Hello there.");
+  });
+
+  it("returns null when absent, empty, or blank", () => {
+    expect(extractTweet("no tweet line here")).toBeNull();
+    expect(extractTweet("Tweet:")).toBeNull();
+    expect(extractTweet("Tweet:    ")).toBeNull();
+    expect(extractTweet(null)).toBeNull();
+    expect(extractTweet(undefined)).toBeNull();
+    expect(extractTweet("")).toBeNull();
+  });
+
+  it("takes only the first Tweet: line", () => {
+    expect(extractTweet("Tweet: first\nTweet: second")).toBe("first");
+  });
+
+  it("does not match the word tweet mid-sentence", () => {
+    expect(extractTweet("I should tweet: maybe later")).toBeNull();
+  });
+
+  it("caps at 500 chars", () => {
+    expect(extractTweet("Tweet: " + "x".repeat(600))?.length).toBe(500);
   });
 });
 
