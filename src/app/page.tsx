@@ -89,8 +89,16 @@ export default async function HomePage() {
         <Container className="relative py-24 md:py-32">
           <div className="mx-auto max-w-5xl text-center">
             <Reveal>
-              <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
-                Get your brand cited by AI.
+              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground">
+                <span className="size-1.5 rounded-full bg-brand" aria-hidden />
+                The visibility system for the AI-search era
+              </span>
+            </Reveal>
+            <Reveal delay={0.05}>
+              <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
+                Get your brand
+                <br />
+                <span className="text-brand">cited by AI.</span>
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
@@ -108,6 +116,14 @@ export default async function HomePage() {
                 See the work
               </Link>
             </div>
+            <ul className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+              {["Fixed scope, clear prices", "No retainer mystery", "India-based, hands-on"].map((item) => (
+                <li key={item} className="inline-flex items-center gap-2">
+                  <Check className="size-4 text-brand" />
+                  {item}
+                </li>
+              ))}
+            </ul>
           </div>
         </Container>
       </Section>
