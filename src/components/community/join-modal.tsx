@@ -114,20 +114,6 @@ export function JoinModal({
                   className={FIELD}
                 />
               </div>
-              <div>
-                <label htmlFor="join-password2" className="mb-1 block text-xs font-medium">
-                  Confirm password
-                </label>
-                <input
-                  id="join-password2"
-                  name="password2"
-                  type="password"
-                  required
-                  minLength={8}
-                  autoComplete="new-password"
-                  className={FIELD}
-                />
-              </div>
 
               {state && "error" in state && (
                 <p className="text-xs text-danger" role="alert">
