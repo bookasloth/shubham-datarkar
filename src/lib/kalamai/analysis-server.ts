@@ -7,6 +7,7 @@ import { extractPage, type Heading } from "./extract";
 import { chunkText } from "./chunk";
 import { embedTexts, toPgVector, EMBED_MODEL } from "./embed";
 import { rankTerms, type TermPage, type RankedTerm } from "./terms";
+import { distill, type ChunkVec, type DistillCluster } from "./distill";
 import { runJson } from "./llm";
 import { BRIEF_SCHEMA, FAKE_BRIEF, buildBriefPrompt, type Brief } from "./brief";
 import { logEvent } from "./events-server";
@@ -65,7 +66,13 @@ type AnalysisRow = {
 };
 
 type Competitor = { url: string; rank: number; wordCount: number; h2Count: number; aiCited: boolean };
-type ReportPartial = { terms: RankedTerm[]; competitors: Competitor[]; successes: number; total: number };
+type ReportPartial = {
+  terms: RankedTerm[];
+  competitors: Competitor[];
+  successes: number;
+  total: number;
+  clusters?: DistillCluster[]; // distill v2 subtopic centroids (for rescore semantic coverage)
+};
 
 /**
  * Run exactly one transition of the analysis job and persist it. The caller
@@ -228,9 +235,41 @@ async function stepR3(db: SupabaseClient, a: AnalysisRow): Promise<StepResult> {
   }[];
   const ok = pages.filter((p) => p.ok);
 
-  // Embed competitor chunks for semantic clustering (distill) + rescore. Runs
-  // once at the extracting step; idempotent (clears prior competitor chunks).
-  await embedCompetitorChunks(db, a.id, ok);
+  // distill v2 corpus = ok competitors with enough body to count (≥250 words).
+  const competitors250 = ok.filter((p) => (p.word_count ?? 0) >= 250);
+
+  // Embed competitor chunks (semantic clustering + rescore) and get the vectors
+  // back for distill. Runs once at extracting; idempotent (clears prior chunks).
+  const chunkVectors = await embedCompetitorChunks(db, a.id, competitors250);
+
+  // distill v2: log-odds + hard 60% gate + IQR target ranges + clusters. Written
+  // ALONGSIDE v1 rankTerms (D2) — persisted to kalamai_term_signals + report.clusters,
+  // shadow until the rank harness validates. Background prior is uniform until the
+  // corpus script populates kalamai_corpus_terms.
+  const targetLength = median(competitors250.map((p) => p.word_count ?? 0)) || 1000;
+  const background = await loadBackground(db, a.locale);
+  const distilled = distill({
+    pages: competitors250.map((p) => ({ rank: p.rank, bodyText: p.body_text ?? "", wordCount: p.word_count ?? 0 })),
+    targetLength,
+    background,
+    chunkVectors,
+  });
+  await db.from("kalamai_term_signals").delete().eq("analysis_id", a.id);
+  if (distilled.terms.length) {
+    await db.from("kalamai_term_signals").insert(
+      distilled.terms.map((t) => ({
+        analysis_id: a.id,
+        term: t.term,
+        ngram: t.ngram,
+        z: t.z,
+        delta: t.delta,
+        doc_freq: t.docFreq,
+        coverage: t.coverage,
+        freq_lo: t.freqLo,
+        freq_hi: t.freqHi,
+      })),
+    );
+  }
 
   const termPages: TermPage[] = ok.map((p) => ({
     rank: p.rank,
@@ -251,7 +290,13 @@ async function stepR3(db: SupabaseClient, a: AnalysisRow): Promise<StepResult> {
     }))
     .sort((x, y) => x.rank - y.rank);
 
-  const report: ReportPartial = { terms: rankTerms(termPages), competitors, successes: ok.length, total: pages.length };
+  const report: ReportPartial = {
+    terms: rankTerms(termPages),
+    competitors,
+    successes: ok.length,
+    total: pages.length,
+    clusters: distilled.clusters,
+  };
   const successRate = pages.length ? Math.round((ok.length / pages.length) * 1000) / 1000 : 0;
 
   await db
@@ -267,26 +312,28 @@ async function stepR3(db: SupabaseClient, a: AnalysisRow): Promise<StepResult> {
   return { status: "analyzing", progress: 75 };
 }
 
-// Chunk + embed each ok competitor page, store vectors in kalamai_chunks.
-// Idempotent: clears this analysis's competitor chunks first, so a reclaimed
-// step can't double-insert. Fake-embed mode (no GEMINI_API_KEY) uses hashed
-// vectors, so this runs offline with zero spend.
+// Chunk + embed each competitor page, store vectors in kalamai_chunks, and RETURN
+// the vectors (with competitor index) for distill's clustering — avoids re-reading
+// + parsing pgvector. Idempotent: clears this analysis's competitor chunks first,
+// so a reclaimed step can't double-insert. Fake-embed mode (no GEMINI_API_KEY) uses
+// hashed vectors, so this runs offline with zero spend.
 async function embedCompetitorChunks(
   db: SupabaseClient,
   analysisId: string,
   pages: { body_text: string | null }[],
-): Promise<void> {
+): Promise<ChunkVec[]> {
   await db.from("kalamai_chunks").delete().eq("analysis_id", analysisId).eq("source_type", "competitor");
 
   const rows: Record<string, unknown>[] = [];
-  for (const p of pages) {
-    const chunks = chunkText(p.body_text ?? "");
+  const chunkVectors: ChunkVec[] = [];
+  for (let pi = 0; pi < pages.length; pi++) {
+    const chunks = chunkText(pages[pi].body_text ?? "");
     if (!chunks.length) continue;
     const vectors = await embedTexts(
       chunks.map((c) => c.text),
       "RETRIEVAL_DOCUMENT",
     );
-    chunks.forEach((c, i) =>
+    chunks.forEach((c, i) => {
       rows.push({
         source_type: "competitor",
         analysis_id: analysisId,
@@ -295,10 +342,37 @@ async function embedCompetitorChunks(
         token_count: c.tokenCount,
         embedding: toPgVector(vectors[i]),
         embedding_model: EMBED_MODEL,
-      }),
-    );
+      });
+      chunkVectors.push({ vector: vectors[i], competitorIndex: pi, text: c.text });
+    });
   }
   if (rows.length) await db.from("kalamai_chunks").insert(rows);
+  return chunkVectors;
+}
+
+// Background term frequencies for distill's Dirichlet prior. Empty until the
+// corpus script populates kalamai_corpus_terms → distill uses a uniform prior.
+// ponytail: loads the whole language vocab; add a `term in (gated)` filter if the
+// corpus grows large enough that this read matters.
+async function loadBackground(
+  db: SupabaseClient,
+  language: string,
+): Promise<{ counts: Map<string, number>; total: number }> {
+  const [{ data: terms }, { data: totals }] = await Promise.all([
+    db.from("kalamai_corpus_terms").select("term, count").eq("language", language),
+    db.from("kalamai_corpus_totals").select("total_tokens").eq("language", language).maybeSingle(),
+  ]);
+  const counts = new Map<string, number>();
+  for (const row of (terms ?? []) as { term: string; count: number }[]) counts.set(row.term, Number(row.count));
+  const total = Number((totals as { total_tokens: number } | null)?.total_tokens ?? 0);
+  return { counts, total };
+}
+
+function median(nums: number[]): number {
+  if (!nums.length) return 0;
+  const s = [...nums].sort((a, b) => a - b);
+  const m = Math.floor(s.length / 2);
+  return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2;
 }
 
 // R4 — one Sonnet call turns the code-derived signal into the brief. Malformed

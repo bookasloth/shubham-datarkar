@@ -18,6 +18,9 @@ const store: Record<string, Row[]> = {
   kalamai_llm_calls: [],
   kalamai_events: [],
   kalamai_chunks: [],
+  kalamai_term_signals: [],
+  kalamai_corpus_terms: [],
+  kalamai_corpus_totals: [],
 };
 
 class Query {
@@ -137,10 +140,17 @@ import { runStep } from "./analysis-server";
 import { FakeSerpProvider } from "./serp/fake";
 import type { SerpProvider } from "./serp/provider";
 
+// Long enough (>250 words) to clear the distill competitor threshold + trip Readability.
+const LONG_BODY = Array.from(
+  { length: 40 },
+  (_, i) =>
+    `<p>Section ${i}: digital marketing agencies offer seo, content marketing, ppc, and social ` +
+    `media services for local businesses seeking growth, leads, and brand visibility online.</p>`,
+).join("");
 const PAGE_HTML = (url: string) =>
   `<html><head><title>Digital Marketing in Nagpur</title><meta name="description" content="seo and content"></head>` +
-  `<body><main><article><h1>Digital Marketing Company</h1><h2>SEO Services</h2>` +
-  `<p>digital marketing seo content ${url}</p></article></main></body></html>`;
+  `<body><main><article><h1>Digital Marketing Company</h1><h2>SEO Services</h2>${LONG_BODY}` +
+  `<p>contact us ${url}</p></article></main></body></html>`;
 
 const fakeCrawl = async (url: string) => PAGE_HTML(url);
 
@@ -202,6 +212,10 @@ describe("runStep", () => {
     expect(chunks.length).toBeGreaterThanOrEqual(8); // >= 1 per ok page
     expect(chunks.every((c) => c.source_type === "competitor")).toBe(true);
     expect(chunks.every((c) => c.embedding_model === "gemini-embedding-001")).toBe(true);
+
+    // distill v2 wrote gated term signals + clusters (shadow, alongside v1).
+    expect(store.kalamai_term_signals.length).toBeGreaterThan(0);
+    expect((a.report as { clusters?: unknown[] }).clusters).toBeDefined();
   });
 
   it("marks low_confidence when fewer than 20 pages crawl ok", async () => {
