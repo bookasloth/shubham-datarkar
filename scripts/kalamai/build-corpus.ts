@@ -28,7 +28,8 @@ const NEG_SAMPLE = 10; // cap negatives per keyword (spread across the band) →
 const CRAWL_CONCURRENCY = 4;
 const KEYWORD_DELAY_MS = 1500; // polite gap between keywords
 
-type Arg = { keywords: string[]; lang: string; country: string; file?: string; dry: boolean; noEmbed: boolean };
+type Provider = "serper" | "dataforseo";
+type Arg = { keywords: string[]; lang: string; country: string; file?: string; dry: boolean; noEmbed: boolean; provider: Provider };
 
 function parseArgs(argv: string[]): Arg {
   const get = (k: string) => {
@@ -36,6 +37,10 @@ function parseArgs(argv: string[]): Arg {
     return i >= 0 ? argv[i + 1] : undefined;
   };
   const kw = get("keywords");
+  // Provider: --provider flag > SERP_PROVIDER env > serper-if-key-else-dataforseo
+  // (mirrors analysis-server.defaultSerp). Serper is the free default.
+  const p = (get("provider") ?? process.env.SERP_PROVIDER) as Provider | undefined;
+  const provider: Provider = p === "dataforseo" ? "dataforseo" : p === "serper" ? "serper" : process.env.SERPER_API_KEY ? "serper" : "dataforseo";
   return {
     keywords: kw ? kw.split(",").map((s) => s.trim()).filter(Boolean) : [],
     lang: get("lang") ?? "en",
@@ -46,10 +51,37 @@ function parseArgs(argv: string[]): Arg {
     // log-odds background prior (3b reads body_text); skips semantic clusters,
     // which need embeddings. Use when Gemini quota is unavailable.
     noEmbed: argv.includes("--no-embed"),
+    provider,
   };
 }
 
-async function fetchSerp100(keyword: string, lang: string, country: string): Promise<{ url: string; rank: number }[]> {
+type Ranked = { url: string; rank: number };
+
+function fetchSerp100(keyword: string, lang: string, country: string, provider: Provider): Promise<Ranked[]> {
+  return provider === "serper" ? fetchSerp100Serper(keyword, lang, country) : fetchSerp100DataForSeo(keyword, lang, country);
+}
+
+// Serper: single POST, num=100 for the negative band. The SerpProvider interface
+// caps organic at 30, so corpus labeling needs its own depth-100 fetch.
+async function fetchSerp100Serper(keyword: string, lang: string, country: string): Promise<Ranked[]> {
+  const key = process.env.SERPER_API_KEY;
+  if (!key) throw new Error("SERPER_API_KEY not configured");
+  const res = await fetch("https://google.serper.dev/search", {
+    method: "POST",
+    headers: { "X-API-KEY": key, "Content-Type": "application/json" },
+    body: JSON.stringify({ q: keyword, gl: country.toLowerCase(), hl: lang, num: NEG_MAX }),
+    signal: AbortSignal.timeout(30_000),
+  });
+  if (!res.ok) throw new Error(`Serper ${res.status}`);
+  const json = (await res.json()) as { organic?: { link?: unknown; position?: unknown }[] };
+  return (json.organic ?? [])
+    .filter((o) => typeof o.link === "string")
+    .map((o) => ({ url: o.link as string, rank: typeof o.position === "number" ? o.position : 0 }))
+    .filter((o) => o.rank > 0)
+    .sort((a, b) => a.rank - b.rank);
+}
+
+async function fetchSerp100DataForSeo(keyword: string, lang: string, country: string): Promise<Ranked[]> {
   const login = process.env.DATAFORSEO_LOGIN;
   const password = process.env.DATAFORSEO_PASSWORD;
   if (!login || !password) throw new Error("DataForSEO credentials not configured");
@@ -194,9 +226,13 @@ async function main() {
     return;
   }
 
-  // Real run: refuse fake data (Hard Rule 3).
-  if (!process.env.DATAFORSEO_LOGIN || !process.env.DATAFORSEO_PASSWORD) {
-    console.error("Refusing to run: DataForSEO credentials missing. Set them in .env.local (Hard Rule 3: no synthetic corpus).");
+  // Real run: refuse fake data (Hard Rule 3). Require the selected provider's creds.
+  if (args.provider === "serper" && !process.env.SERPER_API_KEY) {
+    console.error("Refusing to run: SERPER_API_KEY missing. Set it in .env.local, or pass --provider dataforseo.");
+    process.exit(1);
+  }
+  if (args.provider === "dataforseo" && (!process.env.DATAFORSEO_LOGIN || !process.env.DATAFORSEO_PASSWORD)) {
+    console.error("Refusing to run: DataForSEO credentials missing. Set them in .env.local, or pass --provider serper.");
     process.exit(1);
   }
   if (!args.noEmbed && isFakeEmbed()) {
@@ -216,13 +252,13 @@ async function main() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
-  console.log(`Building corpus: ${keywords.length} keyword(s), lang=${args.lang}, country=${args.country}\n`);
+  console.log(`Building corpus: ${keywords.length} keyword(s), lang=${args.lang}, country=${args.country}, provider=${args.provider}\n`);
   const all: CorpusResult[] = [];
   let totalTargets = 0;
 
   for (const [ki, keyword] of keywords.entries()) {
     try {
-      const serp = await fetchSerp100(keyword, args.lang, args.country);
+      const serp = await fetchSerp100(keyword, args.lang, args.country, args.provider);
       const labeled = selectLabeled(serp);
       totalTargets += labeled.length;
       const robots = new RobotsCache();

@@ -13,6 +13,7 @@ import { BRIEF_SCHEMA, FAKE_BRIEF, buildBriefPrompt, type Brief } from "./brief"
 import { logEvent } from "./events-server";
 import type { SerpProvider, SerpOrganic, SerpResult } from "./serp/provider";
 import { DataForSeoProvider } from "./serp/dataforseo";
+import { SerperProvider } from "./serp/serper";
 import { FakeSerpProvider } from "./serp/fake";
 import { crawlUrl, RobotsCache, type Crawler } from "./crawl";
 import {
@@ -35,9 +36,18 @@ function fakeCrawler(): Crawler {
     `</article></main></body></html>`;
 }
 
+function defaultSerp(): SerpProvider {
+  // Config switch (not a runtime chain): flip SERP_PROVIDER in Vercel to fail
+  // over. Unset → prefer whichever creds exist, Serper first (free default).
+  const which = process.env.SERP_PROVIDER;
+  if (which === "serper") return new SerperProvider();
+  if (which === "dataforseo") return new DataForSeoProvider();
+  return process.env.SERPER_API_KEY ? new SerperProvider() : new DataForSeoProvider();
+}
+
 function defaultDeps(): { serp: SerpProvider; crawl: Crawler } {
   if (process.env.KALAMAI_FAKE_SERP === "1") return { serp: new FakeSerpProvider(), crawl: fakeCrawler() };
-  return { serp: new DataForSeoProvider(), crawl: crawlUrl };
+  return { serp: defaultSerp(), crawl: crawlUrl };
 }
 
 const BATCH = 6;
