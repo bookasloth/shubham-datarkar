@@ -30,8 +30,14 @@ type Item = Record<string, unknown>;
 // are unverified against a live response — confirm on the first real call
 // (the AI-Overview block in particular varies by keyword).
 export function parseDataForSeo(json: unknown): SerpResult {
-  const items =
-    ((json as { tasks?: { result?: { items?: Item[] }[] }[] })?.tasks?.[0]?.result?.[0]?.items ?? []) as Item[];
+  const task = (json as { tasks?: { status_code?: number; status_message?: string; result?: { items?: Item[] }[] }[] })
+    ?.tasks?.[0];
+  // Task-level error returns HTTP 200 with a non-20000 status (e.g. 40201 account
+  // paused). Throw so it fails the analysis loudly instead of caching an empty SERP.
+  if (task && typeof task.status_code === "number" && task.status_code !== 20000) {
+    throw new Error(`DataForSEO task ${task.status_code}: ${task.status_message ?? "error"}`);
+  }
+  const items = (task?.result?.[0]?.items ?? []) as Item[];
 
   const organic: SerpResult["organic"] = [];
   const paa: string[] = [];

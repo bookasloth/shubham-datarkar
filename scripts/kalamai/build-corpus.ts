@@ -24,6 +24,7 @@ const LOCATION: Record<string, string> = { IN: "India", US: "United States", GB:
 const POS_MAX = 10; // rank <= this => positive
 const NEG_MIN = 30; // rank in [NEG_MIN, NEG_MAX] => negative
 const NEG_MAX = 100;
+const NEG_SAMPLE = 10; // cap negatives per keyword (spread across the band) → ~20 pages/kw
 const CRAWL_CONCURRENCY = 4;
 const KEYWORD_DELAY_MS = 1500; // polite gap between keywords
 
@@ -58,8 +59,14 @@ async function fetchSerp100(keyword: string, lang: string, country: string): Pro
     signal: AbortSignal.timeout(30_000),
   });
   if (!res.ok) throw new Error(`DataForSEO ${res.status}`);
-  const json = (await res.json()) as { tasks?: { result?: { items?: Record<string, unknown>[] }[] }[] };
-  const items = json.tasks?.[0]?.result?.[0]?.items ?? [];
+  const json = (await res.json()) as {
+    tasks?: { status_code?: number; status_message?: string; result?: { items?: Record<string, unknown>[] }[] }[];
+  };
+  const task = json.tasks?.[0];
+  // Task-level error (e.g. 40201 account paused) returns HTTP 200 — surface it,
+  // don't let it masquerade as "0 organic results".
+  if (task && task.status_code !== 20000) throw new Error(`DataForSEO task ${task.status_code}: ${task.status_message}`);
+  const items = task?.result?.[0]?.items ?? [];
   return items
     .filter((i) => i.type === "organic" && typeof i.url === "string")
     .map((i) => ({ url: i.url as string, rank: typeof i.rank_absolute === "number" ? i.rank_absolute : 0 }))
@@ -67,11 +74,14 @@ async function fetchSerp100(keyword: string, lang: string, country: string): Pro
     .sort((a, b) => a.rank - b.rank);
 }
 
-// Keep the top-10 and the 30-100 band; drop the ambiguous 11-29 middle.
+// Keep all top-10 positives + a spread sample of the 30-100 negative band; drop
+// the ambiguous 11-29 middle. Capping negatives keeps ~20 pages/keyword.
 function selectLabeled(serp: { url: string; rank: number }[]): { url: string; rank: number; isPositive: boolean }[] {
-  return serp
-    .filter((o) => o.rank <= POS_MAX || (o.rank >= NEG_MIN && o.rank <= NEG_MAX))
-    .map((o) => ({ ...o, isPositive: o.rank <= POS_MAX }));
+  const positives = serp.filter((o) => o.rank <= POS_MAX).map((o) => ({ ...o, isPositive: true }));
+  const band = serp.filter((o) => o.rank >= NEG_MIN && o.rank <= NEG_MAX);
+  const step = Math.max(1, Math.floor(band.length / NEG_SAMPLE));
+  const negatives = band.filter((_, i) => i % step === 0).slice(0, NEG_SAMPLE).map((o) => ({ ...o, isPositive: false }));
+  return [...positives, ...negatives];
 }
 
 async function mapLimit<T, R>(items: T[], limit: number, fn: (t: T) => Promise<R>): Promise<R[]> {
