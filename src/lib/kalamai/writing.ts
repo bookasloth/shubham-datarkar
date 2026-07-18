@@ -36,6 +36,36 @@ export function buildCachePrefix(brief: Brief, params: ArticleParams): string {
   return JSON.stringify({ brief, params });
 }
 
+/**
+ * Real, quotable fact-sentences pulled from the crawled competitor pages so the
+ * writer can ground claims instead of inventing "studies suggest…". Mechanical
+ * (not LLM): keep mid-length sentences that carry a number/stat, drop boilerplate,
+ * dedupe, competitor-rank order. Empty in → empty out (facts section is skipped).
+ */
+export function extractSourceFacts(pages: { rank: number; bodyText: string }[], max = 18): string[] {
+  const seen = new Set<string>();
+  const facts: string[] = [];
+  for (const p of [...pages].sort((a, b) => a.rank - b.rank)) {
+    for (const raw of (p.bodyText || "").split(/(?<=[.!?])\s+/)) {
+      const s = raw.trim().replace(/\s+/g, " ");
+      if (s.length < 40 || s.length > 240) continue;
+      if (!/\d/.test(s)) continue; // a real fact usually carries a number
+      if (/(cookie|subscribe|sign\s?up|log\s?in|©|all rights reserved|privacy policy)/i.test(s)) continue;
+      const key = s.toLowerCase().slice(0, 60);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      facts.push(s);
+      if (facts.length >= max) return facts;
+    }
+  }
+  return facts;
+}
+
+function factsBlock(sourceFacts: string[]): string {
+  if (!sourceFacts.length) return "";
+  return ["", "Source facts (real excerpts from ranking pages — ground claims in these, do NOT invent figures):", ...sourceFacts.map((f) => `- ${f}`)].join("\n");
+}
+
 /** Meta is a straight pull from the brief + the plan the model already chose. */
 export function buildArticleMeta(brief: Brief, plan: SectionPlan): ArticleMeta {
   return {
@@ -102,19 +132,27 @@ export function buildDraftPrompt(
   brief: Brief,
   params: ArticleParams,
   plan: SectionPlan,
+  sourceFacts: string[] = [],
 ): { system: string; user: string; cachePrefix: string } {
   const system =
     `You are an expert ${params.tone} SEO writer for an audience of ${params.audience}. ` +
-    `Write a complete, original ~${params.targetWords}-word article as a JSON array of ContentBlocks. ` +
-    "Open with a 'lead' block, use 'h2'/'h3' for the planned sections, weave the recommended terms in naturally, " +
-    "and include a 'faq' block near the end answering the brief's questions. Return ONLY the JSON array.\n" +
+    `Write a complete, original article of about ${params.targetWords} words (do not significantly exceed it — be ` +
+    "specific and concise, not padded) as a JSON array of ContentBlocks. " +
+    "Open with a 'lead' block, use 'h2'/'h3' for the planned sections, and include a 'faq' block near the end " +
+    "answering the brief's questions. Open each section with a direct one-sentence answer, then expand.\n" +
+    "GROUNDING: base any statistic, percentage, year, or factual claim on the Source facts below. Never invent " +
+    "numbers or attribute claims to unnamed 'studies', 'surveys', or 'experts' — if no source fact supports a figure, " +
+    "make the point qualitatively without a fabricated statistic. Prefer concrete specifics (named tools, real figures) " +
+    "over generic phrasing. Weave recommended terms in naturally; do NOT over-repeat any single term (that reads as " +
+    "keyword stuffing). Return ONLY the JSON array.\n" +
     BLOCK_SPEC;
   const user = [
     "Writing plan:",
     ...plan.sections.map((s) => `## ${s.heading} (~${s.words}w)\n${s.points.map((p) => `- ${p}`).join("\n")}`),
     "",
-    "Recommended terms to include:",
+    "Recommended terms to include (use naturally, do not stuff):",
     brief.termClusters.flatMap((c) => c.terms).slice(0, 30).join(", "),
+    factsBlock(sourceFacts),
   ].join("\n");
   return { system, user, cachePrefix: buildCachePrefix(brief, params) };
 }
@@ -137,12 +175,20 @@ export function buildCritiquePrompt(
   brief: Brief,
   params: ArticleParams,
   blocks: ContentBlock[],
+  sourceFacts: string[] = [],
 ): { system: string; user: string; cachePrefix: string } {
   const system =
-    "You are a strict SEO editor. Compare the draft against the brief and return JSON per the schema: recommended terms " +
-    "not used, brief outline sections not covered, and concrete writing issues (thin sections, missing direct answers, " +
-    "keyword stuffing). Set ok=true only if the draft is already publish-ready.";
-  const user = ["Draft (markdown):", blocksToMarkdown(blocks)].join("\n");
+    "You are a demanding SEO/AEO editor. Compare the draft against the brief and source facts, and return JSON per the " +
+    "schema. In 'issues', flag every instance of:\n" +
+    "1. A statistic or factual claim NOT supported by the source facts, or hedged with 'studies/surveys/experts suggest' " +
+    "and similar with no concrete figure or named source — quote the offending phrase.\n" +
+    "2. Any single keyword or phrase repeated so often it reads as stuffing — name the term and roughly how many times.\n" +
+    "3. Generic filler that could apply to any topic — demand a concrete specific, example, or figure instead.\n" +
+    "4. Any section that does not open with a direct one-sentence answer.\n" +
+    "Also list recommended terms not used and brief outline sections not covered. Set ok=true ONLY if the draft is " +
+    "specific, grounded in real facts, free of stuffing, and every section leads with a direct answer. A merely " +
+    "competent, generic draft is NOT ok — be strict.";
+  const user = ["Draft (markdown):", blocksToMarkdown(blocks), factsBlock(sourceFacts)].join("\n");
   return { system, user, cachePrefix: buildCachePrefix(brief, params) };
 }
 

@@ -11,7 +11,7 @@ import type { Brief } from "./brief";
 import {
   OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
   FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE,
-  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta,
+  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta, extractSourceFacts,
   type ArticleParams, type SectionPlan, type Critique, type ArticleMeta,
 } from "./writing";
 
@@ -117,15 +117,33 @@ async function stepOutline(db: SupabaseClient, a: ArticleRow): Promise<StepResul
   return { status: "outlining", progress: 15 };
 }
 
+// Real fact-sentences from the crawled competitors, so W2/W3 can ground claims
+// instead of inventing them. Top-10 ok pages by rank; empty if none stored.
+async function loadSourceFacts(db: SupabaseClient, analysisId: string): Promise<string[]> {
+  const { data } = await db
+    .from("kalamai_pages")
+    .select("rank, body_text")
+    .eq("analysis_id", analysisId)
+    .eq("ok", true)
+    .order("rank")
+    .limit(10);
+  const pages = ((data ?? []) as { rank: number; body_text: string | null }[]).map((p) => ({ rank: p.rank, bodyText: p.body_text ?? "" }));
+  return extractSourceFacts(pages);
+}
+
 // W2 — draft the body as ContentBlock[] (big streamed call, reads the cached brief).
 async function stepDraft(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const brief = await loadBrief(db, a);
   const plan = a.stage_state.plan!;
-  const { system, user, cachePrefix } = buildDraftPrompt(brief, a.params, plan);
-  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_DRAFT });
+  const facts = await loadSourceFacts(db, a.analysis_id);
+  const { system, user, cachePrefix } = buildDraftPrompt(brief, a.params, plan, facts);
+  // Headroom so a grounded, slightly-long article's JSON completes instead of
+  // truncating mid-array (which the parser can't salvage).
+  const DRAFT_TOKENS = 32000;
+  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
   await logCall(db, a, "W2", usage);
   const blocks = await parseWithRepair(text, async () => {
-    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_DRAFT });
+    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
     return r.text;
   });
   await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "drafting", progress: 40 }).eq("id", a.id);
@@ -135,7 +153,8 @@ async function stepDraft(db: SupabaseClient, a: ArticleRow): Promise<StepResult>
 // W3 — critique the draft against the brief (flat JSON).
 async function stepCritique(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const brief = await loadBrief(db, a);
-  const { system, user, cachePrefix } = buildCritiquePrompt(brief, a.params, a.stage_state.blocks!);
+  const facts = await loadSourceFacts(db, a.analysis_id);
+  const { system, user, cachePrefix } = buildCritiquePrompt(brief, a.params, a.stage_state.blocks!, facts);
   const { data: critique, usage } = await runJson<Critique>({ system, user, schema: CRITIQUE_SCHEMA, effort: "low", cachePrefix, fake: FAKE_CRITIQUE });
   await logCall(db, a, "W3", usage);
   await db.from("kalamai_articles").update({ stage_state: mergeState(a, { critique }), status: "reviewing", progress: 60 }).eq("id", a.id);
@@ -149,10 +168,10 @@ async function stepRewrite(db: SupabaseClient, a: ArticleRow): Promise<StepResul
   if (!critique.ok) {
     const brief = await loadBrief(db, a);
     const { system, user, cachePrefix } = buildRewritePrompt(brief, a.params, blocks, critique);
-    const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_REWRITE });
+    const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_REWRITE, maxTokens: 32000 });
     await logCall(db, a, "W4", usage);
     blocks = await parseWithRepair(text, async () => {
-      const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_REWRITE });
+      const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_REWRITE, maxTokens: 32000 });
       return r.text;
     });
   }
