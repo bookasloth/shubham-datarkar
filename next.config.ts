@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // jsdom (via @mozilla/readability in kalamai's extract.ts) uses Node.js-specific
+  // features and crashes the serverless bundle on Vercel — the /api/kalamai/step
+  // route 500s on load. Opt it out of Server Component bundling so it's required
+  // natively from node_modules at runtime. Loads fine locally either way.
+  serverExternalPackages: ["jsdom"],
   // Supabase Storage serves photos from <project-ref>.supabase.co — next/image
   // needs an explicit remote pattern or it 400s on every photo.
   images: {
