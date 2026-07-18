@@ -8,8 +8,9 @@ import { loginDestination, safeNext } from "@/lib/auth/redirect";
 import { buildConfirmUrl } from "@/lib/auth/confirm-url";
 import { sendTemplate } from "@/lib/email/send-template";
 import { confirmEmail, forgotPassword, passwordChanged } from "@/lib/email/templates/auth";
+import { isUnverifiedPastGrace } from "@/lib/auth/verification-gate";
 
-export type SignInState = { error: string } | undefined;
+export type SignInState = { error: string; needsVerification?: boolean } | undefined;
 export type MagicLinkState = { ok: true } | { error: string } | undefined;
 export type ResetRequestState = { ok: true } | { error: string } | undefined;
 export type UpdatePasswordState = { error: string } | undefined;
@@ -39,11 +40,39 @@ export async function signIn(
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
+    // A cron-banned unverified account fails here. Distinguish it so we can show
+    // the verify prompt instead of "wrong password". Admin lookup runs only on
+    // failed logins. ponytail: listUsers scans up to 1000 users; swap to a
+    // by-email index/RPC if the user table outgrows that.
+    const banned = await isUnverifiedAccount(email);
+    if (banned) {
+      return { error: "Verify your email before you log in.", needsVerification: true };
+    }
     return { error: "Invalid email or password." };
+  }
+
+  // Signed in, but if the account is unverified past the 48h grace window, block
+  // it now (covers accounts the daily cron hasn't banned yet).
+  const u = data.user;
+  if (u && isUnverifiedPastGrace({ email_confirmed_at: u.email_confirmed_at, created_at: u.created_at })) {
+    await supabase.auth.signOut();
+    return { error: "Verify your email before you log in.", needsVerification: true };
   }
 
   // redirect() throws to perform the redirect — keep it outside try/catch.
   redirect(loginDestination(next, data.user?.email));
+}
+
+/** True if an account exists for this email and is not yet email-verified. */
+async function isUnverifiedAccount(email: string): Promise<boolean> {
+  try {
+    const { data } = await supabaseAdmin().auth.admin.listUsers({ page: 1, perPage: 1000 });
+    const target = email.toLowerCase();
+    const u = data?.users.find((x) => x.email?.toLowerCase() === target);
+    return !!u && !u.email_confirmed_at;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -242,6 +271,42 @@ export async function updatePassword(
   }
 
   redirect("/login?reset=1");
+}
+
+export type ResendState = { ok: true } | { error: string } | undefined;
+
+/**
+ * Re-mint and re-send the branded confirmation email for an unconfirmed account.
+ * Always reports success (no enumeration), mirroring requestPasswordReset.
+ */
+export async function resendConfirmation(
+  _prev: ResendState,
+  formData: FormData,
+): Promise<ResendState> {
+  const email = String(formData.get("email") ?? "").trim();
+  if (!email) return { error: "Enter your email." };
+
+  try {
+    const origin_ = await origin();
+    const dest = loginDestination(null, email);
+    const { data, error } = await supabaseAdmin().auth.admin.generateLink({
+      type: "signup",
+      email,
+      // ponytail: the SDK's signup-link type requires `password`, but the server
+      // only applies it when creating a new user — resend only ever targets an
+      // account that already exists, so this value is never used. Throwaway.
+      password: globalThis.crypto.randomUUID(),
+      options: { redirectTo: `${origin_}${dest}` },
+    });
+    const tokenHash = data?.properties?.hashed_token;
+    if (!error && tokenHash) {
+      const confirmUrl = buildConfirmUrl(origin_, tokenHash, "signup", dest);
+      await sendTemplate(email, confirmEmail({ confirmUrl }));
+    }
+  } catch {
+    // Swallow — never reveal whether the address exists.
+  }
+  return { ok: true };
 }
 
 export async function signOut(): Promise<void> {

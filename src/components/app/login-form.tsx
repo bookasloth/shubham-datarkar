@@ -14,8 +14,10 @@ import { cn } from "@/lib/utils";
 import {
   signIn,
   signInWithMagicLink,
+  resendConfirmation,
   type SignInState,
   type MagicLinkState,
+  type ResendState,
 } from "@/lib/auth/actions";
 
 type View = "signin" | "magic";
@@ -144,6 +146,7 @@ function CredentialsForm({
   onMagic: () => void;
 }) {
   const [state, formAction, pending] = useActionState<SignInState, FormData>(signIn, undefined);
+  const [resendState, resendAction] = useActionState<ResendState, FormData>(resendConfirmation, undefined);
   const errRef = React.useRef<HTMLParagraphElement>(null);
 
   React.useEffect(() => {
@@ -187,6 +190,15 @@ function CredentialsForm({
         >
           {state.error}
         </p>
+      )}
+
+      {state?.needsVerification && (
+        <form action={resendAction} className="text-center">
+          <input type="hidden" name="email" value={email} />
+          <button type="submit" className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground">
+            {resendState && "ok" in resendState ? "Verification email sent — check your inbox." : "Resend verification email"}
+          </button>
+        </form>
       )}
 
       <Button type="submit" size="lg" loading={pending} className="w-full">
