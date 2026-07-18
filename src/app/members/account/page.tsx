@@ -9,6 +9,7 @@ import { getSubscriptionStatus } from "@/lib/subscribers/queries";
 import { getMyDonations } from "@/lib/support/queries";
 import { NewsletterPrefs } from "@/components/members/newsletter-prefs";
 import { PersonalDetailsCard } from "@/components/members/personal-details-card";
+import UsernameForm from "@/components/games/UsernameForm";
 import { getMyAccount } from "@/lib/members/account-queries";
 
 export const metadata = buildMetadata({ title: "Account", path: "/members/account", noIndex: true });
@@ -54,6 +55,16 @@ export default async function AccountPage() {
             whatsapp: account.whatsapp ?? "",
           }}
         />
+
+        <section className="rounded-card border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Username</h2>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Changing your handle breaks old links to your profile and past @mentions of you.
+          </p>
+          <div className="mt-3">
+            <UsernameForm current={profile?.username ?? ""} />
+          </div>
+        </section>
 
         <section className="rounded-card border border-border bg-card p-4">
           <div className="flex items-center justify-between">

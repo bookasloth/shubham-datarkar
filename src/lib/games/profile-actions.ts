@@ -23,5 +23,6 @@ export async function renameUsername(_prev: RenameState, formData: FormData): Pr
     return { error: "Could not update username." };
   }
   revalidatePath("/games/profile");
+  revalidatePath("/members/account");
   return { ok: true };
 }
