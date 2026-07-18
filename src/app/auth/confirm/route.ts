@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { loginDestination } from "@/lib/auth/redirect";
+import { loginDestination, safeNext } from "@/lib/auth/redirect";
 import { sendTemplate } from "@/lib/email/send-template";
 import { accountWelcome } from "@/lib/email/templates/auth";
 
@@ -15,6 +15,8 @@ export async function GET(request: NextRequest) {
   const { searchParams, origin } = request.nextUrl;
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as EmailOtpType | null;
+  // `next` is attacker-editable; safeNext() it at each redirect below. Recovery
+  // is the exception — it always lands on the reset form (see the tail).
   const next = searchParams.get("next");
   if (!token_hash || !type) return NextResponse.redirect(`${origin}/login?error=link`);
 
@@ -49,13 +51,17 @@ export async function GET(request: NextRequest) {
           // Confirmation must succeed even if the welcome mail fails.
         }
       }
-      const params = next ? `?next=${encodeURIComponent(next)}` : "";
+      const safe = safeNext(next);
+      const params = safe ? `?next=${encodeURIComponent(safe)}` : "";
       return NextResponse.redirect(`${origin}/welcome${params}`);
     }
     // Already onboarded (e.g. a later magiclink) — just land them.
-    return NextResponse.redirect(`${origin}${next || loginDestination(null, data.user.email)}`);
+    return NextResponse.redirect(`${origin}${safeNext(next) ?? loginDestination(null, data.user.email)}`);
   }
 
-  const dest = next || loginDestination(null, data.user?.email);
+  // Recovery links always land on the reset-password form (the verifyOtp session
+  // is a recovery session); everything else uses a sanitized next or the default.
+  const dest =
+    type === "recovery" ? "/reset-password" : safeNext(next) ?? loginDestination(null, data.user?.email);
   return NextResponse.redirect(`${origin}${dest}`);
 }

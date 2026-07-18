@@ -154,6 +154,7 @@ function CredentialsForm({
   }, [state]);
 
   return (
+    <>
     <form action={formAction} className="grid gap-4">
       <input type="hidden" name="next" value={next} />
 
@@ -192,15 +193,6 @@ function CredentialsForm({
         </p>
       )}
 
-      {state?.needsVerification && (
-        <form action={resendAction} className="text-center">
-          <input type="hidden" name="email" value={email} />
-          <button type="submit" className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground">
-            {resendState && "ok" in resendState ? "Verification email sent — check your inbox." : "Resend verification email"}
-          </button>
-        </form>
-      )}
-
       <Button type="submit" size="lg" loading={pending} className="w-full">
         Sign in
         {!pending && <ArrowRight />}
@@ -224,6 +216,18 @@ function CredentialsForm({
         </Link>
       </div>
     </form>
+
+    {/* Sibling of the credentials form (not nested — nested forms are invalid
+        HTML). Shown only after the login gate flags an unverified account. */}
+    {state?.needsVerification && (
+      <form action={resendAction} className="mt-3 text-center">
+        <input type="hidden" name="email" value={email} />
+        <button type="submit" className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground">
+          {resendState && "ok" in resendState ? "Verification email sent — check your inbox." : "Resend verification email"}
+        </button>
+      </form>
+    )}
+    </>
   );
 }
 
