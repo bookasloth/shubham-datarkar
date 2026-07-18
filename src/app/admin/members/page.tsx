@@ -1,6 +1,7 @@
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getActivePlans } from "@/lib/members/membership-server";
 import { revokeGiftAction } from "@/lib/members/membership-actions";
+import { removeAvatarAsAdmin } from "@/lib/members/avatar-actions";
 import { PageHeader, StatusBadge } from "@/components/admin";
 import { GiftForm } from "@/components/admin/gift-form";
 import { ResetPassword } from "@/components/admin/reset-password";
@@ -18,13 +19,14 @@ type MemberRow = {
   status: string | null;
   source: string | null;
   periodEnd: string | null;
+  avatarUrl: string | null;
 };
 
 async function getMembers(): Promise<MemberRow[]> {
   const db = supabaseAdmin();
   const [{ data: users }, { data: profiles }, { data: memberships }] = await Promise.all([
     db.auth.admin.listUsers({ page: 1, perPage: 500 }),
-    db.from("profiles").select("id,username,created_at"),
+    db.from("profiles").select("id,username,created_at,avatar_url"),
     db.from("memberships").select("user_id,plan_key,status,source,current_period_end"),
   ]);
 
@@ -42,6 +44,7 @@ async function getMembers(): Promise<MemberRow[]> {
       status: m?.status ?? null,
       source: m?.source ?? null,
       periodEnd: m?.current_period_end ?? null,
+      avatarUrl: profileById.get(u.id)?.avatar_url ?? null,
     };
   });
 }
@@ -102,6 +105,11 @@ export default async function MembersAdminPage() {
                 <td className="px-4 py-2.5">
                   <div className="flex items-center justify-end gap-2">
                     <ResetPassword userId={m.id} />
+                    {m.avatarUrl && (
+                      <form action={async () => { "use server"; await removeAvatarAsAdmin(m.id); }}>
+                        <Button type="submit" variant="outline" size="sm">Remove photo</Button>
+                      </form>
+                    )}
                     {m.source === "gift" && (
                       <form action={revokeGiftAction}>
                         <input type="hidden" name="user_id" value={m.id} />
