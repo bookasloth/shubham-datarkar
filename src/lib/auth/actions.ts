@@ -58,15 +58,14 @@ export async function signIn(
 async function createAccount(fields: {
   email: string;
   password: string;
-  confirm: string;
   name: string;
   next: string;
 }): Promise<{ error: string } | { ok: true; safe: string | null }> {
-  const { email, password, confirm, name } = fields;
+  const { email, password, name } = fields;
 
   if (!email || !password) return { error: "Email and password are required." };
   if (password.length < 8) return { error: "Password must be at least 8 characters." };
-  if (confirm && confirm !== password) return { error: "Passwords don't match." };
+  // (confirm-password check removed — single-entry signup, requirement 2)
 
   // Mint the confirmation link ourselves (like password reset) so we can send a
   // branded "Confirm your email" instead of Supabase's default template. The link
@@ -108,13 +107,11 @@ export async function signUp(
   const result = await createAccount({
     email: String(formData.get("email") ?? "").trim(),
     password: String(formData.get("password") ?? ""),
-    confirm: String(formData.get("password2") ?? ""),
     name: String(formData.get("name") ?? "").trim(),
     next: String(formData.get("next") ?? ""),
   });
   if ("error" in result) return result;
 
-  // redirect() throws to perform the redirect — keep it outside try/catch.
   redirect(`/login?check=1${result.safe ? `&next=${encodeURIComponent(result.safe)}` : ""}`);
 }
 
@@ -134,17 +131,10 @@ export async function joinFromCommunity(
 ): Promise<JoinState> {
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  const confirm = String(formData.get("password2") ?? "");
-
-  // The modal always renders both password fields, so — unlike the login page,
-  // where the confirm field is optional — a missing match here is a real mismatch.
-  if (!confirm) return { error: "Confirm your password." };
-  if (confirm !== password) return { error: "Passwords don't match." };
 
   const result = await createAccount({
     email,
     password,
-    confirm,
     name: String(formData.get("name") ?? "").trim(),
     next: String(formData.get("next") ?? ""),
   });
