@@ -42,10 +42,9 @@ export async function signIn(
   if (error) {
     // A cron-banned unverified account fails here. Distinguish it so we can show
     // the verify prompt instead of "wrong password". Admin lookup runs only on
-    // failed logins. ponytail: listUsers scans up to 1000 users; swap to a
-    // by-email index/RPC if the user table outgrows that.
-    const banned = await isUnverifiedAccount(email);
-    if (banned) {
+    // failed logins.
+    const existing = await findAuthUser(email);
+    if (existing && !existing.email_confirmed_at) {
       return { error: "Verify your email before you log in.", needsVerification: true };
     }
     return { error: "Invalid email or password." };
@@ -63,15 +62,18 @@ export async function signIn(
   redirect(loginDestination(next, data.user?.email));
 }
 
-/** True if an account exists for this email and is not yet email-verified. */
-async function isUnverifiedAccount(email: string): Promise<boolean> {
+/**
+ * The auth user for this email (case-insensitive), or null.
+ * ponytail: listUsers scans up to 1000 users; swap to a by-email RPC if the
+ * user table outgrows that. Runs only on failed logins / resend requests.
+ */
+async function findAuthUser(email: string) {
   try {
     const { data } = await supabaseAdmin().auth.admin.listUsers({ page: 1, perPage: 1000 });
     const target = email.toLowerCase();
-    const u = data?.users.find((x) => x.email?.toLowerCase() === target);
-    return !!u && !u.email_confirmed_at;
+    return data?.users.find((x) => x.email?.toLowerCase() === target) ?? null;
   } catch {
-    return false;
+    return null;
   }
 }
 
@@ -287,21 +289,29 @@ export async function resendConfirmation(
   if (!email) return { error: "Enter your email." };
 
   try {
-    const origin_ = await origin();
-    const dest = loginDestination(null, email);
-    const { data, error } = await supabaseAdmin().auth.admin.generateLink({
-      type: "signup",
-      email,
-      // ponytail: the SDK's signup-link type requires `password`, but the server
-      // only applies it when creating a new user — resend only ever targets an
-      // account that already exists, so this value is never used. Throwaway.
-      password: globalThis.crypto.randomUUID(),
-      options: { redirectTo: `${origin_}${dest}` },
-    });
-    const tokenHash = data?.properties?.hashed_token;
-    if (!error && tokenHash) {
-      const confirmUrl = buildConfirmUrl(origin_, tokenHash, "signup", dest);
-      await sendTemplate(email, confirmEmail({ confirmUrl }));
+    const user = await findAuthUser(email);
+    // Only unconfirmed accounts need a resend. Silent no-op otherwise (no enumeration).
+    if (user && !user.email_confirmed_at) {
+      // Lift any 48h ban so the emailed link can establish a session when clicked.
+      // The login gate still blocks their password login until they truly verify,
+      // and the daily cron re-bans if they never do — so this temporary unban is safe.
+      await supabaseAdmin().auth.admin.updateUserById(user.id, { ban_duration: "none" });
+
+      const origin_ = await origin();
+      const dest = loginDestination(null, email);
+      // magiclink (NOT signup) so we pass no password — a signup-type link would
+      // overwrite the existing user's password. Verifying a magiclink confirms the
+      // email and signs them in, which is what resend needs.
+      const { data, error } = await supabaseAdmin().auth.admin.generateLink({
+        type: "magiclink",
+        email,
+        options: { redirectTo: `${origin_}${dest}` },
+      });
+      const tokenHash = data?.properties?.hashed_token;
+      if (!error && tokenHash) {
+        const confirmUrl = buildConfirmUrl(origin_, tokenHash, "magiclink", dest);
+        await sendTemplate(email, confirmEmail({ confirmUrl }));
+      }
     }
   } catch {
     // Swallow — never reveal whether the address exists.
