@@ -8,10 +8,18 @@ import { rankTerms, type TermPage, type RankedTerm } from "./terms";
 import { runJson } from "./llm";
 import { BRIEF_SCHEMA, FAKE_BRIEF, buildBriefPrompt, type Brief } from "./brief";
 import { logEvent } from "./events-server";
-import type { SerpProvider, SerpOrganic } from "./serp/provider";
+import type { SerpProvider, SerpOrganic, SerpResult } from "./serp/provider";
 import { DataForSeoProvider } from "./serp/dataforseo";
 import { FakeSerpProvider } from "./serp/fake";
 import { crawlUrl, RobotsCache, type Crawler } from "./crawl";
+import {
+  weekBucket,
+  monthBucket,
+  serpCacheKey,
+  serpCacheLookup,
+  serpCacheStore,
+  reserveSerpCall,
+} from "./serp-cache";
 
 // Offline pipeline for local dev / preview: no DataForSEO creds, no live crawl.
 // Pair with KALAMAI_FAKE_LLM=1 to run the whole flow with zero spend.
@@ -119,10 +127,11 @@ export async function runStep(analysisId: string, deps: AnalysisDeps = {}): Prom
   }
 }
 
-// R1 — SERP fetch. A provider throw is the only hard failure here; empty results
-// are allowed (niche keyword) and surface later as low confidence.
+// R1 — SERP fetch, weekly-cached + budget-gated. A provider throw or an exhausted
+// budget is a hard failure here; empty results are allowed (niche keyword) and
+// surface later as low confidence. Fake mode skips cache + budget entirely.
 async function stepR1(db: SupabaseClient, a: AnalysisRow, serp: SerpProvider): Promise<StepResult> {
-  const result = await serp.fetch({ keyword: a.keyword, country: a.country, locale: a.locale });
+  const result = await fetchSerpCached(db, a, serp);
   await db
     .from("kalamai_analyses")
     .update({
@@ -135,6 +144,25 @@ async function stepR1(db: SupabaseClient, a: AnalysisRow, serp: SerpProvider): P
     })
     .eq("id", a.id);
   return { status: "crawling", progress: 10 };
+}
+
+// Cache-first SERP fetch. HIT → reuse, zero cost. MISS → reserve one call against
+// the monthly cap (fail closed), fetch live, then cache. Fake mode bypasses both.
+async function fetchSerpCached(db: SupabaseClient, a: AnalysisRow, serp: SerpProvider): Promise<SerpResult> {
+  if (process.env.KALAMAI_FAKE_SERP === "1") {
+    return serp.fetch({ keyword: a.keyword, country: a.country, locale: a.locale });
+  }
+  const week = weekBucket();
+  const key = serpCacheKey(a.keyword, a.locale, a.country, week);
+  const cached = await serpCacheLookup(db, key);
+  if (cached) return cached;
+
+  const allowed = await reserveSerpCall(db, monthBucket());
+  if (!allowed) throw new Error("serp_budget_exhausted"); // fail closed — no live fetch
+
+  const result = await serp.fetch({ keyword: a.keyword, country: a.country, locale: a.locale });
+  await serpCacheStore(db, { key, keyword: a.keyword, language: a.locale, country: a.country, week, serp: result });
+  return result;
 }
 
 // R2 — crawl one batch of up to 6 URLs. Idempotent: the unique(analysis_id,url)

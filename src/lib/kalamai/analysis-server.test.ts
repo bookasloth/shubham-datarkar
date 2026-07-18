@@ -2,9 +2,12 @@ import { describe, it, expect, beforeAll, beforeEach, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-// Force fake LLM regardless of the developer's environment.
+// Force fake LLM + fake SERP: this is the offline pipeline test. Fake SERP mode
+// bypasses the weekly cache + budget reservation (which need real DB tables); the
+// injected providers below drive the state machine directly.
 beforeAll(() => {
   process.env.KALAMAI_FAKE_LLM = "1";
+  process.env.KALAMAI_FAKE_SERP = "1";
 });
 
 // ---- minimal in-memory Supabase mock (only the calls runStep makes) ----
