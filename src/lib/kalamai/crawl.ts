@@ -1,5 +1,5 @@
-import "server-only";
-
+// NOT server-only: also imported by the standalone corpus script (plain node).
+// Pure fetch + SSRF guard, no secrets. Never import into a client component.
 import { isBlockedHost } from "./block-host";
 
 const UA = "KalamAIBot/1.0 (+https://shubhamdatarkar.com/tools/kalamai)";

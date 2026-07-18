@@ -1,6 +1,6 @@
-import "server-only";
-
 // Gemini text-embedding-004 (768-dim). Called via REST — no SDK dependency.
+// NOT marked server-only: also imported by the standalone corpus script (plain
+// node). Never import into a client component (it reads GEMINI_API_KEY).
 // Model + dim are PINNED and stored per chunk row; changing the model
 // invalidates every stored vector. Fake mode (no key, or KALAMAI_FAKE_EMBED=1)
 // returns deterministic hashed vectors so clustering/scoring run offline.
