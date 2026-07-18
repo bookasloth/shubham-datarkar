@@ -201,7 +201,7 @@ describe("runStep", () => {
     const chunks = store.kalamai_chunks;
     expect(chunks.length).toBeGreaterThanOrEqual(8); // >= 1 per ok page
     expect(chunks.every((c) => c.source_type === "competitor")).toBe(true);
-    expect(chunks.every((c) => c.embedding_model === "text-embedding-004")).toBe(true);
+    expect(chunks.every((c) => c.embedding_model === "gemini-embedding-001")).toBe(true);
   });
 
   it("marks low_confidence when fewer than 20 pages crawl ok", async () => {

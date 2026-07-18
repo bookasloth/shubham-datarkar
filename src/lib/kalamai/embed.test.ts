@@ -12,7 +12,7 @@ import { embedTexts, toPgVector, isFakeEmbed, EMBED_DIM, EMBED_MODEL } from "./e
 describe("embed (fake mode)", () => {
   it("is fake when flagged", () => {
     expect(isFakeEmbed()).toBe(true);
-    expect(EMBED_MODEL).toBe("text-embedding-004");
+    expect(EMBED_MODEL).toBe("gemini-embedding-001");
     expect(EMBED_DIM).toBe(768);
   });
 

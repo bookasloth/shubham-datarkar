@@ -33,9 +33,9 @@ Replace `extract.ts`'s first-`<article>/<main>/<body>` regex with a **Readabilit
 - `chunk_index` sequential per page.
 
 ### Embed
-- **Gemini `text-embedding-004`, 768-dim**, `task_type=RETRIEVAL_DOCUMENT` for corpus/competitor chunks.
+- **Gemini `gemini-embedding-001`, 768-dim**, `task_type=RETRIEVAL_DOCUMENT` for corpus/competitor chunks.
 - Batch: embed a page's chunks in one API call where the SDK allows; throttle to free-tier rate (≤1500 rpm) with backoff.
-- Store `embedding_model='text-embedding-004'` on **every** row [C, Q4].
+- Store `embedding_model='gemini-embedding-001'` on **every** row [C, Q4].
 - **Serverless placement**: competitor embedding runs inside the R2 `crawling` step, embedding only that step's `BATCH=6` pages — stays under the 60s ceiling. Offline corpus embedding runs in the local script, no ceiling.
 - Fake: `KALAMAI_FAKE_EMBED=1` → deterministic vector = normalized hash of chunk text (stable, lets clustering tests run without a key).
 
@@ -55,6 +55,6 @@ Replace `extract.ts`'s first-`<article>/<main>/<body>` regex with a **Readabilit
 1. On a fixture HTML with nav + footer + article, Readability output contains the article body and **excludes** nav/footer text (assert known nav string absent, known body string present).
 2. `junkRatio` on a clean article < 0.05; on a nav-heavy page > 0.3 (sanity thresholds).
 3. A ~2,000-word page yields ~10–14 chunks, each 30–256 tokens, `chunk_index` contiguous.
-4. Every chunk row has a 768-length embedding and `embedding_model='text-embedding-004'`.
+4. Every chunk row has a 768-length embedding and `embedding_model='gemini-embedding-001'`.
 5. One URL that 500s does not throw and does not stop the other pages (assert other pages' rows present, failed row `ok=false`).
 6. Fake-embed mode produces identical vectors for identical text across runs (determinism).

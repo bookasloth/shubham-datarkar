@@ -45,7 +45,7 @@ termCoverage = Σ_w ( norm_z(w) · credit(w) ) / Σ_w norm_z(w)
 ```
 
 ### B. Semantic subtopic coverage [C — the differentiator]
-- Chunk the draft (~200 tok, same as extract), embed (Gemini `text-embedding-004`, `task_type=RETRIEVAL_QUERY`).
+- Chunk the draft (~200 tok, same as extract), embed (Gemini `gemini-embedding-001`, `task_type=RETRIEVAL_QUERY`).
 - For each cluster `c` (centroid + `competitor_count` weight): `sim(c) = max over draft chunks of cosine(chunk, centroid_c)`. Covered iff `sim(c) ≥ τ`, **τ = 0.72 start** (tuned on corpus).
 ```
 semanticCoverage = Σ_c ( w_c · 1[sim(c) ≥ τ] ) / Σ_c w_c      where w_c = competitor_count

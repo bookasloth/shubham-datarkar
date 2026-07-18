@@ -3,7 +3,7 @@
 Status: **Phase 1 / PLAN**. Awaiting approval before SPEC.
 Category: content research + optimization (NeuronWriter / Surfer class).
 Stack: Next.js (App Router) + Supabase (Postgres + pgvector) + Vercel serverless.
-Models: **Claude `claude-sonnet-5`** (brief + draft passes 1 & 3), **Claude `claude-haiku-4-5`** (draft passes 2 & 4), **Gemini `text-embedding-004`** (embeddings only). **No Opus, any pass.** SERP: DataForSEO. No Inngest in v1.
+Models: **Claude `claude-sonnet-5`** (brief + draft passes 1 & 3), **Claude `claude-haiku-4-5`** (draft passes 2 & 4), **Gemini `gemini-embedding-001`** (embeddings only). **No Opus, any pass.** SERP: DataForSEO. No Inngest in v1.
 
 **Economics reality [Q11 correction]:** KalamAI is member-facing (Kalamwala community), **not** a standalone paid product — **zero per-article revenue**. Plan for worst case: SaaS-shaped volume, no revenue offset. Therefore quota is **denominated in rupees of LLM spend, not analysis count**, enforced fail-closed at both global and per-user level, and is a **conversion mechanic**, not merely a guardrail.
 
@@ -140,8 +140,8 @@ Index: unique(url); (language, country); (is_positive). Training reads the whole
 | chunk_index | int not null | |
 | text | text not null | |
 | token_count | int not null | |
-| embedding | **vector(768)** not null | text-embedding-004 = 768 dims |
-| embedding_model | text **not null** | **[C]** e.g. `text-embedding-004`. Stored per row; changing the model invalidates vectors — this is a schema fact, not config. |
+| embedding | **vector(768)** not null | gemini-embedding-001 = 768 dims |
+| embedding_model | text **not null** | **[C]** e.g. `gemini-embedding-001`. Stored per row; changing the model invalidates vectors — this is a schema fact, not config. |
 | created_at | timestamptz default now() | |
 Indexes: **hnsw (embedding vector_cosine_ops)** for ANN; btree (analysis_id), (corpus_page_id), (article_id).
 **Unbounded-query call-out**: any vector search MUST carry a `where` filter (analysis_id or language) **and** a `LIMIT`. An unfiltered ANN query scans the whole corpus. Rescore's semantic step compares draft chunks to the analysis's cluster centroids held in memory — it does **not** ANN-search the corpus at request time.
@@ -283,7 +283,7 @@ The two expensive things named in Phase 2 constraints — SERP and the corpus �
 
 ## 5. Cost model **[addresses the 7× watch directly]**
 
-**Assumptions (labeled — correct me if any are off):** ₹/$ = 83 · DataForSEO organic live/advanced = **$0.003 = ₹0.25/call** · Gemini text-embedding-004 = **free tier** (rate-limited 1500 rpm, ₹0) · Claude Sonnet 5 = $3/$15 per MTok in/out · Claude Haiku 4.5 = **$1/$5 per MTok in/out** · 10 competitor pages/analysis · ~2,000 words/page ≈ 2,600 tokens ≈ 13 chunks ⇒ ~130 chunks/analysis. **These estimates are provisional — real per-generation token counts are logged to `kalamai_llm_calls` from day one and the rupee-per-tier quota is calibrated against them, not against this table [C].**
+**Assumptions (labeled — correct me if any are off):** ₹/$ = 83 · DataForSEO organic live/advanced = **$0.003 = ₹0.25/call** · Gemini gemini-embedding-001 = **free tier** (rate-limited 1500 rpm, ₹0) · Claude Sonnet 5 = $3/$15 per MTok in/out · Claude Haiku 4.5 = **$1/$5 per MTok in/out** · 10 competitor pages/analysis · ~2,000 words/page ≈ 2,600 tokens ≈ 13 chunks ⇒ ~130 chunks/analysis. **These estimates are provisional — real per-generation token counts are logged to `kalamai_llm_calls` from day one and the rupee-per-tier quota is calibrated against them, not against this table [C].**
 
 ### 5.1 Two separate ledgers — the key point
 
@@ -322,7 +322,7 @@ Routing Haiku onto the two bulk-token passes (W2 draft, W4 rewrite) **roughly ha
 
 ### 5.3 Per 1,000 rescores
 - API cost: embeddings only, **free tier ⇒ ₹0 marginal**. The real limit is **Gemini rate (1,500 rpm)**, not rupees. 1,000 rescores × ~13 draft chunks = ~13k embed calls; batch + throttle keeps under the minute cap.
-- If embeddings ever move to paid: 1,000 × 2,600 tok = 2.6M tok — still sub-₹1 at current text-embedding-004 pricing. **Rescore is compute/rate-bound, not cost-bound.** This is what makes the on-demand button safe to expose to all members.
+- If embeddings ever move to paid: 1,000 × 2,600 tok = 2.6M tok — still sub-₹1 at current gemini-embedding-001 pricing. **Rescore is compute/rate-bound, not cost-bound.** This is what makes the on-demand button safe to expose to all members.
 
 ---
 
@@ -384,7 +384,7 @@ Keys go into Vercel **when a module needs them at runtime** — not a build bloc
 - `DATAFORSEO_LOGIN/PASSWORD` — SERP. Fake: `KALAMAI_FAKE_SERP=1` (exists).
 - `ANTHROPIC_API_KEY` — brief + draft. Fake: `KALAMAI_FAKE_LLM=1` (exists).
 
-Embedding model pinned: **`text-embedding-004`, 768-dim**, stored per chunk row **[C, Q4]**. Semantic subtopic coverage is **in `rank` v1**.
+Embedding model pinned: **`gemini-embedding-001`, 768-dim**, stored per chunk row **[C, Q4]**. Semantic subtopic coverage is **in `rank` v1**.
 
 ---
 
