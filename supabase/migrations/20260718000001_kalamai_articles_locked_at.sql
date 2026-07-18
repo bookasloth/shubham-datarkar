@@ -1,0 +1,11 @@
+-- Single-flight lock column for the article-writing job machine.
+--
+-- kalamai_analyses got `locked_at` in 20260713000001_security_hardening.sql, but
+-- kalamai_articles never did. runArticleStep (writing-server.ts) claims a job by
+-- writing + filtering `locked_at` exactly like analysis-server's runStep — against
+-- a column that didn't exist, so PostgREST returned zero rows for every claim and
+-- the job sat at `queued` forever (HTTP 200, no transition). This adds the missing
+-- column so the claim works and articles advance queued → outlining → … → complete.
+--
+-- Idempotent; safe to re-run.
+alter table public.kalamai_articles add column if not exists locked_at timestamptz;
