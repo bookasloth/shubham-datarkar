@@ -15,6 +15,7 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     userId: r.user_id as string,
     username: r.username as string,
     displayName: (r.display_name as string) ?? null,
+    avatarUrl: (r.avatar_url as string | null) ?? null,
     badge: r.badge as FeedPost["badge"],
     type: r.type as FeedPost["type"],
     body: (r.body as string) ?? null,

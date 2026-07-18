@@ -69,7 +69,13 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           standalone
         />
 
-        {canPost && <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />}
+        {canPost && (
+          <ReplyBox
+            postId={post.id}
+            seed={shellUser?.username ?? ""}
+            avatarSrc={shellUser?.avatarUrl ?? null}
+          />
+        )}
         {/* Logged out, the pill stays and opens the join modal — the post used to
             simply end, with no sign the conversation was open to anyone. */}
         {!user && <ReplyPrompt />}

@@ -30,6 +30,8 @@ export type FeedPost = {
   userId: string;
   username: string;
   displayName: string | null;
+  /** Author's uploaded profile photo, or null → CommunityAvatar seeds an icon. */
+  avatarUrl: string | null;
   badge: Badge;
   type: PostType;
   body: string | null;
