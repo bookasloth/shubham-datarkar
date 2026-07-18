@@ -8,6 +8,7 @@ import {
   viewerCanPost,
   viewerHandle,
 } from "@/lib/community/queries";
+import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { PostCard } from "@/components/community/post-card";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
@@ -20,6 +21,13 @@ export default async function ProfilePage() {
 
   const handle = await viewerHandle();
   if (!handle) redirect("/community");
+
+  const sb = await supabaseAuthServer();
+  const { data: meProfile } = await sb
+    .from("profiles")
+    .select("avatar_url")
+    .eq("id", user.id)
+    .maybeSingle();
 
   const [canPost, posts, total] = await Promise.all([
     viewerCanPost(),
@@ -45,7 +53,7 @@ export default async function ProfilePage() {
   return (
     <div>
       <header className="mb-2 flex items-center gap-3 border-b border-border px-4 py-4">
-        <CommunityAvatar seed={handle} size={48} />
+        <CommunityAvatar seed={handle} src={(meProfile?.avatar_url as string | null) ?? null} size={48} />
         <div>
           <h1 className="font-display text-lg font-bold">@{handle}</h1>
           <p className="text-sm text-muted-foreground">
