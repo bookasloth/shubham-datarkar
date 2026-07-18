@@ -7,6 +7,7 @@ import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { AnalysisPoller } from "@/components/kalamai/analysis-poller";
 import { KalamaiReport, type AnalysisReport } from "@/components/kalamai/report";
+import { NewArticleForm } from "@/components/kalamai/new-article-form";
 
 export const metadata = buildMetadata({ title: "KalamAI Analysis", path: "/tools/kalamai", noIndex: true });
 export const dynamic = "force-dynamic";
@@ -39,7 +40,10 @@ export default async function KalamaiAnalysisPage({ params }: { params: Promise<
       <Section>
         <Container size="narrow">
           {a.status === "complete" && a.report ? (
-            <KalamaiReport report={a.report as AnalysisReport} lowConfidence={!!a.low_confidence} />
+            <div className="space-y-6">
+              <KalamaiReport report={a.report as AnalysisReport} lowConfidence={!!a.low_confidence} />
+              <NewArticleForm analysisId={a.id} />
+            </div>
           ) : a.status === "failed" ? (
             <div className="rounded-card border border-border bg-card p-6">
               <p className="text-sm font-medium text-danger">This analysis failed.</p>
