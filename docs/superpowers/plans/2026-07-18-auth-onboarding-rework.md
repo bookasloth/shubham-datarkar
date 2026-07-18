@@ -873,36 +873,52 @@ In `vercel.json`, add to `crons` (runs 04:00, after the existing jobs):
 { "path": "/api/cron/block-unverified", "schedule": "0 4 * * *" }
 ```
 
-- [ ] **Step 4: Unban and route to onboarding on verify**
+- [ ] **Step 4: Unban and route to onboarding on any email-confirmation verify**
 
-In `src/app/auth/confirm/route.ts`, after a successful signup-type `verifyOtp` (the existing `if (type === "signup" && data.user?.email)` block), clear any ban and send the welcome mail; then route signup verifications to `/welcome`:
+In `src/app/auth/confirm/route.ts`, replace the existing signup-only welcome block. Both a `signup`-type link (fresh signup click) and a `magiclink`-type link (the resend from Task 7) are email confirmations: verifying either proves the address, so both must lift any 48h ban and run a not-yet-onboarded user through `/welcome`. Key the welcome mail + onboarding redirect on **`profiles.onboarded_at` being null**, NOT on the link `type` — otherwise a resend confirmation (magiclink) silently skips the welcome and onboarding. `recovery` links (which carry `next=/reset-password`) must NOT be treated as confirmations.
+
+Add a top-of-file `import { supabaseAdmin } from "@/lib/supabase/server";`. Then:
 
 ```ts
-  if (type === "signup" && data.user) {
-    // Lift any 48h ban now that the address is confirmed.
+  // signup click OR magiclink resend = an email confirmation. Recovery links
+  // (next=/reset-password) fall through to the generic redirect below.
+  if ((type === "signup" || type === "magiclink") && data.user) {
+    // Verifying proves the address — lift any 48h cron ban.
     try {
-      await (await import("@/lib/supabase/server")).supabaseAdmin()
-        .auth.admin.updateUserById(data.user.id, { ban_duration: "none" });
+      await supabaseAdmin().auth.admin.updateUserById(data.user.id, { ban_duration: "none" });
     } catch {
       // Non-fatal — verification succeeded regardless.
     }
-    if (data.user.email) {
-      try {
-        await sendTemplate(data.user.email, accountWelcome({ name: data.user.user_metadata?.full_name ?? null }));
-      } catch {
-        // Confirmation must succeed even if the welcome mail fails.
+
+    // Newcomers (not yet onboarded) get the welcome mail once and go to /welcome.
+    // Keying on onboarded_at (not link type) means a resend confirmation is
+    // treated identically to a first signup click.
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("onboarded_at")
+      .eq("id", data.user.id)
+      .maybeSingle();
+
+    if (!prof?.onboarded_at) {
+      if (data.user.email) {
+        try {
+          await sendTemplate(data.user.email, accountWelcome({ name: data.user.user_metadata?.full_name ?? null }));
+        } catch {
+          // Confirmation must succeed even if the welcome mail fails.
+        }
       }
+      const params = next ? `?next=${encodeURIComponent(next)}` : "";
+      return NextResponse.redirect(`${origin}/welcome${params}`);
     }
-    // New accounts land in onboarding; carry the original destination.
-    const params = next ? `?next=${encodeURIComponent(next)}` : "";
-    return NextResponse.redirect(`${origin}/welcome${params}`);
+    // Already onboarded (e.g. a later magiclink) — just land them.
+    return NextResponse.redirect(`${origin}${next || loginDestination(null, data.user.email)}`);
   }
 
   const dest = next || loginDestination(null, data.user?.email);
   return NextResponse.redirect(`${origin}${dest}`);
 ```
 
-(Prefer a top-of-file `import { supabaseAdmin } from "@/lib/supabase/server";` over the inline dynamic import if the linter objects.)
+(`profiles` has a public self-read RLS policy, so this select works under the session established by `verifyOtp`.)
 
 - [ ] **Step 5: Typecheck**
 
