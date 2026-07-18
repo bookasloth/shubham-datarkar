@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
 import { verifyGithubSignature } from "@/lib/community/auto/github-verify";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet } from "@/lib/community/auto/pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, buildBrief } from "@/lib/community/auto/pr";
 import { autoPost } from "@/lib/community/auto/post";
+import { writeNote } from "@/lib/community/auto/note-llm";
 import { pick } from "@/lib/community/auto/templates";
 
 export const dynamic = "force-dynamic";
@@ -60,12 +61,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ignored: "filtered" });
   }
 
-  // An author-written `Tweet:` line wins: the PR title is reviewer-facing and no
-  // template can un-write dev-speak. Absent one, fall back to the pools as before.
-  // `shouldAnnounce` stays the only gate — a Tweet: line changes the wording, not
-  // whether a PR is worth announcing.
+  // Wording precedence, all under the same `shouldAnnounce` gate:
+  //   1. an author-written `Tweet:` line — a human chose it, use it verbatim;
+  //   2. else Haiku writes it in the founder's voice (two drafts, judged winner);
+  //   3. else the template pool — the safety net when the model is off/erroring, so
+  //      a PR that should announce always posts *something*.
   const body =
     extractTweet(pr.body) ??
+    (await writeNote(buildBrief({ project, title, body: pr.body, labels }))) ??
     pick("pr", { title: humanizeSubject(parsePrTitle(title).subject), project });
   // Key includes the repo: PR #5 exists in every repo, and a bare `pr:5` would
   // make the second repo's PR #5 dedupe against the first and never post.
