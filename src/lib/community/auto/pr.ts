@@ -29,6 +29,94 @@ export function parsePrTitle(title: string): { type: string | null; scope: strin
   return { type: m[1].toLowerCase(), scope: m[2] ? m[2].toLowerCase() : null, subject: m[3].trim() };
 }
 
+/**
+ * The compact, LLM-facing view of a merged PR: no diffs, no internal noise — just
+ * what a note-writer needs. Built purely from the webhook payload, so it's testable
+ * without a network call and carries nothing the public post shouldn't be based on.
+ */
+export type PrBrief = {
+  project: string;          // "the site" | "Book A Sloth"
+  type: string | null;     // feat | fix | perf | ...
+  scope: string | null;
+  subject: string;         // parsed PR subject
+  title: string;
+  body: string;            // distilled body snippet
+  labels: string[];
+};
+
+/**
+ * Strip the parts of a PR body that shouldn't reach the note-writer: HTML comments
+ * (PR templates), the author's own `Tweet:` line (it's used verbatim elsewhere and
+ * would just bias the model), and runs of whitespace. Capped so a giant PR body
+ * can't blow up the prompt.
+ */
+export function distillBody(body: string | null | undefined): string {
+  if (!body) return "";
+  return body
+    .replace(/<!--[\s\S]*?-->/g, " ")
+    .replace(/^[ \t]*Tweet:[ \t]*.*$/gim, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 600);
+}
+
+export function buildBrief(input: {
+  project: string;
+  title: string;
+  body: string | null | undefined;
+  labels: string[];
+}): PrBrief {
+  const { type, scope, subject } = parsePrTitle(input.title);
+  return {
+    project: input.project,
+    type,
+    scope,
+    subject,
+    title: input.title.trim(),
+    body: distillBody(input.body),
+    labels: input.labels,
+  };
+}
+
+/** The two-draft-plus-verdict shape Haiku returns. Pure so it lives here, not in the server-only generator. */
+export type NoteDrafts = { draft_a: string; draft_b: string; winner: "a" | "b"; reason?: string };
+
+/**
+ * Word-initial `@` is stripped from AI-written note text: the model can't vouch for
+ * a handle, and the feed linkifies + emails real handles. Same rule as
+ * humanizeSubject, but casing is preserved (one-word/lowercase notes are allowed).
+ */
+export function stripHandles(s: string): string {
+  return s.replace(/(^|\s)@(?=[a-z0-9])/gi, "$1");
+}
+
+// Conservative emoji ranges (no \p{} property escapes — tsconfig target is ES2017):
+// emoji block, misc symbols + dingbats, misc symbols/arrows.
+const EMOJI = /[\u{1F000}-\u{1FAFF}\u{2600}-\u{27BF}\u{2B00}-\u{2BFF}]/u;
+
+export function cleanNote(s: string): string {
+  return stripHandles((s ?? "").replace(/\s+/g, " ").trim()).slice(0, 500).trim();
+}
+
+/** House rules the auto-poster enforces regardless of what the model returned. */
+export function isValidNote(s: string): boolean {
+  return s.length > 0 && s.length <= 500 && !EMOJI.test(s);
+}
+
+/**
+ * The judged winner, cleaned and validated. Falls back to the loser if the winner
+ * fails house rules; returns null only if BOTH drafts are unusable (→ template pool).
+ */
+export function chooseNote(j: NoteDrafts): string | null {
+  const winner = j.winner === "b" ? j.draft_b : j.draft_a;
+  const loser = j.winner === "b" ? j.draft_a : j.draft_b;
+  for (const cand of [winner, loser]) {
+    const c = cleanNote(cand);
+    if (isValidNote(c)) return c;
+  }
+  return null;
+}
+
 export function shouldAnnounce(title: string, labels: string[]): boolean {
   if (labels.some((l) => l.toLowerCase() === "no-announce")) return false;
   const { type, scope } = parsePrTitle(title);
