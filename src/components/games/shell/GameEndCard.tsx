@@ -83,7 +83,7 @@ export function GameEndCard({
 
         <div className="flex flex-col gap-1.5">
           <Button asChild size="sm">
-            <Link href={`/login?view=signup&next=${encodeURIComponent(next)}`}>Create a free account</Link>
+            <Link href={`/register?next=${encodeURIComponent(next)}`}>Create a free account</Link>
           </Button>
           <Link
             href={`/login?next=${encodeURIComponent(next)}`}

@@ -13,36 +13,33 @@ import { PasswordField } from "@/components/app/password-field";
 import { cn } from "@/lib/utils";
 import {
   signIn,
-  signUp,
   signInWithMagicLink,
+  resendConfirmation,
   type SignInState,
   type MagicLinkState,
+  type ResendState,
 } from "@/lib/auth/actions";
 
-type View = "signin" | "signup" | "magic";
+type View = "signin" | "magic";
 
-/** Per-view chrome. The signup view carries the full wordmark; the returning
- *  flows (signin/magic) carry the compact square mark. */
+/** Per-view chrome. */
 const HEADINGS: Record<View, { title: string; sub: string; wordmark: boolean }> = {
   signin: { title: "Welcome back", sub: "Sign in to your account.", wordmark: false },
-  signup: { title: "Create your account", sub: "Join in a few seconds.", wordmark: true },
   magic: { title: "Sign in with a link", sub: "We'll email you a one-time link.", wordmark: false },
 };
 
 export function LoginForm({
   next = "",
-  initialView = "signin",
   check,
   reset,
   errorParam,
 }: {
   next?: string;
-  initialView?: "signin" | "signup";
   check?: boolean;
   reset?: boolean;
   errorParam?: string;
 }) {
-  const [view, setView] = React.useState<View>(initialView);
+  const [view, setView] = React.useState<View>("signin");
   // Lifted so the address survives switching between password / magic-link views.
   const [email, setEmail] = React.useState("");
   const h = HEADINGS[view];
@@ -80,12 +77,9 @@ export function LoginForm({
           />
         ) : (
           <CredentialsForm
-            key={view}
-            signup={view === "signup"}
             next={next}
             email={email}
             setEmail={setEmail}
-            onSwap={() => setView(view === "signup" ? "signin" : "signup")}
             onMagic={() => setView("magic")}
           />
         )}
@@ -141,53 +135,28 @@ function Banner({
 }
 
 function CredentialsForm({
-  signup,
   next,
   email,
   setEmail,
-  onSwap,
   onMagic,
 }: {
-  signup: boolean;
   next: string;
   email: string;
   setEmail: (v: string) => void;
-  onSwap: () => void;
   onMagic: () => void;
 }) {
-  const [state, formAction, pending] = useActionState<SignInState, FormData>(
-    signup ? signUp : signIn,
-    undefined,
-  );
-  const [pw, setPw] = React.useState("");
-  const [confirm, setConfirm] = React.useState("");
+  const [state, formAction, pending] = useActionState<SignInState, FormData>(signIn, undefined);
+  const [resendState, resendAction] = useActionState<ResendState, FormData>(resendConfirmation, undefined);
   const errRef = React.useRef<HTMLParagraphElement>(null);
-
-  const mismatch = signup && confirm.length > 0 && confirm !== pw;
 
   React.useEffect(() => {
     if (state?.error) errRef.current?.focus();
   }, [state]);
 
   return (
+    <>
     <form action={formAction} className="grid gap-4">
       <input type="hidden" name="next" value={next} />
-
-      {signup && (
-        <div className="grid gap-1.5">
-          <Label htmlFor="signup-name">
-            Name <span className="font-normal text-muted-foreground">(optional)</span>
-          </Label>
-          <Input
-            id="signup-name"
-            name="name"
-            type="text"
-            autoComplete="name"
-            placeholder="Your name"
-            autoFocus
-          />
-        </div>
-      )}
 
       <div className="grid gap-1.5">
         <Label htmlFor="login-email">Email</Label>
@@ -198,7 +167,7 @@ function CredentialsForm({
           autoComplete="email"
           placeholder="you@example.com"
           required
-          autoFocus={!signup}
+          autoFocus
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
@@ -208,29 +177,10 @@ function CredentialsForm({
         id="login-password"
         name="password"
         label="Password"
-        autoComplete={signup ? "new-password" : "current-password"}
-        placeholder={signup ? "At least 8 characters" : "••••••••"}
+        autoComplete="current-password"
+        placeholder="••••••••"
         required
-        meter={signup}
-        onValueChange={setPw}
       />
-
-      {signup && (
-        <div className="grid gap-1.5">
-          <PasswordField
-            id="signup-confirm"
-            name="password2"
-            label="Confirm password"
-            autoComplete="new-password"
-            placeholder="Re-enter your password"
-            required
-            onValueChange={setConfirm}
-          />
-          {mismatch && (
-            <p className="text-xs text-destructive">Passwords don&apos;t match.</p>
-          )}
-        </div>
-      )}
 
       {state?.error && (
         <p
@@ -243,30 +193,10 @@ function CredentialsForm({
         </p>
       )}
 
-      <Button type="submit" size="lg" loading={pending} disabled={mismatch} className="w-full">
-        {signup ? "Create account" : "Sign in"}
+      <Button type="submit" size="lg" loading={pending} className="w-full">
+        Sign in
         {!pending && <ArrowRight />}
       </Button>
-
-      {signup && (
-        <p className="text-center text-xs text-muted-foreground">
-          By creating an account you agree to our{" "}
-          <Link
-            href="/terms-of-use"
-            className="text-foreground underline underline-offset-4 hover:text-muted-foreground"
-          >
-            Terms
-          </Link>{" "}
-          and{" "}
-          <Link
-            href="/privacy-policy"
-            className="text-foreground underline underline-offset-4 hover:text-muted-foreground"
-          >
-            Privacy Policy
-          </Link>
-          .
-        </p>
-      )}
 
       <Divider />
 
@@ -278,15 +208,26 @@ function CredentialsForm({
         >
           Email me a sign-in link instead
         </button>
-        <button
-          type="button"
-          onClick={onSwap}
+        <Link
+          href={next ? `/register?next=${encodeURIComponent(next)}` : "/register"}
           className="text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
         >
-          {signup ? "Already have an account? Sign in" : "New here? Create a free account"}
-        </button>
+          New here? Create a free account
+        </Link>
       </div>
     </form>
+
+    {/* Sibling of the credentials form (not nested — nested forms are invalid
+        HTML). Shown only after the login gate flags an unverified account. */}
+    {state?.needsVerification && (
+      <form action={resendAction} className="mt-3 text-center">
+        <input type="hidden" name="email" value={email} />
+        <button type="submit" className="text-sm font-medium text-foreground underline underline-offset-4 hover:text-muted-foreground">
+          {resendState && "ok" in resendState ? "Verification email sent — check your inbox." : "Resend verification email"}
+        </button>
+      </form>
+    )}
+    </>
   );
 }
 
