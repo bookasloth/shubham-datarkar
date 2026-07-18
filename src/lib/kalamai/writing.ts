@@ -1,6 +1,7 @@
 import type { ContentBlock } from "@/lib/data/types";
 import type { Brief } from "./brief";
 import { blocksToMarkdown } from "./serialize";
+import { countWords } from "@/lib/blog/words";
 
 /**
  * Prompt builders + offline fixtures for the writing engine (W1-W4). Pure string
@@ -36,15 +37,18 @@ export function buildCachePrefix(brief: Brief, params: ArticleParams): string {
   return JSON.stringify({ brief, params });
 }
 
+export type SourceFact = { text: string; url: string };
+
 /**
  * Real, quotable fact-sentences pulled from the crawled competitor pages so the
  * writer can ground claims instead of inventing "studies suggest…". Mechanical
  * (not LLM): keep mid-length sentences that carry a number/stat, drop boilerplate,
- * dedupe, competitor-rank order. Empty in → empty out (facts section is skipped).
+ * dedupe, competitor-rank order. Each fact carries its page URL so the writer can
+ * backlink the stat to its source. Empty in → empty out (facts section skipped).
  */
-export function extractSourceFacts(pages: { rank: number; bodyText: string }[], max = 18): string[] {
+export function extractSourceFacts(pages: { rank: number; bodyText: string; url: string }[], max = 18): SourceFact[] {
   const seen = new Set<string>();
-  const facts: string[] = [];
+  const facts: SourceFact[] = [];
   for (const p of [...pages].sort((a, b) => a.rank - b.rank)) {
     for (const raw of (p.bodyText || "").split(/(?<=[.!?])\s+/)) {
       const s = raw.trim().replace(/\s+/g, " ");
@@ -54,16 +58,41 @@ export function extractSourceFacts(pages: { rank: number; bodyText: string }[], 
       const key = s.toLowerCase().slice(0, 60);
       if (seen.has(key)) continue;
       seen.add(key);
-      facts.push(s);
+      facts.push({ text: s, url: p.url });
       if (facts.length >= max) return facts;
     }
   }
   return facts;
 }
 
-function factsBlock(sourceFacts: string[]): string {
+function factsBlock(sourceFacts: SourceFact[]): string {
   if (!sourceFacts.length) return "";
-  return ["", "Source facts (real excerpts from ranking pages — ground claims in these, do NOT invent figures):", ...sourceFacts.map((f) => `- ${f}`)].join("\n");
+  return [
+    "",
+    "Source facts (real excerpts from ranking pages — ground claims in these; do NOT invent figures or URLs). When you state one of these statistics, cite it by linking to its [source] URL:",
+    ...sourceFacts.map((f) => `- "${f.text}" [source: ${f.url}]`),
+  ].join("\n");
+}
+
+/**
+ * Hard word-count ceiling. Keeps leading body blocks until the cap, always
+ * preserving trailing faq/takeaways. Guarantees ≤ cap (assuming the preserved
+ * tail alone is under it) — the prompt + critique aim for the band; this is the
+ * backstop so a runaway draft can never ship over-length.
+ */
+export function enforceWordCap(blocks: ContentBlock[], cap = 2200): ContentBlock[] {
+  if (countWords(blocks) <= cap) return blocks;
+  const tail = blocks.filter((b) => b.type === "faq" || b.type === "takeaways");
+  const body = blocks.filter((b) => b.type !== "faq" && b.type !== "takeaways");
+  const kept: ContentBlock[] = [];
+  for (const b of body) {
+    kept.push(b);
+    if (countWords([...kept, ...tail]) > cap) {
+      kept.pop();
+      break;
+    }
+  }
+  return [...kept, ...tail];
 }
 
 /** Meta is a straight pull from the brief + the plan the model already chose. */
@@ -81,7 +110,10 @@ const BLOCK_SPEC =
   '{"type":"lead","text":string} {"type":"ul","items":string[]} {"type":"ol","items":string[]} ' +
   '{"type":"quote","text":string,"cite"?:string} {"type":"callout","variant"?:"info"|"tip"|"warning","title"?:string,"text":string} ' +
   '{"type":"table","columns":string[],"rows":string[][]} {"type":"steps","items":[{"title":string,"detail":string}]} ' +
-  '{"type":"takeaways","title"?:string,"items":string[]} {"type":"faq","items":[{"q":string,"a":string}]}';
+  '{"type":"takeaways","title"?:string,"items":string[]} {"type":"faq","items":[{"q":string,"a":string}]}\n' +
+  'Any "text" value may be a string OR an array mixing strings and link spans, e.g. ' +
+  '["Answer engines convert ", {"t":"a","text":"4.4x higher","href":"https://source.example/page"}, " than organic."] — ' +
+  "use a link span ONLY to cite a Source fact's exact [source] URL. Never invent a URL.";
 
 /* — W1: section plan (runJson) — */
 
@@ -111,8 +143,11 @@ export const OUTLINE_SCHEMA: Record<string, unknown> = {
 export function buildOutlinePrompt(brief: Brief, params: ArticleParams): { system: string; user: string } {
   const system =
     "You are an expert SEO/AEO content strategist. Produce a section-by-section writing plan as JSON matching the schema. " +
-    `Allocate 'words' across sections to total about ${params.targetWords}. Ground every section in the brief's outline, ` +
-    "entities, and recommended terms. title must be <= 60 chars; description 120-160 chars. Do not invent facts.";
+    `Allocate 'words' across sections to total ${params.targetWords} — the whole article must stay between 1000 and 2200 ` +
+    "words, never over 2200. Ground every section in the brief's outline, entities, and recommended terms. " +
+    "The FINAL section must be a Conclusion that takes a clear point of view (a recommendation the writer stands behind, " +
+    "not a neutral summary) and calls out the low-hanging fruit — the highest-leverage actions the reader can act on " +
+    "immediately. title must be <= 60 chars; description 120-160 chars. Do not invent facts.";
   const user = [
     `Tone: ${params.tone}. Audience: ${params.audience}.`,
     params.brandFacts ? `Brand facts: ${params.brandFacts}` : "",
@@ -132,19 +167,24 @@ export function buildDraftPrompt(
   brief: Brief,
   params: ArticleParams,
   plan: SectionPlan,
-  sourceFacts: string[] = [],
+  sourceFacts: SourceFact[] = [],
 ): { system: string; user: string; cachePrefix: string } {
   const system =
     `You are an expert ${params.tone} SEO writer for an audience of ${params.audience}. ` +
-    `Write a complete, original article of about ${params.targetWords} words (do not significantly exceed it — be ` +
-    "specific and concise, not padded) as a JSON array of ContentBlocks. " +
+    "Write a complete, original article as a JSON array of ContentBlocks. LENGTH: keep it between 1000 and 2200 words " +
+    `(target ${params.targetWords}); never exceed 2200 — be specific and concise, not padded. ` +
     "Open with a 'lead' block, use 'h2'/'h3' for the planned sections, and include a 'faq' block near the end " +
     "answering the brief's questions. Open each section with a direct one-sentence answer, then expand.\n" +
     "GROUNDING: base any statistic, percentage, year, or factual claim on the Source facts below. Never invent " +
     "numbers or attribute claims to unnamed 'studies', 'surveys', or 'experts' — if no source fact supports a figure, " +
-    "make the point qualitatively without a fabricated statistic. Prefer concrete specifics (named tools, real figures) " +
-    "over generic phrasing. Weave recommended terms in naturally; do NOT over-repeat any single term (that reads as " +
-    "keyword stuffing). Return ONLY the JSON array.\n" +
+    "make the point qualitatively without a fabricated statistic. When you state a statistic drawn from a Source fact, " +
+    "BACKLINK it: write that text as an array with an {\"t\":\"a\",\"text\":…,\"href\":…} span pointing to that fact's " +
+    "exact [source] URL, so the claim cites its source. Only ever link to the provided source URLs. " +
+    "Prefer concrete specifics (named tools, real figures) over generic phrasing. Weave recommended terms in naturally; " +
+    "do NOT over-repeat any single term (that reads as keyword stuffing).\n" +
+    "END the article with a Conclusion that states a genuine point of view / recommendation (not a neutral recap), " +
+    "followed by a short 'takeaways' or 'ol' block of low-hanging-fruit actions the reader can start on today. " +
+    "Return ONLY the JSON array.\n" +
     BLOCK_SPEC;
   const user = [
     "Writing plan:",
@@ -175,19 +215,23 @@ export function buildCritiquePrompt(
   brief: Brief,
   params: ArticleParams,
   blocks: ContentBlock[],
-  sourceFacts: string[] = [],
+  sourceFacts: SourceFact[] = [],
 ): { system: string; user: string; cachePrefix: string } {
+  const wordCount = countWords(blocks);
   const system =
     "You are a demanding SEO/AEO editor. Compare the draft against the brief and source facts, and return JSON per the " +
     "schema. In 'issues', flag every instance of:\n" +
     "1. A statistic or factual claim NOT supported by the source facts, or hedged with 'studies/surveys/experts suggest' " +
     "and similar with no concrete figure or named source — quote the offending phrase.\n" +
-    "2. Any single keyword or phrase repeated so often it reads as stuffing — name the term and roughly how many times.\n" +
-    "3. Generic filler that could apply to any topic — demand a concrete specific, example, or figure instead.\n" +
-    "4. Any section that does not open with a direct one-sentence answer.\n" +
+    "2. A statistic drawn from a source fact that is NOT backlinked to its source URL — those claims must cite their source.\n" +
+    "3. Any single keyword or phrase repeated so often it reads as stuffing — name the term and roughly how many times.\n" +
+    "4. Generic filler that could apply to any topic — demand a concrete specific, example, or figure instead.\n" +
+    "5. Any section that does not open with a direct one-sentence answer.\n" +
+    "6. A missing or weak Conclusion — it must state a genuine point of view and list low-hanging-fruit actions.\n" +
+    `7. Length outside 1000-2200 words (this draft is ${wordCount} words) — flag if over 2200 or under 1000.\n` +
     "Also list recommended terms not used and brief outline sections not covered. Set ok=true ONLY if the draft is " +
-    "specific, grounded in real facts, free of stuffing, and every section leads with a direct answer. A merely " +
-    "competent, generic draft is NOT ok — be strict.";
+    "specific, grounded, backlinked, free of stuffing, within the word band, ends with a POV conclusion, and every " +
+    "section leads with a direct answer. A merely competent, generic draft is NOT ok — be strict.";
   const user = ["Draft (markdown):", blocksToMarkdown(blocks), factsBlock(sourceFacts)].join("\n");
   return { system, user, cachePrefix: buildCachePrefix(brief, params) };
 }

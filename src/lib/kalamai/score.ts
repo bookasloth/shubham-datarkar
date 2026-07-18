@@ -40,7 +40,7 @@ type Check = { label: string; priority: keyof typeof WEIGHT; test: (f: Facts) =>
 const CHECKS: Check[] = [
   { label: "Covers recommended terms", priority: "high", test: (f) => f.termCoverage >= 0.6 },
   { label: "Follows the recommended outline", priority: "high", test: (f) => f.outlineCoverage >= 0.7 },
-  { label: "Meets the target word count", priority: "medium", test: (f) => f.wordCount >= f.targetWords * 0.8 },
+  { label: "Within the 1000-2200 word range", priority: "medium", test: (f) => f.wordCount >= 1000 && f.wordCount <= 2200 },
   { label: "Has FAQ section", priority: "medium", test: (f) => f.hasFaq },
   { label: "Has JSON-LD schema", priority: "medium", test: (f) => !!f.meta.jsonld && f.meta.jsonld.length > 0 },
   { label: "Meta title 15-60 chars", priority: "low", test: (f) => (f.meta.title?.length ?? 0) >= 15 && (f.meta.title?.length ?? 0) <= 60 },

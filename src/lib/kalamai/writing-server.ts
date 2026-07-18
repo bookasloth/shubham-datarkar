@@ -11,8 +11,8 @@ import type { Brief } from "./brief";
 import {
   OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
   FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE,
-  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta, extractSourceFacts,
-  type ArticleParams, type SectionPlan, type Critique, type ArticleMeta,
+  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
+  type ArticleParams, type SectionPlan, type Critique, type ArticleMeta, type SourceFact,
 } from "./writing";
 
 const STEP_LOCK_MS = 2 * 60_000; // reclaim a claim left by a crashed/timed-out step (maxDuration is 60s)
@@ -119,15 +119,15 @@ async function stepOutline(db: SupabaseClient, a: ArticleRow): Promise<StepResul
 
 // Real fact-sentences from the crawled competitors, so W2/W3 can ground claims
 // instead of inventing them. Top-10 ok pages by rank; empty if none stored.
-async function loadSourceFacts(db: SupabaseClient, analysisId: string): Promise<string[]> {
+async function loadSourceFacts(db: SupabaseClient, analysisId: string): Promise<SourceFact[]> {
   const { data } = await db
     .from("kalamai_pages")
-    .select("rank, body_text")
+    .select("rank, url, body_text")
     .eq("analysis_id", analysisId)
     .eq("ok", true)
     .order("rank")
     .limit(10);
-  const pages = ((data ?? []) as { rank: number; body_text: string | null }[]).map((p) => ({ rank: p.rank, bodyText: p.body_text ?? "" }));
+  const pages = ((data ?? []) as { rank: number; url: string; body_text: string | null }[]).map((p) => ({ rank: p.rank, url: p.url, bodyText: p.body_text ?? "" }));
   return extractSourceFacts(pages);
 }
 
@@ -182,7 +182,8 @@ async function stepRewrite(db: SupabaseClient, a: ArticleRow): Promise<StepResul
 // W5 — pure-code score + finalize. No LLM.
 async function stepScore(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const brief = await loadBrief(db, a);
-  const blocks = a.stage_state.blocks ?? [];
+  // Hard ceiling backstop: never ship over 2200 words even if the model ran long.
+  const blocks = enforceWordCap(a.stage_state.blocks ?? []);
   const meta = a.stage_state.meta ?? { title: "", description: "", jsonld: "" };
   const score = scoreArticle({ blocks, meta, brief, targetWords: a.params.targetWords });
   await db.from("kalamai_articles").update({ blocks, meta, score, status: "complete", progress: 100 }).eq("id", a.id);
