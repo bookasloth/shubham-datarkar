@@ -1,0 +1,172 @@
+import "server-only";
+
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { ContentBlock } from "@/lib/data/types";
+import { supabaseAdmin } from "@/lib/supabase/server";
+import { runJson, runText, type LlmUsage } from "./llm";
+import { parseWithRepair, KalamaiHardFailure } from "./content-blocks";
+import { scoreArticle } from "./score";
+import { logEvent } from "./events-server";
+import type { Brief } from "./brief";
+import {
+  OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
+  FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE,
+  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta,
+  type ArticleParams, type SectionPlan, type Critique, type ArticleMeta,
+} from "./writing";
+
+const STEP_LOCK_MS = 2 * 60_000; // reclaim a claim left by a crashed/timed-out step (maxDuration is 60s)
+
+export type StepResult = { status: string; progress: number };
+
+type ArticleRow = {
+  id: string;
+  user_id: string;
+  analysis_id: string;
+  params: ArticleParams;
+  status: string;
+  progress: number;
+  locked_at: string | null;
+  stage_state: StageState;
+};
+
+type StageState = {
+  plan?: SectionPlan;
+  meta?: ArticleMeta;
+  blocks?: ContentBlock[];
+  critique?: Critique;
+};
+
+/**
+ * Advance one transition of an article-writing job. Mirrors analysis-server's
+ * runStep: single-flight claim, one stage per call, hard failures flip status to
+ * 'failed' (which drops the row from the quota count — that's the refund). The
+ * caller (the article-step route) re-invokes until the status is terminal.
+ */
+export async function runArticleStep(articleId: string): Promise<StepResult> {
+  const db = supabaseAdmin();
+  const { data } = await db.from("kalamai_articles").select("*").eq("id", articleId).maybeSingle();
+  const a = data as ArticleRow | null;
+  if (!a) throw new Error(`article ${articleId} not found`);
+  if (a.status === "complete" || a.status === "failed") return { status: a.status, progress: a.progress };
+
+  // Single-flight claim: only one worker advances the row; concurrent /step
+  // calls no-op so one article quota unit can't fan out into repeated LLM spend.
+  const staleBefore = new Date(Date.now() - STEP_LOCK_MS).toISOString();
+  const { data: claimed } = await db
+    .from("kalamai_articles")
+    .update({ locked_at: new Date().toISOString() })
+    .eq("id", a.id)
+    .eq("status", a.status)
+    .or(`locked_at.is.null,locked_at.lt.${staleBefore}`)
+    .select("id");
+  if (!claimed?.length) return { status: a.status, progress: a.progress };
+
+  try {
+    switch (a.status) {
+      case "queued": return await stepOutline(db, a);
+      case "outlining": return await stepDraft(db, a);
+      case "drafting": return await stepCritique(db, a);
+      case "reviewing": return await stepRewrite(db, a);
+      case "scoring": return await stepScore(db, a);
+      default: return { status: a.status, progress: a.progress };
+    }
+  } catch (e) {
+    const message = (e instanceof Error ? e.message : String(e)).slice(0, 500);
+    await db.from("kalamai_articles").update({ status: "failed", error: message, locked_at: null }).eq("id", a.id);
+    await logEvent("article_failed", { userId: a.user_id, articleId: a.id, meta: { at: a.status } });
+    return { status: "failed", progress: a.progress };
+  } finally {
+    await db.from("kalamai_articles").update({ locked_at: null }).eq("id", a.id);
+  }
+}
+
+async function logCall(db: SupabaseClient, a: ArticleRow, stage: string, usage: LlmUsage): Promise<void> {
+  await db.from("kalamai_llm_calls").insert({
+    article_id: a.id,
+    user_id: a.user_id,
+    stage,
+    input_tokens: usage.inputTokens,
+    output_tokens: usage.outputTokens,
+    cache_read_tokens: usage.cacheReadTokens,
+    cache_write_tokens: usage.cacheWriteTokens,
+    cost_usd: usage.costUsd,
+    ms: usage.ms,
+  });
+}
+
+async function loadBrief(db: SupabaseClient, a: ArticleRow): Promise<Brief> {
+  const { data } = await db.from("kalamai_analyses").select("report").eq("id", a.analysis_id).maybeSingle();
+  const brief = (data?.report as { brief?: Brief } | null)?.brief;
+  if (!brief) throw new KalamaiHardFailure("source analysis has no brief");
+  return brief;
+}
+
+function mergeState(a: ArticleRow, patch: Partial<StageState>): StageState {
+  return { ...a.stage_state, ...patch };
+}
+
+// W1 — section plan (cheap JSON). Also fixes the meta the rest of the flow uses.
+async function stepOutline(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
+  const brief = await loadBrief(db, a);
+  const { system, user } = buildOutlinePrompt(brief, a.params);
+  const { data: plan, usage } = await runJson<SectionPlan>({ system, user, schema: OUTLINE_SCHEMA, effort: "low", fake: FAKE_OUTLINE });
+  await logCall(db, a, "W1", usage);
+  const meta = buildArticleMeta(brief, plan);
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { plan, meta }), status: "outlining", progress: 15 }).eq("id", a.id);
+  return { status: "outlining", progress: 15 };
+}
+
+// W2 — draft the body as ContentBlock[] (big streamed call, reads the cached brief).
+async function stepDraft(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
+  const brief = await loadBrief(db, a);
+  const plan = a.stage_state.plan!;
+  const { system, user, cachePrefix } = buildDraftPrompt(brief, a.params, plan);
+  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_DRAFT });
+  await logCall(db, a, "W2", usage);
+  const blocks = await parseWithRepair(text, async () => {
+    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_DRAFT });
+    return r.text;
+  });
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "drafting", progress: 40 }).eq("id", a.id);
+  return { status: "drafting", progress: 40 };
+}
+
+// W3 — critique the draft against the brief (flat JSON).
+async function stepCritique(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
+  const brief = await loadBrief(db, a);
+  const { system, user, cachePrefix } = buildCritiquePrompt(brief, a.params, a.stage_state.blocks!);
+  const { data: critique, usage } = await runJson<Critique>({ system, user, schema: CRITIQUE_SCHEMA, effort: "low", cachePrefix, fake: FAKE_CRITIQUE });
+  await logCall(db, a, "W3", usage);
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { critique }), status: "reviewing", progress: 60 }).eq("id", a.id);
+  return { status: "reviewing", progress: 60 };
+}
+
+// W4 — rewrite to final blocks, unless the critique already passed (then skip the spend).
+async function stepRewrite(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
+  const critique = a.stage_state.critique!;
+  let blocks = a.stage_state.blocks!;
+  if (!critique.ok) {
+    const brief = await loadBrief(db, a);
+    const { system, user, cachePrefix } = buildRewritePrompt(brief, a.params, blocks, critique);
+    const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_REWRITE });
+    await logCall(db, a, "W4", usage);
+    blocks = await parseWithRepair(text, async () => {
+      const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_REWRITE });
+      return r.text;
+    });
+  }
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "scoring", progress: 85 }).eq("id", a.id);
+  return { status: "scoring", progress: 85 };
+}
+
+// W5 — pure-code score + finalize. No LLM.
+async function stepScore(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
+  const brief = await loadBrief(db, a);
+  const blocks = a.stage_state.blocks ?? [];
+  const meta = a.stage_state.meta ?? { title: "", description: "", jsonld: "" };
+  const score = scoreArticle({ blocks, meta, brief, targetWords: a.params.targetWords });
+  await db.from("kalamai_articles").update({ blocks, meta, score, status: "complete", progress: 100 }).eq("id", a.id);
+  await logEvent("article_completed", { userId: a.user_id, articleId: a.id });
+  return { status: "complete", progress: 100 };
+}

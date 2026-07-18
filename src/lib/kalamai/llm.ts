@@ -61,21 +61,63 @@ export async function runJson<T>(args: {
   user: string;
   schema: Record<string, unknown>;
   effort?: "low" | "medium" | "high";
+  cachePrefix?: string;
   fake: T;
 }): Promise<{ data: T; usage: LlmUsage }> {
   if (isFakeLlm()) return { data: args.fake, usage: ZERO_USAGE };
 
   const started = Date.now();
+  const system: Anthropic.TextBlockParam[] = [{ type: "text", text: args.system }];
+  if (args.cachePrefix) {
+    system.push({ type: "text", text: args.cachePrefix, cache_control: { type: "ephemeral" } });
+  }
   const res = await getClient().messages.create({
     model: KALAMAI_MODEL,
     max_tokens: 4096,
     thinking: { type: "disabled" },
     output_config: { effort: args.effort ?? "low", format: { type: "json_schema", schema: args.schema } },
-    system: args.system,
+    system,
     messages: [{ role: "user", content: args.user }],
   });
 
   const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
   const data = JSON.parse(text) as T;
   return { data, usage: toUsage(res.usage, Date.now() - started) };
+}
+
+/**
+ * One free-form text call for the writing engine, where structured output can't
+ * be used (ContentBlock is a recursive union). `cachePrefix` — the compressed
+ * brief — is marked `cache_control: ephemeral` so W1 writes it and W2-W4 read it
+ * at 0.1x; keep it byte-identical across pokes or the cache misses and the
+ * article costs ~3x. Streamed and resolved via `.finalMessage()` because these
+ * calls run 15-40s and emit >16K tokens, past the non-streaming SDK timeout.
+ */
+export async function runText(args: {
+  system: string;
+  user: string;
+  cachePrefix?: string;
+  maxTokens?: number;
+  fake: string;
+}): Promise<{ text: string; usage: LlmUsage }> {
+  if (isFakeLlm()) return { text: args.fake, usage: ZERO_USAGE };
+
+  const started = Date.now();
+  const system: Anthropic.TextBlockParam[] = [{ type: "text", text: args.system }];
+  if (args.cachePrefix) {
+    system.push({ type: "text", text: args.cachePrefix, cache_control: { type: "ephemeral" } });
+  }
+
+  const message = await getClient()
+    .messages.stream({
+      model: KALAMAI_MODEL,
+      max_tokens: args.maxTokens ?? 16000,
+      thinking: { type: "disabled" },
+      system,
+      messages: [{ role: "user", content: args.user }],
+    })
+    .finalMessage();
+
+  const text = message.content.map((b) => (b.type === "text" ? b.text : "")).join("");
+  return { text, usage: toUsage(message.usage, Date.now() - started) };
 }

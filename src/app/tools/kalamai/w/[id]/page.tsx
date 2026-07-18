@@ -1,32 +1,44 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import type { ContentBlock } from "@/lib/data/types";
 import { buildMetadata } from "@/lib/seo";
 import { requireMember } from "@/lib/members/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
+import { slugify } from "@/lib/utils";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
+import { ArticleBody } from "@/components/content/article-body";
+import { ArticlePoller } from "@/components/kalamai/article-poller";
+import { ExportButtons } from "@/components/kalamai/export-buttons";
+import { blocksToMarkdown, blocksToHtml } from "@/lib/kalamai/serialize";
 
-export const metadata = buildMetadata({
-  title: "KalamAI Article",
-  path: "/tools/kalamai",
-  noIndex: true,
-});
+export const metadata = buildMetadata({ title: "KalamAI Article", path: "/tools/kalamai", noIndex: true });
+export const dynamic = "force-dynamic";
+
+type ArticleMeta = { title?: string; description?: string; jsonld?: string };
+type ArticleScore = {
+  overall: number;
+  passed: string[];
+  failed: string[];
+  details: { termCoverage: number; outlineCoverage: number; wordCount: number };
+};
 
 export default async function KalamaiArticlePage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await requireMember(`/tools/kalamai/w/${id}`);
 
-  // Ownership-scoped read. The rendered article, editor, and export land here
-  // with the writing engine (Phase 3).
   const { data: article } = await supabaseAdmin()
     .from("kalamai_articles")
-    .select("id, status, meta")
+    .select("id, status, progress, blocks, meta, score")
     .eq("id", id)
     .eq("user_id", ctx.user!.id)
     .maybeSingle();
   if (!article) notFound();
 
-  const title = (article.meta as { title?: string } | null)?.title ?? "Article";
+  const meta = (article.meta ?? {}) as ArticleMeta;
+  const blocks = (article.blocks ?? []) as ContentBlock[];
+  const score = article.score as ArticleScore | null;
+  const title = meta.title || "Article";
 
   return (
     <>
@@ -41,12 +53,46 @@ export default async function KalamaiArticlePage({ params }: { params: Promise<{
       />
       <Section>
         <Container size="narrow">
-          <div className="rounded-card border border-border bg-card p-6">
-            <p className="text-sm text-muted-foreground">
-              Status: <span className="font-medium text-foreground">{article.status}</span>
-            </p>
-          </div>
-          <Link href="/tools/kalamai/history" className="mt-4 inline-block text-sm font-medium hover:underline">
+          {article.status === "complete" ? (
+            <div className="space-y-8">
+              {score && (
+                <div className="rounded-card border border-border bg-card p-5">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium text-foreground">Content score</p>
+                    <span className="text-2xl font-semibold tabular-nums">{score.overall}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {score.details.wordCount} words · terms {Math.round(score.details.termCoverage * 100)}% · outline{" "}
+                    {Math.round(score.details.outlineCoverage * 100)}%
+                  </p>
+                  {score.failed.length > 0 && (
+                    <p className="mt-2 text-xs text-muted-foreground">To improve: {score.failed.join(", ")}.</p>
+                  )}
+                </div>
+              )}
+
+              <ExportButtons slug={slugify(title)} markdown={blocksToMarkdown(blocks)} html={blocksToHtml(blocks)} />
+
+              <article className="rounded-card border border-border bg-card p-6 sm:p-8">
+                <ArticleBody blocks={blocks} />
+              </article>
+            </div>
+          ) : article.status === "failed" ? (
+            <div className="rounded-card border border-border bg-card p-6">
+              <p className="text-sm font-medium text-danger">Writing this article failed.</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Your quota was not charged.{" "}
+                <Link href="/tools/kalamai/history" className="font-medium text-foreground hover:underline">
+                  Back to history
+                </Link>
+                .
+              </p>
+            </div>
+          ) : (
+            <ArticlePoller id={article.id} initialStatus={article.status} initialProgress={article.progress ?? 0} />
+          )}
+
+          <Link href="/tools/kalamai/history" className="mt-6 inline-block text-sm font-medium hover:underline">
             Back to history
           </Link>
         </Container>
