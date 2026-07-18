@@ -1,9 +1,12 @@
 import { Readability } from "@mozilla/readability";
-import { JSDOM, VirtualConsole } from "jsdom";
+import { parseHTML } from "linkedom";
 import { parseHtml } from "@/lib/seo/parse-html";
 
-// Swallow jsdom's noisy "Could not parse CSS stylesheet" warnings from real pages.
-const silentConsole = new VirtualConsole();
+// linkedom (not jsdom): a light, serverless-safe DOM. jsdom pulls an ESM-only
+// transitive dep (html-encoding-sniffer → @exodus/bytes) that ERR_REQUIRE_ESMs
+// when required in the Vercel/Turbopack Node runtime, crashing the analysis
+// route at load. linkedom parses HTML without a CSS engine, so there's also no
+// "Could not parse CSS stylesheet" noise to silence.
 
 /** Cleaned competitor-page signal for term stats and the competitor snapshot. */
 export type Heading = { level: 1 | 2 | 3; text: string };
@@ -93,9 +96,9 @@ function junkRatio(rawText: string): number {
 // no real article, so the caller can fall back to the regex strip.
 function readabilityExtract(html: string): { title: string | null; rawText: string; headings: Heading[] } | null {
   try {
-    // Fresh JSDOM per call; Readability mutates the document it parses.
-    const dom = new JSDOM(html, { url: "https://example.invalid/", virtualConsole: silentConsole });
-    const article = new Readability(dom.window.document).parse();
+    // Fresh document per call; Readability mutates the document it parses.
+    const { document } = parseHTML(html);
+    const article = new Readability(document as unknown as Document).parse();
     const rawText = article?.textContent?.trim() ?? "";
     if (!article || rawText.length < 200) return null; // no real article body
     return {
