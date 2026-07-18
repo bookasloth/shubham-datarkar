@@ -1,6 +1,9 @@
 import { Readability } from "@mozilla/readability";
-import { JSDOM } from "jsdom";
+import { JSDOM, VirtualConsole } from "jsdom";
 import { parseHtml } from "@/lib/seo/parse-html";
+
+// Swallow jsdom's noisy "Could not parse CSS stylesheet" warnings from real pages.
+const silentConsole = new VirtualConsole();
 
 /** Cleaned competitor-page signal for term stats and the competitor snapshot. */
 export type Heading = { level: 1 | 2 | 3; text: string };
@@ -91,7 +94,7 @@ function junkRatio(rawText: string): number {
 function readabilityExtract(html: string): { title: string | null; rawText: string; headings: Heading[] } | null {
   try {
     // Fresh JSDOM per call; Readability mutates the document it parses.
-    const dom = new JSDOM(html, { url: "https://example.invalid/" });
+    const dom = new JSDOM(html, { url: "https://example.invalid/", virtualConsole: silentConsole });
     const article = new Readability(dom.window.document).parse();
     const rawText = article?.textContent?.trim() ?? "";
     if (!article || rawText.length < 200) return null; // no real article body

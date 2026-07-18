@@ -13,7 +13,8 @@ export const EMBED_MODEL = "gemini-embedding-001";
 export const EMBED_DIM = 768;
 
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${EMBED_MODEL}:embedContent`;
-const CONCURRENCY = 5; // parallel embedContent calls (free-tier rpm friendly)
+const CONCURRENCY = 2; // parallel embedContent calls (gentle on rpm limits)
+const MAX_ATTEMPTS = 5;
 
 export type EmbedTaskType = "RETRIEVAL_DOCUMENT" | "RETRIEVAL_QUERY";
 
@@ -33,6 +34,18 @@ function fakeVector(text: string): number[] {
   return normalize(v);
 }
 
+class EmbedError extends Error {
+  constructor(message: string, readonly status: number, readonly retryAfterMs: number) {
+    super(message);
+  }
+}
+
+// "retryDelay": "17s" in a 429 body → ms. Falls back to 0 (caller uses backoff).
+function parseRetryDelay(body: string): number {
+  const m = body.match(/"retryDelay"\s*:\s*"(\d+)s"/);
+  return m ? Number(m[1]) * 1000 : 0;
+}
+
 async function embedOne(text: string, taskType: EmbedTaskType): Promise<number[]> {
   const res = await fetch(`${ENDPOINT}?key=${process.env.GEMINI_API_KEY}`, {
     method: "POST",
@@ -40,7 +53,10 @@ async function embedOne(text: string, taskType: EmbedTaskType): Promise<number[]
     body: JSON.stringify({ content: { parts: [{ text }] }, taskType, outputDimensionality: EMBED_DIM }),
     signal: AbortSignal.timeout(30_000),
   });
-  if (!res.ok) throw new Error(`gemini_embed_failed: ${res.status} ${(await res.text()).slice(0, 200)}`);
+  if (!res.ok) {
+    const body = (await res.text()).slice(0, 300);
+    throw new EmbedError(`gemini_embed_failed: ${res.status} ${body}`, res.status, parseRetryDelay(body));
+  }
   const json = (await res.json()) as { embedding?: { values: number[] } };
   const vals = json.embedding?.values;
   if (!Array.isArray(vals) || vals.length !== EMBED_DIM) throw new Error(`gemini_embed_bad_dim: ${vals?.length}`);
@@ -61,14 +77,17 @@ export async function embedTexts(texts: string[], taskType: EmbedTaskType): Prom
     while (next < texts.length) {
       const i = next++;
       let lastErr: unknown;
-      for (let attempt = 0; attempt < 3; attempt++) {
+      for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
         try {
           out[i] = await embedOne(texts[i], taskType);
           lastErr = null;
           break;
         } catch (e) {
           lastErr = e;
-          await new Promise((r) => setTimeout(r, 400 * (attempt + 1)));
+          // On 429, honour the server's retryDelay; otherwise exponential backoff.
+          const retry = e instanceof EmbedError && e.retryAfterMs > 0 ? e.retryAfterMs : 0;
+          const backoff = retry || Math.min(2_000 * 2 ** attempt, 32_000);
+          await new Promise((r) => setTimeout(r, backoff));
         }
       }
       if (lastErr) throw lastErr;
