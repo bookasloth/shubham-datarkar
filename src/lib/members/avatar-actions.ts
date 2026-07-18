@@ -69,11 +69,12 @@ export async function removeAvatar(): Promise<AvatarState> {
   if (!user) return { error: "Sign in first." };
 
   const admin = supabaseAdmin();
-  await clearFolder(admin, user.id);
   // Service role: profiles UPDATE is column-allowlisted to username/display_name/bio
   // for authenticated (security_hardening.sql). Own id only.
   const { error } = await admin.from("profiles").update({ avatar_url: null }).eq("id", user.id);
   if (error) return { error: "Could not remove your photo." };
+  // DB is already null — storage cleanup can't leave a dangling URL now.
+  await clearFolder(admin, user.id);
 
   const { data: p } = await sb.from("profiles").select("username").eq("id", user.id).maybeSingle();
   revalidateProfiles(p?.username as string | undefined);
@@ -87,9 +88,10 @@ export async function removeAvatarAsAdmin(userId: string): Promise<AvatarState> 
   if (!isAdmin) return { error: "Not authorised." };
 
   const admin = supabaseAdmin();
-  await clearFolder(admin, userId);
   const { error } = await admin.from("profiles").update({ avatar_url: null }).eq("id", userId);
   if (error) return { error: "Could not remove that photo." };
+  // DB is already null — storage cleanup can't leave a dangling URL now.
+  await clearFolder(admin, userId);
 
   const { data: p } = await admin.from("profiles").select("username").eq("id", userId).maybeSingle();
   revalidateProfiles(p?.username as string | undefined);
