@@ -23,9 +23,10 @@ const THEMES = [
 ] as const;
 
 export function ProfileMenu({
-  displayName, email, username, isAdmin, isPremium,
+  displayName, email, username, avatarUrl, isAdmin, isPremium,
 }: {
   displayName: string; email: string; username: string | null;
+  avatarUrl: string | null;
   isAdmin: boolean; isPremium: boolean;
 }) {
   const { theme, setTheme } = useTheme();
@@ -41,12 +42,12 @@ export function ProfileMenu({
         aria-label="Account menu"
         className="rounded-full outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
       >
-        <CommunityAvatar seed={seed} size={32} />
+        <CommunityAvatar seed={seed} src={avatarUrl} size={32} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-64 p-2">
         {/* Identity */}
         <div className="flex items-center gap-3 px-1.5 py-2">
-          <CommunityAvatar seed={seed} size={40} />
+          <CommunityAvatar seed={seed} src={avatarUrl} size={40} />
           <div className="min-w-0">
             <p className="truncate font-medium text-foreground">{displayName}</p>
             <p className="truncate text-xs text-muted-foreground">{handle}</p>

@@ -77,6 +77,7 @@ export function AppShell({
                 displayName={user!.displayName}
                 email={user!.email}
                 username={user!.username}
+                avatarUrl={user!.avatarUrl}
                 isAdmin={user!.isAdmin}
                 isPremium={user!.isPremium}
               />
