@@ -50,7 +50,10 @@ export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageR
       .eq("user_id", user.id));
   }
   if (err) return { error: err.message };
-  revalidatePath("/community");
+  // No revalidatePath here: the client bar is authoritative for the viewer's own
+  // vote and reconciles in place, so revalidating would force a needless
+  // whole-feed RSC refetch after every tap (and fight the optimistic update). The
+  // DB write is the source of truth on the next full load. [[community-optimistic-feed]]
   return { ok: true };
 }
 
@@ -69,8 +72,8 @@ export async function toggleBookmark(postId: string): Promise<EngageResult> {
     ? await sb.from("community_bookmarks").delete().eq("post_id", postId).eq("user_id", user.id)
     : await sb.from("community_bookmarks").insert({ post_id: postId, user_id: user.id });
   if (err) return { error: err.message };
-  revalidatePath("/community");
-  revalidatePath("/community/bookmarks");
+  // Client bar is authoritative; skip the feed refetch. The bookmarks page reads
+  // the DB fresh on its own load, so it needs no revalidation from here either.
   return { ok: true };
 }
 
@@ -94,7 +97,7 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
     if (err.code === "23505") return { ok: true };
     return { error: err.message };
   }
-  revalidatePath("/community");
+  // Client bar is authoritative; skip the feed refetch.
   return { ok: true };
 }
 

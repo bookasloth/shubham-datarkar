@@ -1,7 +1,6 @@
 "use client";
-import { useOptimistic, useRef, useState, useTransition } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { ThumbsUp, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react";
 import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
@@ -49,9 +48,7 @@ function reduce(s: Engagement, a: Action): Engagement {
 }
 
 export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: React.ReactNode }) {
-  const router = useRouter();
   const { toast } = useToast();
-  const [, start] = useTransition();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,13 +64,13 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     }
   }
 
-  // `committed` is the client-authoritative truth seeded from the server render.
-  // We advance it ONLY on a confirmed mutation — never router.refresh() on the
-  // happy path, so a like never triggers a whole-feed refetch. The optimistic
-  // overlay stacks rapid clicks over `committed` and reverts a failed action on
-  // its own when the transition settles; the error path additionally refreshes
-  // to re-sync display with the server after a partial-failure toggle chain.
-  const [committed, setCommitted] = useState<Engagement>({
+  // Plain client-authoritative state seeded once from the server render. The UI
+  // moves the instant you tap (a synchronous setState — no useOptimistic overlay
+  // that would tear down a beat before the confirmed value lands and flash the
+  // old count). We never refetch to reconcile: `sRef` mirrors state synchronously
+  // so rapid clicks reduce over the latest value, and a failure rolls just the
+  // affected fields back to their pre-tap snapshot.
+  const [state, setState] = useState<Engagement>({
     vote: post.viewerVote,
     up: post.upCount,
     down: post.downCount,
@@ -82,7 +79,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     reblogs: post.reblogCount,
     reblogged: post.viewerReblogged,
   });
-  const [state, addOptimistic] = useOptimistic<Engagement, Action>(committed, reduce);
+  const sRef = useRef(state);
 
   // Serialize each channel's server calls in click order so the DB lands on the
   // final intent regardless of which request resolves first. Toggle actions are
@@ -92,25 +89,30 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
   const bmChain = useRef<Promise<unknown>>(Promise.resolve());
   const rbChain = useRef<Promise<unknown>>(Promise.resolve());
 
+  function set(next: Engagement) {
+    sRef.current = next;
+    setState(next);
+  }
+
   function run(
     chain: React.MutableRefObject<Promise<unknown>>,
     action: Action,
     call: () => ReturnType<typeof toggleVote>,
+    fields: (keyof Engagement)[],
   ) {
-    start(async () => {
-      addOptimistic(action);
-      const next = chain.current.then(call);
-      chain.current = next;
-      const r = await next;
-      if ("error" in r) {
+    const before = sRef.current;
+    set(reduce(before, action)); // instant, synchronous — no flash
+    setError(null);
+    const next = chain.current.then(call);
+    chain.current = next;
+    void next.then((r) => {
+      if (r && "error" in r) {
+        // Roll only this channel's fields back to their pre-tap values, leaving
+        // any other channel's newer state intact. No refetch — sRef is truth.
+        const rolled = { ...sRef.current };
+        Object.assign(rolled, Object.fromEntries(fields.map((f) => [f, before[f]])));
+        set(rolled);
         report(r.error);
-        // Heal display vs. server after a failure mid-toggle-chain. Rare path —
-        // the happy path never refetches. ponytail: full re-sync beats tracking
-        // per-action inverse deltas across a partially-applied queue.
-        router.refresh();
-      } else {
-        setError(null);
-        setCommitted((c) => reduce(c, action));
       }
     });
   }
@@ -118,17 +120,17 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
   function onVote(value: 1 | -1) {
     setBurst(value === 1 ? "up" : "down");
     setTimeout(() => setBurst(null), 480);
-    run(voteChain, { kind: "vote", value }, () => toggleVote(post.id, value));
+    run(voteChain, { kind: "vote", value }, () => toggleVote(post.id, value), ["vote", "up", "down"]);
   }
 
   function onBookmark() {
-    run(bmChain, { kind: "bookmark" }, () => toggleBookmark(post.id));
+    run(bmChain, { kind: "bookmark" }, () => toggleBookmark(post.id), ["marked", "bookmarks"]);
   }
 
   function onReblog() {
     setReblogFx(true);
     setTimeout(() => setReblogFx(false), 500);
-    run(rbChain, { kind: "reblog" }, () => toggleReblog(post.id));
+    run(rbChain, { kind: "reblog" }, () => toggleReblog(post.id), ["reblogged", "reblogs"]);
   }
 
   // Fire the like burst only when the vote lands ON (not when toggling it off).
