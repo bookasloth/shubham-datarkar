@@ -28,7 +28,7 @@ const NEG_SAMPLE = 10; // cap negatives per keyword (spread across the band) →
 const CRAWL_CONCURRENCY = 4;
 const KEYWORD_DELAY_MS = 1500; // polite gap between keywords
 
-type Arg = { keywords: string[]; lang: string; country: string; file?: string; dry: boolean };
+type Arg = { keywords: string[]; lang: string; country: string; file?: string; dry: boolean; noEmbed: boolean };
 
 function parseArgs(argv: string[]): Arg {
   const get = (k: string) => {
@@ -42,6 +42,10 @@ function parseArgs(argv: string[]): Arg {
     country: get("country") ?? "IN",
     file: get("file"),
     dry: argv.includes("--dry"),
+    // --no-embed: store pages + body_text only, skip Gemini. Enough for the
+    // log-odds background prior (3b reads body_text); skips semantic clusters,
+    // which need embeddings. Use when Gemini quota is unavailable.
+    noEmbed: argv.includes("--no-embed"),
   };
 }
 
@@ -106,6 +110,7 @@ async function processPage(
   ctx: { keyword: string; lang: string; country: string },
   robots: RobotsCache,
   html?: string, // provided in --dry
+  noEmbed = false,
 ): Promise<CorpusResult> {
   let page: ExtractedPage | null = null;
   try {
@@ -144,7 +149,7 @@ async function processPage(
       .maybeSingle();
 
     const pageId = (up as { id: string } | null)?.id;
-    if (pageId && ok && page) {
+    if (pageId && ok && page && !noEmbed) {
       await db.from("kalamai_chunks").delete().eq("corpus_page_id", pageId);
       const chunks = chunkText(page.bodyText);
       if (chunks.length) {
@@ -194,8 +199,8 @@ async function main() {
     console.error("Refusing to run: DataForSEO credentials missing. Set them in .env.local (Hard Rule 3: no synthetic corpus).");
     process.exit(1);
   }
-  if (isFakeEmbed()) {
-    console.error("Refusing to run: GEMINI_API_KEY missing (fake embeddings). Set it in .env.local (Hard Rule 3).");
+  if (!args.noEmbed && isFakeEmbed()) {
+    console.error("Refusing to run: GEMINI_API_KEY missing (fake embeddings). Set it in .env.local (Hard Rule 3), or pass --no-embed to build the log-odds prior without embeddings.");
     process.exit(1);
   }
 
@@ -222,7 +227,7 @@ async function main() {
       totalTargets += labeled.length;
       const robots = new RobotsCache();
       const results = await mapLimit(labeled, CRAWL_CONCURRENCY, (t) =>
-        processPage(db, t, { keyword, lang: args.lang, country: args.country }, robots),
+        processPage(db, t, { keyword, lang: args.lang, country: args.country }, robots, undefined, args.noEmbed),
       );
       all.push(...results);
       const okCount = results.filter((r) => r.ok).length;

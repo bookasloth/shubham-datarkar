@@ -51,6 +51,32 @@ export function ngramOf(term: string): number {
 }
 
 /**
+ * Background term frequencies for distill's log-odds prior (corpus module 3b).
+ * Same pipeline as distill's SERP side (buildCorpusTokens → grams → count) so
+ * bgCounts/bgTotal are directly comparable to serpCounts/serpTotal. NO subgram
+ * suppression here — distill suppresses only the SERP side and looks background
+ * terms up by exact key. `totalTokens` sums ALL gram counts (matches distill's
+ * serpTotal); `minCount` prunes which rows get STORED but does not change the
+ * total, so pruned rare grams simply resolve to y_bg=0 downstream.
+ */
+export function backgroundFrequencies(
+  docs: string[],
+  minCount = 1,
+): { terms: { term: string; ngram: number; count: number }[]; totalTokens: number; docCount: number } {
+  const { docTokens } = buildCorpusTokens(docs);
+  const counts = new Map<string, number>();
+  for (const toks of docTokens) {
+    for (const [term, c] of countMap(grams(toks))) counts.set(term, (counts.get(term) ?? 0) + c);
+  }
+  let totalTokens = 0;
+  for (const c of counts.values()) totalTokens += c;
+  const terms = [...counts.entries()]
+    .filter(([, c]) => c >= minCount)
+    .map(([term, count]) => ({ term, ngram: ngramOf(term), count }));
+  return { terms, totalTokens, docCount: docs.length };
+}
+
+/**
  * N-gram double-count suppression: if a longer gram's count ≥ 0.8× a contained
  * shorter gram's count, the phrase carries the signal — suppress the shorter gram.
  * Returns the set of terms to drop.
