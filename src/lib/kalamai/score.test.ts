@@ -17,7 +17,7 @@ const strongArticle: ContentBlock[] = [
   { type: "h2", text: "SEO Services" },
   { type: "p", text: "Our seo services and content marketing drive growth." },
   { type: "h2", text: "PPC Advertising" },
-  { type: "p", text: "We run ppc campaigns for local businesses. ".repeat(120) },
+  { type: "p", text: "We run ppc campaigns for local businesses. ".repeat(200) }, // ~1200 words → within the 1000-2200 band
   { type: "h2", text: "Local SEO for Nagpur" },
   { type: "p", text: "Local seo helps you rank in Nagpur." },
   { type: "faq", items: [{ q: "How much does it cost?", a: "It depends on scope." }] },
@@ -31,7 +31,7 @@ const strongMeta = {
 
 describe("scoreArticle", () => {
   it("scores a brief-aligned article high and reports full coverage", () => {
-    const s = scoreArticle({ blocks: strongArticle, meta: strongMeta, brief, targetWords: 300 });
+    const s = scoreArticle({ blocks: strongArticle, meta: strongMeta, brief, targetWords: 1600 });
     expect(s.details.termCoverage).toBe(1); // all 4 terms present
     expect(s.details.outlineCoverage).toBe(1); // all 3 H2s present
     expect(s.overall).toBeGreaterThanOrEqual(85);

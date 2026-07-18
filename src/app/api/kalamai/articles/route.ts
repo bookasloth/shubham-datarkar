@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   if (!analysisId) return NextResponse.json({ error: "Missing analysisId." }, { status: 400 });
 
   const params = {
-    targetWords: clamp(Math.round(Number(body.targetWords) || 1500), 500, 4000),
+    targetWords: clamp(Math.round(Number(body.targetWords) || 1600), 1000, 2200),
     tone: String(body.tone ?? "professional").slice(0, 40) || "professional",
     audience: String(body.audience ?? "").slice(0, 200),
     brandFacts: String(body.brandFacts ?? "").slice(0, 1000) || undefined,
