@@ -3,12 +3,14 @@ import { useOptimistic, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createReply } from "@/lib/community/engage-actions";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/toast";
 import { CommunityAvatar } from "./community-avatar";
 
 const MAX = 500;
 
 export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
   const router = useRouter();
+  const { toast } = useToast();
   const [body, setBody] = useState("");
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
@@ -21,16 +23,23 @@ export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
   const empty = body.trim().length === 0;
 
   function submit() {
-    if (empty) return;
+    // `pending` guard blocks the double-fire from Enter + click or a rapid
+    // double-tap, so the same reply can't be posted twice.
+    if (empty || pending) return;
     const text = body;
+    setBody(""); // clear instantly; restored below if the post fails
     start(async () => {
       addReply(text);
       const r = await createReply(postId, text);
       if ("error" in r) {
+        setBody(text);
         setError(r.error);
+        toast({ title: "Reply didn't post", description: r.error, variant: "danger" });
       } else {
         setError(null);
-        setBody("");
+        // Single-post route: refetch just this thread to swap the optimistic echo
+        // for the real reply and bump the parent's comment count. Cheap — one
+        // post, not the feed.
         router.refresh();
       }
     });
@@ -62,7 +71,7 @@ export function ReplyBox({ postId, seed }: { postId: string; seed: string }) {
             size="sm"
             className="rounded-full"
             loading={pending}
-            disabled={empty}
+            disabled={empty || pending}
             onClick={submit}
           >
             Reply
