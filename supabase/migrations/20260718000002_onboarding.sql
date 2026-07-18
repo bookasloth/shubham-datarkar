@@ -8,6 +8,13 @@ alter table public.profiles add column if not exists referral_source text;
 -- grants are additive. referral_source stays withheld — it is only ever written.
 grant select (onboarded_at) on public.profiles to authenticated;
 
+-- security_hardening.sql revoked base UPDATE on profiles and allowlisted only
+-- (username, display_name, bio). The onboarding flow writes these two columns
+-- from the user's own session, so add them to the UPDATE allowlist. RLS
+-- ("profiles: self write", auth.uid() = id) still restricts writes to the
+-- caller's own row. Column grants are additive.
+grant update (onboarded_at, referral_source) on public.profiles to authenticated;
+
 -- Let a signed-in user set their own username, with uniqueness + format rules.
 -- security definer so the unique-violation is caught server-side and surfaced
 -- as a friendly error. Callable by the authenticated user for their own row only
