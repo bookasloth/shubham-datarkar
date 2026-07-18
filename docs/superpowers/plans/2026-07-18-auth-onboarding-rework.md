@@ -975,7 +975,9 @@ begin
   if auth.uid() is null then
     raise exception 'not authenticated';
   end if;
-  if v !~ '^[a-zA-Z0-9_.]{3,30}$' then
+  -- v is null when p_username is null; guard explicitly so a null doesn't skip
+  -- the regex (NULL !~ pattern is NULL, which PL/pgSQL's IF treats as false).
+  if v is null or v !~ '^[a-zA-Z0-9_.]{3,30}$' then
     raise exception 'username must be 3-30 chars: letters, numbers, dot, underscore';
   end if;
   update public.profiles set username = v where id = auth.uid();
