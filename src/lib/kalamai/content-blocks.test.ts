@@ -31,6 +31,17 @@ describe("parseContentBlocks", () => {
     expect(parseContentBlocks(raw)).toEqual([{ type: "p", text: "hi" }]);
   });
 
+  it("salvages the array when the article text itself contains a ``` fence", () => {
+    // The lazy stripFence regex mis-matches on an inner fence; salvage by [ … ] span.
+    const raw = "```json\n" + JSON.stringify([{ type: "p", text: "use a ```json block for schema" }]) + "\n```";
+    expect(parseContentBlocks(raw)).toEqual([{ type: "p", text: "use a ```json block for schema" }]);
+  });
+
+  it("salvages the array despite a prose preamble before it", () => {
+    const raw = "Here is the article:\n" + JSON.stringify([{ type: "p", text: "hi" }]);
+    expect(parseContentBlocks(raw)).toEqual([{ type: "p", text: "hi" }]);
+  });
+
   it("throws ContentBlockParseError on unparseable JSON", () => {
     expect(() => parseContentBlocks("{not json")).toThrow(ContentBlockParseError);
   });

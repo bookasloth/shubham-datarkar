@@ -88,7 +88,17 @@ export function parseContentBlocks(raw: string): ContentBlock[] {
   try {
     parsed = JSON.parse(stripFence(raw));
   } catch {
-    throw new ContentBlockParseError("output was not valid JSON");
+    // Salvage: strip any preamble/trailing prose (or a fence the lazy regex
+    // mis-matched because the article text itself contains a ``` block) by
+    // taking the outermost [ … ] span and parsing that.
+    const start = raw.indexOf("[");
+    const end = raw.lastIndexOf("]");
+    if (start === -1 || end <= start) throw new ContentBlockParseError("output was not valid JSON");
+    try {
+      parsed = JSON.parse(raw.slice(start, end + 1));
+    } catch {
+      throw new ContentBlockParseError("output was not valid JSON");
+    }
   }
   if (!Array.isArray(parsed)) {
     throw new ContentBlockParseError("output was not a JSON array");

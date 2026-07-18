@@ -13,6 +13,7 @@ const store: Record<string, Row[]> = {
   kalamai_analyses: [],
   kalamai_llm_calls: [],
   kalamai_events: [],
+  kalamai_pages: [],
 };
 
 class Query {
@@ -44,6 +45,12 @@ class Query {
   }
   or(expr: string) {
     this.orGroups.push(expr);
+    return this;
+  }
+  order() {
+    return this;
+  }
+  limit() {
     return this;
   }
   maybeSingle() {
