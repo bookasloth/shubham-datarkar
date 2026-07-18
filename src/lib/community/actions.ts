@@ -4,12 +4,9 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { validatePost } from "./validate";
 import { notifyPostCreated, notifyMentions } from "./community-notify";
+import { validateImageFile, imageExt } from "@/lib/media/image-upload";
 
 const BUCKET = "community-media";
-const MAX_BYTES = 5 * 1024 * 1024;
-// Raster only. `startsWith("image/")` would admit image/svg+xml — an SVG can carry
-// <script>, and this bucket is public (served inline from *.supabase.co). (audit L-2)
-const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif", "image/avif"]);
 
 export type CreatePostState = { error?: string; ok?: boolean } | undefined;
 
@@ -43,13 +40,13 @@ export async function createPost(
   let imageUrls: string[] | null = null;
   if (valid.type === "image") {
     for (const f of files) {
-      if (f.size > MAX_BYTES) return { error: "Each image must be under 5MB." };
-      if (!ALLOWED_IMAGE_TYPES.has(f.type)) return { error: "Use a JPG, PNG, WebP, GIF, or AVIF image." };
+      const err = validateImageFile(f);
+      if (err) return { error: err };
     }
     const admin = supabaseAdmin();
     const urls: string[] = [];
     for (const f of files) {
-      const ext = (f.name.split(".").pop() || "bin").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const ext = imageExt(f);
       const path = `${user.id}/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
       const { error } = await admin.storage.from(BUCKET).upload(path, f, {
         contentType: f.type || "application/octet-stream",

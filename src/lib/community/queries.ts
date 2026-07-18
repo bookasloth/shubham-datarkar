@@ -178,11 +178,11 @@ export async function viewerCanPost(): Promise<boolean> {
  *  instead of rendering an empty feed for a user who doesn't exist. */
 export async function getProfileByUsername(
   username: string,
-): Promise<{ id: string; username: string; displayName: string | null; badge: Badge } | null> {
+): Promise<{ id: string; username: string; displayName: string | null; avatarUrl: string | null; badge: Badge } | null> {
   const sb = await supabaseAuthServer();
   const { data } = await sb
     .from("profiles")
-    .select("id, username, display_name")
+    .select("id, username, display_name, avatar_url")
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!data) return null;
@@ -194,6 +194,7 @@ export async function getProfileByUsername(
     id: data.id as string,
     username: data.username as string,
     displayName: (data.display_name as string) ?? null,
+    avatarUrl: (data.avatar_url as string) ?? null,
     badge: ((badge as Badge) ?? "grey") satisfies Badge,
   };
 }

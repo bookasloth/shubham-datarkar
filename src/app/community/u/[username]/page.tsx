@@ -77,7 +77,7 @@ export default async function CommunityProfilePage({
     <div>
       {/* mb-2 so the rule reads as the header's edge, not the first post's. */}
       <header className="mb-2 flex items-center gap-3 border-b border-border px-4 py-4">
-        <CommunityAvatar seed={profile.username} size={48} />
+        <CommunityAvatar seed={profile.username} src={profile.avatarUrl} size={48} />
         <div>
           <h1 className="flex items-center gap-1.5 font-display text-lg font-bold">
             {name}
