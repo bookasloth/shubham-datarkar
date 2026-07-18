@@ -237,6 +237,8 @@ create policy member_avatars_admin_delete
 
 If Step 1 shows `anon` reads `profiles` table-wide (not column-scoped), the `grant ... to anon` is harmless (idempotent superset); keep it for clarity.
 
+Note — no UPDATE grant here on purpose. `security_hardening.sql` column-allowlists the authenticated UPDATE on `profiles` to `(username, display_name, bio)`; Task 3 writes `avatar_url` through the **service-role** client (after authenticating the user) rather than widening that allowlist, keeping the writable-column surface minimal.
+
 - [ ] **Step 3: Hand the SQL to the user to run**
 
 Do NOT apply. Tell the user: "Run `supabase/migrations/20260718000001_member_avatars.sql` against the own Supabase project, then confirm." Wait for confirmation before relying on the column/bucket in later live verification.
@@ -313,7 +315,11 @@ export async function uploadAvatar(formData: FormData): Promise<AvatarState> {
   if (upErr) return { error: `Upload failed: ${upErr.message}` };
 
   const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
-  const { error: dbErr } = await sb.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
+  // Write via the service role: security_hardening.sql column-allowlists the
+  // authenticated UPDATE on profiles to (username, display_name, bio), so an
+  // auth-client update of avatar_url is silently denied. We've already
+  // authenticated the user above, and scope the write to their own id.
+  const { error: dbErr } = await admin.from("profiles").update({ avatar_url: publicUrl }).eq("id", user.id);
   if (dbErr) return { error: "Could not save your photo." };
 
   // Remove the previous object(s) only after the new one is committed.
@@ -334,7 +340,9 @@ export async function removeAvatar(): Promise<AvatarState> {
 
   const admin = supabaseAdmin();
   await clearFolder(admin, user.id);
-  const { error } = await sb.from("profiles").update({ avatar_url: null }).eq("id", user.id);
+  // Service role: profiles UPDATE is column-allowlisted to username/display_name/bio
+  // for authenticated (security_hardening.sql). Own id only.
+  const { error } = await admin.from("profiles").update({ avatar_url: null }).eq("id", user.id);
   if (error) return { error: "Could not remove your photo." };
 
   const { data: p } = await sb.from("profiles").select("username").eq("id", user.id).maybeSingle();
