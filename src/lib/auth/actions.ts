@@ -40,11 +40,17 @@ export async function signIn(
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    // A cron-banned unverified account fails here. Distinguish it so we can show
-    // the verify prompt instead of "wrong password". Admin lookup runs only on
-    // failed logins.
+    // The ONLY correct-credential failure here is a cron-banned unverified
+    // account (banned_until in the future): within-grace unverified users sign
+    // in fine above, and past-grace ones are what the daily cron bans. Gate the
+    // verify prompt on the live ban, not on email_confirmed_at — keying off the
+    // latter would answer a wrong-password typo against any unverified account
+    // differently from a confirmed/nonexistent one, enumerating unverified
+    // emails and mis-messaging a genuine typo. Admin lookup runs only on failed
+    // logins.
     const existing = await findAuthUser(email);
-    if (existing && !existing.email_confirmed_at) {
+    const banned = existing?.banned_until && new Date(existing.banned_until) > new Date();
+    if (banned) {
       return { error: "Verify your email before you log in.", needsVerification: true };
     }
     return { error: "Invalid email or password." };
