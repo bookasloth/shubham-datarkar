@@ -48,3 +48,33 @@ describe("extractPage", () => {
     expect(page.wordCount).toBeGreaterThan(10);
   });
 });
+
+// A long article trips the Readability path (short fixtures fall back to regex).
+const LONG_BODY = Array.from(
+  { length: 40 },
+  (_, i) =>
+    `<p>Paragraph ${i} explains search engine optimisation, keyword research, content strategy, ` +
+    `and on-page technical work for local businesses in Nagpur and beyond.</p>`,
+).join("");
+const LONG_HTML = `<!doctype html><html><head><title>SEO Guide</title>
+<meta name="description" content="A long SEO guide."></head><body>
+<nav><a href="/">Home</a> NAVJUNK NAVJUNK NAVJUNK</nav>
+<main><article><h1>The Complete SEO Guide</h1>${LONG_BODY}<h2>Advanced Tactics</h2>${LONG_BODY}</article></main>
+<footer>FOOTERJUNK contact us privacy terms</footer></body></html>`;
+
+describe("extractPage — Readability path", () => {
+  const page = extractPage(LONG_HTML);
+
+  it("uses Readability on a real-length article", () => {
+    expect(page.extractMethod).toBe("readability");
+  });
+  it("keeps article body, drops nav + footer chrome", () => {
+    expect(page.bodyText).toContain("keyword research");
+    expect(page.bodyText).not.toContain("NAVJUNK");
+    expect(page.bodyText).not.toContain("FOOTERJUNK");
+  });
+  it("reports a low junkRatio for a clean article", () => {
+    expect(page.junkRatio).toBeLessThan(0.05);
+  });
+});
+
