@@ -1,26 +1,24 @@
 import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { Container, Section } from "@/components/layout/container";
-import { LoginForm } from "@/components/app/login-form";
+import { RegisterForm } from "@/components/app/register-form";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { loginDestination, safeNext } from "@/lib/auth/redirect";
 
 export const metadata = buildMetadata({
-  title: "Sign in",
-  description: "Sign in to your account.",
-  path: "/login",
+  title: "Create account",
+  description: "Create your account.",
+  path: "/register",
   noIndex: true,
 });
 
-export default async function LoginPage({
+export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ reset?: string; check?: string; error?: string; next?: string }>;
+  searchParams: Promise<{ next?: string }>;
 }) {
-  const { reset, check, error, next } = await searchParams;
+  const { next } = await searchParams;
 
-  // Already signed in? Skip the form and go straight to the destination. This
-  // is the single entry point — /members/login and /games/login redirect here.
   const {
     data: { user },
   } = await (await supabaseAuthServer()).auth.getUser();
@@ -29,12 +27,7 @@ export default async function LoginPage({
   return (
     <Section className="flex min-h-[80vh] items-center">
       <Container size="narrow">
-        <LoginForm
-          next={safeNext(next ?? null) ?? ""}
-          check={check === "1"}
-          reset={reset === "1"}
-          errorParam={error}
-        />
+        <RegisterForm next={safeNext(next ?? null) ?? ""} />
       </Container>
     </Section>
   );

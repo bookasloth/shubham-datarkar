@@ -110,7 +110,7 @@ export function UpgradePanel({
     if (!signedIn) {
       // Carry the chosen plan through signup; land back here to check out.
       const next = `/members/upgrade?plan=${selected.key}`;
-      router.push(`/login?view=signup&next=${encodeURIComponent(next)}`);
+      router.push(`/register?next=${encodeURIComponent(next)}`);
       return;
     }
     void checkout(selected);

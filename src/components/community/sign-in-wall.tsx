@@ -11,6 +11,7 @@ import { MessagesSquare } from "lucide-react";
  */
 export function SignInWall({ returnPath }: { returnPath: string }) {
   const login = `/login?next=${encodeURIComponent(returnPath)}`;
+  const register = `/register?next=${encodeURIComponent(returnPath)}`;
   return (
     <div className="relative -mt-24 pt-24">
       {/* Sits above the feed's last card and dissolves it into the page. */}
@@ -29,7 +30,7 @@ export function SignInWall({ returnPath }: { returnPath: string }) {
         </p>
         <div className="mt-6 flex items-center gap-3">
           <Link
-            href={`${login}&view=signup`}
+            href={register}
             className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
           >
             Create a free account

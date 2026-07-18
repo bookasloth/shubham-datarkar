@@ -33,7 +33,7 @@ export const metadata = buildMetadata({
 // After signup a member lands in /members (their workspace), where the
 // membership actually lives. ponytail: checkout (Razorpay) not wired yet —
 // this creates the account; charging is the next step.
-const SIGNUP = "/login?view=signup";
+const SIGNUP = "/register";
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
