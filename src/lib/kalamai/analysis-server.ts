@@ -4,6 +4,8 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mapWithConcurrency } from "@/lib/seo/fetch-html";
 import { extractPage, type Heading } from "./extract";
+import { chunkText } from "./chunk";
+import { embedTexts, toPgVector, EMBED_MODEL } from "./embed";
 import { rankTerms, type TermPage, type RankedTerm } from "./terms";
 import { runJson } from "./llm";
 import { BRIEF_SCHEMA, FAKE_BRIEF, buildBriefPrompt, type Brief } from "./brief";
@@ -226,6 +228,10 @@ async function stepR3(db: SupabaseClient, a: AnalysisRow): Promise<StepResult> {
   }[];
   const ok = pages.filter((p) => p.ok);
 
+  // Embed competitor chunks for semantic clustering (distill) + rescore. Runs
+  // once at the extracting step; idempotent (clears prior competitor chunks).
+  await embedCompetitorChunks(db, a.id, ok);
+
   const termPages: TermPage[] = ok.map((p) => ({
     rank: p.rank,
     aiCited: p.ai_overview_cited,
@@ -259,6 +265,40 @@ async function stepR3(db: SupabaseClient, a: AnalysisRow): Promise<StepResult> {
     })
     .eq("id", a.id);
   return { status: "analyzing", progress: 75 };
+}
+
+// Chunk + embed each ok competitor page, store vectors in kalamai_chunks.
+// Idempotent: clears this analysis's competitor chunks first, so a reclaimed
+// step can't double-insert. Fake-embed mode (no GEMINI_API_KEY) uses hashed
+// vectors, so this runs offline with zero spend.
+async function embedCompetitorChunks(
+  db: SupabaseClient,
+  analysisId: string,
+  pages: { body_text: string | null }[],
+): Promise<void> {
+  await db.from("kalamai_chunks").delete().eq("analysis_id", analysisId).eq("source_type", "competitor");
+
+  const rows: Record<string, unknown>[] = [];
+  for (const p of pages) {
+    const chunks = chunkText(p.body_text ?? "");
+    if (!chunks.length) continue;
+    const vectors = await embedTexts(
+      chunks.map((c) => c.text),
+      "RETRIEVAL_DOCUMENT",
+    );
+    chunks.forEach((c, i) =>
+      rows.push({
+        source_type: "competitor",
+        analysis_id: analysisId,
+        chunk_index: c.index,
+        text: c.text,
+        token_count: c.tokenCount,
+        embedding: toPgVector(vectors[i]),
+        embedding_model: EMBED_MODEL,
+      }),
+    );
+  }
+  if (rows.length) await db.from("kalamai_chunks").insert(rows);
 }
 
 // R4 — one Sonnet call turns the code-derived signal into the brief. Malformed

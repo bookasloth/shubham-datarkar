@@ -1,6 +1,8 @@
+import { Readability } from "@mozilla/readability";
+import { JSDOM } from "jsdom";
 import { parseHtml } from "@/lib/seo/parse-html";
 
-/** Cleaned competitor-page signal for TF-IDF and the competitor snapshot. */
+/** Cleaned competitor-page signal for term stats and the competitor snapshot. */
 export type Heading = { level: 1 | 2 | 3; text: string };
 
 export type ExtractedPage = {
@@ -10,6 +12,8 @@ export type ExtractedPage = {
   bodyText: string; // boilerplate-stripped, tag-free
   wordCount: number;
   jsonldTypes: string[];
+  junkRatio: number; // fraction of body lines that look like nav/boilerplate (QA metric)
+  extractMethod: "readability" | "regex_fallback";
 };
 
 const NAMED: Record<string, string> = {
@@ -68,14 +72,63 @@ function countWords(text: string): number {
   return text.split(/\s+/).filter((w) => /[\p{L}\p{N}]/u.test(w)).length;
 }
 
+// Lines that look like site chrome rather than article prose. Used only for a QA
+// ratio (risk 2: catch a stripper leaving nav junk) — never to drop content.
+const JUNK_LINE =
+  /^(home|menu|search|subscribe|sign ?in|log ?in|register|share|tweet|follow|cookies?|privacy|terms|contact|about us|©|\d{4} all rights|back to top|skip to|read more|newsletter)\b/i;
+
+function junkRatio(rawText: string): number {
+  const lines = rawText.split(/\n+/).map((l) => l.trim()).filter((l) => l.length > 0);
+  if (!lines.length) return 0;
+  const junk = lines.filter((l) => l.length < 3 || JUNK_LINE.test(l)).length;
+  return Math.round((junk / lines.length) * 1000) / 1000;
+}
+
+// Readability extraction: the article body with nav/footer/aside removed by the
+// same engine Firefox Reader View uses. Headings come from the CLEANED article
+// content, so nav headings don't leak in. Returns null on a framework shell with
+// no real article, so the caller can fall back to the regex strip.
+function readabilityExtract(html: string): { title: string | null; rawText: string; headings: Heading[] } | null {
+  try {
+    // Fresh JSDOM per call; Readability mutates the document it parses.
+    const dom = new JSDOM(html, { url: "https://example.invalid/" });
+    const article = new Readability(dom.window.document).parse();
+    const rawText = article?.textContent?.trim() ?? "";
+    if (!article || rawText.length < 200) return null; // no real article body
+    return {
+      title: article.title?.trim() || null,
+      rawText,
+      headings: extractHeadings(article.content ?? ""),
+    };
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Extract the signal a competitor page contributes. Reuses parseHtml for the
- * head-based fields (title, meta, JSON-LD types) — those work on any page — and
- * does its own region/heading/body pass, since parseHtml only returns counts and
- * its word count is scoped to this site's own <main id="main">.
+ * head-based fields (title, meta, JSON-LD types). Body/headings come from
+ * Readability; on a JS-shell page with no article, falls back to the regex strip.
  */
 export function extractPage(html: string): ExtractedPage {
   const meta = parseHtml(html);
+  const readable = readabilityExtract(html);
+
+  if (readable) {
+    const bodyText = readable.rawText.replace(/\s+/g, " ").trim();
+    return {
+      title: meta.title ?? readable.title,
+      metaDescription: meta.description,
+      jsonldTypes: meta.schemas,
+      headings: readable.headings.length ? readable.headings : extractHeadings(mainRegion(html)),
+      bodyText,
+      wordCount: countWords(bodyText),
+      junkRatio: junkRatio(readable.rawText),
+      extractMethod: "readability",
+    };
+  }
+
+  // Fallback: naive region + regex strip (framework shells, malformed HTML).
   const region = stripBoilerplate(mainRegion(html));
   const bodyText = toText(region);
   return {
@@ -85,5 +138,7 @@ export function extractPage(html: string): ExtractedPage {
     headings: extractHeadings(region),
     bodyText,
     wordCount: countWords(bodyText),
+    junkRatio: junkRatio(bodyText),
+    extractMethod: "regex_fallback",
   };
 }

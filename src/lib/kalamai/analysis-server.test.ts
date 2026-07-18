@@ -17,10 +17,11 @@ const store: Record<string, Row[]> = {
   kalamai_pages: [],
   kalamai_llm_calls: [],
   kalamai_events: [],
+  kalamai_chunks: [],
 };
 
 class Query {
-  private mode: "select" | "update" | "upsert" | "insert" = "select";
+  private mode: "select" | "update" | "upsert" | "insert" | "delete" = "select";
   private filters: [string, unknown][] = [];
   private orGroups: string[] = [];
   private selectRequested = false;
@@ -53,6 +54,10 @@ class Query {
   insert(rows: Row | Row[]) {
     this.mode = "insert";
     this.rows = Array.isArray(rows) ? rows : [rows];
+    return this;
+  }
+  delete() {
+    this.mode = "delete";
     return this;
   }
   eq(col: string, val: unknown) {
@@ -108,6 +113,10 @@ class Query {
     }
     if (this.mode === "insert") {
       this.table_().push(...this.rows.map((r) => ({ ...r })));
+      return { data: null, error: null };
+    }
+    if (this.mode === "delete") {
+      store[this.table] = this.table_().filter((r) => !this.filters.every(([c, v]) => r[c] === v));
       return { data: null, error: null };
     }
     // upsert
@@ -187,6 +196,12 @@ describe("runStep", () => {
 
     expect(store.kalamai_pages.filter((p) => p.ok)).toHaveLength(8);
     expect(store.kalamai_llm_calls.filter((c) => c.stage === "R4")).toHaveLength(1);
+
+    // Competitor chunks embedded (fake-embed) with the pinned model.
+    const chunks = store.kalamai_chunks;
+    expect(chunks.length).toBeGreaterThanOrEqual(8); // >= 1 per ok page
+    expect(chunks.every((c) => c.source_type === "competitor")).toBe(true);
+    expect(chunks.every((c) => c.embedding_model === "text-embedding-004")).toBe(true);
   });
 
   it("marks low_confidence when fewer than 20 pages crawl ok", async () => {
