@@ -170,7 +170,6 @@ import { signUp, type SignInState } from "@/lib/auth/actions";
 
 export function RegisterForm({ next = "" }: { next?: string }) {
   const [state, formAction, pending] = useActionState<SignInState, FormData>(signUp, undefined);
-  const [pw, setPw] = React.useState("");
   const errRef = React.useRef<HTMLParagraphElement>(null);
 
   React.useEffect(() => {
@@ -209,7 +208,6 @@ export function RegisterForm({ next = "" }: { next?: string }) {
             placeholder="At least 8 characters"
             required
             meter
-            onValueChange={setPw}
           />
 
           {state?.error && (
@@ -243,7 +241,6 @@ export function RegisterForm({ next = "" }: { next?: string }) {
 }
 ```
 
-(Note: `pw` is wired to `PasswordField`'s meter; it is otherwise unused — the meter needs the value. Keep it.)
 
 - [ ] **Step 2: Create the `/register` page (mirrors `/login` page's auth-skip guard)**
 
@@ -1222,7 +1219,7 @@ export function WelcomeWizard({
           </div>
           <Card className="p-6">
             {isPremium ? (
-              <p className="text-center text-sm text-muted-foreground">You&apos;re already a Member. 🎉</p>
+              <p className="text-center text-sm text-muted-foreground">You&apos;re already a Member.</p>
             ) : (
               <UpgradePanel plans={plans} email={email} signedIn />
             )}
