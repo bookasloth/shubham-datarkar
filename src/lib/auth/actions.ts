@@ -104,15 +104,28 @@ export async function signUp(
   _prev: SignInState,
   formData: FormData,
 ): Promise<SignInState> {
+  const email = String(formData.get("email") ?? "").trim();
+  const password = String(formData.get("password") ?? "");
   const result = await createAccount({
-    email: String(formData.get("email") ?? "").trim(),
-    password: String(formData.get("password") ?? ""),
+    email,
+    password,
     name: String(formData.get("name") ?? "").trim(),
     next: String(formData.get("next") ?? ""),
   });
   if ("error" in result) return result;
 
-  redirect(`/login?check=1${result.safe ? `&next=${encodeURIComponent(result.safe)}` : ""}`);
+  // Sign them in immediately so they can use the app during the 48h grace window.
+  // Requires Supabase "Confirm email" enforcement OFF (see plan Global Constraints);
+  // if it is still ON this returns an error and we fall back to the check banner.
+  const supabase = await supabaseAuthServer();
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) {
+    redirect(`/login?check=1${result.safe ? `&next=${encodeURIComponent(result.safe)}` : ""}`);
+  }
+
+  const params = new URLSearchParams({ email });
+  if (result.safe) params.set("next", result.safe);
+  redirect(`/verify-email?${params.toString()}`);
 }
 
 export type JoinState = { error: string } | { ok: true; email: string } | undefined;
