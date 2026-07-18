@@ -25,3 +25,4 @@ end;
 $$;
 
 revoke all on function public.block_unverified_accounts() from public, anon, authenticated;
+grant execute on function public.block_unverified_accounts() to service_role;

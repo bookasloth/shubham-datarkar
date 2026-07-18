@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     // Newcomers (not yet onboarded) get the welcome mail once and go to /welcome.
     // Keying on onboarded_at (not link type) means a resend confirmation is
     // treated identically to a first signup click.
-    const { data: prof } = await supabase
+    const { data: prof } = await supabaseAdmin()
       .from("profiles")
       .select("onboarded_at")
       .eq("id", data.user.id)
