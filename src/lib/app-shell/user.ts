@@ -7,6 +7,7 @@ export type ShellUser = {
   email: string;
   displayName: string;
   username: string | null;
+  avatarUrl: string | null;
   role: MemberRole;
   isAdmin: boolean;
   isPremium: boolean;
@@ -22,7 +23,7 @@ export const getShellUser = cache(async (): Promise<ShellUser> => {
   const sb = await supabaseAuthServer();
   const { data: profile } = await sb
     .from("profiles")
-    .select("display_name, username")
+    .select("display_name, username, avatar_url")
     .eq("id", ctx.user.id)
     .maybeSingle();
 
@@ -36,6 +37,7 @@ export const getShellUser = cache(async (): Promise<ShellUser> => {
     email,
     displayName,
     username: profile?.username?.trim() || null,
+    avatarUrl: (profile?.avatar_url as string | null) ?? null,
     role: ctx.role,
     isAdmin: ctx.role === "admin",
     isPremium: ctx.role === "premium" || ctx.role === "admin",
