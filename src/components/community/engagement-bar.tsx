@@ -1,5 +1,5 @@
 "use client";
-import { useOptimistic, useState, useTransition } from "react";
+import { useOptimistic, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ThumbsUp, MessagesSquare, Repeat2, Bookmark, Medal } from "lucide-react";
@@ -8,6 +8,7 @@ import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
 import { JoinModal } from "@/components/community/join-modal";
 import { GATE } from "@/lib/community/gate-messages";
+import { useToast } from "@/components/ui/toast";
 
 // `relative` anchors the like-burst overlay; `active:scale-90` gives every
 // action a tactile press that transition-ui eases back on release.
@@ -49,74 +50,85 @@ function reduce(s: Engagement, a: Action): Engagement {
 
 export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: React.ReactNode }) {
   const router = useRouter();
-  const [pending, start] = useTransition();
+  const { toast } = useToast();
+  const [, start] = useTransition();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
 
   // A logged-out tap is the one "error" worth acting on rather than reporting:
-  // it means someone wanted in. Everything else still renders as text below.
+  // it means someone wanted in. Everything else surfaces as a toast.
   function report(message: string) {
     if (message === GATE.SIGNED_OUT) setJoining(true);
-    else setError(message);
+    else {
+      setError(message);
+      toast({ title: "That didn't go through", description: message, variant: "danger" });
+    }
   }
 
-  // Base comes straight from props, so a router.refresh() (or any re-render with
-  // fresh server data) is what resets the optimistic overlay. Seeding useState
-  // once would freeze these counts at mount and never pick the new values up.
-  // A failed action leaves props unchanged, so the overlay reverts on its own.
-  const [state, addOptimistic] = useOptimistic<Engagement, Action>(
-    {
-      vote: post.viewerVote,
-      up: post.upCount,
-      down: post.downCount,
-      marked: post.viewerBookmarked,
-      bookmarks: post.bookmarkCount,
-      reblogs: post.reblogCount,
-      reblogged: post.viewerReblogged,
-    },
-    reduce,
-  );
+  // `committed` is the client-authoritative truth seeded from the server render.
+  // We advance it ONLY on a confirmed mutation — never router.refresh() on the
+  // happy path, so a like never triggers a whole-feed refetch. The optimistic
+  // overlay stacks rapid clicks over `committed` and reverts a failed action on
+  // its own when the transition settles; the error path additionally refreshes
+  // to re-sync display with the server after a partial-failure toggle chain.
+  const [committed, setCommitted] = useState<Engagement>({
+    vote: post.viewerVote,
+    up: post.upCount,
+    down: post.downCount,
+    marked: post.viewerBookmarked,
+    bookmarks: post.bookmarkCount,
+    reblogs: post.reblogCount,
+    reblogged: post.viewerReblogged,
+  });
+  const [state, addOptimistic] = useOptimistic<Engagement, Action>(committed, reduce);
+
+  // Serialize each channel's server calls in click order so the DB lands on the
+  // final intent regardless of which request resolves first. Toggle actions are
+  // read-then-write on the server, so overlapping them races; a promise chain
+  // per channel keeps them strictly ordered without blocking the UI.
+  const voteChain = useRef<Promise<unknown>>(Promise.resolve());
+  const bmChain = useRef<Promise<unknown>>(Promise.resolve());
+  const rbChain = useRef<Promise<unknown>>(Promise.resolve());
+
+  function run(
+    chain: React.MutableRefObject<Promise<unknown>>,
+    action: Action,
+    call: () => ReturnType<typeof toggleVote>,
+  ) {
+    start(async () => {
+      addOptimistic(action);
+      const next = chain.current.then(call);
+      chain.current = next;
+      const r = await next;
+      if ("error" in r) {
+        report(r.error);
+        // Heal display vs. server after a failure mid-toggle-chain. Rare path —
+        // the happy path never refetches. ponytail: full re-sync beats tracking
+        // per-action inverse deltas across a partially-applied queue.
+        router.refresh();
+      } else {
+        setError(null);
+        setCommitted((c) => reduce(c, action));
+      }
+    });
+  }
 
   function onVote(value: 1 | -1) {
     setBurst(value === 1 ? "up" : "down");
     setTimeout(() => setBurst(null), 480);
-    start(async () => {
-      addOptimistic({ kind: "vote", value });
-      const r = await toggleVote(post.id, value);
-      if ("error" in r) report(r.error);
-      else {
-        setError(null);
-        router.refresh();
-      }
-    });
+    run(voteChain, { kind: "vote", value }, () => toggleVote(post.id, value));
   }
 
   function onBookmark() {
-    start(async () => {
-      addOptimistic({ kind: "bookmark" });
-      const r = await toggleBookmark(post.id);
-      if ("error" in r) report(r.error);
-      else {
-        setError(null);
-        router.refresh();
-      }
-    });
+    run(bmChain, { kind: "bookmark" }, () => toggleBookmark(post.id));
   }
 
   function onReblog() {
     setReblogFx(true);
     setTimeout(() => setReblogFx(false), 500);
-    start(async () => {
-      addOptimistic({ kind: "reblog" });
-      const r = await toggleReblog(post.id);
-      if ("error" in r) report(r.error);
-      else {
-        setError(null);
-        router.refresh();
-      }
-    });
+    run(rbChain, { kind: "reblog" }, () => toggleReblog(post.id));
   }
 
   // Fire the like burst only when the vote lands ON (not when toggling it off).
@@ -137,7 +149,6 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
 
         <button
           type="button"
-          disabled={pending}
           onClick={onReblog}
           aria-label="Reblog"
           aria-pressed={state.reblogged}
@@ -150,7 +161,6 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
 
         <button
           type="button"
-          disabled={pending}
           onClick={() => onVote(1)}
           aria-label="Upvote"
           aria-pressed={state.vote === 1}
@@ -177,7 +187,6 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
 
         <button
           type="button"
-          disabled={pending}
           onClick={onBookmark}
           aria-label="Bookmark"
           aria-pressed={state.marked}

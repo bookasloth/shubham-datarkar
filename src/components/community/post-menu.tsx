@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { reportPost, deleteOwnPost } from "@/lib/community/engage-actions";
 import { setPostHidden, setPostDemoted, adminDeletePost } from "@/lib/community/admin-actions";
+import { usePostCardFrame } from "./post-card-frame";
+import { useToast } from "@/components/ui/toast";
 
 export function PostMenu({
   postId,
@@ -18,16 +20,59 @@ export function PostMenu({
   isLoggedIn,
   isOwner,
   isAdmin = false,
+  standalone = false,
 }: {
   postId: string;
   publicId: string;
   isLoggedIn: boolean;
   isOwner: boolean;
   isAdmin?: boolean;
+  /** Root card of a single-post page: a successful delete navigates to the feed
+   *  rather than hiding the card in place. */
+  standalone?: boolean;
 }) {
   const router = useRouter();
+  const { toast } = useToast();
+  const frame = usePostCardFrame();
   const [pending, start] = useTransition();
   const [note, setNote] = useState<string | null>(null);
+
+  // Optimistically pull the card, run the mutation, put it back on failure. On a
+  // standalone post page there's nothing to hide into — succeed by navigating to
+  // the feed instead. `settle` returns whether the caller should proceed.
+  function errOf(r: unknown): string | null {
+    return r && typeof r === "object" && "error" in r && typeof r.error === "string"
+      ? r.error
+      : null;
+  }
+
+  function removeThenRun(run: () => Promise<unknown>, failTitle: string) {
+    if (standalone) {
+      start(async () => {
+        const err = errOf(await run());
+        if (err) toast({ title: failTitle, description: err, variant: "danger" });
+        else router.push("/community");
+      });
+      return;
+    }
+    frame?.remove();
+    start(async () => {
+      try {
+        const err = errOf(await run());
+        if (err) {
+          frame?.restore();
+          toast({ title: failTitle, description: err, variant: "danger" });
+        }
+      } catch (e) {
+        frame?.restore();
+        toast({
+          title: failTitle,
+          description: e instanceof Error ? e.message : "Please try again.",
+          variant: "danger",
+        });
+      }
+    });
+  }
 
   async function onCopyLink() {
     try {
@@ -49,27 +94,16 @@ export function PostMenu({
 
   function onDelete() {
     if (!window.confirm("Delete this post? This can't be undone.")) return;
-    start(async () => {
-      const r = await deleteOwnPost(postId);
-      if ("error" in r) setNote(r.error);
-      else router.refresh();
-    });
+    removeThenRun(() => deleteOwnPost(postId), "Couldn't delete the post");
   }
 
   // Admin actions throw on failure (unlike the {error} unions above). Hide/demote
-  // drop the post from the feed RPC for everyone, so refresh to reflect it.
-  // Reversal (unhide/undemote) lives in /admin/community — the feed can't show
-  // what it filters out. ponytail: one-way inline is the takedown path; panel reverses.
-  function runAdmin(fn: () => Promise<void>, confirmMsg?: string) {
+  // drop the post from the feed RPC for everyone; removeThenRun pulls the card
+  // instantly and restores it if the mutation throws. Reversal (unhide/undemote)
+  // lives in /admin/community — the feed can't show what it filters out.
+  function runAdmin(fn: () => Promise<void>, confirmMsg?: string, failTitle = "Action failed") {
     if (confirmMsg && !window.confirm(confirmMsg)) return;
-    start(async () => {
-      try {
-        await fn();
-        router.refresh();
-      } catch (e) {
-        setNote(e instanceof Error ? e.message : "Action failed.");
-      }
-    });
+    removeThenRun(fn, failTitle);
   }
 
   return (

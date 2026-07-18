@@ -66,6 +66,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
           pollResult={pollResults[post.id]}
           canVote={canPost}
           viewerId={user?.id ?? null}
+          standalone
         />
 
         {canPost && <ReplyBox postId={post.id} seed={shellUser?.username ?? ""} />}

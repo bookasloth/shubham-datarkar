@@ -10,17 +10,22 @@ import { CommunityAvatar } from "./community-avatar";
 import { EngagementBar } from "./engagement-bar";
 import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
+import { PostCardFrame } from "./post-card-frame";
 
 export async function PostCard({
   post,
   pollResult,
   canVote = false,
   viewerId = null,
+  standalone = false,
 }: {
   post: FeedPost;
   pollResult?: PollResult;
   canVote?: boolean;
   viewerId?: string | null;
+  /** The root card on a single-post page. Deleting it navigates away instead of
+   *  hiding it in place (hiding would leave the page's replies orphaned). */
+  standalone?: boolean;
 }) {
   // Cached per request (getAdminUser is React.cache) — one auth check per render
   // regardless of how many cards map over it.
@@ -34,6 +39,7 @@ export async function PostCard({
     tokens.flatMap((t) => (t.type === "link" ? [t.href] : [])),
   );
   return (
+    <PostCardFrame>
     <article className="group relative mb-3 rounded-card border border-border bg-card p-4 transition-ui hover:bg-muted/30">
       {/* Whole-card click target → single post (Twitter-style). Absolutely
           positioned and z-10 so it paints over the static header/body/media
@@ -149,11 +155,13 @@ export async function PostCard({
                 isLoggedIn={Boolean(viewerId)}
                 isOwner={viewerId === post.userId}
                 isAdmin={isAdmin}
+                standalone={standalone}
               />
             }
           />
         </div>
       </div>
     </article>
+    </PostCardFrame>
   );
 }
