@@ -33,9 +33,15 @@ export async function saveOnboardingStep1(
     return { error: /taken/i.test(nameErr.message) ? "That username is taken." : "Could not set username." };
   }
 
-  if (referral) {
-    await supabase.from("profiles").update({ referral_source: referral }).eq("id", user.id);
-  }
+  // Stamp onboarded_at here: reaching the membership step already counts as
+  // onboarded (membership is an optional upsell). Otherwise a user who PAYS in
+  // step 2 — which redirects without calling completeOnboarding — would finish
+  // with onboarded_at still null and get routed back through onboarding.
+  const update: { onboarded_at: string; referral_source?: string } = {
+    onboarded_at: new Date().toISOString(),
+  };
+  if (referral) update.referral_source = referral;
+  await supabase.from("profiles").update(update).eq("id", user.id);
   return { ok: true };
 }
 
