@@ -1,6 +1,7 @@
 {
   "crons": [
     { "path": "/api/cron/birthday-greetings", "schedule": "0 3 * * *" },
-    { "path": "/api/cron/email-dispatch", "schedule": "30 3 * * *" }
+    { "path": "/api/cron/email-dispatch", "schedule": "30 3 * * *" },
+    { "path": "/api/cron/block-unverified", "schedule": "0 4 * * *" }
   ]
 }
