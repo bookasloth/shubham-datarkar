@@ -5,7 +5,7 @@ import { describe, it, expect, vi } from "vitest";
 // resolve condition in vitest) — same fix as the other *-server.test.ts files.
 vi.mock("server-only", () => ({}));
 
-import { validateUsername } from "./onboarding-actions";
+import { validateUsername } from "./username";
 
 describe("validateUsername", () => {
   it("accepts a valid handle", () => {

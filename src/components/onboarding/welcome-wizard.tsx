@@ -12,9 +12,9 @@ import type { MembershipPlan } from "@/lib/members/membership-server";
 import {
   saveOnboardingStep1,
   completeOnboarding,
-  validateUsername,
   type Step1State,
 } from "@/lib/auth/onboarding-actions";
+import { validateUsername } from "@/lib/auth/username";
 
 const REFERRALS = ["Search", "X / Twitter", "LinkedIn", "Instagram", "YouTube", "A friend", "Other"];
 

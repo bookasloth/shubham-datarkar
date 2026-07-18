@@ -3,15 +3,11 @@
 import { redirect } from "next/navigation";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { safeNext } from "@/lib/auth/redirect";
+import { validateUsername } from "@/lib/auth/username";
 
-/** Mirror of the DB rule in set_username. Returns an error string, or null if OK. */
-export function validateUsername(raw: string): string | null {
-  const v = raw.trim();
-  if (!/^[a-zA-Z0-9_.]{3,30}$/.test(v)) {
-    return "Username must be 3-30 chars: letters, numbers, dot, underscore.";
-  }
-  return null;
-}
+// validateUsername lives in a plain module (not this "use server" file) so the
+// client wizard can import it synchronously — re-exporting it here would turn it
+// back into a server action. Imported for the server-side guard below.
 
 export type Step1State = { error: string } | { ok: true } | undefined;
 
