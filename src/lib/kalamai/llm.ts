@@ -33,6 +33,31 @@ export function isFakeLlm(): boolean {
   return !process.env.ANTHROPIC_API_KEY || process.env.KALAMAI_FAKE_LLM === "1";
 }
 
+/**
+ * System blocks with the cacheable brief FIRST. Anthropic caches the prompt
+ * prefix up to the cache_control marker, so the invariant brief must precede the
+ * stage-specific instructions — otherwise the differing instruction block breaks
+ * the prefix and the cache never hits (cache_read stays 0). The streamed writing
+ * calls (W2 draft, W4 rewrite) share it: W2 writes, W4 reads at 0.1x. The brief
+ * runs ~2.2K tokens, over the 1024 min.
+ *
+ * `mark=false` for structured-output (runJson) calls: their output_config makes
+ * the prefix a different shape, so they can't read the streamed cache anyway —
+ * marking it would only write a throwaway cache at 1.25x. Send the brief uncached.
+ */
+export function buildSystem(
+  cachePrefix: string | undefined,
+  instructions: string,
+  mark = true,
+): Anthropic.TextBlockParam[] {
+  const system: Anthropic.TextBlockParam[] = [];
+  if (cachePrefix) {
+    system.push(mark ? { type: "text", text: cachePrefix, cache_control: { type: "ephemeral" } } : { type: "text", text: cachePrefix });
+  }
+  system.push({ type: "text", text: instructions });
+  return system;
+}
+
 // Standard Sonnet 5 pricing (upper bound; intro pricing through 2026-08-31 is cheaper).
 // $3 in / $15 out per MTok; cache read 0.1x, cache write 1.25x.
 function costUsd(u: Omit<LlmUsage, "costUsd" | "ms">): number {
@@ -67,10 +92,7 @@ export async function runJson<T>(args: {
   if (isFakeLlm()) return { data: args.fake, usage: ZERO_USAGE };
 
   const started = Date.now();
-  const system: Anthropic.TextBlockParam[] = [{ type: "text", text: args.system }];
-  if (args.cachePrefix) {
-    system.push({ type: "text", text: args.cachePrefix, cache_control: { type: "ephemeral" } });
-  }
+  const system = buildSystem(args.cachePrefix, args.system, false); // structured output → can't share the streamed cache
   const res = await getClient().messages.create({
     model: KALAMAI_MODEL,
     max_tokens: 4096,
@@ -103,10 +125,7 @@ export async function runText(args: {
   if (isFakeLlm()) return { text: args.fake, usage: ZERO_USAGE };
 
   const started = Date.now();
-  const system: Anthropic.TextBlockParam[] = [{ type: "text", text: args.system }];
-  if (args.cachePrefix) {
-    system.push({ type: "text", text: args.cachePrefix, cache_control: { type: "ephemeral" } });
-  }
+  const system = buildSystem(args.cachePrefix, args.system);
 
   const message = await getClient()
     .messages.stream({
