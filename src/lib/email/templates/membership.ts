@@ -105,6 +105,31 @@ export function paymentFailed(a: { name?: string | null; planName: string; retry
   };
 }
 
+/** Membership ended (cancelled / not renewing / paused-out). Humour: Subtle, no guilt. */
+export function membershipEnded(a: { name?: string | null; planName: string }): RenderedEmail {
+  const first = firstName(a.name);
+  const plan = esc(a.planName);
+  return {
+    subject: "Your membership just clocked out",
+    html: renderEmail({
+      preheader: `Your ${plan} membership has ended. The door's still unlocked whenever.`,
+      headerTagline: "Membership",
+      title: "Your membership just clocked out",
+      footerNote: TXN_FOOTER,
+      bodyHtml:
+        p(`Hey ${esc(first)},`) +
+        p(`Your ${plan} membership has ended, so the members-only bits are behind their little locks again.`) +
+        p("No hard feelings.") +
+        p("No 'are you SURE' popup chasing you around.") +
+        p("Everything you can reach without a membership is still exactly where you left it.") +
+        p("And if you ever want back in, it's one click away."),
+      cta: { label: "Restart my membership", href: `${SITE}/members` },
+      afterCta: emailGif(EMAIL_GIFS.membershipEnded, "A door quietly closing", 340),
+    }),
+    text: `Hey ${first}, your ${a.planName} membership has ended — the members-only bits are locked again. No hard feelings. Whenever you want back in, it's one click: ${SITE}/members`,
+  };
+}
+
 /** New members-only resource. Humour: Subtle. */
 export function newMemberResource(a: { name?: string | null; title: string; href: string; kind?: string }): RenderedEmail {
   const first = firstName(a.name);

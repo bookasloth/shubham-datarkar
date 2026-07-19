@@ -28,7 +28,9 @@ export async function runIntroductions(): Promise<number> {
     for (const u of data?.users ?? []) {
       if (!u.email || !u.created_at) continue;
       const age = now - new Date(u.created_at).getTime();
-      if (age < 24 * 3600e3 || age > 48 * 3600e3) continue;
+      // 48–72h after signup: spaced out from the account-welcome so onboarding
+      // doesn't bunch up in the first day.
+      if (age < 48 * 3600e3 || age > 72 * 3600e3) continue;
       if (!(await claim(u.email, "introduction", "once"))) continue;
       const name = (u.user_metadata?.full_name as string) || (u.user_metadata?.name as string) || null;
       if ((await sendTemplate(u.email, introduction({ name }))).ok) sent++;
@@ -168,9 +170,10 @@ export async function runMonthlyRoundup(t: { dom: number; ym: string }): Promise
   return sent;
 }
 
-/** Mondays: top 5 root community posts (by upvotes) from the last 7 days → active subscribers. */
+/** Wednesdays: top 5 root community posts (by upvotes) from the last 7 days → active subscribers.
+ *  Moved off Monday so blogs/community/leaderboard don't all land the same day. */
 export async function runCommunityDigest(t: { dow: number; iso: string }): Promise<number> {
-  if (t.dow !== 1) return 0;
+  if (t.dow !== 3) return 0; // 3 = Wednesday
   let sent = 0;
   try {
     const since = new Date(Date.now() - 7 * 86400e3).toISOString();
@@ -196,7 +199,7 @@ export async function runCommunityDigest(t: { dow: number; iso: string }): Promi
   return sent;
 }
 
-/** Nudge: joined 3-14 days ago, confirmed email, zero root posts, once ever. */
+/** Nudge: joined 7-14 days ago, confirmed email, zero root posts, once ever. */
 export async function runFirstPostNudge(): Promise<number> {
   let sent = 0;
   try {
@@ -206,7 +209,8 @@ export async function runFirstPostNudge(): Promise<number> {
     for (const u of data?.users ?? []) {
       if (!u.email || !u.email_confirmed_at || !u.created_at) continue;
       const age = now - new Date(u.created_at).getTime();
-      if (age < 3 * 86400e3 || age > 14 * 86400e3) continue;
+      // 7–14 days: give the account-welcome / introduction room before nudging.
+      if (age < 7 * 86400e3 || age > 14 * 86400e3) continue;
       const { count } = await admin
         .from("community_posts")
         .select("id", { count: "exact", head: true })
@@ -255,9 +259,10 @@ export async function runMemberDigest(t: { dom: number; ym: string }): Promise<n
   return sent;
 }
 
-/** Mondays: per-game top-5 weekly leaderboard → everyone who played that game in the last 7 days. */
+/** Fridays: per-game top-5 weekly leaderboard → everyone who played that game in the last 7 days.
+ *  Moved off Monday so blogs/community/leaderboard don't all land the same day. */
 export async function runWeeklyLeaderboard(t: { dow: number; date: string; iso: string }): Promise<number> {
-  if (t.dow !== 1) return 0;
+  if (t.dow !== 5) return 0; // 5 = Friday
   let sent = 0;
   try {
     const admin = supabaseAdmin();
@@ -288,7 +293,7 @@ export async function runWeeklyLeaderboard(t: { dow: number; date: string; iso: 
   return sent;
 }
 
-/** Daily: streak >= 3 who haven't played today yet, per game. */
+/** Daily: streak >= 2 who haven't played today yet, per game. */
 export async function runStreakReminders(t: { date: string }): Promise<number> {
   let sent = 0;
   try {
@@ -299,7 +304,7 @@ export async function runStreakReminders(t: { date: string }): Promise<number> {
           .from("streaks")
           .select("user_id, current_streak")
           .eq("game", key)
-          .gte("current_streak", 3);
+          .gte("current_streak", 2);
         for (const s of streakRows ?? []) {
           try {
             const { count } = await admin

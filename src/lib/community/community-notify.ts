@@ -4,6 +4,7 @@ import { getUserEmail } from "@/lib/email/user-email";
 import { sendTemplate } from "@/lib/email/send-template";
 import { communityWelcome, postPublished, newComment, mentioned } from "@/lib/email/templates/community";
 import { mentionedHandles } from "@/lib/community/linkify";
+import { claim, istParts } from "@/lib/email/dispatch/dedupe";
 
 const SITE = "https://shubhamdatarkar.com";
 
@@ -31,8 +32,15 @@ export async function notifyPostCreated(userId: string, postHref: string): Promi
     const email = await getUserEmail(userId);
     if (!email) return;
     const kind = postEmailKind((count ?? 1) - 1);
-    if (kind === "welcome") await sendTemplate(email, communityWelcome({}));
-    else await sendTemplate(email, postPublished({ href: postHref }));
+    if (kind === "welcome") {
+      await sendTemplate(email, communityWelcome({}));
+      return;
+    }
+    // Publish notice: at most once a day, only for the first post of that day.
+    // The daily claim both dedupes and enforces "first post today wins".
+    const day = istParts(new Date()).date;
+    if (!(await claim(email, "postPublished", day))) return;
+    await sendTemplate(email, postPublished({ href: postHref }));
   } catch (e) {
     console.warn("[community] post email failed:", (e as Error).message);
   }

@@ -9,6 +9,7 @@ import { slugify } from "@/lib/utils";
 import type { ContentBlock } from "@/lib/data/types";
 import type { ResourceMeta } from "./types";
 import { requiredCapabilityForType } from "@/lib/members/capabilities";
+import { notifyNewResource } from "@/lib/members/resource-notify";
 
 /*
  * Members pages render dynamically (cookie session), so no revalidatePath is
@@ -142,6 +143,10 @@ export async function createResource(formData: FormData): Promise<void> {
     .single();
   if (error) throw new Error(error.message);
   await syncTags(created.id, String(formData.get("tags") ?? ""));
+  // Announce only member-gated resources that go straight to published.
+  if (data.status === "published" && data.required_capability) {
+    await notifyNewResource({ slug: data.slug, title: data.title, type: data.type });
+  }
   redirect("/admin/resources");
 }
 
@@ -149,9 +154,15 @@ export async function updateResource(id: string, formData: FormData): Promise<vo
   await requireAdmin();
   const supabase = await supabaseAuthServer();
   const data = fields(formData);
+  // Prior status: only a draft→published transition should announce (re-saving an
+  // already-published resource must not re-blast the members list).
+  const { data: prior } = await supabase.from("resources").select("status").eq("id", id).maybeSingle();
   const { error } = await supabase.from("resources").update(data).eq("id", id);
   if (error) throw new Error(error.message);
   await syncTags(id, String(formData.get("tags") ?? ""));
+  if (prior?.status !== "published" && data.status === "published" && data.required_capability) {
+    await notifyNewResource({ slug: data.slug, title: data.title, type: data.type });
+  }
   redirect("/admin/resources");
 }
 

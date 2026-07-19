@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { getEmailCredentials } from "@/lib/email/store";
-import { sendEmail } from "@/lib/email/smtp";
-import { birthdayEmail } from "@/lib/members/birthday-email";
+import { sendTemplate } from "@/lib/email/send-template";
+import { birthday } from "@/lib/email/templates/engagement";
 
 type BirthdayRow = { id: string; email: string; full_name: string | null };
 
@@ -32,16 +31,11 @@ export async function GET(request: Request) {
   const rows = (data ?? []) as BirthdayRow[];
   if (rows.length === 0) return NextResponse.json({ ok: true, sent: 0 });
 
-  const creds = await getEmailCredentials();
-  if (!creds) {
-    console.warn("[cron] no email credentials; skipping birthday greetings");
-    return NextResponse.json({ error: "Email not configured." }, { status: 503 });
-  }
-
+  // One birthday email, from the shared catalog template. `mark_birthday_greeted`
+  // keeps it to once per person per year (re-runs are idempotent).
   let sent = 0;
   for (const r of rows) {
-    const { subject, html, text } = birthdayEmail(r.full_name);
-    const res = await sendEmail(creds, { to: r.email, subject, html, text });
+    const res = await sendTemplate(r.email, birthday({ name: r.full_name }));
     if (res.ok) {
       await db.rpc("mark_birthday_greeted", { p_id: r.id });
       sent++;

@@ -45,7 +45,7 @@ describe("email catalog", () => {
   it("transactional emails do not claim a newsletter subscription", () => {
     const txnKeys = [
       "confirmEmail", "accountWelcome", "forgotPassword", "passwordChanged", "commentOtp",
-      "membershipActivated", "renewalReminder", "membershipRenewed", "paymentFailed",
+      "membershipActivated", "renewalReminder", "membershipRenewed", "paymentFailed", "membershipEnded",
       "membershipGift", "requestReceived", "requestApproved", "requestDeclined",
       "contactConfirmation", "projectInquiry", "communityWelcome", "postPublished",
       "newComment", "birthday", "festival", "weMissYou", "inactiveAccount",
