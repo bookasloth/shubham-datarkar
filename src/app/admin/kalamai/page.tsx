@@ -21,8 +21,8 @@ export default async function AdminKalamaiUsagePage() {
       <div>
         <h1 className="text-2xl font-bold tracking-tight">KalamAI Usage</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every analysis and article run — user, query, model, tokens, and an estimated cost. Cost is an estimate from
-          logged tokens at Sonnet list price, not a bill.
+          Every analysis and article run — user, query, model, tokens, and cost. Cost is the real cost logged per call,
+          so cached tokens (read at 0.1×) are already discounted. Cached tokens are shown next to in/out.
         </p>
       </div>
 
@@ -65,6 +65,9 @@ export default async function AdminKalamaiUsagePage() {
                     <td className="px-3 py-2 text-muted-foreground">{r.model}</td>
                     <td className="px-3 py-2 text-right tabular-nums text-muted-foreground">
                       {nf.format(r.inTokens)} / {nf.format(r.outTokens)}
+                      {r.cacheReadTokens > 0 && (
+                        <span className="ml-1 text-success">· {nf.format(r.cacheReadTokens)} cached</span>
+                      )}
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">₹{r.costInr.toFixed(2)}</td>
                     <td className="px-3 py-2 text-muted-foreground">{r.result}</td>
