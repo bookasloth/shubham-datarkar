@@ -2,7 +2,7 @@ import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
   Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Gamepad2, Search,
   Library, Tags, MessageSquarePlus, UserRound, Bell, BarChart3, MessagesSquare,
-  Contact, Send, Inbox, type LucideIcon,
+  Contact, Send, Inbox, Coins, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
@@ -77,6 +77,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     items: [
       { label: "Dashboard", href: "/admin/seo", icon: Search },
       { label: "Pages", href: "/admin/seo/pages", icon: FileText },
+      { label: "KalamAI Usage", href: "/admin/kalamai", icon: Coins },
     ],
   },
 ];
