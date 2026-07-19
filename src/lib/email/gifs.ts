@@ -40,6 +40,7 @@ export const EMAIL_GIFS = {
   renewalReminder: `${G}/renewal-reminder.gif`,
   membershipRenewed: `${G}/membership-renewed.gif`,
   paymentFailed: `${G}/payment-failed.gif`,
+  membershipEnded: `${G}/membership-ended.gif`,
   newResource: `${G}/new-resource.gif`,
   memberDigest: `${G}/member-digest.gif`,
   membershipGift: `${G}/membership-gift.gif`,

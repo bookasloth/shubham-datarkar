@@ -6,6 +6,7 @@ import { puzzleDateISO, isTodayOrYesterday } from "@/lib/daily";
 import { getMemberContext } from "@/lib/members/session";
 import { can } from "@/lib/members/capabilities";
 import { validateResult, type SubmitInput } from "@/lib/games/validate-result";
+import { notifyAchievements } from "@/lib/games/achievement-notify";
 
 export type SubmitOutcome =
   | { ok: true }
@@ -50,5 +51,14 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
   );
 
   if (error) return { ok: false, reason: "error" };
+
+  // Achievement emails: only daily wins touch streaks, so only they can unlock
+  // a first-win / streak milestone. Best-effort — never fails the submit.
+  if (check.source === "daily" && input.status === "won" && user.email) {
+    const name =
+      (user.user_metadata?.full_name as string) || (user.user_metadata?.name as string) || null;
+    await notifyAchievements(user.id, user.email, name, input.game);
+  }
+
   return { ok: true };
 }

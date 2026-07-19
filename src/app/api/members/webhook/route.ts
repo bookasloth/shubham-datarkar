@@ -62,6 +62,7 @@ export async function POST(request: Request) {
     case "subscription.completed":
       // Access continues until current_period_end; only the status flips.
       await syncMembershipFromWebhook(subscriptionId, "cancelled");
+      await notifyMembershipEvent(subscriptionId, "ended");
       break;
     case "subscription.halted":
       // Payment retries exhausted — this is a real payment failure, email the member.
@@ -70,8 +71,9 @@ export async function POST(request: Request) {
       break;
     case "subscription.paused":
       // A pause is not a payment failure (no "payment didn't go through" email);
-      // access still lapses so we sync the status only.
+      // access lapses, so treat it as the membership ending.
       await syncMembershipFromWebhook(subscriptionId, "expired");
+      await notifyMembershipEvent(subscriptionId, "ended");
       break;
     default:
       break; // authenticated but unhandled — ack
