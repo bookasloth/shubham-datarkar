@@ -89,13 +89,7 @@ export default async function HomePage() {
         <Container className="relative py-24 md:py-32">
           <div className="mx-auto max-w-5xl text-center">
             <Reveal>
-              <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-xs font-medium text-muted-foreground">
-                <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-                The visibility system for the AI-search era
-              </span>
-            </Reveal>
-            <Reveal delay={0.05}>
-              <h1 className="mt-6 text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
+              <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
                 Get your brand
                 <br />
                 <span className="text-brand">cited by AI.</span>
