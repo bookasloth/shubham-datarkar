@@ -38,11 +38,11 @@ function fakeCrawler(): Crawler {
 
 function defaultSerp(): SerpProvider {
   // Config switch (not a runtime chain): flip SERP_PROVIDER in Vercel to fail
-  // over. Unset → prefer whichever creds exist, Serper first (free default).
+  // over. Unset → prefer whichever creds exist, DataForSEO first (primary).
   const which = process.env.SERP_PROVIDER;
   if (which === "serper") return new SerperProvider();
   if (which === "dataforseo") return new DataForSeoProvider();
-  return process.env.SERPER_API_KEY ? new SerperProvider() : new DataForSeoProvider();
+  return process.env.DATAFORSEO_LOGIN ? new DataForSeoProvider() : new SerperProvider();
 }
 
 function defaultDeps(): { serp: SerpProvider; crawl: Crawler } {
