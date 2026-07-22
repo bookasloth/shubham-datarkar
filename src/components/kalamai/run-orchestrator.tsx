@@ -43,10 +43,16 @@ export function RunOrchestrator({ analysisId, initialStatus }: { analysisId: str
     (async () => {
       // 1) Drive the analysis to complete.
       let st = initialStatus;
+      let staleCount = 0;
       while (!cancelled && st !== "complete" && st !== "failed") {
         const data = await poke("/api/kalamai/step", { id: analysisId });
         if (cancelled) return;
-        if (!data) { setNote("Hit a snag, retrying…"); await sleep(1500); continue; }
+        if (!data) {
+          staleCount++;
+          if (staleCount >= 8) { setPhase("failed"); setNote("The service isn't responding. Please try again."); return; }
+          setNote("Hit a snag, retrying…"); await sleep(1500); continue;
+        }
+        staleCount = 0;
         st = data.status; setProgress(Math.min(45, data.progress)); setNote(null);
       }
       if (cancelled) return;
@@ -70,10 +76,16 @@ export function RunOrchestrator({ analysisId, initialStatus }: { analysisId: str
 
       // 3) Drive the article to complete.
       let ast = "queued";
+      let articleStaleCount = 0;
       while (!cancelled && ast !== "complete" && ast !== "failed") {
         const data = await poke("/api/kalamai/article-step", { id: articleId });
         if (cancelled) return;
-        if (!data) { setNote("Writing…"); await sleep(1500); continue; }
+        if (!data) {
+          articleStaleCount++;
+          if (articleStaleCount >= 8) { setPhase("failed"); setNote("The service isn't responding. Please try again."); return; }
+          setNote("Writing…"); await sleep(1500); continue;
+        }
+        articleStaleCount = 0;
         ast = data.status; setProgress(50 + Math.round(data.progress / 2)); setNote(null);
       }
       if (cancelled) return;
