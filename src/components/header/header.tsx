@@ -7,6 +7,7 @@ import { ThemeToggle } from "@/components/layout/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { BurgerMenu } from "./burger-menu";
+import { DesktopNav } from "./desktop-nav";
 import { MoreMenu } from "./more-menu";
 import { useHeaderUser } from "./use-header-user";
 
@@ -40,8 +41,11 @@ export function Header() {
       )}
     >
       <div className="mx-auto grid h-16 max-w-[var(--container-page)] grid-cols-[1fr_auto_1fr] items-center px-4 md:px-8">
-        <div className="justify-self-start">
-          <BurgerMenu />
+        <div className="flex items-center gap-1 justify-self-start">
+          <div className="lg:hidden">
+            <BurgerMenu />
+          </div>
+          <DesktopNav />
         </div>
 
         <div className="justify-self-center">
