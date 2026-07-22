@@ -171,42 +171,6 @@ export function buildOutlinePrompt(brief: Brief, params: ArticleParams): { syste
   return { system, user };
 }
 
-/* — W2: draft body (runText) — */
-
-export function buildDraftPrompt(
-  brief: Brief,
-  params: ArticleParams,
-  plan: SectionPlan,
-  sourceFacts: SourceFact[] = [],
-): { system: string; user: string; cachePrefix: string } {
-  const system =
-    `You are an expert ${params.tone} SEO writer for an audience of ${params.audience}. ` +
-    "Write a complete, original article as a JSON array of ContentBlocks. LENGTH: keep it between 1000 and 2200 words " +
-    `(target ${params.targetWords}); never exceed 2200 — be specific and concise, not padded. ` +
-    "Open with a 'lead' block, use 'h2'/'h3' for the planned sections, and include a 'faq' block near the end " +
-    "answering the brief's questions. Open each section with a direct one-sentence answer, then expand.\n" +
-    "GROUNDING: base any statistic, percentage, year, or factual claim on the Source facts below. Never invent " +
-    "numbers or attribute claims to unnamed 'studies', 'surveys', or 'experts' — if no source fact supports a figure, " +
-    "make the point qualitatively without a fabricated statistic. When you state a statistic drawn from a Source fact, " +
-    "BACKLINK it: write that text as an array with an {\"t\":\"a\",\"text\":…,\"href\":…} span pointing to that fact's " +
-    "exact [source] URL, so the claim cites its source. Only ever link to the provided source URLs. " +
-    "Prefer concrete specifics (named tools, real figures) over generic phrasing. Weave recommended terms in naturally; " +
-    "do NOT over-repeat any single term (that reads as keyword stuffing).\n" +
-    "END the article with a Conclusion that states a genuine point of view / recommendation (not a neutral recap), " +
-    "followed by a short 'takeaways' or 'ol' block of low-hanging-fruit actions the reader can start on today. " +
-    "Return ONLY the JSON array.\n" +
-    BLOCK_SPEC;
-  const user = [
-    "Writing plan:",
-    ...plan.sections.map((s) => `## ${s.heading} (~${s.words}w)\n${s.points.map((p) => `- ${p}`).join("\n")}`),
-    "",
-    "Recommended terms to include (use naturally, do not stuff):",
-    brief.termClusters.flatMap((c) => c.terms).slice(0, 30).join(", "),
-    factsBlock(sourceFacts),
-  ].join("\n");
-  return { system, user, cachePrefix: buildCachePrefix(brief, params) };
-}
-
 /* — W3: critique (runJson) — */
 
 export const CRITIQUE_SCHEMA: Record<string, unknown> = {
@@ -243,30 +207,6 @@ export function buildCritiquePrompt(
     "specific, grounded, backlinked, free of stuffing, within the word band, ends with a POV conclusion, and every " +
     "section leads with a direct answer. A merely competent, generic draft is NOT ok — be strict.";
   const user = ["Draft (markdown):", blocksToMarkdown(blocks), factsBlock(sourceFacts)].join("\n");
-  return { system, user, cachePrefix: buildCachePrefix(brief, params) };
-}
-
-/* — W4: rewrite to final (runText) — */
-
-export function buildRewritePrompt(
-  brief: Brief,
-  params: ArticleParams,
-  blocks: ContentBlock[],
-  critique: Critique,
-): { system: string; user: string; cachePrefix: string } {
-  const system =
-    "You are an expert SEO writer revising a draft. Apply every critique point, keep everything that already works, and " +
-    "return the COMPLETE revised article as a JSON array of ContentBlocks. Return ONLY the JSON array.\n" +
-    BLOCK_SPEC;
-  const user = [
-    "Critique to apply:",
-    critique.missingTerms.length ? `- Add terms: ${critique.missingTerms.join(", ")}` : "",
-    critique.missingSections.length ? `- Add sections: ${critique.missingSections.join(", ")}` : "",
-    ...critique.issues.map((i) => `- Fix: ${i}`),
-    "",
-    "Current draft (JSON):",
-    JSON.stringify(blocks),
-  ].filter(Boolean).join("\n");
   return { system, user, cachePrefix: buildCachePrefix(brief, params) };
 }
 
@@ -361,19 +301,4 @@ export const FAKE_OUTLINE: SectionPlan = {
   ],
 };
 
-const FAKE_BLOCKS: ContentBlock[] = [
-  { type: "lead", text: "A digital marketing company in Nagpur helps local businesses grow online." },
-  { type: "h2", text: "What a digital marketing company in Nagpur does" },
-  { type: "p", text: "It offers seo services, ppc, and content marketing tailored to local businesses." },
-  { type: "h2", text: "How to choose an agency" },
-  { type: "p", text: "Ask about local seo experience, reporting, and pricing before you commit." },
-  { type: "h2", text: "Local SEO for Nagpur businesses" },
-  { type: "p", text: "Local seo and a strong Google Business Profile drive Nagpur foot traffic." },
-  { type: "faq", items: [{ q: "How much does digital marketing cost in Nagpur?", a: "It depends on scope and channels." }] },
-];
-
-export const FAKE_DRAFT: string = JSON.stringify(FAKE_BLOCKS);
-
 export const FAKE_CRITIQUE: Critique = { missingTerms: [], missingSections: [], issues: [], ok: true };
-
-export const FAKE_REWRITE: string = JSON.stringify(FAKE_BLOCKS);

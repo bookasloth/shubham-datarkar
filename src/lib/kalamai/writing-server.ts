@@ -10,8 +10,8 @@ import { logEvent } from "./events-server";
 import type { Brief } from "./brief";
 import {
   OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
-  FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_SECTION_DRAFT,
-  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildSectionRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
+  FAKE_OUTLINE, FAKE_CRITIQUE, FAKE_SECTION_DRAFT,
+  buildOutlinePrompt, buildCritiquePrompt, buildSectionRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
   buildSectionDraftPrompt,
   type ArticleParams, type SectionPlan, type Critique, type ArticleMeta, type SourceFact,
 } from "./writing";

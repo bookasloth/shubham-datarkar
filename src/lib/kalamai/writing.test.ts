@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
-  extractSourceFacts, buildDraftPrompt, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
+  extractSourceFacts, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
   buildSectionDraftPrompt, buildSectionRewritePrompt, buildCachePrefix, FAKE_SECTION_DRAFT,
 } from "./writing";
 import { FAKE_BRIEF } from "./brief";
@@ -31,15 +31,15 @@ describe("extractSourceFacts", () => {
     expect(extractSourceFacts([{ rank: 1, url: U, bodyText: many }], 18)).toHaveLength(18);
   });
 
-  it("empty pages → no facts section; facts → source url appears for backlinking", () => {
-    const draft = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, []);
+  it("empty facts → no facts section; facts → source url appears for backlinking", () => {
+    const plan = { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [{ heading: "H", points: [], words: 400 }] };
+    const draft = buildSectionDraftPrompt(FAKE_BRIEF, PARAMS, plan, 0, [], []);
     expect(draft.user).not.toContain("Source facts");
-    const withFacts = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
+    const withFacts = buildSectionDraftPrompt(FAKE_BRIEF, PARAMS, plan, 0, [], [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
     expect(withFacts.user).toContain("Source facts");
     expect(withFacts.user).toContain("20%");
     expect(withFacts.user).toContain(U);
     expect(draft.system).toMatch(/BACKLINK/);
-    expect(draft.system).toMatch(/1000 and 2200 words/);
   });
 
   it("critique flags unsourced stats + word band", () => {
