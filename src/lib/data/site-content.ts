@@ -84,6 +84,19 @@ export const faqs: Faq[] = [
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-07-23",
+    version: "v3.3",
+    title: "Everything I built, actually findable",
+    type: "Improved",
+    notes: [
+      "The full site menu now sits on the bar on desktop — Work, Services, Content and Build, one click away — instead of hiding behind a hamburger on a wide empty header.",
+      "The Join Community button opens the community feed now, not a pricing page.",
+      "The homepage finally points at the parts that aren't a sales pitch: games, the community feed, and the free tools.",
+      "Added a Support link to the footer, so you no longer have to already be a member to find the support page.",
+      "The games, community and members areas wear the same header as the rest of the site — matching height, and a theme switch that logged-out visitors couldn't reach before.",
+    ],
+  },
+  {
     date: "2026-07-17",
     version: "v3.2",
     title: "A feed worth landing on, and streaks that count right",
