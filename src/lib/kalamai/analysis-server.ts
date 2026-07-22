@@ -54,6 +54,12 @@ const BATCH = 6;
 const CRAWL_CONCURRENCY = 6;
 const MIN_CONFIDENT = 20; // < this many successful crawls → low_confidence banner
 const STEP_LOCK_MS = 2 * 60_000; // reclaim a claim left behind by a crashed/timed-out step (maxDuration is 60s)
+// Wall-clock ceiling for the R3 embed loop. R3 must finish inside the route's
+// 60s maxDuration; embedding an unbounded corpus (Gemini timeouts + 429 backoff)
+// used to blow past it, killing the lambda with status still 'extracting' and
+// wedging the job forever. Cap the embed at ~40s and proceed with whatever
+// completed — clusters are best-effort; terms/rank don't use embeddings at all.
+const EMBED_BUDGET_MS = 40_000;
 
 export type StepResult = { status: string; progress: number };
 export type AnalysisDeps = { serp?: SerpProvider; crawl?: Crawler };
@@ -334,29 +340,35 @@ async function embedCompetitorChunks(
 ): Promise<ChunkVec[]> {
   await db.from("kalamai_chunks").delete().eq("analysis_id", analysisId).eq("source_type", "competitor");
 
-  const rows: Record<string, unknown>[] = [];
   const chunkVectors: ChunkVec[] = [];
+  const deadline = Date.now() + EMBED_BUDGET_MS;
   for (let pi = 0; pi < pages.length; pi++) {
+    // Never START a page once the budget is spent — a single slow/rate-limited
+    // page (up to 5 retries × ~30s) must not push R3 past the 60s route ceiling.
+    if (Date.now() >= deadline) break;
     const chunks = chunkText(pages[pi].body_text ?? "");
     if (!chunks.length) continue;
     const vectors = await embedTexts(
       chunks.map((c) => c.text),
       "RETRIEVAL_DOCUMENT",
     );
+    // Persist per page so partial progress survives a reclaim (delete-first at the
+    // top keeps this idempotent). ponytail: budget cap, not resumable — if partial
+    // clusters ever matter, batch by an embed_cursor like R2's crawl_cursor.
+    const rows = chunks.map((c, i) => ({
+      source_type: "competitor",
+      analysis_id: analysisId,
+      chunk_index: c.index,
+      text: c.text,
+      token_count: c.tokenCount,
+      embedding: toPgVector(vectors[i]),
+      embedding_model: EMBED_MODEL,
+    }));
+    await db.from("kalamai_chunks").insert(rows);
     chunks.forEach((c, i) => {
-      rows.push({
-        source_type: "competitor",
-        analysis_id: analysisId,
-        chunk_index: c.index,
-        text: c.text,
-        token_count: c.tokenCount,
-        embedding: toPgVector(vectors[i]),
-        embedding_model: EMBED_MODEL,
-      });
       chunkVectors.push({ vector: vectors[i], competitorIndex: pi, text: c.text });
     });
   }
-  if (rows.length) await db.from("kalamai_chunks").insert(rows);
   return chunkVectors;
 }
 
