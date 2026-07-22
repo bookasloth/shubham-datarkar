@@ -10,8 +10,9 @@ import { logEvent } from "./events-server";
 import type { Brief } from "./brief";
 import {
   OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
-  FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE,
-  buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
+  FAKE_OUTLINE, FAKE_CRITIQUE, FAKE_SECTION_DRAFT,
+  buildOutlinePrompt, buildCritiquePrompt, buildSectionRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
+  buildSectionDraftPrompt,
   type ArticleParams, type SectionPlan, type Critique, type ArticleMeta, type SourceFact,
 } from "./writing";
 
@@ -35,6 +36,9 @@ type StageState = {
   meta?: ArticleMeta;
   blocks?: ContentBlock[];
   critique?: Critique;
+  sectionBlocks?: ContentBlock[][];
+  draftCursor?: number;
+  rewriteCursor?: number;
 };
 
 /**
@@ -131,22 +135,41 @@ async function loadSourceFacts(db: SupabaseClient, analysisId: string): Promise<
   return extractSourceFacts(pages);
 }
 
-// W2 — draft the body as ContentBlock[] (big streamed call, reads the cached brief).
+// W2 — draft ONE section per call, accumulating in stage_state.sectionBlocks. Stays
+// at 'outlining' until every section is drafted, so no single LLM call can exceed the
+// 60s route ceiling. Then assembles blocks and advances to 'drafting'.
 async function stepDraft(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const brief = await loadBrief(db, a);
   const plan = a.stage_state.plan!;
+  const sections = plan.sections ?? [];
   const facts = await loadSourceFacts(db, a.analysis_id);
-  const { system, user, cachePrefix } = buildDraftPrompt(brief, a.params, plan, facts);
-  // Headroom so a grounded, slightly-long article's JSON completes instead of
-  // truncating mid-array (which the parser can't salvage).
-  const DRAFT_TOKENS = 32000;
-  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
+  const sectionBlocks = a.stage_state.sectionBlocks ? [...a.stage_state.sectionBlocks] : [];
+  const cursor = a.stage_state.draftCursor ?? 0;
+
+  if (sections.length === 0) {
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks: [], sectionBlocks: [], draftCursor: 0 }), status: "drafting", progress: 40 }).eq("id", a.id);
+    return { status: "drafting", progress: 40 };
+  }
+
+  const priorHeadings = sections.slice(0, cursor).map((s) => s.heading);
+  const { system, user, cachePrefix } = buildSectionDraftPrompt(brief, a.params, plan, cursor, priorHeadings, facts);
+  const SECTION_TOKENS = 8000; // one section is small; ample headroom, finishes well under 60s
+  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
   await logCall(db, a, "W2", usage);
   const blocks = await parseWithRepair(text, async () => {
-    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
+    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
     return r.text;
   });
-  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "drafting", progress: 40 }).eq("id", a.id);
+  sectionBlocks[cursor] = blocks;
+  const nextCursor = cursor + 1;
+  const progress = 15 + Math.round((25 * nextCursor) / sections.length);
+
+  if (nextCursor < sections.length) {
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, draftCursor: nextCursor }), progress }).eq("id", a.id);
+    return { status: "outlining", progress };
+  }
+  const assembled = sectionBlocks.flat();
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, draftCursor: nextCursor, blocks: assembled }), status: "drafting", progress: 40 }).eq("id", a.id);
   return { status: "drafting", progress: 40 };
 }
 
@@ -161,21 +184,46 @@ async function stepCritique(db: SupabaseClient, a: ArticleRow): Promise<StepResu
   return { status: "reviewing", progress: 60 };
 }
 
-// W4 — rewrite to final blocks, unless the critique already passed (then skip the spend).
+// W4 — rewrite ONE section per call when the critique failed, mirroring stepDraft so a
+// rewrite can't exceed the 60s ceiling either. If the critique passed, skip straight to
+// scoring (no spend). Stays at 'reviewing' until all sections are rewritten.
 async function stepRewrite(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const critique = a.stage_state.critique!;
-  let blocks = a.stage_state.blocks!;
-  if (!critique.ok) {
-    const brief = await loadBrief(db, a);
-    const { system, user, cachePrefix } = buildRewritePrompt(brief, a.params, blocks, critique);
-    const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_REWRITE, maxTokens: 32000 });
-    await logCall(db, a, "W4", usage);
-    blocks = await parseWithRepair(text, async () => {
-      const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_REWRITE, maxTokens: 32000 });
-      return r.text;
-    });
+  if (critique.ok) {
+    await db.from("kalamai_articles").update({ status: "scoring", progress: 85 }).eq("id", a.id);
+    return { status: "scoring", progress: 85 };
   }
-  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "scoring", progress: 85 }).eq("id", a.id);
+
+  const brief = await loadBrief(db, a);
+  const plan = a.stage_state.plan!;
+  const sections = plan.sections ?? [];
+  const sectionBlocks = a.stage_state.sectionBlocks ? [...a.stage_state.sectionBlocks] : [];
+  const cursor = a.stage_state.rewriteCursor ?? 0;
+
+  if (sections.length === 0 || cursor >= sections.length) {
+    const assembled = sectionBlocks.flat();
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks: assembled }), status: "scoring", progress: 85 }).eq("id", a.id);
+    return { status: "scoring", progress: 85 };
+  }
+
+  const priorHeadings = sections.slice(0, cursor).map((s) => s.heading);
+  const { system, user, cachePrefix } = buildSectionRewritePrompt(brief, a.params, sectionBlocks[cursor] ?? [], critique, sections[cursor].heading, priorHeadings);
+  const SECTION_TOKENS = 8000;
+  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
+  await logCall(db, a, "W4", usage);
+  sectionBlocks[cursor] = await parseWithRepair(text, async () => {
+    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
+    return r.text;
+  });
+  const nextCursor = cursor + 1;
+  const progress = 60 + Math.round((25 * nextCursor) / sections.length);
+
+  if (nextCursor < sections.length) {
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, rewriteCursor: nextCursor }), progress }).eq("id", a.id);
+    return { status: "reviewing", progress };
+  }
+  const assembled = sectionBlocks.flat();
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, rewriteCursor: nextCursor, blocks: assembled }), status: "scoring", progress: 85 }).eq("id", a.id);
   return { status: "scoring", progress: 85 };
 }
 

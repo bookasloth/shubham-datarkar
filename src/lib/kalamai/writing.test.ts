@@ -1,5 +1,8 @@
 import { describe, it, expect } from "vitest";
-import { extractSourceFacts, buildDraftPrompt, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE } from "./writing";
+import {
+  extractSourceFacts, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
+  buildSectionDraftPrompt, buildSectionRewritePrompt, buildCachePrefix, FAKE_SECTION_DRAFT,
+} from "./writing";
 import { FAKE_BRIEF } from "./brief";
 import type { ContentBlock } from "@/lib/data/types";
 
@@ -28,15 +31,15 @@ describe("extractSourceFacts", () => {
     expect(extractSourceFacts([{ rank: 1, url: U, bodyText: many }], 18)).toHaveLength(18);
   });
 
-  it("empty pages → no facts section; facts → source url appears for backlinking", () => {
-    const draft = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, []);
+  it("empty facts → no facts section; facts → source url appears for backlinking", () => {
+    const plan = { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [{ heading: "H", points: [], words: 400 }] };
+    const draft = buildSectionDraftPrompt(FAKE_BRIEF, PARAMS, plan, 0, [], []);
     expect(draft.user).not.toContain("Source facts");
-    const withFacts = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
+    const withFacts = buildSectionDraftPrompt(FAKE_BRIEF, PARAMS, plan, 0, [], [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
     expect(withFacts.user).toContain("Source facts");
     expect(withFacts.user).toContain("20%");
     expect(withFacts.user).toContain(U);
     expect(draft.system).toMatch(/BACKLINK/);
-    expect(draft.system).toMatch(/1000 and 2200 words/);
   });
 
   it("critique flags unsourced stats + word band", () => {
@@ -77,5 +80,57 @@ describe("buildArticleMeta — OG fields", () => {
     const meta = buildArticleMeta(brief, plan);
     expect(meta.ogTitle).toBe(meta.title);
     expect(meta.ogDescription).toBe(meta.description);
+  });
+});
+
+const briefStub = {
+  metaTitles: ["T"], metaDescriptions: ["D"], schemaJsonLd: "{}",
+  outline: [{ h2: "H", h3: [] }],
+  termClusters: [{ label: "c", terms: ["seo", "ppc"] }],
+  questions: ["What is X?"],
+} as unknown as import("./brief").Brief;
+const paramsStub = { targetWords: 1500, tone: "professional", audience: "smb owners" };
+
+describe("buildSectionDraftPrompt", () => {
+  it("section 0 asks for an opening lead", () => {
+    const { system } = buildSectionDraftPrompt(briefStub, paramsStub, FAKE_OUTLINE, 0, []);
+    expect(system.toLowerCase()).toContain("lead");
+  });
+  it("the final section asks for a closing faq", () => {
+    const last = FAKE_OUTLINE.sections.length - 1;
+    const { system } = buildSectionDraftPrompt(briefStub, paramsStub, FAKE_OUTLINE, last, ["a", "b"]);
+    expect(system.toLowerCase()).toContain("faq");
+  });
+  it("a middle section asks for neither lead nor faq and lists prior headings", () => {
+    const { system, user } = buildSectionDraftPrompt(briefStub, paramsStub, FAKE_OUTLINE, 1, ["Prior One"]);
+    expect(system.toLowerCase()).not.toContain("lead block");
+    expect(system.toLowerCase()).not.toContain("faq");
+    expect(user).toContain("Prior One");
+    expect(user).toContain(FAKE_OUTLINE.sections[1].heading);
+  });
+  it("cache prefix is stable across section indexes", () => {
+    const p0 = buildSectionDraftPrompt(briefStub, paramsStub, FAKE_OUTLINE, 0, []).cachePrefix;
+    const p2 = buildSectionDraftPrompt(briefStub, paramsStub, FAKE_OUTLINE, 2, ["a", "b"]).cachePrefix;
+    expect(p0).toBe(buildCachePrefix(briefStub, paramsStub));
+    expect(p2).toBe(p0);
+  });
+});
+
+describe("buildSectionRewritePrompt", () => {
+  it("includes the critique points and the target section heading", () => {
+    const critique = { missingTerms: ["schema"], missingSections: [], issues: ["too generic"], ok: false };
+    const { user } = buildSectionRewritePrompt(briefStub, paramsStub, [{ type: "p", text: "x" }], critique, "My Section", []);
+    expect(user).toContain("schema");
+    expect(user).toContain("too generic");
+    expect(user).toContain("My Section");
+  });
+});
+
+describe("FAKE_SECTION_DRAFT", () => {
+  it("parses to a small non-empty ContentBlock array", () => {
+    const arr = JSON.parse(FAKE_SECTION_DRAFT);
+    expect(Array.isArray(arr)).toBe(true);
+    expect(arr.length).toBeGreaterThan(0);
+    expect(arr.length).toBeLessThanOrEqual(4);
   });
 });
