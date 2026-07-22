@@ -132,6 +132,9 @@ describe("runArticleStep", () => {
     const seq = await drive("art-1");
 
     expect(seq[seq.length - 1]).toBe("complete");
+    // drafts section-by-section (FAKE_OUTLINE has 3 sections) — status stays 'outlining'
+    // for one poke per section before advancing to 'drafting'.
+    expect(seq.filter((s) => s === "outlining").length).toBeGreaterThanOrEqual(3);
     const art = store.kalamai_articles[0];
     expect(art.status).toBe("complete");
     expect(art.progress).toBe(100);
@@ -147,20 +150,24 @@ describe("runArticleStep", () => {
     expect(store.kalamai_events.some((e) => e.event === "article_completed")).toBe(true);
   });
 
-  it("runs the W4 rewrite when the critique is not ok", async () => {
+  it("runs the W4 rewrite one section per call when the critique is not ok", async () => {
     seed({
       article: {
         status: "reviewing",
         stage_state: {
-          plan: { title: "T", description: "D", sections: [] },
+          plan: { title: "T", description: "D", ogTitle: "OG", ogDescription: "OGD", sections: [{ heading: "Only section", points: [], words: 300 }] },
+          sectionBlocks: [[{ type: "p", text: "draft" }]],
           blocks: [{ type: "p", text: "draft" }],
           critique: { missingTerms: ["local seo"], missingSections: [], issues: ["thin intro"], ok: false },
         },
       },
     });
     const { status } = await runArticleStep("art-1");
+    // single section → the rewrite loop finishes in one call and advances straight to scoring
     expect(status).toBe("scoring");
     expect(store.kalamai_llm_calls.some((c) => c.stage === "W4")).toBe(true);
+    const art = store.kalamai_articles[0];
+    expect((art.stage_state as { blocks: unknown[] }).blocks.length).toBeGreaterThan(0);
   });
 
   it("hard-fails and refunds (status→failed) when the source analysis has no brief", async () => {
