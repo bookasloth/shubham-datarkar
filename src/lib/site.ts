@@ -84,6 +84,7 @@ export const navGroups: NavGroup[] = [
       { label: "Blog", href: "/blog", description: "Essays, playbooks, teardowns" },
       { label: "Newsletter", href: "/newsletter", description: "One signal every Tuesday" },
       { label: "Resources", href: "/resources", description: "Frameworks & templates" },
+      { label: "Community", href: "/community", description: "Build-in-public feed" },
       { label: "Changelog", href: "/changelog", description: "What changed, and when" },
     ],
   },
@@ -92,6 +93,7 @@ export const navGroups: NavGroup[] = [
     items: [
       { label: "Products", href: "/products", description: "Timewheel SaaS" },
       { label: "Free Tools", href: "/tools", description: "Use them, no signup" },
+      { label: "Games", href: "/games", description: "Daily word puzzles" },
       { label: "AI Experiments", href: "/ai-experiments", description: "The lab" },
       { label: "Components", href: "/components", description: "The design system" },
     ],
