@@ -145,6 +145,7 @@ export const footerNav: NavGroup[] = [
   {
     label: "More",
     items: [
+      { label: "Support", href: "/support" },
       { label: "FAQ", href: "/faq" },
       { label: "Media Kit", href: "/media-kit" },
       { label: "Changelog", href: "/changelog" },
