@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { buildShareText, gameShareUrl } from "@/lib/games/share";
+import { buildShareText, gameLeaderboardUrl, gameShareUrl } from "@/lib/games/share";
 import { GAMES } from "@/lib/games/registry";
 
 describe("buildShareText", () => {
@@ -39,5 +39,11 @@ describe("buildShareText", () => {
       "https://shubhamdatarkar.com/g/intg",
     ]);
     expect(new Set(urls).size).toBe(GAMES.length);
+  });
+
+  it("returns each player to that game's leaderboard after a community post", () => {
+    expect(gameLeaderboardUrl("alfazy")).toBe("/games/alfazy/leaderboard");
+    expect(gameLeaderboardUrl("hit_and_blow")).toBe("/games/hit-and-blow/leaderboard");
+    expect(gameLeaderboardUrl("integra")).toBe("/games/integra/leaderboard");
   });
 });

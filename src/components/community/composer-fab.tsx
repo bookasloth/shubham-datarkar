@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
@@ -12,20 +13,33 @@ export function ComposerFab({
   name?: string | null;
   username?: string | null;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [seed, setSeed] = useState("");
+  // Where to send the player after they post — the game's "Share to Community"
+  // link carries ?returnTo=/games/<slug>/leaderboard.
+  const [returnTo, setReturnTo] = useState<string | null>(null);
 
   // ?compose=<text> opens the composer pre-filled — the games' "Share to SD
   // Community" lands here. Read off `location` rather than useSearchParams(),
   // which would drag a Suspense boundary onto the whole feed page.
   useEffect(() => {
-    const text = new URLSearchParams(window.location.search).get("compose");
+    const params = new URLSearchParams(window.location.search);
+    const text = params.get("compose");
+    const rt = params.get("returnTo");
+    // Same-origin paths only — never redirect off-site from a URL param.
+    if (rt && rt.startsWith("/") && !rt.startsWith("//")) setReturnTo(rt);
     if (!text) return;
     setSeed(text);
     setOpen(true);
     // Drop the param so a refresh (or a back-nav) doesn't re-open the sheet.
     window.history.replaceState(null, "", window.location.pathname);
   }, []);
+
+  function afterPosted() {
+    setOpen(false);
+    if (returnTo) router.push(returnTo);
+  }
 
   return (
     <>
@@ -50,7 +64,7 @@ export function ComposerFab({
         >
           <DialogTitle className="sr-only">Compose post</DialogTitle>
           {/* key: remount when the seed arrives so useState picks the new initial body up */}
-          <Composer key={seed} name={name} username={username} initialBody={seed} onPosted={() => setOpen(false)} />
+          <Composer key={seed} name={name} username={username} initialBody={seed} onPosted={afterPosted} />
         </DialogContent>
       </Dialog>
     </>

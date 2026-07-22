@@ -13,7 +13,7 @@ import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
 import { ShareBlock } from "@/components/games/shell/ShareCard";
-import { buildShareText, gameShareUrl } from "@/lib/games/share";
+import { type ShareInput } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -142,15 +142,14 @@ export default function AlfazyBoard({
     })
   );
 
-  const shareText = buildShareText({
+  const share: ShareInput = {
     game: "alfazy",
     puzzleNumber,
     status: status === "won" ? "won" : "lost",
     tries: guesses.length,
     maxGuesses: ALFAZY.maxGuesses,
     grid: shareGrid(rows),
-  });
-  const shareUrl = gameShareUrl("alfazy");
+  };
 
   return (
     <GameStage>
@@ -216,7 +215,7 @@ export default function AlfazyBoard({
           <p className="font-semibold">
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.toUpperCase()}`}
           </p>
-          <ShareBlock text={shareText} url={shareUrl} />
+          <ShareBlock share={share} />
           {/* Logged-out account CTA lives in the GameEndCard dialog below — no
               duplicate "log in" line here. */}
         </div>
@@ -229,8 +228,7 @@ export default function AlfazyBoard({
           slug="alfazy"
           status={status}
           resultLine={status === "won" ? `Solved in ${guesses.length}!` : `The word was ${answer.toUpperCase()}.`}
-          shareText={shareText}
-          shareUrl={shareUrl}
+          share={share}
         />
       )}
 

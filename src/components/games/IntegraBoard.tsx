@@ -13,7 +13,7 @@ import { Tile } from "@/components/games/board/Tile";
 import { Keyboard, type KeyDef } from "@/components/games/board/Keyboard";
 import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
 import { ShareBlock } from "@/components/games/shell/ShareCard";
-import { buildShareText, gameShareUrl } from "@/lib/games/share";
+import { type ShareInput } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -158,15 +158,14 @@ export default function IntegraBoard({
     }),
   );
 
-  const shareText = buildShareText({
+  const share: ShareInput = {
     game: "integra",
     puzzleNumber,
     status: status === "won" ? "won" : "lost",
     tries: guesses.length,
     maxGuesses: INTEGRA.maxGuesses,
     grid: shareGrid(rows),
-  });
-  const shareUrl = gameShareUrl("integra");
+  };
 
   return (
     <GameStage className={colorblind ? "integra-cb" : undefined}>
@@ -233,7 +232,7 @@ export default function IntegraBoard({
           <p className="font-semibold">
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.split("").map(show).join("")}`}
           </p>
-          <ShareBlock text={shareText} url={shareUrl} />
+          <ShareBlock share={share} />
           {/* Logged-out account CTA lives in the GameEndCard dialog below — no
               duplicate "log in" line here. */}
         </div>
@@ -250,8 +249,7 @@ export default function IntegraBoard({
               ? `Solved in ${guesses.length}!`
               : `The equation was ${answer.split("").map(show).join("")}.`
           }
-          shareText={shareText}
-          shareUrl={shareUrl}
+          share={share}
         />
       )}
 

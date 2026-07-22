@@ -18,6 +18,21 @@ export function gameShareUrl(game: GameKey): string {
   return `${site.url}/g/${g?.code ?? ""}`;
 }
 
+/** Where "Share to Community" returns the player after they post. */
+export function gameLeaderboardUrl(game: GameKey): string {
+  const g = gameByKey(game);
+  return `/games/${g?.slug ?? ""}/leaderboard`;
+}
+
+/** The headline line — reused by the share text and the shareable image. */
+export function shareTitle(i: ShareInput): string {
+  const name = gameByKey(i.game)?.name ?? "Game";
+  const score = i.status === "won" ? `${i.tries}/${i.maxGuesses}` : `X/${i.maxGuesses}`;
+  return i.status === "won"
+    ? `I Solved ${name} #${i.puzzleNumber} in ${score}`
+    : `I played ${name} #${i.puzzleNumber} — ${score}`;
+}
+
 /**
  * The one share string, used by the clipboard and every social target.
  *
@@ -26,11 +41,5 @@ export function gameShareUrl(game: GameKey): string {
  * as gibberish to a screen reader. The grid is the visual anchor, not the title.
  */
 export function buildShareText(i: ShareInput): string {
-  const name = gameByKey(i.game)?.name ?? "Game";
-  const score = i.status === "won" ? `${i.tries}/${i.maxGuesses}` : `X/${i.maxGuesses}`;
-  const head =
-    i.status === "won"
-      ? `I Solved ${name} #${i.puzzleNumber} in ${score}`
-      : `I played ${name} #${i.puzzleNumber} — ${score}`;
-  return `${head}\n${i.grid}\n\nTry now at ${gameShareUrl(i.game)}`;
+  return `${shareTitle(i)}\n${i.grid}\n\nTry now at ${gameShareUrl(i.game)}`;
 }
