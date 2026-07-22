@@ -60,7 +60,7 @@ export function AdminCommand() {
         <div className="flex items-center gap-2 border-b border-admin-border px-4">
           <Search className="size-4 text-admin-text-muted" />
           <Command.Input
-            placeholder="Search admin…"
+            placeholder="Search or jump to…"
             className="h-12 w-full bg-transparent text-sm text-admin-text outline-none placeholder:text-admin-text-muted"
           />
           <Kbd>Esc</Kbd>
