@@ -15,7 +15,7 @@ import { blocksToMarkdown, blocksToHtml } from "@/lib/kalamai/serialize";
 export const metadata = buildMetadata({ title: "KalamAI Article", path: "/tools/kalamai", noIndex: true });
 export const dynamic = "force-dynamic";
 
-type ArticleMeta = { title?: string; description?: string; jsonld?: string };
+type ArticleMeta = { title?: string; description?: string; ogTitle?: string; ogDescription?: string; jsonld?: string };
 type ArticleScore = {
   overall: number;
   passed: string[];
@@ -76,6 +76,18 @@ export default async function KalamaiArticlePage({ params }: { params: Promise<{
               <article className="rounded-card border border-border bg-card p-6 sm:p-8">
                 <ArticleBody blocks={blocks} />
               </article>
+
+              {(meta.title || meta.ogTitle) && (
+                <div className="mt-8 rounded-card border border-border bg-card p-6">
+                  <p className="text-sm font-medium text-foreground">Search &amp; social</p>
+                  <dl className="mt-4 space-y-3 text-sm">
+                    {meta.title && (<div><dt className="text-xs font-medium text-muted-foreground">Meta title</dt><dd className="text-foreground">{meta.title}</dd></div>)}
+                    {meta.description && (<div><dt className="text-xs font-medium text-muted-foreground">Meta description</dt><dd className="text-foreground">{meta.description}</dd></div>)}
+                    {meta.ogTitle && (<div><dt className="text-xs font-medium text-muted-foreground">OG title</dt><dd className="text-foreground">{meta.ogTitle}</dd></div>)}
+                    {meta.ogDescription && (<div><dt className="text-xs font-medium text-muted-foreground">OG description</dt><dd className="text-foreground">{meta.ogDescription}</dd></div>)}
+                  </dl>
+                </div>
+              )}
             </div>
           ) : article.status === "failed" ? (
             <div className="rounded-card border border-border bg-card p-6">
