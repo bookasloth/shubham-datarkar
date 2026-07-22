@@ -2,7 +2,7 @@ import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
   Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Gamepad2, Search,
   Library, Tags, MessageSquarePlus, UserRound, Bell, BarChart3, MessagesSquare,
-  Contact, Send, Inbox, Coins, type LucideIcon,
+  Contact, Send, Inbox, Coins, Hammer, Gem, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
@@ -34,27 +34,32 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     ],
   },
   {
-    heading: "Members",
+    heading: "Library",
     items: [
       { label: "Resources", href: "/admin/resources", icon: Library },
       { label: "Taxonomy", href: "/admin/resources/taxonomy", icon: Tags },
-      { label: "Tools", href: "/admin/resources/tools", icon: Wrench },
-      { label: "Analytics", href: "/admin/members/analytics", icon: BarChart3 },
-      { label: "Requests", href: "/admin/requests", icon: MessageSquarePlus },
-      { label: "Members", href: "/admin/members", icon: UserRound },
-      { label: "Plans", href: "/admin/plans", icon: CreditCard },
-      { label: "Community", href: "/admin/community", icon: MessagesSquare },
-      { label: "Announcements", href: "/admin/announcements", icon: Bell },
+      { label: "Tools", href: "/admin/resources/tools", icon: Hammer },
     ],
   },
   {
     heading: "Audience",
     items: [
       { label: "People", href: "/admin/people", icon: Contact },
+      { label: "Members", href: "/admin/members", icon: UserRound },
+      { label: "Plans", href: "/admin/plans", icon: Gem },
       { label: "Subscribers", href: "/admin/subscribers", icon: Users },
-      { label: "Broadcast", href: "/admin/broadcast", icon: Send },
       { label: "Contacts", href: "/admin/contacts", icon: Mail },
+      { label: "Broadcast", href: "/admin/broadcast", icon: Send },
       { label: "Email Inbox", href: "/admin/inbox", icon: Inbox },
+      { label: "Analytics", href: "/admin/members/analytics", icon: BarChart3 },
+    ],
+  },
+  {
+    heading: "Community",
+    items: [
+      { label: "Community", href: "/admin/community", icon: MessagesSquare },
+      { label: "Announcements", href: "/admin/announcements", icon: Bell },
+      { label: "Requests", href: "/admin/requests", icon: MessageSquarePlus },
     ],
   },
   {
@@ -75,7 +80,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   {
     heading: "SEO",
     items: [
-      { label: "Dashboard", href: "/admin/seo", icon: Search },
+      { label: "SEO Overview", href: "/admin/seo", icon: Search },
       { label: "Pages", href: "/admin/seo/pages", icon: FileText },
       { label: "KalamAI Usage", href: "/admin/kalamai", icon: Coins },
     ],
