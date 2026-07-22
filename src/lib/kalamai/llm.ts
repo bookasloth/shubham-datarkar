@@ -28,6 +28,34 @@ function getClient(): Anthropic {
   return (client ??= new Anthropic());
 }
 
+/**
+ * Transient = worth retrying: network errors (no status), 408/409/429, and any
+ * 5xx (covers 529 overloaded). A 4xx like 400 invalid_request is a bug, not a
+ * blip — never retry it, or the section step burns its whole 60s budget looping.
+ */
+function isTransient(err: unknown): boolean {
+  const status = (err as { status?: number })?.status;
+  if (status == null) return true; // network/connection error → retry
+  return status === 408 || status === 409 || status === 429 || status >= 500;
+}
+
+/**
+ * Bounded retry with exponential backoff. 3 attempts, ~0.5s/1s backoff — quick
+ * enough that 2 retries still fit a ~35s section call inside the 60s route budget
+ * (worst case ~36.5s), or the step gets reclaimed and reruns. Retries only on
+ * transient errors so a genuine 4xx surfaces immediately.
+ */
+async function withRetry<T>(fn: () => Promise<T>, attempts = 3): Promise<T> {
+  for (let attempt = 0; ; attempt++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (attempt >= attempts - 1 || !isTransient(err)) throw err;
+      await new Promise((r) => setTimeout(r, 500 * 2 ** attempt));
+    }
+  }
+}
+
 /** No key (or explicit flag) → canned fixtures, zero spend. Powers offline tests + dev. */
 export function isFakeLlm(): boolean {
   return !process.env.ANTHROPIC_API_KEY || process.env.KALAMAI_FAKE_LLM === "1";
@@ -93,14 +121,16 @@ export async function runJson<T>(args: {
 
   const started = Date.now();
   const system = buildSystem(args.cachePrefix, args.system, false); // structured output → can't share the streamed cache
-  const res = await getClient().messages.create({
-    model: KALAMAI_MODEL,
-    max_tokens: 4096,
-    thinking: { type: "disabled" },
-    output_config: { effort: args.effort ?? "low", format: { type: "json_schema", schema: args.schema } },
-    system,
-    messages: [{ role: "user", content: args.user }],
-  });
+  const res = await withRetry(() =>
+    getClient().messages.create({
+      model: KALAMAI_MODEL,
+      max_tokens: 4096,
+      thinking: { type: "disabled" },
+      output_config: { effort: args.effort ?? "low", format: { type: "json_schema", schema: args.schema } },
+      system,
+      messages: [{ role: "user", content: args.user }],
+    }),
+  );
 
   const text = res.content.map((b) => (b.type === "text" ? b.text : "")).join("");
   const data = JSON.parse(text) as T;
@@ -127,15 +157,17 @@ export async function runText(args: {
   const started = Date.now();
   const system = buildSystem(args.cachePrefix, args.system);
 
-  const message = await getClient()
-    .messages.stream({
-      model: KALAMAI_MODEL,
-      max_tokens: args.maxTokens ?? 16000,
-      thinking: { type: "disabled" },
-      system,
-      messages: [{ role: "user", content: args.user }],
-    })
-    .finalMessage();
+  const message = await withRetry(() =>
+    getClient()
+      .messages.stream({
+        model: KALAMAI_MODEL,
+        max_tokens: args.maxTokens ?? 16000,
+        thinking: { type: "disabled" },
+        system,
+        messages: [{ role: "user", content: args.user }],
+      })
+      .finalMessage(),
+  );
 
   const text = message.content.map((b) => (b.type === "text" ? b.text : "")).join("");
   return { text, usage: toUsage(message.usage, Date.now() - started) };
