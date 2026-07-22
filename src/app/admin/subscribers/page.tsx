@@ -14,7 +14,9 @@ export default async function AdminSubscribersPage() {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-admin-text">Subscribers</h1>
-          <p className="mt-1 text-sm text-admin-text-muted">{subscribers.length} total</p>
+          <p className="mt-1 text-sm text-admin-text-muted">
+            Newsletter opt-ins — everyone who subscribed via the site. {subscribers.length} total.
+          </p>
         </div>
         <AdminButton asChild variant="secondary" size="sm">
           <Link href="/admin/subscribers/export" aria-disabled={subscribers.length === 0}>
