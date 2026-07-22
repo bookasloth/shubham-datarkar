@@ -6,6 +6,7 @@ import { Trophy, Lock, BarChart3, CalendarClock, RotateCcw } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ShareBlock } from "@/components/games/shell/ShareCard";
+import type { ShareInput } from "@/lib/games/share";
 
 function LockedStat({ label }: { label: string }) {
   return (
@@ -38,14 +39,12 @@ export function GameEndCard({
   slug,
   status,
   resultLine,
-  shareText,
-  shareUrl,
+  share,
 }: {
   slug: string;
   status: "won" | "lost";
   resultLine: string;
-  shareText: string;
-  shareUrl: string;
+  share: ShareInput;
 }) {
   const [open, setOpen] = useState(true);
   const next = `/games/${slug}`;
@@ -98,7 +97,7 @@ export function GameEndCard({
           <PromoTile href={`/games/${slug}/archive`} icon={<CalendarClock className="size-3.5" />} title="Archive" />
         </div>
 
-        <ShareBlock text={shareText} url={shareUrl} />
+        <ShareBlock share={share} />
       </DialogContent>
     </Dialog>
   );

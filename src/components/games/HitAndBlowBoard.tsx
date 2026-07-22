@@ -10,7 +10,7 @@ import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
 import { WinBurst, WIN_BURST_MS } from "@/components/games/board/WinBurst";
 import { ShareBlock } from "@/components/games/shell/ShareCard";
-import { buildShareText, gameShareUrl } from "@/lib/games/share";
+import { type ShareInput } from "@/lib/games/share";
 import type { GameStats } from "@/lib/games/profile-queries";
 import { GameWelcome } from "@/components/games/shell/GameWelcome";
 import { GameEndCard } from "@/components/games/shell/GameEndCard";
@@ -100,15 +100,14 @@ export default function HitAndBlowBoard({
     }
   }
 
-  const shareText = buildShareText({
+  const share: ShareInput = {
     game: "hit_and_blow",
     puzzleNumber,
     status: status === "won" ? "won" : "lost",
     tries: history.length,
     maxGuesses: HIT_AND_BLOW.maxGuesses,
     grid: shareSummary(history),
-  });
-  const shareUrl = gameShareUrl("hit_and_blow");
+  };
 
   return (
     <GameStage>
@@ -157,7 +156,7 @@ export default function HitAndBlowBoard({
           <p className="font-semibold">
             {status === "won" ? `Cracked in ${history.length}!` : `Code was ${secret}`}
           </p>
-          <ShareBlock text={shareText} url={shareUrl} />
+          <ShareBlock share={share} />
           {/* Logged-out account CTA lives in the GameEndCard dialog below — no
               duplicate "log in" line here. */}
         </div>
@@ -187,8 +186,7 @@ export default function HitAndBlowBoard({
           slug="hit-and-blow"
           status={status}
           resultLine={status === "won" ? `Cracked in ${history.length}!` : `The code was ${secret}.`}
-          shareText={shareText}
-          shareUrl={shareUrl}
+          share={share}
         />
       )}
 
