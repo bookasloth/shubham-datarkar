@@ -1,11 +1,11 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { INTEGRA, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/integra";
 import { submitResult } from "@/lib/games/submit-result";
 import { startPuzzle } from "@/lib/games/start-puzzle";
 import { useGameAuth } from "@/components/games/use-game-auth";
+import { useColorblind } from "@/components/games/use-colorblind";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { FireStreak } from "@/components/games/shell/FireStreak";
@@ -60,32 +60,23 @@ export default function IntegraBoard({
   const [justWon, setJustWon] = useState(false);
   const [burst, setBurst] = useState(false);
   const clockStarted = useRef(false);
-  const [colorblind, setColorblind] = useState(false);
+  // Shared colour-blind hook — same source + sync as Alfazy, no bespoke listener.
+  const [colorblind] = useColorblind("integra");
   const { user } = useGameAuth();
   const submitted = useRef(false);
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
-    if (raw) {
+    if (!raw) return;
+    try {
       const s: Saved = JSON.parse(raw);
       setGuesses(s.guesses);
       setStatus(s.status);
-    }
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("integra:colorblind");
-      setColorblind(saved === "1" || saved === "true");
+    } catch {
+      // Corrupt / old-schema value — start fresh instead of tripping the error boundary.
+      localStorage.removeItem(storageKey);
     }
   }, [storageKey]);
-
-  // Sync colour-blind toggle from the rail's Settings card in the same tab.
-  useEffect(() => {
-    function onSetting(e: Event) {
-      const d = (e as CustomEvent).detail as { key?: string; value?: string } | undefined;
-      if (d?.key === "integra:colorblind") setColorblind(d.value === "1" || d.value === "true");
-    }
-    window.addEventListener("game:setting", onSetting);
-    return () => window.removeEventListener("game:setting", onSetting);
-  }, []);
 
   useEffect(() => {
     if (guesses.length || status !== "playing")
@@ -143,6 +134,10 @@ export default function IntegraBoard({
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
+      // Don't hijack browser shortcuts (Ctrl/Cmd+…) or typing in a real field.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
       if (e.key === "Enter") key("enter");
       else if (e.key === "Backspace") key("back");
       else if (ALLOWED.has(e.key)) key(e.key);
@@ -227,7 +222,11 @@ export default function IntegraBoard({
         })}
       </div>
 
-      {toast && <div className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">{toast}</div>}
+      {toast && (
+        <div role="status" aria-live="polite" className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">
+          {toast}
+        </div>
+      )}
 
       {status !== "playing" ? (
         <div className="flex flex-col items-center gap-2">
@@ -235,14 +234,8 @@ export default function IntegraBoard({
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.split("").map(show).join("")}`}
           </p>
           <ShareBlock text={shareText} url={shareUrl} />
-          {!user && (
-            <p className="text-sm text-muted-foreground">
-              <Link href="/games/login?next=/games/integra" className="underline underline-offset-4 hover:text-foreground">
-                Log in
-              </Link>{" "}
-              to save your streak.
-            </p>
-          )}
+          {/* Logged-out account CTA lives in the GameEndCard dialog below — no
+              duplicate "log in" line here. */}
         </div>
       ) : (
         <Keyboard game="integra" variant="grid" rows={INTEGRA_ROWS} keyStates={keyState} onKey={key} />

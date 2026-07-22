@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { puzzleNumberFor } from "@/lib/daily";
 import { weekBoundsIST, monthBoundsIST, allTimeBoundsIST } from "@/lib/games/periods";
@@ -59,19 +60,22 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
   const maxGuesses = maxGuessesFor(game);
 
   let head: string[] = [];
-  let rows: (string | number)[][] = [];
+  let rows: ReactNode[][] = [];
   let podium: PodiumEntry[] = [];
+
+  // One identity cell — display name with the @username stacked beneath — instead
+  // of two columns that doubled the identity width on phones.
+  const player = (r: { display_name: string | null; username: string }): ReactNode => (
+    <div className="flex flex-col leading-tight">
+      <span className="font-medium text-foreground">{r.display_name ?? r.username}</span>
+      <span className="text-xs text-muted-foreground">@{r.username}</span>
+    </div>
+  );
 
   if (board === "daily") {
     const data = await getDailyBoard(game, puzzleNumberFor(game));
-    head = ["#", "Name", "Username", "Time", "Tries"];
-    rows = data.map((r, i) => [
-      i + 1,
-      r.display_name ?? r.username,
-      `@${r.username}`,
-      fmtTime(r.time_ms),
-      `${r.guesses}/${maxGuesses}`,
-    ]);
+    head = ["#", "Player", "Time", "Tries"];
+    rows = data.map((r, i) => [i + 1, player(r), fmtTime(r.time_ms), `${r.guesses}/${maxGuesses}`]);
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
@@ -80,13 +84,8 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
     // Re-sort client-side by max_streak — RPC returns current-streak order, but the
     // board now surfaces best-streak only.
     const data = (await getStreakBoard(game)).slice().sort((a, b) => b.max_streak - a.max_streak);
-    head = ["#", "Name", "Username", "Best streak"];
-    rows = data.map((r, i) => [
-      i + 1,
-      r.display_name ?? r.username,
-      `@${r.username}`,
-      r.max_streak,
-    ]);
+    head = ["#", "Player", "Best streak"];
+    rows = data.map((r, i) => [i + 1, player(r), r.max_streak]);
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,
@@ -95,14 +94,8 @@ export async function LeaderboardView({ game, board }: { game: GameKey; board: B
     const { start, end } =
       board === "weekly" ? weekBoundsIST() : board === "monthly" ? monthBoundsIST() : allTimeBoundsIST();
     const data = await getPeriodBoard(game, start, end);
-    head = ["#", "Name", "Username", "Solved", "Total tries"];
-    rows = data.map((r, i) => [
-      i + 1,
-      r.display_name ?? r.username,
-      `@${r.username}`,
-      r.solved,
-      r.total_guesses,
-    ]);
+    head = ["#", "Player", "Solved", "Total tries"];
+    rows = data.map((r, i) => [i + 1, player(r), r.solved, r.total_guesses]);
     podium = data.slice(0, 3).map((r) => ({
       displayName: r.display_name ?? r.username,
       username: r.username,

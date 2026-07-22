@@ -7,10 +7,12 @@ export type PodiumEntry = {
 
 // #1 center + tallest. Medals: gold/silver/bronze only — rest of leaderboard stays monochrome.
 // Wide + short blocks so long names wrap instead of clipping. Stats live in the table below.
+// min-h (not fixed h): the podium keeps its stepped silhouette, but a long
+// two-line name grows the bar instead of clipping past line-clamp-2.
 const SLOTS = [
-  { rank: 2, order: "order-1", h: "h-20", bar: "bg-neutral-300 text-neutral-900 dark:bg-neutral-400 dark:text-neutral-900" },
-  { rank: 1, order: "order-2", h: "h-24", bar: "bg-yellow-400 text-neutral-900 dark:bg-yellow-500" },
-  { rank: 3, order: "order-3", h: "h-16", bar: "bg-amber-700 text-white dark:bg-amber-800" },
+  { rank: 2, order: "order-1", h: "min-h-20", bar: "bg-neutral-300 text-neutral-900 dark:bg-neutral-400 dark:text-neutral-900" },
+  { rank: 1, order: "order-2", h: "min-h-24", bar: "bg-yellow-400 text-neutral-900 dark:bg-yellow-500" },
+  { rank: 3, order: "order-3", h: "min-h-16", bar: "bg-amber-700 text-white dark:bg-amber-800" },
 ] as const;
 
 export function Podium({ entries }: { entries: PodiumEntry[] }) {

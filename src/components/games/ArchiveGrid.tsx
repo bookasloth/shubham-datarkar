@@ -114,7 +114,7 @@ export function ArchiveGrid({
                 key={e.puzzleNumber}
                 href={href}
                 className={cn(
-                  "flex aspect-square flex-col items-center justify-center gap-1 rounded-[6px] border p-2 transition-ui",
+                  "flex aspect-square flex-col items-center justify-center gap-1 rounded-input border p-2 transition-ui",
                   open
                     ? "border-border bg-card hover:border-foreground/30"
                     : "border-dashed border-border bg-muted/40 opacity-80 hover:opacity-100",
@@ -125,6 +125,10 @@ export function ArchiveGrid({
                 <span className="text-xs font-medium">#{e.puzzleNumber}</span>
                 {e.solved ? (
                   <Flame className="size-3.5 fill-brand text-brand" />
+                ) : free ? (
+                  // Non-colour signal for the "free today/yesterday" tiles — the
+                  // brand ring alone isn't perceivable for colour-blind players.
+                  <span className="text-[9px] font-semibold uppercase leading-none text-brand">Free</span>
                 ) : open ? (
                   <span className="size-3.5" />
                 ) : (

@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { resolveTheme, getTheme, type Theme, type ThemePalette } from "@/lib/games/themes";
+import { useColorblind } from "@/components/games/use-colorblind";
 
 type ThemeCtx = {
   themeKey: string;
@@ -25,18 +26,9 @@ export default function AlfazyThemeProvider({
   now: number;
   children: ReactNode;
 }) {
-  const [colorblind, setColorblind] = useState(false);
-
-  useEffect(() => {
-    const saved = localStorage.getItem("alfazy:colorblind");
-    if (saved === "true" || saved === "1") setColorblind(true);
-    function onSetting(e: Event) {
-      const d = (e as CustomEvent).detail as { key?: string; value?: string } | undefined;
-      if (d?.key === "alfazy:colorblind") setColorblind(d.value === "1" || d.value === "true");
-    }
-    window.addEventListener("game:setting", onSetting);
-    return () => window.removeEventListener("game:setting", onSetting);
-  }, []);
+  // Shared read + `game:setting` sync (same hook Integra uses); the provider owns
+  // persistence so the exposed setColorblind toggle still writes through.
+  const [colorblind, setColorblind] = useColorblind("alfazy");
 
   useEffect(() => {
     localStorage.setItem("alfazy:colorblind", String(colorblind));

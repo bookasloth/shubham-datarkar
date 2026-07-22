@@ -18,18 +18,19 @@ export function GameHeader({
   actions?: React.ReactNode;
 }) {
   return (
-    // The title is centred on the column (which is what the board is centred on)
-    // rather than pushed to the far-left edge by justify-between — with the actions
-    // overlaid on the right so their width can't pull the title off-centre.
-    <div className="relative flex w-full items-center justify-center">
-      <h1 className="flex items-center gap-2 font-display text-xl font-bold">
+    // A 3-column grid keeps the title centred on the board column while giving the
+    // actions their own track on the right — so a long title (or a wide actions
+    // slot) can't overlap the way an absolutely-positioned overlay would on mobile.
+    <div className="grid w-full grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <span aria-hidden="true" />
+      <h1 className="col-start-2 flex min-w-0 items-center gap-2 font-display text-xl font-bold">
         {slug && (
           // plain <img>: CDN host is CSP-allowed but not a next/image remote pattern
-          <img src={gameIcon(slug)} alt="" aria-hidden="true" width={28} height={28} className="size-7 rounded-[6px]" />
+          <img src={gameIcon(slug)} alt="" aria-hidden="true" width={28} height={28} className="size-7 rounded-btn" />
         )}
         {title}
       </h1>
-      {actions && <div className="absolute right-0 flex items-center gap-1">{actions}</div>}
+      {actions && <div className="col-start-3 flex items-center justify-self-end gap-1">{actions}</div>}
     </div>
   );
 }

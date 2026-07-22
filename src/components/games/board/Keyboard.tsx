@@ -24,11 +24,11 @@ export function Keyboard({
 }) {
   const grid = variant === "grid";
   return (
-    <div className={cn("flex flex-col gap-1.5", grid ? "w-full max-w-[22rem]" : "items-center")}>
+    <div className={cn("flex w-full flex-col gap-1.5", grid ? "max-w-[22rem]" : "max-w-[26rem]")}>
       {rows.map((row, i) => (
         <div
           key={i}
-          className={grid ? "grid gap-1" : "flex gap-1.5"}
+          className={grid ? "grid gap-1" : "flex justify-center gap-1.5"}
           style={grid ? { gridTemplateColumns: `repeat(${row.length}, minmax(0, 1fr))` } : undefined}
         >
           {row.map((k) => {
@@ -41,7 +41,9 @@ export function Keyboard({
                   `${game}-key h-12 rounded-btn font-semibold transition-ui`,
                   st ? `${game}-key--${st}` : "bg-secondary text-secondary-foreground",
                   grid ? "text-base" : "uppercase",
-                  !grid && (k.wide ? "px-3" : "w-8"),
+                  // Flex keys share the row width instead of a fixed 32px, so the
+                  // QWERTY row can't overflow a narrow phone and mis-taps shrink.
+                  !grid && (k.wide ? "flex-[1.4] px-2" : "min-w-0 flex-1"),
                 )}
               >
                 {k.label}
