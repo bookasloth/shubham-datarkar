@@ -68,7 +68,7 @@ export function Header() {
             </Link>
           ) : (
             <Link
-              href="/membership"
+              href="/community"
               className={cn(
                 buttonVariants({ size: "sm" }),
                 "mr-1 hidden sm:inline-flex",
