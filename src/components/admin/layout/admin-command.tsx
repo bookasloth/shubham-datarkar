@@ -14,6 +14,7 @@ export const ADMIN_OPEN_COMMAND_EVENT = "open-admin-command";
 const QUICK_ACTIONS: { label: string; href: string }[] = [
   { label: "New post", href: "/admin/posts/new" },
   { label: "New update", href: "/admin/updates/new" },
+  { label: "New note", href: "/community/compose" },
 ];
 
 export function AdminCommand() {
