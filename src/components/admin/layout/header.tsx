@@ -22,11 +22,12 @@ export function Header({ email }: { email: string }) {
         <button
           type="button"
           onClick={openCommand}
-          className="flex h-9 items-center gap-2 rounded-input border border-admin-border px-3 text-sm text-admin-text-muted transition-[border-color,color] duration-150 hover:border-admin-border-hover hover:text-admin-text"
+          aria-label="Search admin"
+          className="flex h-9 w-9 items-center gap-2 rounded-input border border-admin-border text-sm text-admin-text-muted transition-[border-color,color] duration-150 hover:border-admin-border-hover hover:text-admin-text sm:w-64 sm:px-3 md:w-72"
         >
-          <Search className="size-4" aria-hidden />
-          <span className="hidden sm:inline">Search…</span>
-          <kbd className="hidden rounded bg-admin-surface-hover px-1.5 text-[10px] sm:inline">⌘K</kbd>
+          <Search className="mx-auto size-4 shrink-0 sm:mx-0" aria-hidden />
+          <span className="hidden sm:inline">Search or jump to…</span>
+          <kbd className="ml-auto hidden rounded bg-admin-surface-hover px-1.5 py-0.5 text-[10px] sm:inline">⌘K</kbd>
         </button>
         <DropdownMenu>
           <DropdownMenuTrigger
