@@ -47,6 +47,26 @@ const how = [
   { step: "Compound", detail: "Instrument it, hand it over, and let it run without me." },
 ];
 
+// Beyond the client work — the parts of the site a buyer-funnel home otherwise
+// never surfaces. Each links to a real, already-shipped area.
+const alsoHere = [
+  {
+    href: "/games",
+    label: "Games",
+    detail: "Daily word puzzles — Alfazy, Hit & Blow, Integra. Streaks, archives, leaderboards.",
+  },
+  {
+    href: "/community",
+    label: "Community",
+    detail: "A running feed of what I'm building, in public. Read it, or jump in.",
+  },
+  {
+    href: "/tools",
+    label: "Free tools",
+    detail: "SEO audits, ROAS math, and a growing shelf of utilities. No signup.",
+  },
+];
+
 const forYou = [
   "0–10 Cr ARR SaaS, agencies, and growth-stage startups in India",
   "You have a product and customers — visibility is the constraint",
@@ -272,6 +292,32 @@ export default async function HomePage() {
               </Link>
             </div>
           </div>
+        </Container>
+      </Section>
+
+      {/* 8.5 — Beyond the work: surface games / community / tools */}
+      <Section>
+        <Container>
+          <SectionHeading
+            eyebrow="Also here"
+            title="More than the client work"
+            description="The site isn't only a pitch. There's a place to play, a place to follow along, and tools you can use right now."
+          />
+          <Stagger className="mt-12 grid gap-4 sm:grid-cols-3">
+            {alsoHere.map((item) => (
+              <StaggerItem key={item.href}>
+                <Link href={item.href} className="group block h-full">
+                  <Card className="flex h-full flex-col p-6 transition-ui group-hover:border-foreground/20">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-lg font-semibold tracking-tight">{item.label}</h3>
+                      <ArrowRight className="size-4 text-muted-foreground transition-ui group-hover:translate-x-1 group-hover:text-foreground" />
+                    </div>
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{item.detail}</p>
+                  </Card>
+                </Link>
+              </StaggerItem>
+            ))}
+          </Stagger>
         </Container>
       </Section>
 
