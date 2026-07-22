@@ -184,7 +184,7 @@ async function stepScore(db: SupabaseClient, a: ArticleRow): Promise<StepResult>
   const brief = await loadBrief(db, a);
   // Hard ceiling backstop: never ship over 2200 words even if the model ran long.
   const blocks = enforceWordCap(a.stage_state.blocks ?? []);
-  const meta = a.stage_state.meta ?? { title: "", description: "", jsonld: "" };
+  const meta = a.stage_state.meta ?? { title: "", description: "", ogTitle: "", ogDescription: "", jsonld: "" };
   const score = scoreArticle({ blocks, meta, brief, targetWords: a.params.targetWords });
   await db.from("kalamai_articles").update({ blocks, meta, score, status: "complete", progress: 100 }).eq("id", a.id);
   await logEvent("article_completed", { userId: a.user_id, articleId: a.id });

@@ -5,9 +5,8 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
-// ponytail: near-copy of analysis-poller.tsx with the article endpoint + stages.
-// Not shared, so the working analysis poller stays untouched; fold into one
-// <StepPoller> only if a third poller ever appears.
+// ponytail: standalone poller for the article endpoint + stages.
+// Not shared with other pollers; fold into one <StepPoller> only if a third appears.
 const STAGES = [
   { key: "queued", label: "Queued" },
   { key: "outlining", label: "Planning the outline" },

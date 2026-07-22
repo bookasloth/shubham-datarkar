@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { extractSourceFacts, buildDraftPrompt, buildCritiquePrompt, enforceWordCap } from "./writing";
+import { extractSourceFacts, buildDraftPrompt, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE } from "./writing";
 import { FAKE_BRIEF } from "./brief";
 import type { ContentBlock } from "@/lib/data/types";
 
@@ -29,9 +29,9 @@ describe("extractSourceFacts", () => {
   });
 
   it("empty pages → no facts section; facts → source url appears for backlinking", () => {
-    const draft = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", sections: [] }, []);
+    const draft = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, []);
     expect(draft.user).not.toContain("Source facts");
-    const withFacts = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", sections: [] }, [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
+    const withFacts = buildDraftPrompt(FAKE_BRIEF, PARAMS, { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [] }, [{ text: "AEO lifts citations by 20% in tests.", url: U }]);
     expect(withFacts.user).toContain("Source facts");
     expect(withFacts.user).toContain("20%");
     expect(withFacts.user).toContain(U);
@@ -59,5 +59,23 @@ describe("enforceWordCap", () => {
     // already-short article is returned unchanged
     const short: ContentBlock[] = [long(50), faq];
     expect(enforceWordCap(short, 2200)).toEqual(short);
+  });
+});
+
+describe("buildArticleMeta — OG fields", () => {
+  const brief = { metaTitles: ["Meta T"], metaDescriptions: ["Meta D"], schemaJsonLd: "{}" } as unknown as import("./brief").Brief;
+
+  it("uses the plan's social-optimized OG title/description when present", () => {
+    const plan = { ...FAKE_OUTLINE, ogTitle: "Punchy OG", ogDescription: "Shareable OG blurb" };
+    const meta = buildArticleMeta(brief, plan);
+    expect(meta.ogTitle).toBe("Punchy OG");
+    expect(meta.ogDescription).toBe("Shareable OG blurb");
+  });
+
+  it("falls back to meta title/description when the model omits OG", () => {
+    const plan = { ...FAKE_OUTLINE, ogTitle: "", ogDescription: "" };
+    const meta = buildArticleMeta(brief, plan);
+    expect(meta.ogTitle).toBe(meta.title);
+    expect(meta.ogDescription).toBe(meta.description);
   });
 });

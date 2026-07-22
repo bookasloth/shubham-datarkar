@@ -20,6 +20,8 @@ export type ArticleParams = {
 export type SectionPlan = {
   title: string; // chosen meta/H1 title
   description: string; // meta description
+  ogTitle: string; // social-optimized share title
+  ogDescription: string; // social-optimized share description
   sections: { heading: string; points: string[]; words: number }[];
 };
 
@@ -30,7 +32,7 @@ export type Critique = {
   ok: boolean;
 };
 
-export type ArticleMeta = { title: string; description: string; jsonld: string };
+export type ArticleMeta = { title: string; description: string; ogTitle: string; ogDescription: string; jsonld: string };
 
 /** Stable cached block shared by W2-W4: the brief + the writer's params. */
 export function buildCachePrefix(brief: Brief, params: ArticleParams): string {
@@ -97,9 +99,13 @@ export function enforceWordCap(blocks: ContentBlock[], cap = 2200): ContentBlock
 
 /** Meta is a straight pull from the brief + the plan the model already chose. */
 export function buildArticleMeta(brief: Brief, plan: SectionPlan): ArticleMeta {
+  const title = plan.title || brief.metaTitles[0] || "";
+  const description = plan.description || brief.metaDescriptions[0] || "";
   return {
-    title: plan.title || brief.metaTitles[0] || "",
-    description: plan.description || brief.metaDescriptions[0] || "",
+    title,
+    description,
+    ogTitle: plan.ogTitle || title,
+    ogDescription: plan.ogDescription || description,
     jsonld: brief.schemaJsonLd || "",
   };
 }
@@ -120,10 +126,12 @@ const BLOCK_SPEC =
 export const OUTLINE_SCHEMA: Record<string, unknown> = {
   type: "object",
   additionalProperties: false,
-  required: ["title", "description", "sections"],
+  required: ["title", "description", "ogTitle", "ogDescription", "sections"],
   properties: {
     title: { type: "string" },
     description: { type: "string" },
+    ogTitle: { type: "string" },
+    ogDescription: { type: "string" },
     sections: {
       type: "array",
       items: {
@@ -147,7 +155,9 @@ export function buildOutlinePrompt(brief: Brief, params: ArticleParams): { syste
     "words, never over 2200. Ground every section in the brief's outline, entities, and recommended terms. " +
     "The FINAL section must be a Conclusion that takes a clear point of view (a recommendation the writer stands behind, " +
     "not a neutral summary) and calls out the low-hanging fruit — the highest-leverage actions the reader can act on " +
-    "immediately. title must be <= 60 chars; description 120-160 chars. Do not invent facts.";
+    "immediately. title must be <= 60 chars; description 120-160 chars. " +
+    "Also produce ogTitle and ogDescription — social-share variants that are punchier and more curiosity-driven than the meta title/description (ogTitle <= 70 chars; ogDescription 110-160 chars). " +
+    "Do not invent facts.";
   const user = [
     `Tone: ${params.tone}. Audience: ${params.audience}.`,
     params.brandFacts ? `Brand facts: ${params.brandFacts}` : "",
@@ -265,6 +275,8 @@ export function buildRewritePrompt(
 export const FAKE_OUTLINE: SectionPlan = {
   title: "Digital Marketing Company in Nagpur",
   description: "A results-driven digital marketing company in Nagpur offering SEO, PPC, and content marketing for local businesses that grow.",
+  ogTitle: "Grow Your Nagpur Business Online",
+  ogDescription: "SEO, PPC, and content that actually move the needle for local Nagpur businesses — here's how to pick the right partner.",
   sections: [
     { heading: "What a digital marketing company in Nagpur does", points: ["Core services", "Who it's for"], words: 400 },
     { heading: "How to choose an agency", points: ["Questions to ask", "Pricing"], words: 400 },
