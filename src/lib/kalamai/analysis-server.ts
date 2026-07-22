@@ -59,7 +59,7 @@ const STEP_LOCK_MS = 2 * 60_000; // reclaim a claim left behind by a crashed/tim
 // used to blow past it, killing the lambda with status still 'extracting' and
 // wedging the job forever. Cap the embed at ~40s and proceed with whatever
 // completed — clusters are best-effort; terms/rank don't use embeddings at all.
-const EMBED_BUDGET_MS = 40_000;
+const EMBED_BUDGET_MS = 30_000;
 
 export type StepResult = { status: string; progress: number };
 export type AnalysisDeps = { serp?: SerpProvider; crawl?: Crawler };
@@ -343,15 +343,26 @@ async function embedCompetitorChunks(
   const chunkVectors: ChunkVec[] = [];
   const deadline = Date.now() + EMBED_BUDGET_MS;
   for (let pi = 0; pi < pages.length; pi++) {
-    // Never START a page once the budget is spent — a single slow/rate-limited
-    // page (up to 5 retries × ~30s) must not push R3 past the 60s route ceiling.
     if (Date.now() >= deadline) break;
     const chunks = chunkText(pages[pi].body_text ?? "");
     if (!chunks.length) continue;
-    const vectors = await embedTexts(
-      chunks.map((c) => c.text),
-      "RETRIEVAL_DOCUMENT",
-    );
+    // Bound the TOTAL embed by wall clock, not just per-page: a single page's
+    // embedTexts can hang for minutes on a Gemini free-tier 429 storm (5 retries ×
+    // ~30s/chunk), which is what pushed R3 past the 60s route ceiling and wedged
+    // the job at 'extracting'. Race each page against the remaining budget and
+    // treat a timeout OR an embed throw as "stop embedding, finalize with what we
+    // have" — clusters are best-effort; terms/rank never use these vectors.
+    let vectors: number[][] | null = null;
+    try {
+      vectors = await Promise.race([
+        embedTexts(chunks.map((c) => c.text), "RETRIEVAL_DOCUMENT"),
+        new Promise<null>((resolve) => setTimeout(() => resolve(null), Math.max(0, deadline - Date.now()))),
+      ]);
+    } catch {
+      vectors = null; // provider down / rate-limited — degrade, don't wedge
+    }
+    if (!vectors) break;
+    const embedded = vectors;
     // Persist per page so partial progress survives a reclaim (delete-first at the
     // top keeps this idempotent). ponytail: budget cap, not resumable — if partial
     // clusters ever matter, batch by an embed_cursor like R2's crawl_cursor.
@@ -361,12 +372,12 @@ async function embedCompetitorChunks(
       chunk_index: c.index,
       text: c.text,
       token_count: c.tokenCount,
-      embedding: toPgVector(vectors[i]),
+      embedding: toPgVector(embedded[i]),
       embedding_model: EMBED_MODEL,
     }));
     await db.from("kalamai_chunks").insert(rows);
     chunks.forEach((c, i) => {
-      chunkVectors.push({ vector: vectors[i], competitorIndex: pi, text: c.text });
+      chunkVectors.push({ vector: embedded[i], competitorIndex: pi, text: c.text });
     });
   }
   return chunkVectors;
