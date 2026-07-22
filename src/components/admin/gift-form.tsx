@@ -7,7 +7,13 @@ import { Input } from "@/components/ui/input";
 
 const CELL = "h-9 rounded-btn border border-border bg-background px-2 text-sm";
 
-export function GiftForm({ plans }: { plans: { key: string; name: string }[] }) {
+export function GiftForm({
+  plans,
+  defaultEmail,
+}: {
+  plans: { key: string; name: string }[];
+  defaultEmail?: string;
+}) {
   const [state, action, pending] = useActionState<GiftState, FormData>(
     giftMembershipByEmail,
     undefined,
@@ -18,7 +24,7 @@ export function GiftForm({ plans }: { plans: { key: string; name: string }[] }) 
       <div className="flex flex-wrap items-end gap-2">
         <div className="space-y-1">
           <label className="text-xs font-medium text-muted-foreground">Gift a plan (by email)</label>
-          <Input name="email" type="email" placeholder="person@email.com" className="h-9 w-64" required />
+          <Input name="email" type="email" placeholder="person@email.com" defaultValue={defaultEmail} className="h-9 w-64" required />
         </div>
         <select name="plan_key" className={`${CELL} w-44`} required defaultValue="">
           <option value="" disabled>
