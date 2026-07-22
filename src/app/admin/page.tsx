@@ -4,6 +4,7 @@ import { getSubscribers } from "@/lib/subscribers/queries";
 import { countEntities } from "@/lib/content/queries";
 import { getPaymentStats, getRecentSupports } from "@/lib/payments/queries";
 import { getContacts } from "@/lib/contact/queries";
+import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { ENTITY_LIST } from "@/lib/content/registry";
 import { formatDate } from "@/lib/utils";
 import { AdminButton, StatusBadge } from "@/components/admin";
@@ -14,6 +15,35 @@ export const dynamic = "force-dynamic";
 const inr = (n: number) =>
   new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(n);
 
+/** Count of member requests still awaiting an admin decision. */
+async function getOpenRequestCount(): Promise<number> {
+  try {
+    const sb = await supabaseAuthServer();
+    const { count } = await sb
+      .from("member_requests")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "open");
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+/** A pending-work nudge — links to the queue that needs attention. */
+function ActionPill({ label, count, href }: { label: string; count: number; href: string }) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-2 rounded-card border border-admin-border bg-admin-surface px-3 py-2 text-sm text-admin-text transition-[border-color] duration-150 hover:border-admin-border-hover"
+    >
+      <span className="flex min-w-6 items-center justify-center rounded-full bg-admin-accent px-1.5 text-xs font-semibold text-admin-accent-fg">
+        {count}
+      </span>
+      <span>{label}</span>
+    </Link>
+  );
+}
+
 const postTone = (s: string) =>
   s === "published" ? "success" : s === "scheduled" ? "info" : "neutral";
 const supportTone = (s: string) =>
@@ -21,15 +51,17 @@ const supportTone = (s: string) =>
 
 export default async function AdminDashboardPage() {
   // One parallel batch; each array is reused for both its count and its recent list.
-  const [posts, subscribers, payments, recentSupports, contacts, entityCounts] = await Promise.all([
+  const [posts, subscribers, payments, recentSupports, contacts, entityCounts, openRequests] = await Promise.all([
     getAllPostsAdmin(),
     getSubscribers(),
     getPaymentStats(),
     getRecentSupports(5),
     getContacts(1000), // no count() helper; 1000 >> real contact volume, so length is accurate
     Promise.all(ENTITY_LIST.map(async (e) => ({ def: e, count: await countEntities(e.table) }))),
+    getOpenRequestCount(),
   ]);
 
+  const newContacts = contacts.filter((c) => c.status === "new").length;
   const { published, drafts, scheduled } = postStatusCounts(posts);
   const recentPosts = [...posts]
     .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
@@ -45,6 +77,17 @@ export default async function AdminDashboardPage() {
           <AdminButton asChild size="sm" variant="secondary"><Link href="/admin/updates/new">New update</Link></AdminButton>
         </div>
       </div>
+
+      {/* Action needed — only rendered when something is actually waiting */}
+      {(newContacts > 0 || openRequests > 0) && (
+        <div>
+          <h2 className="mb-2 text-sm font-semibold text-admin-text">Needs attention</h2>
+          <div className="flex flex-wrap gap-3">
+            {newContacts > 0 && <ActionPill label="New contacts" count={newContacts} href="/admin/contacts" />}
+            {openRequests > 0 && <ActionPill label="Open requests" count={openRequests} href="/admin/requests" />}
+          </div>
+        </div>
+      )}
 
       {/* KPIs */}
       <h2 className="sr-only">Key metrics</h2>
