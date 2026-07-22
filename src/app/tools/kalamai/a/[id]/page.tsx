@@ -5,7 +5,7 @@ import { requireMember } from "@/lib/members/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
-import { AnalysisPoller } from "@/components/kalamai/analysis-poller";
+import { RunOrchestrator } from "@/components/kalamai/run-orchestrator";
 import { KalamaiReport, type AnalysisReport } from "@/components/kalamai/report";
 import { NewArticleForm } from "@/components/kalamai/new-article-form";
 
@@ -56,7 +56,7 @@ export default async function KalamaiAnalysisPage({ params }: { params: Promise<
               </p>
             </div>
           ) : (
-            <AnalysisPoller id={a.id} initialStatus={a.status} initialProgress={a.progress ?? 0} />
+            <RunOrchestrator analysisId={a.id} initialStatus={a.status} />
           )}
 
           {terminal && (
