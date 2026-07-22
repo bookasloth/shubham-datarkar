@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { ALFAZY, scoreGuess, isWin, isValidGuess, shareGrid, type Tile as TileState } from "@/lib/games/alfazy";
 import { submitResult } from "@/lib/games/submit-result";
 import { startPuzzle } from "@/lib/games/start-puzzle";
@@ -57,10 +56,14 @@ export default function AlfazyBoard({
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
-    if (raw) {
+    if (!raw) return;
+    try {
       const s: Saved = JSON.parse(raw);
       setGuesses(s.guesses);
       setStatus(s.status);
+    } catch {
+      // Corrupt / old-schema value — start fresh instead of tripping the error boundary.
+      localStorage.removeItem(storageKey);
     }
   }, [storageKey]);
 
@@ -118,6 +121,10 @@ export default function AlfazyBoard({
 
   useEffect(() => {
     const h = (e: KeyboardEvent) => {
+      // Don't hijack browser shortcuts (Ctrl/Cmd+R etc.) or typing in a real field.
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const t = e.target as HTMLElement | null;
+      if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName))) return;
       if (e.key === "Enter") key("enter");
       else if (e.key === "Backspace") key("back");
       else if (/^[a-zA-Z]$/.test(e.key)) key(e.key.toLowerCase());
@@ -198,7 +205,11 @@ export default function AlfazyBoard({
         })}
       </div>
 
-      {toast && <div className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">{toast}</div>}
+      {toast && (
+        <div role="status" aria-live="polite" className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">
+          {toast}
+        </div>
+      )}
 
       {status !== "playing" ? (
         <div className="flex flex-col items-center gap-2">
@@ -206,14 +217,8 @@ export default function AlfazyBoard({
             {status === "won" ? `Solved in ${guesses.length}!` : `Answer: ${answer.toUpperCase()}`}
           </p>
           <ShareBlock text={shareText} url={shareUrl} />
-          {!user && (
-            <p className="text-sm text-muted-foreground">
-              <Link href="/games/login?next=/games/alfazy" className="underline underline-offset-4 hover:text-foreground">
-                Log in
-              </Link>{" "}
-              to save your streak.
-            </p>
-          )}
+          {/* Logged-out account CTA lives in the GameEndCard dialog below — no
+              duplicate "log in" line here. */}
         </div>
       ) : (
         <Keyboard game="alfazy" rows={ALFAZY_ROWS} keyStates={keyState} onKey={key} />

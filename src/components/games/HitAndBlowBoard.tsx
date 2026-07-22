@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { HIT_AND_BLOW, secretFor, scoreGuess, isWin, isValidGuess, shareSummary } from "@/lib/games/hit-and-blow";
 import { submitResult } from "@/lib/games/submit-result";
 import { startPuzzle } from "@/lib/games/start-puzzle";
@@ -42,10 +41,14 @@ export default function HitAndBlowBoard({
 
   useEffect(() => {
     const raw = typeof window !== "undefined" && localStorage.getItem(storageKey);
-    if (raw) {
+    if (!raw) return;
+    try {
       const s: Saved = JSON.parse(raw);
       setHistory(s.history);
       setStatus(s.status);
+    } catch {
+      // Corrupt / old-schema value — start fresh instead of tripping the error boundary.
+      localStorage.removeItem(storageKey);
     }
   }, [storageKey]);
 
@@ -133,15 +136,21 @@ export default function HitAndBlowBoard({
         {history.map((r, i) => (
           <div key={i} className="flex items-center justify-between rounded-input border border-border bg-card px-4 py-2">
             <span className="font-mono text-lg tracking-widest">{r.guess}</span>
-            <span className="text-sm">
-              {"🎯".repeat(r.hits)}{"💨".repeat(r.blows) || (r.hits === 0 ? "—" : "")}
+            <span className="text-sm" aria-label={`${r.hits} hits, ${r.blows} blows`}>
+              <span aria-hidden="true">
+                {"🎯".repeat(r.hits)}{"💨".repeat(r.blows) || (r.hits === 0 ? "—" : "")}
+              </span>
               <span className="ml-2 text-muted-foreground">{r.hits}H {r.blows}B</span>
             </span>
           </div>
         ))}
       </div>
 
-      {toast && <div className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">{toast}</div>}
+      {toast && (
+        <div role="status" aria-live="polite" className="rounded-btn bg-primary px-3 py-1 text-sm text-primary-foreground">
+          {toast}
+        </div>
+      )}
 
       {status !== "playing" ? (
         <div className="flex flex-col items-center gap-2">
@@ -149,14 +158,8 @@ export default function HitAndBlowBoard({
             {status === "won" ? `Cracked in ${history.length}!` : `Code was ${secret}`}
           </p>
           <ShareBlock text={shareText} url={shareUrl} />
-          {!user && (
-            <p className="text-sm text-muted-foreground">
-              <Link href="/games/login?next=/games/hit-and-blow" className="underline underline-offset-4 hover:text-foreground">
-                Log in
-              </Link>{" "}
-              to save your streak.
-            </p>
-          )}
+          {/* Logged-out account CTA lives in the GameEndCard dialog below — no
+              duplicate "log in" line here. */}
         </div>
       ) : (
         <div className="flex gap-2">
@@ -169,7 +172,11 @@ export default function HitAndBlowBoard({
             placeholder={"•".repeat(HIT_AND_BLOW.length)}
             className="w-40 rounded-input border-2 border-input bg-background px-4 py-2 text-center font-mono text-2xl tracking-widest outline-none transition-ui focus:border-brand"
           />
-          <button onClick={submit} className="rounded-btn bg-primary px-5 font-semibold text-primary-foreground transition-ui hover:opacity-90">
+          <button
+            onClick={submit}
+            disabled={!isValidGuess(current)}
+            className="rounded-btn bg-primary px-5 font-semibold text-primary-foreground transition-ui hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
             Go
           </button>
         </div>

@@ -17,11 +17,14 @@ export function GameWelcome({
   howto: string;
 }) {
   const dismissKey = `games:welcome-dismissed:${game}`;
-  const [show, setShow] = useState(false);
+  // Default visible so the strip renders server-side / on first paint — the
+  // instruction shows before the game finishes loading, and there's no post-
+  // hydration pop-in. The effect only *hides* it for players who dismissed it.
+  const [show, setShow] = useState(true);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    setShow(localStorage.getItem(dismissKey) !== "1");
+    if (localStorage.getItem(dismissKey) === "1") setShow(false);
   }, [dismissKey]);
 
   if (!show) return null;
