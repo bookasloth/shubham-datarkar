@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Check, Copy, Download, Share2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -59,29 +59,19 @@ export function ShareCard({ share }: { share: ShareInput }) {
   const community = `/community?compose=${enc}&returnTo=${encodeURIComponent(gameLeaderboardUrl(share.game))}`;
 
   const [copied, setCopied] = useState(false);
-  const [img, setImg] = useState<{ url: string; blob: Blob } | null>(null);
+  // The PNG is rendered on demand — only when an image button is pressed — and
+  // cached, so it never costs anything (or screen space) unless someone shares.
+  const cache = useRef<{ url: string; blob: Blob } | null>(null);
+  useEffect(() => () => {
+    if (cache.current) URL.revokeObjectURL(cache.current.url);
+  }, []);
 
-  // Render the PNG once per distinct result. A fresh ShareInput object arrives
-  // every parent render, so key the effect on the values, not the reference.
-  const key = `${share.game}|${share.puzzleNumber}|${share.status}|${share.tries}|${share.grid}`;
-  useEffect(() => {
-    let objectUrl: string | undefined;
-    let alive = true;
-    renderResultImage(share)
-      .then((blob) => {
-        if (!alive) return;
-        objectUrl = URL.createObjectURL(blob);
-        setImg({ url: objectUrl, blob });
-      })
-      .catch(() => {
-        // Canvas/toBlob unsupported — text buttons still work; image ones no-op.
-      });
-    return () => {
-      alive = false;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [key]);
+  async function getImage() {
+    if (cache.current) return cache.current;
+    const blob = await renderResultImage(share);
+    cache.current = { url: URL.createObjectURL(blob), blob };
+    return cache.current;
+  }
 
   async function copy() {
     try {
@@ -93,19 +83,19 @@ export function ShareCard({ share }: { share: ShareInput }) {
     }
   }
 
-  function download() {
-    if (!img) return;
+  async function download() {
+    const { url } = await getImage();
     const a = document.createElement("a");
-    a.href = img.url;
+    a.href = url;
     a.download = `${share.game}-${share.puzzleNumber}.png`;
     a.click();
   }
 
-  // Instagram has no web share intent: on a phone hand the PNG to the native
-  // share sheet (which lists Instagram); on desktop fall back to a download.
+  // Instagram/LinkedIn have no web file-share URL: on a phone hand the PNG to
+  // the native share sheet; on desktop fall back to a download.
   async function shareImage() {
-    if (!img) return;
-    const file = new File([img.blob], `${share.game}-${share.puzzleNumber}.png`, { type: "image/png" });
+    const { blob } = await getImage();
+    const file = new File([blob], `${share.game}-${share.puzzleNumber}.png`, { type: "image/png" });
     if (typeof navigator.canShare === "function" && navigator.canShare({ files: [file] })) {
       try {
         await navigator.share({ files: [file], text });
@@ -119,13 +109,6 @@ export function ShareCard({ share }: { share: ShareInput }) {
 
   return (
     <div className="w-full space-y-3 rounded-card border border-border bg-card p-3 text-left">
-      {img ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={img.url} alt="Shareable result" className="w-full rounded-card border border-border" />
-      ) : (
-        <div className="aspect-[4/5] w-full animate-pulse rounded-card border border-border bg-muted" />
-      )}
-
       {/* Row 1: copy (square) + community (3× wide) */}
       <div className="flex gap-2">
         <button
@@ -150,7 +133,7 @@ export function ShareCard({ share }: { share: ShareInput }) {
         <a href={`https://wa.me/?text=${enc}`} target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp" className={iconCls}>
           <WhatsAppIcon className="size-4" />
         </a>
-        <button type="button" onClick={shareImage} aria-label="Share to LinkedIn" className={iconCls} disabled={!img}>
+        <button type="button" onClick={shareImage} aria-label="Share to LinkedIn" className={iconCls}>
           <LinkedInIcon className="size-4" />
         </button>
         <a
@@ -162,7 +145,7 @@ export function ShareCard({ share }: { share: ShareInput }) {
         >
           <FacebookIcon className="size-4" />
         </a>
-        <button type="button" onClick={shareImage} aria-label="Share to Instagram" className={iconCls} disabled={!img}>
+        <button type="button" onClick={shareImage} aria-label="Share to Instagram" className={iconCls}>
           <InstagramIcon className="size-4" />
         </button>
       </div>
@@ -170,8 +153,7 @@ export function ShareCard({ share }: { share: ShareInput }) {
       <button
         type="button"
         onClick={download}
-        disabled={!img}
-        className={cn(iconCls, "w-full gap-2 text-sm font-medium disabled:opacity-50")}
+        className={cn(iconCls, "w-full gap-2 text-sm font-medium")}
       >
         <Download className="size-4" /> Download image
       </button>
