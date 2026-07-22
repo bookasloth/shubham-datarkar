@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/layout/theme-toggle";
 import {
   Sheet, SheetBody, SheetContent, SheetHeader, SheetTitle, SheetTrigger,
 } from "@/components/ui/sheet";
@@ -34,7 +35,7 @@ export function AppShell({
     <div className="flex min-h-dvh flex-col">
       {/* Top bar */}
       <header className="sticky top-0 z-40 border-b border-border bg-background/90 backdrop-blur">
-        <div className="flex h-14 items-center gap-3 px-4 lg:px-6">
+        <div className="flex h-16 items-center gap-3 px-4 lg:px-6">
           <Sheet open={drawer} onOpenChange={setDrawer}>
             <SheetTrigger
               aria-label="Open menu"
@@ -72,6 +73,7 @@ export function AppShell({
           </button>
 
           <div className="flex items-center gap-2">
+            <ThemeToggle />
             {signedIn ? (
               <ProfileMenu
                 displayName={user!.displayName}
@@ -95,7 +97,7 @@ export function AppShell({
 
       <div className="mx-auto flex w-full max-w-[1240px] flex-1 justify-center gap-6 px-4">
         {/* Desktop sidebar — floating card, glued to the middle column */}
-        <aside className="sticky top-14 hidden h-[calc(100dvh-3.5rem)] w-64 shrink-0 py-4 lg:block">
+        <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-64 shrink-0 py-4 lg:block">
           <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
             <AppSidebar signedIn={signedIn} isPremium={isPremium} />
           </div>
@@ -108,7 +110,7 @@ export function AppShell({
         </main>
         {rail && (
           <aside className="hidden w-80 shrink-0 py-4 xl:block">
-            <div className="sticky top-[4.5rem]">{rail}</div>
+            <div className="sticky top-[5rem]">{rail}</div>
           </aside>
         )}
       </div>
