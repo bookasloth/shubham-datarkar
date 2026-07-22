@@ -10,8 +10,9 @@ import { logEvent } from "./events-server";
 import type { Brief } from "./brief";
 import {
   OUTLINE_SCHEMA, CRITIQUE_SCHEMA,
-  FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE,
+  FAKE_OUTLINE, FAKE_DRAFT, FAKE_CRITIQUE, FAKE_REWRITE, FAKE_SECTION_DRAFT,
   buildOutlinePrompt, buildDraftPrompt, buildCritiquePrompt, buildRewritePrompt, buildArticleMeta, extractSourceFacts, enforceWordCap,
+  buildSectionDraftPrompt,
   type ArticleParams, type SectionPlan, type Critique, type ArticleMeta, type SourceFact,
 } from "./writing";
 
@@ -35,6 +36,9 @@ type StageState = {
   meta?: ArticleMeta;
   blocks?: ContentBlock[];
   critique?: Critique;
+  sectionBlocks?: ContentBlock[][];
+  draftCursor?: number;
+  rewriteCursor?: number;
 };
 
 /**
@@ -131,22 +135,41 @@ async function loadSourceFacts(db: SupabaseClient, analysisId: string): Promise<
   return extractSourceFacts(pages);
 }
 
-// W2 — draft the body as ContentBlock[] (big streamed call, reads the cached brief).
+// W2 — draft ONE section per call, accumulating in stage_state.sectionBlocks. Stays
+// at 'outlining' until every section is drafted, so no single LLM call can exceed the
+// 60s route ceiling. Then assembles blocks and advances to 'drafting'.
 async function stepDraft(db: SupabaseClient, a: ArticleRow): Promise<StepResult> {
   const brief = await loadBrief(db, a);
   const plan = a.stage_state.plan!;
+  const sections = plan.sections ?? [];
   const facts = await loadSourceFacts(db, a.analysis_id);
-  const { system, user, cachePrefix } = buildDraftPrompt(brief, a.params, plan, facts);
-  // Headroom so a grounded, slightly-long article's JSON completes instead of
-  // truncating mid-array (which the parser can't salvage).
-  const DRAFT_TOKENS = 32000;
-  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
+  const sectionBlocks = a.stage_state.sectionBlocks ? [...a.stage_state.sectionBlocks] : [];
+  const cursor = a.stage_state.draftCursor ?? 0;
+
+  if (sections.length === 0) {
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks: [], sectionBlocks: [], draftCursor: 0 }), status: "drafting", progress: 40 }).eq("id", a.id);
+    return { status: "drafting", progress: 40 };
+  }
+
+  const priorHeadings = sections.slice(0, cursor).map((s) => s.heading);
+  const { system, user, cachePrefix } = buildSectionDraftPrompt(brief, a.params, plan, cursor, priorHeadings, facts);
+  const SECTION_TOKENS = 8000; // one section is small; ample headroom, finishes well under 60s
+  const { text, usage } = await runText({ system, user, cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
   await logCall(db, a, "W2", usage);
   const blocks = await parseWithRepair(text, async () => {
-    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_DRAFT, maxTokens: DRAFT_TOKENS });
+    const r = await runText({ system, user: user + "\n\nReturn ONLY a valid JSON array of ContentBlocks.", cachePrefix, fake: FAKE_SECTION_DRAFT, maxTokens: SECTION_TOKENS });
     return r.text;
   });
-  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { blocks }), status: "drafting", progress: 40 }).eq("id", a.id);
+  sectionBlocks[cursor] = blocks;
+  const nextCursor = cursor + 1;
+  const progress = 15 + Math.round((25 * nextCursor) / sections.length);
+
+  if (nextCursor < sections.length) {
+    await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, draftCursor: nextCursor }), progress }).eq("id", a.id);
+    return { status: "outlining", progress };
+  }
+  const assembled = sectionBlocks.flat();
+  await db.from("kalamai_articles").update({ stage_state: mergeState(a, { sectionBlocks, draftCursor: nextCursor, blocks: assembled }), status: "drafting", progress: 40 }).eq("id", a.id);
   return { status: "drafting", progress: 40 };
 }
 
