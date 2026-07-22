@@ -150,15 +150,9 @@ export function ShareCard({ share }: { share: ShareInput }) {
         <a href={`https://wa.me/?text=${enc}`} target="_blank" rel="noopener noreferrer" aria-label="Share on WhatsApp" className={iconCls}>
           <WhatsAppIcon className="size-4" />
         </a>
-        <a
-          href={`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Share on LinkedIn"
-          className={iconCls}
-        >
+        <button type="button" onClick={shareImage} aria-label="Share to LinkedIn" className={iconCls} disabled={!img}>
           <LinkedInIcon className="size-4" />
-        </a>
+        </button>
         <a
           href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`}
           target="_blank"
