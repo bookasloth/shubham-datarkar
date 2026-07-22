@@ -29,6 +29,63 @@ describe("buildSystem (prompt-cache ordering)", () => {
   });
 });
 
+// A single transient error (529 overloaded, network blip) must NOT fail the
+// article — runText retries with backoff. One live prod run flipped an article to
+// `failed` on a transient draft-stage error before this guard existed.
+describe("runText transient retry", () => {
+  const finalMessage = vi.fn();
+  const stream = vi.fn(() => ({ finalMessage }));
+  const prevKey = process.env.ANTHROPIC_API_KEY;
+  const prevFake = process.env.KALAMAI_FAKE_LLM;
+
+  beforeEach(() => {
+    process.env.ANTHROPIC_API_KEY = "test-key";
+    process.env.KALAMAI_FAKE_LLM = "0";
+    vi.resetModules();
+    stream.mockClear();
+    finalMessage.mockReset();
+    vi.doMock("@anthropic-ai/sdk", () => ({
+      default: class {
+        messages = { stream };
+      },
+    }));
+  });
+  afterEach(() => {
+    process.env.ANTHROPIC_API_KEY = prevKey;
+    process.env.KALAMAI_FAKE_LLM = prevFake;
+    vi.doUnmock("@anthropic-ai/sdk");
+    vi.useRealTimers();
+  });
+
+  const okMessage = {
+    content: [{ type: "text", text: "drafted" }],
+    usage: { input_tokens: 1, output_tokens: 1 },
+  };
+
+  it("retries once on a 529 overloaded error then succeeds", async () => {
+    finalMessage
+      .mockRejectedValueOnce(Object.assign(new Error("overloaded"), { status: 529 }))
+      .mockResolvedValueOnce(okMessage);
+    vi.useFakeTimers();
+
+    const { runText } = await import("./llm");
+    const p = runText({ system: "s", user: "u", fake: "x" });
+    await vi.runAllTimersAsync(); // advance past the backoff sleep
+    const { text } = await p;
+
+    expect(text).toBe("drafted");
+    expect(stream).toHaveBeenCalledTimes(2);
+  });
+
+  it("does NOT retry a 4xx (invalid request) — surfaces immediately", async () => {
+    finalMessage.mockRejectedValue(Object.assign(new Error("bad request"), { status: 400 }));
+
+    const { runText } = await import("./llm");
+    await expect(runText({ system: "s", user: "u", fake: "x" })).rejects.toThrow("bad request");
+    expect(stream).toHaveBeenCalledTimes(1);
+  });
+});
+
 // runText's real path streams from the Anthropic SDK; the offline branch (no key
 // or KALAMAI_FAKE_LLM) is the seam every writing test and local dev run hits.
 describe("runText fake mode", () => {
