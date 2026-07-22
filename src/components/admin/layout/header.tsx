@@ -43,6 +43,9 @@ export function Header({ email }: { email: string }) {
             <DropdownMenuItem asChild>
               <Link href="/admin/updates/new">New update</Link>
             </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/community/compose">New note</Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
         <NotificationsBell />
