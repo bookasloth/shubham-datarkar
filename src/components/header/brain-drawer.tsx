@@ -6,18 +6,23 @@ import { usePathname } from "next/navigation";
 import * as Dialog from "@radix-ui/react-dialog";
 import { ArrowUpRight, X } from "lucide-react";
 import { leftBrain, rightBrain, site, socials, type NavGroup } from "@/lib/site";
-import { caseStudies } from "@/lib/data/case-studies";
-import { getLatestPostsForNav } from "@/lib/blog/actions";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Logo } from "@/components/brand/logo";
 import { cn } from "@/lib/utils";
-import { Search } from "./search";
 
 export type Brain = "left" | "right";
 
-const latestCases = caseStudies.slice(0, 2);
-
-type NavPost = { slug: string; title: string; category: string };
+const BRAINS: Record<Brain, { title: string; tagline: string; groups: NavGroup[] }> = {
+  left: {
+    title: "Growth & Systems",
+    tagline: "Services, proof, and the machine behind the businesses.",
+    groups: leftBrain,
+  },
+  right: {
+    title: "Ideas & Play",
+    tagline: "Writing, community, experiments — the human side.",
+    groups: rightBrain,
+  },
+};
 
 function SpotifyIcon({ className }: { className?: string }) {
   return (
@@ -35,59 +40,13 @@ function YouTubeIcon({ className }: { className?: string }) {
   );
 }
 
-/** YouTube + Spotify — both framed around the build, so they live left-brain. */
-function ListenButtons() {
-  return (
-    <div className="mt-6 grid grid-cols-2 gap-3">
-      <a
-        href={site.youtubeUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-col justify-center gap-1 rounded-btn bg-[#FF0000] px-4 py-5 text-white transition-ui hover:bg-[#ff1a1a]"
-      >
-        <span className="text-[11px] font-medium uppercase tracking-wide text-white/80">
-          Watch me build
-        </span>
-        <span className="flex items-center gap-2 font-semibold">
-          <YouTubeIcon className="size-5" />
-          YouTube
-        </span>
-      </a>
-      <a
-        href={site.spotifyUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-col justify-center gap-1 rounded-btn bg-[#1DB954] px-4 py-5 text-black transition-ui hover:bg-[#1ed760]"
-      >
-        <span className="text-[11px] font-medium uppercase tracking-wide text-black/70">
-          Focus, build, repeat
-        </span>
-        <span className="flex items-center gap-2 font-semibold">
-          <SpotifyIcon className="size-5" />
-          Spotify
-        </span>
-      </a>
-    </div>
-  );
-}
-
-const BRAINS: Record<Brain, { title: string; tagline: string; groups: NavGroup[] }> = {
-  left: {
-    title: "Growth & Systems",
-    tagline: "Services, proof, and the machine behind the businesses.",
-    groups: leftBrain,
-  },
-  right: {
-    title: "Ideas & Play",
-    tagline: "Writing, community, experiments — the human side.",
-    groups: rightBrain,
-  },
-};
-
-/** Grouped nav list for one brain — label heading + items with descriptions. */
+/** Three nav groups as three columns on desktop, a single title stack on mobile. */
 function NavGroups({ groups, pathname }: { groups: NavGroup[]; pathname: string }) {
   return (
-    <nav aria-label="Primary" className="flex min-w-0 flex-col gap-6">
+    <nav
+      aria-label="Primary"
+      className="grid min-w-0 grid-cols-1 gap-x-8 gap-y-6 lg:grid-cols-3"
+    >
       {groups.map((group) => (
         <div key={group.label} className="min-w-0">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
@@ -124,111 +83,69 @@ function NavGroups({ groups, pathname }: { groups: NavGroup[]; pathname: string 
   );
 }
 
-/** Left-brain aside: proof at a glance — latest cases + recent writing. */
-function LeftAside({ posts }: { posts: NavPost[] }) {
+const bookACall = cn(buttonVariants({ size: "lg" }), "flex-1");
+
+/** Left-brain button row: YouTube + Spotify (both build-themed) + Book a call. */
+function LeftButtons() {
   return (
-    <>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Latest cases
-      </p>
-      <ul className="mt-3 flex flex-col gap-2">
-        {latestCases.map((c) => (
-          <li key={c.slug}>
-            <Link
-              href={`/case-studies/${c.slug}`}
-              className="group flex items-center gap-4 rounded-card p-2 transition-ui hover:bg-accent"
-            >
-              <span
-                aria-hidden
-                className="grid size-14 shrink-0 place-items-center rounded-img bg-secondary text-center font-display text-xs font-bold text-foreground"
-              >
-                {c.heroMetric.value}
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-medium text-foreground">
-                  {c.title}
-                </span>
-                <span className="text-xs text-muted-foreground">
-                  {c.client} · {c.sector}
-                </span>
-              </span>
-              <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-ui group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
-            </Link>
-          </li>
-        ))}
-      </ul>
-
-      {posts.length > 0 && (
-        <>
-          <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Notes/Updates
-          </p>
-          <ul className="mt-3 flex flex-col gap-2">
-            {posts.map((p) => (
-              <li key={p.slug}>
-                <Link
-                  href={`/blog/${p.category}/${p.slug}`}
-                  className="group flex items-center gap-3 rounded-card p-2 transition-ui hover:bg-accent"
-                >
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-medium text-foreground">
-                      {p.title}
-                    </span>
-                    <span className="text-xs capitalize text-muted-foreground">
-                      {p.category.replace(/-/g, " ")}
-                    </span>
-                  </span>
-                  <ArrowUpRight className="size-4 shrink-0 text-muted-foreground transition-ui group-hover:-translate-y-0.5 group-hover:translate-x-0.5 group-hover:text-foreground" />
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </>
-      )}
-
-      <ListenButtons />
-    </>
+    <div className="flex flex-col gap-3 sm:flex-row">
+      <a
+        href={site.youtubeUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-1 items-center justify-center gap-2 rounded-btn bg-[#FF0000] px-4 py-3 font-semibold text-white transition-ui hover:bg-[#ff1a1a]"
+      >
+        <YouTubeIcon className="size-5" />
+        YouTube
+      </a>
+      <a
+        href={site.spotifyUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex flex-1 items-center justify-center gap-2 rounded-btn bg-[#1DB954] px-4 py-3 font-semibold text-black transition-ui hover:bg-[#1ed760]"
+      >
+        <SpotifyIcon className="size-5" />
+        Spotify
+      </a>
+      <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={bookACall}>
+        Book a call
+      </a>
+    </div>
   );
 }
 
-/** Right-brain aside: search + the places to follow along. */
-function RightAside() {
+/** Right-brain button row: socials + Book a call, all on one line. */
+function RightButtons() {
   return (
-    <>
-      <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Find what you need
-      </p>
-      <Search className="mt-3" />
-
-      <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-        Follow
-      </p>
-      <ul className="mt-2 flex flex-col">
-        {socials.map((s) => (
-          <li key={s.label}>
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="flex flex-1 flex-wrap gap-2">
+        {socials
+          .filter((s) => s.href !== site.bookingUrl)
+          .map((s) => (
             <a
+              key={s.label}
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-between rounded-btn px-2 py-2 text-sm transition-ui hover:bg-accent"
+              className="flex-1 whitespace-nowrap rounded-btn border border-border px-3 py-3 text-center text-sm font-medium text-foreground transition-ui hover:bg-accent"
             >
-              <span className="font-medium text-foreground">{s.label}</span>
-              <span className="text-xs text-muted-foreground">{s.handle}</span>
+              {s.label}
             </a>
-          </li>
-        ))}
-      </ul>
-    </>
+          ))}
+      </div>
+      <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={bookACall}>
+        Book a call
+      </a>
+    </div>
   );
 }
 
 /**
- * The dual-brain navigation drawer. Controlled by the header: `edge` sets which
- * side it slides from (and null = closed), `brain` sets which content shows.
- * The two are independent — you open the left burger onto the left edge with
- * left-brain content, then the in-drawer toggle can flip the *content* to the
- * right brain without the panel jumping edges. Radix Dialog gives focus trap,
- * scroll lock, and Esc/overlay dismissal for free.
+ * The dual-brain navigation menu. Drops as a centered panel under the navbar.
+ * `edge` (null = closed) opens it and seeds `brain`; on desktop the left burger
+ * and right kebab are two fixed menus (no toggle), on mobile a single panel with
+ * an in-panel toggle to switch brains. Radix Dialog gives focus trap, scroll
+ * lock, and Esc/overlay dismissal for free.
  */
 export function BrainDrawer({
   edge,
@@ -242,19 +159,7 @@ export function BrainDrawer({
   onClose: () => void;
 }) {
   const pathname = usePathname();
-  const [posts, setPosts] = React.useState<NavPost[]>([]);
   const open = edge !== null;
-
-  // Recent posts live in the DB — fetch once, only after the drawer first opens.
-  // ponytail: on-open fetch, revisit if it feels slow.
-  React.useEffect(() => {
-    if (open && posts.length === 0) {
-      getLatestPostsForNav(2)
-        .then(setPosts)
-        .catch(() => {});
-    }
-  }, [open, posts.length]);
-
   const active = BRAINS[brain];
 
   return (
@@ -263,77 +168,65 @@ export function BrainDrawer({
         <Dialog.Overlay className="overlay-anim fixed inset-0 z-[95] bg-foreground/40 backdrop-blur-sm" />
         <Dialog.Content
           aria-describedby={undefined}
-          className={cn(
-            "fixed inset-y-0 z-[96] flex w-full max-w-[26rem] flex-col overflow-y-auto bg-background/90 backdrop-blur-md outline-none lg:max-w-[46rem]",
-            edge === "left"
-              ? "drawer-left left-0 border-r border-border"
-              : "drawer-right right-0 border-l border-border",
-          )}
+          className="fixed inset-x-0 top-[4.25rem] z-[96] flex justify-center px-3 outline-none md:px-8"
         >
-          {/* Top row — Logo + Close (the bar is covered while open) */}
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <Logo />
-            <Dialog.Title className="sr-only">{active.title}</Dialog.Title>
+          <div
+            className={cn(
+              "pop-anim flex max-h-[calc(100dvh-5.5rem)] w-full max-w-[var(--container-page)]",
+              "flex-col overflow-y-auto rounded-card border border-border bg-background/95 p-4 shadow-lg backdrop-blur-md sm:p-6",
+            )}
+          >
+          {/* Header row: title (desktop) / toggle (mobile) + close */}
+          <div className="flex items-start justify-between gap-4">
+            {/* Desktop: the menu is fixed to one brain, so just name it. */}
+            <div className="hidden lg:block">
+              <Dialog.Title className="font-display text-lg font-bold text-foreground">
+                {active.title}
+              </Dialog.Title>
+              <p className="mt-1 text-xs text-muted-foreground">{active.tagline}</p>
+            </div>
+
+            {/* Mobile: one panel, toggle between brains. */}
+            <div className="min-w-0 flex-1 lg:hidden">
+              <Dialog.Title className="sr-only">{active.title}</Dialog.Title>
+              <div
+                role="tablist"
+                aria-label="Switch menu"
+                className="grid grid-cols-2 gap-1 rounded-btn bg-secondary p-1"
+              >
+                {(["left", "right"] as const).map((b) => (
+                  <button
+                    key={b}
+                    role="tab"
+                    aria-selected={brain === b}
+                    onClick={() => onBrainChange(b)}
+                    className={cn(
+                      "rounded-btn px-3 py-2 text-sm font-medium transition-ui",
+                      brain === b
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground",
+                    )}
+                  >
+                    {BRAINS[b].title}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <Dialog.Close asChild>
-              <Button variant="ghost" size="icon" aria-label="Close menu">
+              <Button variant="ghost" size="icon" aria-label="Close menu" className="shrink-0">
                 <X />
               </Button>
             </Dialog.Close>
           </div>
 
-          {/* Brain toggle — mobile only. On desktop each edge is its own fixed
-              menu (left burger = left brain, right kebab = right brain), so
-              there is nothing to switch. */}
-          <div className="px-4 pt-4 lg:hidden">
-            <div
-              role="tablist"
-              aria-label="Switch menu"
-              className="grid grid-cols-2 gap-1 rounded-btn bg-secondary p-1"
-            >
-              {(["left", "right"] as const).map((b) => (
-                <button
-                  key={b}
-                  role="tab"
-                  aria-selected={brain === b}
-                  onClick={() => onBrainChange(b)}
-                  className={cn(
-                    "rounded-btn px-3 py-2 text-sm font-medium transition-ui",
-                    brain === b
-                      ? "bg-background text-foreground shadow-sm"
-                      : "text-muted-foreground hover:text-foreground",
-                  )}
-                >
-                  {BRAINS[b].title}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Desktop heading — names the fixed menu (no toggle up there). */}
-          <div className="hidden px-4 pt-5 lg:block">
-            <h2 className="font-display text-lg font-bold text-foreground">{active.title}</h2>
-            <p className="mt-1 text-xs text-muted-foreground">{active.tagline}</p>
-          </div>
-
-          <div className="grid min-w-0 flex-1 grid-cols-1 gap-8 p-4 lg:grid-cols-2 lg:gap-10">
+          <div className="mt-6 min-w-0">
             <NavGroups groups={active.groups} pathname={pathname} />
-
-            {/* Aside (cases/writing/buttons or search/socials) — desktop only.
-                Mobile keeps the menu to bare titles. */}
-            <aside className="hidden min-w-0 flex-col lg:flex lg:border-l lg:border-border lg:pl-10">
-              {brain === "left" ? <LeftAside posts={posts} /> : <RightAside />}
-            </aside>
           </div>
 
-          <div className="border-t border-border p-4">
-            <a
-              href={site.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ size: "lg" }), "w-full")}
-            >
-              Book a call
-            </a>
+          <div className="mt-8 border-t border-border pt-6">
+            {brain === "left" ? <LeftButtons /> : <RightButtons />}
+          </div>
           </div>
         </Dialog.Content>
       </Dialog.Portal>
