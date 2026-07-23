@@ -27,12 +27,12 @@ export default async function KalamaiArticlePage({ params }: { params: Promise<{
   const { id } = await params;
   const ctx = await requireMember(`/tools/kalamai/w/${id}`);
 
-  const { data: article } = await supabaseAdmin()
+  let q = supabaseAdmin()
     .from("kalamai_articles")
     .select("id, status, progress, blocks, meta, score")
-    .eq("id", id)
-    .eq("user_id", ctx.user!.id)
-    .maybeSingle();
+    .eq("id", id);
+  if (ctx.role !== "admin") q = q.eq("user_id", ctx.user!.id); // admin can view any user's article
+  const { data: article } = await q.maybeSingle();
   if (!article) notFound();
 
   const meta = (article.meta ?? {}) as ArticleMeta;

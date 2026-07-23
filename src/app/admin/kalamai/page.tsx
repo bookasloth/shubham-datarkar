@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { getKalamaiUsage, type KalamaiUsageRow } from "@/lib/kalamai/admin-queries";
 
 export const dynamic = "force-dynamic";
@@ -58,7 +59,14 @@ export default async function AdminKalamaiUsagePage() {
                 {rows?.map((r) => (
                   <tr key={`${r.kind}-${r.id}`} className="hover:bg-accent">
                     <td className="px-3 py-2 font-medium">{r.user}</td>
-                    <td className="px-3 py-2">{r.keyword}</td>
+                    <td className="px-3 py-2">
+                      <Link
+                        href={`/tools/kalamai/${r.kind === "article" ? "w" : "a"}/${r.id}`}
+                        className="font-medium hover:underline"
+                      >
+                        {r.keyword}
+                      </Link>
+                    </td>
                     <td className="px-3 py-2">
                       <span className="rounded-full border border-border px-2 py-0.5 text-xs capitalize text-muted-foreground">{r.kind}</span>
                     </td>

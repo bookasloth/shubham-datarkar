@@ -24,3 +24,32 @@ export async function listRecentAnalyses(userId: string, limit = 20): Promise<An
     createdAt: r.created_at as string,
   }));
 }
+
+export type ArticleListItem = {
+  id: string;
+  title: string;
+  status: string;
+  overall: number | null;
+  createdAt: string;
+};
+
+/** Articles written from a given analysis (any owner — the analysis page is
+ *  already ownership/admin-scoped before this runs). Newest first. */
+export async function listArticlesForAnalysis(analysisId: string): Promise<ArticleListItem[]> {
+  const { data } = await supabaseAdmin()
+    .from("kalamai_articles")
+    .select("id, status, meta, score, created_at")
+    .eq("analysis_id", analysisId)
+    .order("created_at", { ascending: false });
+  return (data ?? []).map((r) => {
+    const meta = (r.meta ?? {}) as { title?: string };
+    const score = (r.score ?? null) as { overall?: number } | null;
+    return {
+      id: r.id as string,
+      title: meta.title || "Untitled article",
+      status: r.status as string,
+      overall: score?.overall ?? null,
+      createdAt: r.created_at as string,
+    };
+  });
+}

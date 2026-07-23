@@ -8,6 +8,7 @@ import { PageHero } from "@/components/layout/page-hero";
 import { RunOrchestrator } from "@/components/kalamai/run-orchestrator";
 import { KalamaiReport, type AnalysisReport } from "@/components/kalamai/report";
 import { NewArticleForm } from "@/components/kalamai/new-article-form";
+import { listArticlesForAnalysis } from "@/lib/kalamai/queries-server";
 
 export const metadata = buildMetadata({ title: "KalamAI Analysis", path: "/tools/kalamai", noIndex: true });
 export const dynamic = "force-dynamic";
@@ -15,16 +16,18 @@ export const dynamic = "force-dynamic";
 export default async function KalamaiAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const ctx = await requireMember(`/tools/kalamai/a/${id}`);
+  const isAdmin = ctx.role === "admin";
 
-  const { data: a } = await supabaseAdmin()
+  let q = supabaseAdmin()
     .from("kalamai_analyses")
     .select("id, keyword, status, progress, report, low_confidence")
-    .eq("id", id)
-    .eq("user_id", ctx.user!.id)
-    .maybeSingle();
+    .eq("id", id);
+  if (!isAdmin) q = q.eq("user_id", ctx.user!.id); // admin can view any user's analysis
+  const { data: a } = await q.maybeSingle();
   if (!a) notFound();
 
   const terminal = a.status === "complete" || a.status === "failed";
+  const articles = a.status === "complete" ? await listArticlesForAnalysis(a.id) : [];
 
   return (
     <>
@@ -42,6 +45,28 @@ export default async function KalamaiAnalysisPage({ params }: { params: Promise<
           {a.status === "complete" && a.report ? (
             <div className="space-y-6">
               <KalamaiReport report={a.report as AnalysisReport} lowConfidence={!!a.low_confidence} />
+              {articles.length > 0 && (
+                <div className="rounded-card border border-border bg-card p-6">
+                  <p className="text-sm font-medium text-foreground">Articles written from this brief</p>
+                  <ul className="mt-3 divide-y divide-border rounded-card border border-border">
+                    {articles.map((art) => (
+                      <li key={art.id}>
+                        <Link href={`/tools/kalamai/w/${art.id}`} className="flex items-center justify-between gap-3 p-3 transition-ui hover:bg-muted">
+                          <span className="min-w-0">
+                            <span className="block truncate text-sm">{art.title}</span>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(art.createdAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
+                            </span>
+                          </span>
+                          <span className="shrink-0 rounded-btn bg-muted px-2 py-0.5 text-[11px] capitalize text-muted-foreground">
+                            {art.overall != null ? `${art.status} · ${art.overall}/100` : art.status}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               <NewArticleForm analysisId={a.id} />
             </div>
           ) : a.status === "failed" ? (
