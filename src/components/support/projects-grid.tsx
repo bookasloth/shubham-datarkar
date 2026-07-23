@@ -5,10 +5,12 @@ import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { supportProjects, type SupportProject } from "@/lib/data/support-content";
+import { ProjectLogo } from "@/components/support/project-logo";
 
 /**
  * "Projects I'm working on" — 4×2 grid of square logo tiles. Tapping a tile
  * opens a minimal glass modal (top logo → blurb → visit link), centered.
+ * Logos (and their fallbacks) are rendered by ProjectLogo.
  */
 export function ProjectsGrid() {
   const [active, setActive] = React.useState<SupportProject | null>(null);
@@ -21,6 +23,8 @@ export function ProjectsGrid() {
     const key = new URLSearchParams(window.location.search).get("p");
     if (!key) return;
     const match = supportProjects.find((p) => p.key === key);
+    // One-time sync from the URL param on mount — feature, not a render loop.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (match) setActive(match);
   }, []);
 
@@ -35,10 +39,9 @@ export function ProjectsGrid() {
             type="button"
             onClick={() => setActive(proj)}
             aria-label={proj.name}
-            className="aspect-square rounded-btn border border-border bg-muted/40 p-2 transition-ui hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+            className="flex aspect-square items-center justify-center rounded-btn border border-border bg-muted/40 p-2 transition-ui hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={proj.logo} alt="" className="size-full object-contain" />
+            <ProjectLogo project={proj} />
           </button>
         ))}
       </div>
@@ -48,8 +51,7 @@ export function ProjectsGrid() {
           {active && (
             <div className="flex flex-col items-center gap-3">
               <span className="flex size-20 items-center justify-center p-1">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={active.logo} alt="" className="size-full object-contain" />
+                <ProjectLogo project={active} />
               </span>
               <DialogTitle>{active.name}</DialogTitle>
               <DialogDescription className="text-center">{active.blurb}</DialogDescription>

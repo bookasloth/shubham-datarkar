@@ -31,6 +31,12 @@ export const supportProfile = {
 /** Website-assets base for project logos. Files: `{key}.png`. */
 const PROJECT_LOGO_BASE = "https://website-assets.shubhamdatarkar.com/images/sd/website/project";
 
+/** Per-key logo overrides where the `{key}.png` isn't uploaded. */
+const LOGO_OVERRIDES: Record<string, string> = {
+  // Reuse the email footer mark — the one real Shubham Datarkar logo we have.
+  "shubham-datarkar": "https://company-assets.bookasloth.in/images/sd/email/shubham-logo-secondary.png",
+};
+
 export type SupportProject = {
   /** key = image filename = url slug (single source; logo + href derived below). */
   key: string;
@@ -206,7 +212,7 @@ const PROJECT_SEEDS: ProjectSeed[] = [
 
 export const supportProjects: SupportProject[] = PROJECT_SEEDS.map((p) => ({
   ...p,
-  logo: `${PROJECT_LOGO_BASE}/${p.key}.png`,
+  logo: LOGO_OVERRIDES[p.key] ?? `${PROJECT_LOGO_BASE}/${p.key}.png`,
   blurb: p.tagline,
   href: `/projects/${p.key}`,
 }));
