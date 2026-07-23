@@ -10,7 +10,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const product = await getPublishedEntityBySlug<Product>("products", slug);
   return ogImage({
-    eyebrow: product?.category ?? "Product",
+    category: product?.category ?? "Product",
     title: product?.name ?? "Products",
+    subtitle: product?.tagline,
+    kind: "product",
   });
 }

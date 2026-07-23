@@ -10,9 +10,9 @@ export default async function Image({ params }: { params: Promise<{ slug: string
   const { slug } = await params;
   const study = await getPublishedEntityBySlug<CaseStudy>("case_studies", slug);
   return ogImage({
-    eyebrow: study ? `Case Study · ${study.sector}` : "Case Study",
+    category: study ? `Case Study · ${study.sector}` : "Case Study",
     title: study?.title ?? "Case Study",
-    metric: study?.heroMetric.value,
-    metricLabel: study?.heroMetric.label,
+    subtitle: study ? `${study.heroMetric.value} — ${study.heroMetric.label}` : undefined,
+    kind: "case",
   });
 }
