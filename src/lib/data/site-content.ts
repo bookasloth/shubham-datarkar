@@ -118,6 +118,20 @@ export const faqs: Faq[] = [
 export const changelog: ChangelogEntry[] = [
   {
     date: "2026-07-23",
+    version: "v3.5",
+    title: "The free tools actually work now",
+    type: "Improved",
+    notes: [
+      "Every free tool is real. The SEO audit genuinely fetches and scores any URL, the readability checker runs real Flesch–Kincaid, and the copy analyzer, headline tester, and content-brief generator run on Claude — no more sample scores.",
+      "New — embed the UTM builder, ROAS calculator, or schema generator on your own site with one line of HTML.",
+      "New — share any tool result as a clean image card.",
+      "The SEO audit shows your top issues free, then unlocks the full report for an email.",
+      "Every page got a redesigned social-share card — dark, sharp, and properly branded.",
+      "The daily games now say what they are: Alfazy (a Wordle-style word game), Hit and Blow (Bulls and Cows), and Integra (a Nerdle-style math puzzle).",
+    ],
+  },
+  {
+    date: "2026-07-23",
     version: "v3.4",
     title: "Built to be found — by Google and the AIs",
     type: "Improved",

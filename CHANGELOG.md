@@ -4,6 +4,45 @@ Engineering changelog. The user-facing version history lives on-site at
 [`/changelog`](https://shubhamdatarkar.com/changelog) (sourced from
 `src/lib/data/site-content.ts`); this file tracks the technical detail.
 
+## v3.5 — 2026-07-23 — Real tools + growth loop + OG redesign
+
+Made every free tool real (they were mostly hash-of-input demos), wrapped them
+in a lead/share/embed loop, positioned the games against their analogs, and
+rebuilt every social-share card.
+
+### Tools made real
+- **Readability** — real Flesch Reading Ease + Flesch–Kincaid, in-browser
+  (`lib/tools/readability.ts`, tested). (#295)
+- **SEO Audit** — reuses the internal `analyzePage`/`scorePage` engine on
+  external URLs via an SSRF-safe fetch (`lib/tools/safe-fetch.ts` + tested
+  `lib/tools/ip.ts`: private-IP/redirect/size/time guards) → `/api/tools/seo-audit`. (#297)
+- **Copy Analyzer + Headline Tester** — real analysis via Claude **Haiku**
+  (`lib/tools/ai-analyze.ts`, pure tested `ai-parse.ts`) → `/api/tools/analyze`. (#299)
+- **Content Brief** — real brief via Haiku (`lib/tools/ai-brief.ts`, tested
+  `brief-parse.ts`) → `/api/tools/content-brief`. Removed the dead
+  `DemoAnalyzer`/`demoConfigs`/`scoreFrom` — zero fake results remain. (#306)
+
+### Growth loop
+- **Lead capture** on results, reusing `subscribe()` (tagged `tool:{slug}`); the
+  SEO audit gates its full report behind an email. (#303)
+- **Shareable result cards** — `/tools/share` Satori route → 1080×1350 score
+  card + native-share/download button. (#304)
+- **Embeddable widgets** for UTM/ROAS/Schema at `/tools/[slug]/embed` (bare,
+  noindex, backlink); CSP updated so only embed routes are frameable
+  (negative-lookahead source keeps the rest at `frame-ancestors 'none'`). (#301)
+- **`/tools` hub** emits an `ItemList` of the free tools. (#295)
+
+### SEO / positioning
+- Tools got `SoftwareApplication` + `FAQPage` schema and real on-page content
+  (overview / how-to / FAQ). (#292)
+- Games positioned against Wordle / Bulls-and-Cows / Nerdle — `VideoGame` schema
+  (`sameAs`), keyword metadata, per-game About/FAQ. (#292)
+- Community + games hub reframed for the marketer/founder/developer audience. (#292)
+
+### Design
+- Every OG / social-share card rebuilt: dark charcoal + diagonal panel, orange
+  accent, real Jakarta/Poppins, per-page icon, real Sd logo (`lib/seo/og.tsx`). (#289)
+
 ## v3.4 — 2026-07-23 — SEO / AEO / GEO overhaul
 
 A full technical-SEO, Answer-Engine, and Generative-Engine optimization pass,
