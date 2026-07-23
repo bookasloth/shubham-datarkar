@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
 import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
@@ -99,7 +100,9 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
               <AvatarFallback>{author.initials}</AvatarFallback>
             </Avatar>
             <div className="text-sm">
-              <div className="font-medium">{author.name}</div>
+              <Link href="/about" className="font-medium underline-offset-4 hover:underline">
+                {author.name}
+              </Link>
               <div className="text-muted-foreground">
                 <time dateTime={post.date}>{formatDate(post.date)}</time> · {readingTime(post.words)} min read
               </div>

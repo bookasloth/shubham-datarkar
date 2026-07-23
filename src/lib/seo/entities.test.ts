@@ -7,7 +7,6 @@ import {
   personNode,
   websiteNode,
   siteGraph,
-  organizationNodes,
 } from "./entities";
 import { articleSchema, serviceSchema, reviewSchema, profilePageSchema } from "@/lib/seo";
 import type { Service, Testimonial } from "@/lib/data/types";
@@ -61,29 +60,34 @@ describe("entity graph", () => {
     expect(ids.sort()).toEqual(Object.values(ORG_IDS).sort());
   });
 
-  it("every worksFor reference resolves to an Organization the /about graph defines", () => {
+  it("every worksFor reference resolves to an Organization the site graph defines", () => {
+    // Orgs now live in the site graph (root layout, every page), so worksFor
+    // resolves everywhere — not only on /about as before.
     const defined = new Set<string>();
-    collectDefinedIds(organizationNodes(), defined);
+    collectDefinedIds(siteGraph(), defined);
     for (const ref of personNode().worksFor) {
       expect(defined.has(ref["@id"]), ref["@id"]).toBe(true);
     }
   });
 
   it("every Organization node links back to the Person id", () => {
-    for (const org of organizationNodes()["@graph"]) {
+    const orgs = siteGraph()["@graph"].filter((n) => n["@type"] === "Organization") as Record<
+      string,
+      unknown
+    >[];
+    expect(orgs).toHaveLength(Object.keys(ORG_IDS).length);
+    for (const org of orgs) {
       const backref = org.founder ?? org.employee;
-      expect(backref, org["@id"]).toEqual({ "@id": PERSON_ID });
+      expect(backref, org["@id"] as string).toEqual({ "@id": PERSON_ID });
     }
   });
 
-  it("no @id is defined twice across the site graph and the /about graph", () => {
+  it("no @id is defined twice across the site graph", () => {
     const seen = new Map<string, number>();
-    for (const graph of [siteGraph(), organizationNodes()]) {
-      const ids = new Set<string>();
-      collectDefinedIds(graph, ids);
-      for (const id of ids) seen.set(id, (seen.get(id) ?? 0) + 1);
-    }
-    // Person + WebSite (site graph) + 4 orgs (/about) — all distinct.
+    const ids = new Set<string>();
+    collectDefinedIds(siteGraph(), ids);
+    for (const id of ids) seen.set(id, (seen.get(id) ?? 0) + 1);
+    // Person + WebSite + 4 orgs — all distinct.
     const duplicated = [...seen.entries()].filter(([, n]) => n > 1);
     expect(duplicated).toEqual([]);
   });
@@ -96,7 +100,10 @@ describe("entity graph", () => {
       datePublished: "2026-01-01",
     });
     expect(article.author).toEqual(personRef);
-    expect(article.publisher).toEqual(personRef);
+    // publisher is an Organization WITH a logo (Person publishers are ineligible
+    // for Google Article rich results), not a bare Person reference.
+    expect((article.publisher as Record<string, unknown>)["@type"]).toBe("Organization");
+    expect((article.publisher as { logo?: unknown }).logo).toBeTruthy();
 
     const fakeService = { slug: "seo", name: "SEO", description: "d", startingAt: "on request" } as Service;
     expect(serviceSchema(fakeService).provider).toEqual(personRef);

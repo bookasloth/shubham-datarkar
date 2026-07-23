@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Quote } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema, caseStudySchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, caseStudySchema, faqSchema } from "@/lib/seo";
 import type { CaseStudy } from "@/lib/data/types";
 import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -57,6 +57,35 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
 
   const ctx = study.context;
 
+  // Related case studies — same-sector first, then fill to 3. Internal links
+  // turn each proof page into a cluster instead of a dead end.
+  const all = await getPublishedEntities<CaseStudy>("case_studies");
+  const others = all.filter((c) => c.slug !== study.slug);
+  const related = [
+    ...others.filter((c) => c.sector === study.sector),
+    ...others.filter((c) => c.sector !== study.sector),
+  ].slice(0, 3);
+
+  // Data-driven FAQ — every answer comes from the study's own fields, so it's
+  // honest and citable. Feeds "how did {client} achieve {result}" answer boxes.
+  const faqs = [
+    {
+      question: `What results did ${study.client} achieve?`,
+      answer: `${study.heroMetric.value} ${study.heroMetric.label}. ${study.results
+        .slice(0, 3)
+        .map((r) => `${r.kpi}: ${r.before} → ${r.after} (${r.delta})`)
+        .join("; ")}.`,
+    },
+    {
+      question: `How long did the ${study.sector} project take?`,
+      answer: `${ctx.timeline}. Budget: ${ctx.budget}.`,
+    },
+    {
+      question: `Which services were used for ${study.client}?`,
+      answer: ctx.services.join(", ") + ".",
+    },
+  ];
+
   return (
     <>
       <JsonLd
@@ -76,6 +105,7 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           client: study.client,
         })}
       />
+      <JsonLd data={faqSchema(faqs)} />
 
       {/* Hero */}
       <Section bleed className="border-b border-border">
@@ -210,8 +240,48 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
               </div>
             </Reveal>
           </div>
+
+          {/* Data-driven FAQ — answer-shaped, all from the study's own fields */}
+          <div className="mt-14 border-t border-border pt-10">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              Questions, answered
+            </h2>
+            <dl className="mt-6 flex flex-col">
+              {faqs.map((f) => (
+                <div key={f.question} className="border-b border-border py-5 first:pt-0 last:border-b-0">
+                  <dt className="font-semibold tracking-tight">{f.question}</dt>
+                  <dd className="mt-2 text-muted-foreground">{f.answer}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
         </Container>
       </Section>
+
+      {/* Related case studies — cluster the proof pages together */}
+      {related.length > 0 && (
+        <Section className="border-t border-border">
+          <Container size="narrow">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+              More case studies
+            </h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-3">
+              {related.map((r) => (
+                <Link
+                  key={r.slug}
+                  href={`/case-studies/${r.slug}`}
+                  className="group rounded-card border border-border p-5 transition-ui hover:border-foreground"
+                >
+                  <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{r.sector}</div>
+                  <div className="mt-2 font-semibold leading-snug tracking-tight">{r.title}</div>
+                  <div className="mt-3 font-display text-2xl font-bold tracking-tight">{r.heroMetric.value}</div>
+                  <div className="text-xs text-muted-foreground">{r.heroMetric.label}</div>
+                </Link>
+              ))}
+            </div>
+          </Container>
+        </Section>
+      )}
 
       <CtaBand />
     </>
