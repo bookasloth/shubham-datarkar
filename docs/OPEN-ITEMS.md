@@ -7,6 +7,17 @@
 > merged (PRs #24, #31). SEO Phase 1 code complete (6/6). DB activated (3
 > support migrations + `support-media` bucket) and verified. Site not yet live.
 
+## Blueprint program — deferred item (added 2026-07-23)
+
+**F3 — Partial Prerendering / Cache Components (NOT built; do later).** Enabling
+`cacheComponents: true` in `next.config.ts` produced **71 build errors** across the
+app — every Supabase-backed page must wrap uncached data in `use cache` or
+`<Suspense>` first. It is a global rendering-model migration, not a drop-in
+feature. Real Core Web Vitals upside (Google ranks speed), so it's worth doing —
+but as its own dedicated, **tree-quiet** effort (no concurrent sessions), page by
+page, with F11 `use cache` folded in. Everything else in the blueprint design
+program is shipped + live. Context: memory `blueprint-design-system-program`.
+
 ## Ground rules (apply to all work)
 
 - **Supabase:** use the owner's OWN project only. NEVER touch the connected BAS
