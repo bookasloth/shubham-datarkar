@@ -8,6 +8,8 @@ const ORANGE = "#FF4D00";
 const CHARCOAL = "#0E0E10";
 const PANEL = "#F4F4F3";
 const MUTED = "#A1A1AA";
+// The real "Sd" element mark (white ground → reads on the dark card).
+const LOGO_URL = "https://company-assets.bookasloth.in/images/sd/email/shubham-logo-secondary.png";
 
 /** Page-type icon (lucide paths, 24×24, stroke) rendered white in the badge/chip. */
 type Kind = "home" | "blog" | "projects" | "services" | "case" | "product" | "book" | "me" | "page";
@@ -189,10 +191,9 @@ export async function ogImage(input: { category: string; title: string; subtitle
         </div>
 
         {/* brand + domain, bottom-left */}
-        <div style={{ position: "absolute", left: 72, bottom: 52, display: "flex", alignItems: "center", gap: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: 30, height: 30, borderRadius: 8, background: ORANGE, fontFamily: "Jakarta", fontWeight: 800, fontSize: 16, color: "#fff" }}>
-            SD
-          </div>
+        <div style={{ position: "absolute", left: 72, bottom: 48, display: "flex", alignItems: "center", gap: 14 }}>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src={LOGO_URL} width={38} height={38} style={{ borderRadius: 7 }} alt="" />
           <div style={{ display: "flex", fontSize: 21, fontWeight: 600, color: "#8A8A93" }}>shubhamdatarkar.com</div>
         </div>
 
