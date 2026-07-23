@@ -24,6 +24,7 @@ export default async function ProductsPage() {
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Products", path: "/products" }])} />
       <PageHero
+        blueprint
         eyebrow="Products"
         title="Software that compounds"
         description="The Timewheel Internet portfolio — a family of focused products, each with its own brand and job to do. Built calm, fast, and free of bloat."

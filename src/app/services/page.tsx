@@ -7,7 +7,7 @@ import { SectionHeading } from "@/components/layout/section-heading";
 import { CtaBand } from "@/components/sections/cta-band";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
 import { ServiceCard } from "@/components/cards/service-card";
-import { Card } from "@/components/ui/card";
+import { BentoCard } from "@/components/blueprint";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
@@ -33,6 +33,7 @@ export default async function ServicesPage() {
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])} />
       <PageHero
+        blueprint
         eyebrow="Services"
         title="How I can help"
         description="Productized engagements with clear outcomes. Pick a path, or book a call and we'll figure out the right one together."
@@ -56,13 +57,16 @@ export default async function ServicesPage() {
           <Stagger className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {how.map((h, i) => (
               <StaggerItem key={h.step}>
-                <Card className="h-full p-6">
-                  <span className="font-display text-sm font-bold text-muted-foreground">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <h3 className="mt-3 text-lg font-semibold">{h.step}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{h.detail}</p>
-                </Card>
+                <BentoCard
+                  className="h-full"
+                  title={h.step}
+                  desc={h.detail}
+                  illustration={
+                    <span className="font-display text-2xl font-bold text-muted-foreground">
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                  }
+                />
               </StaggerItem>
             ))}
           </Stagger>

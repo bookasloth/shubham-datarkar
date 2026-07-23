@@ -47,6 +47,7 @@ export default function ProjectsPage() {
       />
       <JsonLd data={projectsItemList()} />
       <PageHero
+        blueprint
         eyebrow="Projects"
         title="What I'm building"
         description="The products, platforms, and communities taking shape right now. Some are live and in your hands; others are still being built in the open."

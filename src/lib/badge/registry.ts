@@ -1,4 +1,5 @@
 import { getPublishedPosts } from "@/lib/blog/queries";
+import { caseStudies } from "@/lib/data/case-studies";
 import type { BadgeData } from "./render";
 
 /**
@@ -14,5 +15,8 @@ export const BADGES: Record<string, () => Promise<BadgeData>> = {
   posts: async () => {
     const posts = await getPublishedPosts();
     return { label: "Published posts", value: String(posts.length) };
+  },
+  "latest-case-study": async () => {
+    return { label: "Latest case study", value: caseStudies[0]?.title ?? "Coming soon" };
   },
 };

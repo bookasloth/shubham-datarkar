@@ -65,6 +65,7 @@ export default function MembershipPage() {
         ]}
       />
       <PageHero
+        blueprint
         eyebrow="Membership"
         title={m.h1}
         description={m.subhead}
