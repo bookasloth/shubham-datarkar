@@ -30,6 +30,12 @@ const nextConfig: NextConfig = {
     // Enables React's <ViewTransition> for shared-element morphs on navigation.
     // Additive: without browser support, pages work normally, just un-animated.
     viewTransition: true,
+    // Inline the (small, atomic Tailwind) CSS as <style> in <head> instead of a
+    // render-blocking <link> — kills the CSS request waterfall so first paint and
+    // the font @font-face arrive with the HTML (Lighthouse: -570ms render-block +
+    // shorter font critical chain). Trade-off: no separate CSS cache for repeat
+    // visitors, which the docs call the right call for atomic frameworks.
+    inlineCss: true,
     optimizePackageImports: [
       "lucide-react",
       "@phosphor-icons/react",
