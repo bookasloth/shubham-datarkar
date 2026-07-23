@@ -7,6 +7,7 @@ import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Card } from "@/components/ui/card";
 import { ToolRunner } from "@/components/tools/tool-runner";
+import { ToolLeadCapture } from "@/components/tools/tool-lead-capture";
 import { EmbedSnippet } from "@/components/tools/embed-snippet";
 import { ToolCard } from "@/components/cards/tool-card";
 import { JsonLd } from "@/components/seo/json-ld";
@@ -72,6 +73,15 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           <Card className="p-6 md:p-8">
             <ToolRunner slug={tool.slug} status={tool.status} />
           </Card>
+          {/* seo-audit gates its full report inline; the others get a plain join. */}
+          {tool.status !== "Soon" && tool.slug !== "seo-audit" && (
+            <ToolLeadCapture
+              className="mx-auto mt-6 max-w-xl"
+              source={tool.slug}
+              title="Get the playbooks behind these tools"
+              blurb="One practical SEO, AEO, and marketing signal every Tuesday. Free, no noise."
+            />
+          )}
         </Container>
       </Section>
 

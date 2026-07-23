@@ -14,6 +14,7 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { analyzeReadability, type Readability } from "@/lib/tools/readability";
+import { ToolLeadCapture } from "@/components/tools/tool-lead-capture";
 
 /* ---------------------------- UTM Builder (real) ---------------------------- */
 function UtmBuilder() {
@@ -396,12 +397,14 @@ function SeoAuditRunner() {
   const [state, setState] = React.useState<"idle" | "loading" | "done" | "error">("idle");
   const [report, setReport] = React.useState<AuditReport | null>(null);
   const [error, setError] = React.useState("");
+  const [unlocked, setUnlocked] = React.useState(false);
 
   async function run(e: React.FormEvent) {
     e.preventDefault();
     if (!url.trim()) return;
     setState("loading");
     setError("");
+    setUnlocked(false);
     try {
       const res = await fetch("/api/tools/seo-audit", {
         method: "POST",
@@ -477,13 +480,23 @@ function SeoAuditRunner() {
             <div className="mt-6">
               <p className="text-sm font-semibold">Fix these ({report.failed.length})</p>
               <ul className="mt-2 flex flex-col gap-2">
-                {report.failed.map((c) => (
+                {(unlocked ? report.failed : report.failed.slice(0, 3)).map((c) => (
                   <li key={c.id} className="flex items-center justify-between gap-3 rounded-card border border-border p-3 text-sm">
                     <span>{c.label}</span>
                     <Badge variant={c.priority === "high" ? "danger" : "warning"}>{c.priority}</Badge>
                   </li>
                 ))}
               </ul>
+              {!unlocked && report.failed.length > 3 && (
+                <ToolLeadCapture
+                  className="mt-4"
+                  source="seo-audit"
+                  title={`See all ${report.failed.length} issues`}
+                  blurb="Get the full audit — every issue on this page — plus one SEO signal every Tuesday. Free."
+                  cta="Unlock the full report"
+                  onSuccess={() => setUnlocked(true)}
+                />
+              )}
             </div>
           )}
 
