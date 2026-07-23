@@ -22,21 +22,15 @@ function SdTile({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 100 100" className={cn("size-full", className)} role="img" aria-label="Shubham Datarkar">
       <rect x="3.5" y="3.5" width="93" height="93" rx="12" fill="#ffffff" stroke={ORANGE} strokeWidth="5.5" />
-      <text x="14" y="27" fontSize="12" fontWeight="800" fill="#171717" fontFamily="sans-serif">EST</text>
-      <text x="86" y="27" fontSize="12" fontWeight="800" fill="#171717" fontFamily="sans-serif" textAnchor="end">
-        1995
-      </text>
       {/* lightning bolt, top-centre */}
-      <path d="M52 9 L43 30 L49 30 L46 45 L59 24 L52 24 Z" fill={ORANGE} />
+      <path d="M52 14 L43 36 L49 36 L46 51 L59 30 L52 30 Z" fill={ORANGE} />
       <text
         x="50"
-        y="82"
-        fontSize="56"
-        fontWeight="800"
+        y="84"
+        fontSize="54"
         fill={ORANGE}
-        fontFamily="sans-serif"
         textAnchor="middle"
-        letterSpacing="-2"
+        style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 400 }}
       >
         Sd
       </text>
@@ -51,7 +45,7 @@ function BugTile({ className }: { className?: string }) {
       className={cn("flex size-full items-center justify-center rounded-[12%] border-2 bg-white", className)}
       style={{ borderColor: ORANGE }}
     >
-      <Bug className="size-3/5" style={{ color: ORANGE }} strokeWidth={2.25} />
+      <Bug className="size-2/5" style={{ color: ORANGE }} strokeWidth={2} />
     </span>
   );
 }
