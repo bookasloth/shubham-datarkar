@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { Post } from "@/lib/data/types";
@@ -19,11 +20,13 @@ export function PostCard({ post }: { post: Post }) {
         <span aria-hidden>·</span>
         <span>{readingTime(post.words)} min read</span>
       </div>
-      <h3 className="mt-4 text-lg font-semibold leading-snug tracking-tight">
-        <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none">
-          {post.title}
-        </Link>
-      </h3>
+      <ViewTransition name={`post-title-${post.slug}`}>
+        <h3 className="mt-4 text-lg font-semibold leading-snug tracking-tight">
+          <Link href={href} className="after:absolute after:inset-0 focus-visible:outline-none">
+            {post.title}
+          </Link>
+        </h3>
+      </ViewTransition>
       <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">{post.excerpt}</p>
       <span className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-foreground">
         Read article
