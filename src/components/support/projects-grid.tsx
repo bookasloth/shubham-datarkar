@@ -13,6 +13,17 @@ import { supportProjects, type SupportProject } from "@/lib/data/support-content
 export function ProjectsGrid() {
   const [active, setActive] = React.useState<SupportProject | null>(null);
 
+  // Deep-link: a project page's "Support this" button lands here with ?p={key},
+  // so the matching project opens straight away. Read from window (not
+  // useSearchParams) to avoid a Suspense boundary that would force this ISR
+  // section dynamic.
+  React.useEffect(() => {
+    const key = new URLSearchParams(window.location.search).get("p");
+    if (!key) return;
+    const match = supportProjects.find((p) => p.key === key);
+    if (match) setActive(match);
+  }, []);
+
   return (
     <div>
       <p className="text-center text-sm font-semibold">Projects I&apos;m working on</p>

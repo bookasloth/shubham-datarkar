@@ -17,7 +17,17 @@ import { CaseStudyCard } from "@/components/cards/case-study-card";
 import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { cn } from "@/lib/utils";
 
-export const metadata = buildMetadata({ path: "/", titleAbsolute: true });
+export const metadata = buildMetadata({
+  path: "/",
+  titleAbsolute: true,
+  // The home page is the money keyword. Front-load AEO/GEO/SEO instead of
+  // falling back to the generic site bio.
+  description:
+    "SEO, AEO & GEO consultant in India. I make 0–10 Cr founder-led companies the answer AI recommends — the name ChatGPT, Claude, Gemini, and Perplexity cite when someone asks who to hire.",
+  ogTitle: "Get your brand cited by AI — SEO · AEO · GEO",
+  ogDescription:
+    "When a founder asks ChatGPT who to hire, you're either the answer or you're invisible. AEO, GEO, and the SEO underneath it.",
+});
 
 function ViewAll({ href, label }: { href: string; label: string }) {
   return (

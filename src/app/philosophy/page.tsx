@@ -33,7 +33,8 @@ export default function PhilosophyPage() {
                   </span>
                   <div>
                     <h2 className="text-xl font-bold tracking-tight">{p.title}</h2>
-                    <p className="mt-2 text-[17px] leading-8 text-foreground/90">{p.text}</p>
+                    <p className="mt-2 text-lg font-medium leading-8 text-foreground">{p.text}</p>
+                    <p className="mt-3 text-[17px] leading-8 text-foreground/80">{p.expanded}</p>
                   </div>
                 </div>
               </StaggerItem>

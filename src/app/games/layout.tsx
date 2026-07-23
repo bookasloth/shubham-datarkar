@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { site } from "@/lib/site";
 import { getShellUser } from "@/lib/app-shell/user";
 import { requestNow } from "@/lib/request-now";
 import { AppShell } from "@/components/app-shell/shell";
@@ -10,6 +11,7 @@ import { GAMES, type GameKey } from "@/lib/games/registry";
 export const metadata: Metadata = {
   title: "Games",
   description: "Daily word and code puzzles — Alfazy, Hit and Blow, Integra.",
+  alternates: { canonical: `${site.url}/games` },
 };
 
 function activeGame(pathname: string): GameKey | null {

@@ -28,10 +28,23 @@ const nextConfig: NextConfig = {
     ],
   },
   async redirects() {
+    // One canonical host: https://shubhamdatarkar.com. Any www. variant or the
+    // .in mirror 308s to the apex, so duplicate hosts never get indexed and no
+    // link equity leaks. HTTP→HTTPS is handled by `upgrade-insecure-requests`
+    // (CSP) + Vercel's edge, so only the host needs folding here.
+    const toApex = (host: string) => ({
+      source: "/:path*",
+      has: [{ type: "host" as const, value: host }],
+      destination: "https://shubhamdatarkar.com/:path*",
+      permanent: true,
+    });
     return [
       // /subscribe is used interchangeably with /newsletter across the site +
       // emails — collapse it to the one real page.
       { source: "/subscribe", destination: "/newsletter", permanent: true },
+      toApex("www.shubhamdatarkar.com"),
+      toApex("shubhamdatarkar.in"),
+      toApex("www.shubhamdatarkar.in"),
     ];
   },
   // Security headers (audit M-1). Clickjacking, MIME-sniff, referrer, and a CSP

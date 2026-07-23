@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Quote } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, caseStudySchema } from "@/lib/seo";
 import type { CaseStudy } from "@/lib/data/types";
 import { getPublishedEntities, getPublishedEntityBySlug } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -65,6 +65,16 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
           { name: "Case Studies", path: "/case-studies" },
           { name: study.client, path: `/case-studies/${study.slug}` },
         ])}
+      />
+      <JsonLd
+        data={caseStudySchema({
+          title: study.title,
+          description:
+            study.seo?.description ??
+            `${study.client} · ${study.heroMetric.value} ${study.heroMetric.label}. ${study.problem.slice(0, 120)}`,
+          path: `/case-studies/${study.slug}`,
+          client: study.client,
+        })}
       />
 
       {/* Hero */}

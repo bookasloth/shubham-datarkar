@@ -93,6 +93,24 @@ export function profilePageSchema() {
   };
 }
 
+/**
+ * Organization publisher WITH a logo. Google Article/BlogPosting rich results
+ * require this — a Person publisher is ineligible. Inlined by each builder so
+ * the node resolves on its own page.
+ */
+function publisherOrg() {
+  return {
+    "@type": "Organization",
+    name: site.name,
+    logo: {
+      "@type": "ImageObject",
+      url: `${site.url}/web-app-manifest-512x512.png`,
+      width: 512,
+      height: 512,
+    },
+  };
+}
+
 export function articleSchema(input: {
   title: string;
   description: string;
@@ -103,14 +121,41 @@ export function articleSchema(input: {
 }) {
   return {
     "@context": "https://schema.org",
-    "@type": "Article",
+    // BlogPosting is the specific type for /blog; author stays the Person entity.
+    "@type": "BlogPosting",
     headline: input.title,
     description: input.description,
     image: input.image ?? `${site.url}/opengraph-image`,
     datePublished: input.datePublished,
     dateModified: input.dateModified ?? input.datePublished,
     author: personRef,
-    publisher: personRef,
+    publisher: publisherOrg(),
+    mainEntityOfPage: `${site.url}${input.path}`,
+  };
+}
+
+/**
+ * Case study as an `Article`. No `datePublished` — the CaseStudy type carries no
+ * date, and fabricating one is dishonest; the node still feeds entity/AEO
+ * confidence (author = Person, publisher = Org, about = the client). `about`
+ * names the client so answer engines link the outcome to the right company.
+ */
+export function caseStudySchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  client: string;
+  image?: string;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: input.title,
+    description: input.description,
+    image: input.image ?? `${site.url}/opengraph-image`,
+    author: personRef,
+    publisher: publisherOrg(),
+    about: { "@type": "Organization", name: input.client },
     mainEntityOfPage: `${site.url}${input.path}`,
   };
 }
@@ -141,14 +186,29 @@ export function faqSchema(items: { question: string; answer: string }[]) {
 }
 
 /**
+ * Extract a numeric starting price from a human rate string:
+ * "₹6,999 / month" → 6999, "₹75K / month" → 75000, "₹1.5L / month" → 150000.
+ * Returns null when there is no number ("On request"), so callers emit no Offer
+ * rather than a broken one. K = ×1e3, L/lakh = ×1e5.
+ */
+export function parseStartingPrice(raw: string): number | null {
+  const m = raw.replace(/,/g, "").match(/(\d+(?:\.\d+)?)\s*(k|l|lakh)?/i);
+  if (!m) return null;
+  const suffix = (m[2] ?? "").toLowerCase();
+  const mult = suffix === "k" ? 1e3 : suffix === "l" || suffix === "lakh" ? 1e5 : 1;
+  return Math.round(parseFloat(m[1]) * mult);
+}
+
+/**
  * Service offering — provider is the Person. An `Offer` is attached only when a
- * real starting price exists ("On request" services emit no Offer rather than a
- * priceless one). No numeric `price`: the rates are ranges ("₹1.5L / month"),
- * carried honestly in the Offer description.
+ * real starting price parses out ("On request" emits no Offer). The Offer now
+ * carries a numeric `price` (the starting rate) so Google doesn't warn on an
+ * Offer with `priceCurrency` and no `price`; the "starting at" nuance stays in
+ * the description.
  */
 export function serviceSchema(service: Service) {
   const url = `${site.url}/services/${service.slug}`;
-  const hasPrice = service.startingAt.trim().toLowerCase() !== "on request";
+  const price = parseStartingPrice(service.startingAt);
   return {
     "@context": "https://schema.org",
     "@type": "Service",
@@ -158,10 +218,11 @@ export function serviceSchema(service: Service) {
     provider: personRef,
     areaServed: "Worldwide",
     url,
-    ...(hasPrice
+    ...(price != null
       ? {
           offers: {
             "@type": "Offer",
+            price,
             priceCurrency: "INR",
             url,
             availability: "https://schema.org/InStock",

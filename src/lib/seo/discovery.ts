@@ -7,6 +7,7 @@ import { caseStudies } from "@/lib/data/case-studies";
 import { services } from "@/lib/data/services";
 import { tools } from "@/lib/data/tools";
 import { products } from "@/lib/data/products";
+import { supportProjects } from "@/lib/data/support-content";
 
 const APP_DIR = path.join(process.cwd(), "src", "app");
 
@@ -59,6 +60,10 @@ const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
   {
     pattern: /^\/tools\/\[slug\]$/,
     expand: () => tools.map((t) => ({ route: `/tools/${t.slug}` })),
+  },
+  {
+    pattern: /^\/projects\/\[slug\]$/,
+    expand: () => supportProjects.map((p) => ({ route: `/projects/${p.key}` })),
   },
 ];
 
