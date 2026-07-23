@@ -118,6 +118,20 @@ export const faqs: Faq[] = [
 export const changelog: ChangelogEntry[] = [
   {
     date: "2026-07-23",
+    version: "v3.4",
+    title: "Built to be found — by Google and the AIs",
+    type: "Improved",
+    notes: [
+      "Every project I'm building now has its own page — what it is, whether it's live, and a way to back it — instead of a 'coming soon' placeholder.",
+      "The /me page is now the build-in-public side of things, kept separate from the hire-me home so the two stop competing.",
+      "Booking a call is its own proper page now — clearly free, with the questions people actually ask, answered.",
+      "Case studies show how the numbers were measured and link to related work.",
+      "Faster pages — swapped the scroll-animation library for plain CSS, so less code loads everywhere.",
+      "A big under-the-hood pass so Google, ChatGPT, Claude, Perplexity and Bing can read, understand, and cite the site properly: structured data on every page, honest ratings, a cleaner sitemap, and a share-preview card for each page.",
+    ],
+  },
+  {
+    date: "2026-07-23",
     version: "v3.3",
     title: "Everything I built, actually findable",
     type: "Improved",
