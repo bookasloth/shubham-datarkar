@@ -82,6 +82,26 @@ export default function NowPage() {
           </Reveal>
         </Container>
       </Section>
+
+      <Section className="pt-0">
+        <Container size="narrow">
+          <div className="rounded-card border border-dashed border-border p-6">
+            <h2 className="font-display text-lg font-bold tracking-tight">Live badges</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Self-updating status badges. Embed one on any site — it stays current.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center gap-4">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/api/badge/latest-post" alt="Latest post" height={56} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/api/badge/posts" alt="Published post count" height={56} />
+            </div>
+            <pre className="mt-5 overflow-x-auto rounded-input border border-border bg-muted/40 p-3 text-xs">
+              <code>{`<img src="https://shubhamdatarkar.com/api/badge/latest-post" alt="Latest post">`}</code>
+            </pre>
+          </div>
+        </Container>
+      </Section>
     </>
   );
 }

@@ -69,6 +69,7 @@ export default function AboutPage() {
         ]}
       />
       <PageHero
+        blueprint
         eyebrow="About"
         title="Marketer who builds. Builder who markets."
         description="I'm Shubham Datarkar — The Kalamwala. I write the copy, run the marketing, and build the software — across a creative studio, a booking SaaS, and my own internet company."

@@ -26,6 +26,7 @@ export default async function CaseStudiesPage() {
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Case Studies", path: "/case-studies" }])} />
       <PageHero
+        blueprint
         eyebrow="Case studies"
         title="Proof, not promises"
         description="Every engagement is built to compound. Here's the before, the after, and exactly how we got there."
