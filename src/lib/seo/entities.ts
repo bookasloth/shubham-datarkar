@@ -93,6 +93,16 @@ export function personNode() {
       { "@id": ORG_IDS.bookASloth },
       { "@id": ORG_IDS.greyHawks },
     ],
+    // Real client ratings: a straight 5.0 across 30+ reviews. reviewCount is the
+    // honest floor of "30+". The individual Review nodes (reviewSchema) each
+    // carry the matching 5-star reviewRating.
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: 5,
+      bestRating: 5,
+      worstRating: 1,
+      reviewCount: 30,
+    },
   };
 }
 

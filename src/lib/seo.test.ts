@@ -132,14 +132,15 @@ describe("reviewSchema", () => {
     { quote: "Rare clarity.", name: "Sri", role: "Founder", company: "Ad Agency", initials: "SR" },
   ];
 
-  it("maps each testimonial to a Review of the Person, with no fabricated rating", () => {
+  it("maps each testimonial to a 5-star Review of the Person", () => {
     const [r] = reviewSchema(testimonials);
     expect(r["@type"]).toBe("Review");
     expect(r.reviewBody).toBe("Rare clarity.");
     expect((r.author as { name?: string }).name).toBe("Sri");
     // The review is about the canonical Person, referenced by @id.
     expect(r.itemReviewed).toEqual({ "@id": `${site.url}/#person` });
-    expect("reviewRating" in r).toBe(false);
+    // Real 5-star rating (clients rate 5.0; see the Person's AggregateRating).
+    expect((r.reviewRating as { ratingValue?: number }).ratingValue).toBe(5);
   });
 });
 
