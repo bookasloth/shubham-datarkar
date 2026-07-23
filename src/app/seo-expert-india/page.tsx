@@ -6,6 +6,7 @@ import { buildMetadata, breadcrumbSchema, faqSchema, reviewSchema, seoLandingSch
 import type { CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { seoExpertIndia as c } from "@/lib/data/landing/seo-expert-india";
+import { seoCities } from "@/lib/data/seo-cities";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Card } from "@/components/ui/card";
@@ -248,6 +249,35 @@ export default async function SeoExpertIndiaPage() {
               </AccordionItem>
             ))}
           </Accordion>
+        </Container>
+      </Section>
+
+      {/* Cities served — internal links into the tier-2 city SEO pages */}
+      <Section bleed className="border-t border-border bg-card py-16 md:py-20">
+        <Container className="text-center">
+          <p className="text-sm font-semibold tracking-wide text-muted-foreground">
+            SEO Expert Across
+          </p>
+          <h2 className="mt-2 font-display text-3xl font-extrabold tracking-tight md:text-4xl">
+            Tier-2 India
+          </h2>
+          <nav className="mx-auto mt-8 flex max-w-3xl flex-wrap items-center justify-center gap-x-3 gap-y-3 text-lg text-muted-foreground">
+            {seoCities.map((city, i) => (
+              <span key={city.slug} className="inline-flex items-center gap-3">
+                <Link
+                  href={`/seo-expert-india/${city.slug}`}
+                  className="transition-ui hover:text-foreground"
+                >
+                  {city.city}
+                </Link>
+                {i < seoCities.length - 1 && (
+                  <span aria-hidden className="text-border">
+                    •
+                  </span>
+                )}
+              </span>
+            ))}
+          </nav>
         </Container>
       </Section>
 
