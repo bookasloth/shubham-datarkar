@@ -62,6 +62,7 @@ export default async function SeoExpertIndiaPage() {
         ]}
       />
       <PageHero
+        blueprint
         eyebrow="SEO Expert"
         title={c.h1}
         description={c.subhead}
