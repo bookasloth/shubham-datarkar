@@ -83,30 +83,37 @@ function NavGroups({ groups, pathname }: { groups: NavGroup[]; pathname: string 
   );
 }
 
-const bookACall = cn(buttonVariants({ size: "lg" }), "flex-1");
+// w-full stretches it on the mobile column; sm:flex-1 gives equal width on the
+// desktop row. (flex-1 alone would set flex-basis on the column's main axis and
+// collapse the button's height, overriding h-12.)
+const bookACall = cn(buttonVariants({ size: "lg" }), "w-full sm:flex-1");
 
 /** Left-brain button row: YouTube + Spotify (both build-themed) + Book a call. */
 function LeftButtons() {
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
-      <a
-        href={site.youtubeUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-1 items-center justify-center gap-2 rounded-btn bg-[#FF0000] px-4 py-3 font-semibold text-white transition-ui hover:bg-[#ff1a1a]"
-      >
-        <YouTubeIcon className="size-5" />
-        YouTube
-      </a>
-      <a
-        href={site.spotifyUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex flex-1 items-center justify-center gap-2 rounded-btn bg-[#1DB954] px-4 py-3 font-semibold text-black transition-ui hover:bg-[#1ed760]"
-      >
-        <SpotifyIcon className="size-5" />
-        Spotify
-      </a>
+      {/* YouTube + Spotify share one line on mobile; sm:contents dissolves this
+          wrapper so all three sit inline on desktop. */}
+      <div className="flex gap-3 sm:contents">
+        <a
+          href={site.youtubeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-btn bg-[#FF0000] px-4 font-semibold text-white transition-ui hover:bg-[#ff1a1a]"
+        >
+          <YouTubeIcon className="size-5" />
+          YouTube
+        </a>
+        <a
+          href={site.spotifyUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-12 flex-1 items-center justify-center gap-2 rounded-btn bg-[#1DB954] px-4 font-semibold text-black transition-ui hover:bg-[#1ed760]"
+        >
+          <SpotifyIcon className="size-5" />
+          Spotify
+        </a>
+      </div>
       <a href={site.bookingUrl} target="_blank" rel="noopener noreferrer" className={bookACall}>
         Book a call
       </a>
@@ -127,7 +134,7 @@ function RightButtons() {
               href={s.href}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex-1 whitespace-nowrap rounded-btn border border-border px-3 py-3 text-center text-sm font-medium text-foreground transition-ui hover:bg-accent"
+              className="flex h-12 flex-1 items-center justify-center whitespace-nowrap rounded-btn border border-border px-3 text-sm font-medium text-foreground transition-ui hover:bg-accent"
             >
               {s.label}
             </a>
