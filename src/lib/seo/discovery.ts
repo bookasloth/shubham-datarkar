@@ -8,6 +8,7 @@ import { services } from "@/lib/data/services";
 import { tools } from "@/lib/data/tools";
 import { products } from "@/lib/data/products";
 import { supportProjects } from "@/lib/data/support-content";
+import { seoCities } from "@/lib/data/seo-cities";
 
 const APP_DIR = path.join(process.cwd(), "src", "app");
 
@@ -64,6 +65,10 @@ const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
   {
     pattern: /^\/projects\/\[slug\]$/,
     expand: () => supportProjects.map((p) => ({ route: `/projects/${p.key}` })),
+  },
+  {
+    pattern: /^\/seo-expert-india\/\[city\]$/,
+    expand: () => seoCities.map((c) => ({ route: `/seo-expert-india/${c.slug}` })),
   },
 ];
 
