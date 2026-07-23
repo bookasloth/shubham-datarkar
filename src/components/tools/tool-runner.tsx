@@ -15,6 +15,7 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { analyzeReadability, type Readability } from "@/lib/tools/readability";
 import { ToolLeadCapture } from "@/components/tools/tool-lead-capture";
+import { ShareResult } from "@/components/tools/share-result";
 
 /* ---------------------------- UTM Builder (real) ---------------------------- */
 function UtmBuilder() {
@@ -367,6 +368,9 @@ function ReadabilityChecker() {
                 </ul>
               </div>
             )}
+            <div className="mt-5">
+              <ShareResult tool="Readability Checker" score={result.fleschReadingEase} label="Reading Ease" />
+            </div>
           </Card>
         )}
       </div>
@@ -505,6 +509,9 @@ function SeoAuditRunner() {
               ✓ {report.passed.length} checks already passing{report.schemas.length ? ` · schema: ${report.schemas.slice(0, 4).join(", ")}` : ""}.
             </p>
           )}
+          <div className="mt-5">
+            <ShareResult tool="Free SEO Audit" score={report.overall} label="SEO Score" />
+          </div>
         </Card>
       )}
     </div>
@@ -635,6 +642,13 @@ function AiAnalyzer({ slug }: { slug: string }) {
                 </ul>
               </div>
             )}
+            <div className="mt-5">
+              <ShareResult
+                tool={slug === "headline-tester" ? "Headline Tester" : "Copy Analyzer"}
+                score={result.score}
+                label={slug === "headline-tester" ? "Headline Score" : "Copy Score"}
+              />
+            </div>
           </Card>
         )}
       </div>
