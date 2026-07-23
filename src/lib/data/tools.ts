@@ -251,11 +251,35 @@ export const tools: Tool[] = [
     icon: "BookOpen",
     category: "Content",
     description: "Check reading level, sentence length, and rhythm before you publish.",
-    status: "Soon",
+    status: "Live",
+    uses: 3400,
     seo: {
       title: "Free Readability Checker Tool",
       description:
-        "Check reading level, sentence length, and rhythm before you publish — a free readability checker that catches clunky copy before your readers do.",
+        "Check reading level, sentence length, and rhythm before you publish — a free readability checker that scores your text with Flesch–Kincaid and flags clunky sentences.",
+    },
+    content: {
+      appCategory: "BusinessApplication",
+      overview: [
+        "The Readability Checker scores your text on the Flesch Reading Ease and Flesch–Kincaid Grade scales — the same standards used to keep writing clear — and flags the long sentences dragging it down. Paste an article, email, or landing page and see exactly how hard it is to read.",
+        "It runs entirely in your browser, so nothing you paste ever leaves your device. Aim for plain English (60+ reading ease) unless you're writing for a specialist audience.",
+      ],
+      features: [
+        "Flesch Reading Ease + Flesch–Kincaid grade level",
+        "Word, sentence, and syllable counts",
+        "Average sentence length and syllables per word",
+        "Flags sentences over 25 words to tighten",
+      ],
+      howTo: [
+        "Paste your text into the box.",
+        "Hit check — the score and metrics appear instantly.",
+        "Shorten the flagged long sentences and simplify dense words, then re-check.",
+      ],
+      faq: [
+        { question: "Is the readability checker free?", answer: "Yes — free, no signup, and it runs entirely in your browser, so your text never leaves your device." },
+        { question: "What score should I aim for?", answer: "For general audiences, aim for a Flesch Reading Ease of 60 or higher (roughly 8th–9th grade). Specialist or technical writing can sit lower, but clarity almost always helps." },
+        { question: "How is the score calculated?", answer: "It uses the Flesch Reading Ease and Flesch–Kincaid Grade formulas, based on your average sentence length and syllables per word — the long-standing standards for measuring readability." },
+      ],
     },
   },
 ];

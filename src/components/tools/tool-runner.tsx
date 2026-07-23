@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
+import { analyzeReadability, type Readability } from "@/lib/tools/readability";
 
 /* ---------------------------- UTM Builder (real) ---------------------------- */
 function UtmBuilder() {
@@ -291,6 +292,90 @@ function DemoAnalyzer({ slug }: { slug: string }) {
   );
 }
 
+/* ------------------------- Readability Checker (real) ------------------------- */
+function ReadabilityChecker() {
+  const [text, setText] = React.useState("");
+  const [result, setResult] = React.useState<Readability | null>(null);
+  const [ran, setRan] = React.useState(false);
+
+  function run(e: React.FormEvent) {
+    e.preventDefault();
+    setResult(analyzeReadability(text));
+    setRan(true);
+  }
+
+  const metrics = result
+    ? [
+        { label: "Reading ease", value: `${result.fleschReadingEase}/100` },
+        { label: "Grade level", value: `${result.fleschKincaidGrade}` },
+        { label: "Words", value: `${result.words}` },
+        { label: "Sentences", value: `${result.sentences}` },
+        { label: "Avg words / sentence", value: `${result.avgWordsPerSentence}` },
+        { label: "Avg syllables / word", value: `${result.avgSyllablesPerWord}` },
+      ]
+    : [];
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <form onSubmit={run} className="grid gap-3">
+        <Label htmlFor="read-input">Paste your text</Label>
+        <Textarea
+          id="read-input"
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder="Paste an article, email, or landing-page copy…"
+          className="min-h-48"
+        />
+        <Button type="submit" className="w-fit">
+          Check readability
+          <ArrowRight />
+        </Button>
+        <Badge variant="muted" className="w-fit">
+          Flesch–Kincaid · runs in your browser
+        </Badge>
+      </form>
+
+      <div>
+        {!ran && <EmptyState title="Your score appears here" description="Paste text on the left and check." />}
+        {ran && !result && (
+          <EmptyState title="Need some text" description="Add a sentence or two and try again." />
+        )}
+        {result && (
+          <Card className="p-6">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm font-medium text-muted-foreground">{result.readingLevel}</span>
+              <span className="font-display text-3xl font-extrabold tracking-tight">{result.fleschReadingEase}</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-foreground" style={{ width: `${result.fleschReadingEase}%` }} />
+            </div>
+            <dl className="mt-5 grid grid-cols-2 gap-3">
+              {metrics.map((m) => (
+                <div key={m.label} className="rounded-card border border-border p-3">
+                  <dt className="text-xs text-muted-foreground">{m.label}</dt>
+                  <dd className="mt-0.5 font-semibold tabular-nums">{m.value}</dd>
+                </div>
+              ))}
+            </dl>
+            {result.hardSentences.length > 0 && (
+              <div className="mt-5">
+                <p className="text-sm font-medium">Long sentences to tighten ({result.hardSentences.length})</p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {result.hardSentences.map((s, i) => (
+                    <li key={i} className="rounded-card border border-border bg-muted/40 p-3 text-sm text-muted-foreground">
+                      {s.length > 160 ? s.slice(0, 160) + "…" : s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* -------------------------------- Router -------------------------------- */
 export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (status === "Soon") {
@@ -305,6 +390,7 @@ export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (slug === "utm-builder") return <UtmBuilder />;
   if (slug === "roas-calculator") return <RoasCalculator />;
   if (slug === "schema-generator") return <SchemaGenerator />;
+  if (slug === "readability-checker") return <ReadabilityChecker />;
   if (demoConfigs[slug]) return <DemoAnalyzer slug={slug} />;
   return (
     <EmptyState
