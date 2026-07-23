@@ -4,10 +4,11 @@ export const size = OG_SIZE;
 export const contentType = OG_CONTENT_TYPE;
 export const alt = "Building in Public — Shubham Datarkar";
 
-export default function Image() {
+export default async function Image() {
   return ogImage({
-    eyebrow: "Shubham Datarkar",
-    title: "Building in Public",
-    metricLabel: "Work, writing, and the receipts behind it",
+    category: "Building in Public",
+    title: "Everything I'm building, out loud",
+    subtitle: "Work, writing, and the receipts behind it.",
+    kind: "me",
   });
 }
