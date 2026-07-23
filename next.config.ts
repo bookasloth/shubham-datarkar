@@ -69,7 +69,9 @@ const nextConfig: NextConfig = {
   async headers() {
     // Dev only: React's dev build uses eval() for debugging; production never does.
     const scriptEval = process.env.NODE_ENV === "production" ? "" : " 'unsafe-eval'";
-    const csp = [
+    // Shared directives; only `frame-ancestors` differs between the app and the
+    // embeddable tool widgets.
+    const directives = [
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${scriptEval} https://checkout.razorpay.com https://va.vercel-scripts.com`,
       "style-src 'self' 'unsafe-inline'",
@@ -77,22 +79,34 @@ const nextConfig: NextConfig = {
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com",
       "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube-nocookie.com https://www.openstreetmap.org",
-      "frame-ancestors 'none'",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
       "upgrade-insecure-requests",
-    ].join("; ");
+    ];
+    const csp = [...directives, "frame-ancestors 'none'"].join("; ");
+    // The /tools/*/embed widgets are meant to be iframed on other sites — they
+    // hold no auth or user data, so cross-origin framing is safe by design.
+    const embedCsp = [...directives, "frame-ancestors *"].join("; ");
+    const common = [
+      { key: "X-Content-Type-Options", value: "nosniff" },
+      { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+      { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+    ];
     return [
       {
-        source: "/:path*",
+        // Everything EXCEPT the embed widgets keeps frame-ancestors 'none' + XFO DENY.
+        source: "/((?!tools/[^/]+/embed).*)",
         headers: [
           { key: "Content-Security-Policy", value: csp },
           { key: "X-Frame-Options", value: "DENY" },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
+          ...common,
         ],
+      },
+      {
+        // Embed widgets: frameable anywhere (no X-Frame-Options), everything else intact.
+        source: "/tools/:slug/embed",
+        headers: [{ key: "Content-Security-Policy", value: embedCsp }, ...common],
       },
     ];
   },

@@ -7,6 +7,7 @@ import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Card } from "@/components/ui/card";
 import { ToolRunner } from "@/components/tools/tool-runner";
+import { EmbedSnippet } from "@/components/tools/embed-snippet";
 import { ToolCard } from "@/components/cards/tool-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
@@ -128,6 +129,14 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
                 </dl>
               </div>
             ) : null}
+          </Container>
+        </Section>
+      )}
+
+      {["utm-builder", "roas-calculator", "schema-generator"].includes(tool.slug) && (
+        <Section className="border-t border-border">
+          <Container size="narrow">
+            <EmbedSnippet slug={tool.slug} name={tool.name} />
           </Container>
         </Section>
       )}

@@ -22,7 +22,10 @@ const BARE_PREFIXES = [
  */
 export function ChromeGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  if (pathname && BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
+  if (!pathname) return <>{children}</>;
+  // Embed widgets (…/embed) render bare so they can be iframed cleanly.
+  if (pathname.endsWith("/embed")) return null;
+  if (BARE_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`))) {
     return null;
   }
   return <>{children}</>;
