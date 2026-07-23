@@ -61,13 +61,46 @@ export const timeline: TimelineItem[] = [
   { year: "2026", title: "CMO & founder", detail: "CMO at Book A Sloth and founder & CEO of Timewheel Internet." },
 ];
 
+// `text` is the one-line teaser shown on /about. `expanded` is the long-form
+// version rendered only on /philosophy, so the two pages don't duplicate the
+// same block — /about points to /philosophy as the deeper read.
 export const principles = [
-  { title: "Systems over hustle", text: "Build mechanisms that compound, then remove yourself from the loop." },
-  { title: "Compounding over campaigns", text: "Own assets that grow without linear effort. Campaigns end; systems don't." },
-  { title: "Ownership over employment", text: "Build things you control. Rented platforms are borrowed leverage." },
-  { title: "Receipts over theories", text: "Every framework has a project behind it. Skin in the game changes everything." },
-  { title: "Depth over breadth", text: "Become the best answer to one question before chasing the next." },
-  { title: "Judgement-led AI", text: "AI accelerates the work; it never replaces the thinking." },
+  {
+    title: "Systems over hustle",
+    text: "Build mechanisms that compound, then remove yourself from the loop.",
+    expanded:
+      "Effort that depends on you being present is a job, not a system. I'd rather spend a week building the mechanism that does the work forever than do the work by hand every week. The goal of every project is the same: get it running well enough that it no longer needs me. Hustle is a tax you pay when you skipped building the system.",
+  },
+  {
+    title: "Compounding over campaigns",
+    text: "Own assets that grow without linear effort. Campaigns end; systems don't.",
+    expanded:
+      "A campaign spikes and dies the day you stop funding it. An asset — a page that ranks, a piece of content that gets cited, a product that keeps selling — earns while you sleep and compounds every month it stays up. I optimise for the second curve almost every time, even when it's slower to start, because slow-and-compounding beats fast-and-flat within a year, and it isn't close after two.",
+  },
+  {
+    title: "Ownership over employment",
+    text: "Build things you control. Rented platforms are borrowed leverage.",
+    expanded:
+      "Reach you rent can be revoked by an algorithm change you didn't vote on. Reach you own — your domain, your list, your product — is leverage nobody can take back. I'll use the rented platforms to build the owned ones, never the other way around. Everything I build is designed to live on ground I control.",
+  },
+  {
+    title: "Receipts over theories",
+    text: "Every framework has a project behind it. Skin in the game changes everything.",
+    expanded:
+      "I don't trust marketing advice from people who've never had their own money on the line. Every framework I teach came out of a project where I could lose something if I was wrong. That's the filter: if I haven't shipped it, I don't sell it. The receipts are the credential — the theory is just the story that explains them afterward.",
+  },
+  {
+    title: "Depth over breadth",
+    text: "Become the best answer to one question before chasing the next.",
+    expanded:
+      "Being vaguely good at ten things gets you cited for none of them. Being the clear best answer to one question gets you recommended by name — by people and, increasingly, by AI. I go deep on a narrow surface until it's undeniable, then expand outward from a position of authority instead of spreading thin from the start.",
+  },
+  {
+    title: "Judgement-led AI",
+    text: "AI accelerates the work; it never replaces the thinking.",
+    expanded:
+      "AI is the fastest intern I've ever hired and the worst decision-maker. It multiplies output once the judgement is already there and multiplies mistakes when it isn't. I let it do the volume — drafts, variants, first passes — and keep the taste, the strategy, and the final call human. The leverage is real; the thinking is still the job.",
+  },
 ];
 
 export const faqs: Faq[] = [

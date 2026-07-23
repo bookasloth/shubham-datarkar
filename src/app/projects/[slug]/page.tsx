@@ -15,11 +15,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const project = getSupportProject(slug);
-  if (!project) return buildMetadata({ title: "Project", path: `/projects/${slug}` });
+  if (!project) return buildMetadata({ title: "Project", path: `/projects/${slug}`, noIndex: true });
+  // ponytail: thin "coming soon" stub — noindex until a real page exists so it
+  // doesn't dilute crawl quality. Still reachable from /support.
   return buildMetadata({
     title: `${project.name} — Coming soon`,
     description: `${project.name} — details coming soon.`,
     path: `/projects/${project.key}`,
+    noIndex: true,
   });
 }
 

@@ -62,7 +62,7 @@ export const navGroups: NavGroup[] = [
   {
     label: "Work",
     items: [
-      { label: "Projects", href: "/work", description: "Everything I've shipped" },
+      { label: "Work", href: "/work", description: "Everything I've shipped" },
       { label: "Case Studies", href: "/case-studies", description: "Real outcomes, real numbers" },
       { label: "Companies", href: "/about#companies", description: "Three operating businesses" },
       { label: "Testimonials", href: "/testimonials", description: "What clients say" },
@@ -100,14 +100,17 @@ export const navGroups: NavGroup[] = [
   },
 ];
 
-/** Flat top-level links shown directly in the bar. */
+// Flat top-level links shown directly in the bar. Anchor text is kept
+// keyword-aligned with each destination (one consistent label per route) so it
+// sends a clean internal-link signal — no cutesy renames that collide across
+// menus (e.g. /work was both "Case Files" here and "Projects" in navGroups).
 export const primaryNav: NavItem[] = [
-  { label: "The Kalamwala", href: "/about" },
-  { label: "In Progress", href: "/projects" },
-  { label: "Case Files", href: "/work" },
-  { label: "My Offerings", href: "/services" },
-  { label: "Notes/Updates", href: "/blog" },
-  { label: "Reach Me", href: "/contact" },
+  { label: "About", href: "/about" },
+  { label: "Projects", href: "/projects" },
+  { label: "Work", href: "/work" },
+  { label: "Services", href: "/services" },
+  { label: "Blog", href: "/blog" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export const footerNav: NavGroup[] = [

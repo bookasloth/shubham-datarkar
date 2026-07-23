@@ -4,8 +4,10 @@ import { ProfileCard } from "@/components/support/profile-card";
 import { SupportNav } from "@/components/support/support-nav";
 import { getSupportStats } from "@/lib/support/queries";
 
-// Live supporter data — render per request, never freeze as static at build.
-export const dynamic = "force-dynamic";
+// Supporter counts change slowly — ISR keeps /support + /support/supporters on
+// the CDN (fast TTFB for an indexable conversion page) and refreshes every 5 min.
+// ponytail: was force-dynamic; 5-min staleness on a coffee counter is fine.
+export const revalidate = 300;
 
 /** Shared frame: persistent profile sidebar + page sub-nav across all three routes. */
 export default async function SupportLayout({ children }: { children: ReactNode }) {
