@@ -252,6 +252,23 @@ export type Tool = {
   status: "Live" | "Beta" | "Soon";
   uses?: number;
   seo?: SeoFields;
+  /**
+   * SEO content, present on optimized tool pages. Drives the SoftwareApplication
+   * + FAQPage schema and the on-page "about / how it works / FAQ" sections.
+   * Absent → the page renders the tool + related only (old behaviour).
+   */
+  content?: {
+    /** schema.org applicationCategory, e.g. "BusinessApplication". */
+    appCategory?: string;
+    /** 1–2 paragraph intro rendered under the tool. */
+    overview?: string[];
+    /** "What it checks / does" bullets → schema featureList. */
+    features?: string[];
+    /** Numbered "how to use it" steps. */
+    howTo?: string[];
+    /** Q&A → FAQPage schema + visible accordion. */
+    faq?: { question: string; answer: string }[];
+  };
 };
 
 export type Testimonial = {

@@ -9,8 +9,9 @@ import { GameRail } from "@/components/games/rail/GameRail";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 
 export const metadata: Metadata = {
-  title: "Games",
-  description: "Daily word and code puzzles — Alfazy, Hit and Blow, Integra.",
+  title: "Daily Games",
+  description:
+    "Free daily brain games for marketers, founders, and developers — Alfazy (a Wordle-style word game), Hit and Blow (Bulls and Cows code-breaking), and Integra (a Nerdle-style math puzzle). New puzzle every day.",
   alternates: { canonical: `${site.url}/games` },
 };
 

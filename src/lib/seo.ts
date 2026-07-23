@@ -316,6 +316,67 @@ export function reviewSchema(testimonials: Testimonial[]) {
 }
 
 /**
+ * Free web tool as a `SoftwareApplication` — the right type for a browser tool.
+ * `offers` price 0 marks it free (so Google/answer engines can say "free"),
+ * `featureList` comes from the tool's own feature bullets. Provider is the
+ * Person. No fabricated rating.
+ */
+export function softwareAppSchema(input: {
+  name: string;
+  description: string;
+  path: string;
+  category?: string;
+  features?: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: input.name,
+    description: input.description,
+    applicationCategory: input.category ?? "BusinessApplication",
+    operatingSystem: "Web",
+    url: `${site.url}${input.path}`,
+    author: personRef,
+    offers: {
+      "@type": "Offer",
+      price: 0,
+      priceCurrency: "INR",
+      availability: "https://schema.org/InStock",
+    },
+    ...(input.features?.length ? { featureList: input.features } : {}),
+  };
+}
+
+/**
+ * A daily browser game as a `VideoGame` — used on /games/[slug]. `sameAs` points
+ * at the well-known game it's kin to (Wordle, Bulls and Cows, Nerdle) so search
+ * + answer engines place it in the right cluster. Free, browser-based.
+ */
+export function videoGameSchema(input: {
+  name: string;
+  description: string;
+  path: string;
+  genre: string;
+  sameAs?: string[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "VideoGame",
+    name: input.name,
+    description: input.description,
+    url: `${site.url}${input.path}`,
+    genre: input.genre,
+    gamePlatform: "Web browser",
+    applicationCategory: "Game",
+    operatingSystem: "Web",
+    author: personRef,
+    publisher: personRef,
+    offers: { "@type": "Offer", price: 0, priceCurrency: "INR", availability: "https://schema.org/InStock" },
+    ...(input.sameAs?.length ? { sameAs: input.sameAs } : {}),
+  };
+}
+
+/**
  * Speaking offering on /speaking — an honest `Service`, not `Event`: there are
  * no scheduled engagements with real dates/venues to mark up. Swap to `Event`
  * schema once concrete talks exist.
