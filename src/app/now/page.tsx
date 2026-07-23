@@ -95,6 +95,8 @@ export default function NowPage() {
               <img src="/api/badge/latest-post" alt="Latest post" height={56} />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/api/badge/posts" alt="Published post count" height={56} />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/api/badge/members" alt="Community member count" height={56} />
             </div>
             <pre className="mt-5 overflow-x-auto rounded-input border border-border bg-muted/40 p-3 text-xs">
               <code>{`<img src="https://shubhamdatarkar.com/api/badge/latest-post" alt="Latest post">`}</code>
