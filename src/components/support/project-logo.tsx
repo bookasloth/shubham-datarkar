@@ -17,27 +17,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-/** "Sd" as a periodic-table element tile — the Shubham Datarkar mark. */
-function SdTile({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 100 100" className={cn("size-full", className)} role="img" aria-label="Shubham Datarkar">
-      <rect x="3.5" y="3.5" width="93" height="93" rx="12" fill="#ffffff" stroke={ORANGE} strokeWidth="5.5" />
-      {/* lightning bolt, top-centre */}
-      <path d="M52 14 L43 36 L49 36 L46 51 L59 30 L52 30 Z" fill={ORANGE} />
-      <text
-        x="50"
-        y="84"
-        fontSize="54"
-        fill={ORANGE}
-        textAnchor="middle"
-        style={{ fontFamily: "var(--font-poppins), sans-serif", fontWeight: 400 }}
-      >
-        Sd
-      </text>
-    </svg>
-  );
-}
-
 /** Bug icon in a bordered tile — the Marketing Bug mark. */
 function BugTile({ className }: { className?: string }) {
   return (
@@ -57,7 +36,6 @@ function BugTile({ className }: { className?: string }) {
  */
 export function ProjectLogo({ project, className }: { project: SupportProject; className?: string }) {
   const [broken, setBroken] = React.useState(false);
-  if (project.key === "shubham-datarkar") return <SdTile className={className} />;
   if (project.key === "marketing-bug") return <BugTile className={className} />;
   if (broken) {
     return (
