@@ -197,9 +197,7 @@ type DemoConfig = {
 };
 
 const demoConfigs: Record<string, DemoConfig> = {
-  "copy-analyzer": { inputType: "text", label: "Paste your copy", placeholder: "Paste a headline or landing-page copy…", cta: "Want the full conversion teardown?" },
   "content-brief": { inputType: "keyword", label: "Target keyword", placeholder: "e.g. saas seo india", cta: "Get the complete brief with competitor angles" },
-  "headline-tester": { inputType: "text", label: "Your headline", placeholder: "Paste a headline to score…", cta: "Want 10 rewritten variants?" },
 };
 
 function scoreFrom(seed: string) {
@@ -509,6 +507,128 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
+/* ------------------------- AI Analyzer (real, Haiku) ------------------------- */
+const aiConfigs: Record<string, { label: string; placeholder: string; multiline: boolean; cta: string }> = {
+  "copy-analyzer": {
+    label: "Paste your copy",
+    placeholder: "Paste a headline or landing-page copy…",
+    multiline: true,
+    cta: "Want the full conversion teardown?",
+  },
+  "headline-tester": {
+    label: "Your headline",
+    placeholder: "Paste a headline to score…",
+    multiline: false,
+    cta: "Want more rewrites?",
+  },
+};
+
+type AiResult = {
+  score: number;
+  summary: string;
+  checks: { label: string; verdict: "good" | "improve" }[];
+  suggestions: string[];
+};
+
+function AiAnalyzer({ slug }: { slug: string }) {
+  const cfg = aiConfigs[slug];
+  const [value, setValue] = React.useState("");
+  const [state, setState] = React.useState<"idle" | "loading" | "done" | "error">("idle");
+  const [result, setResult] = React.useState<AiResult | null>(null);
+  const [error, setError] = React.useState("");
+
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
+    if (!value.trim()) return;
+    setState("loading");
+    setError("");
+    try {
+      const res = await fetch("/api/tools/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kind: slug, text: value }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Analysis failed.");
+        setState("error");
+        return;
+      }
+      setResult(data as AiResult);
+      setState("done");
+    } catch {
+      setError("Couldn't analyze that. Check your connection and try again.");
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-2">
+      <form onSubmit={run} className="grid gap-3">
+        <Label htmlFor="ai-input">{cfg.label}</Label>
+        {cfg.multiline ? (
+          <Textarea id="ai-input" value={value} onChange={(e) => setValue(e.target.value)} placeholder={cfg.placeholder} className="min-h-32" />
+        ) : (
+          <Input id="ai-input" value={value} onChange={(e) => setValue(e.target.value)} placeholder={cfg.placeholder} />
+        )}
+        <Button type="submit" loading={state === "loading"} className="w-fit">
+          Analyze
+          {state !== "loading" && <ArrowRight />}
+        </Button>
+        <Badge variant="muted" className="w-fit">Real analysis · Claude Haiku</Badge>
+      </form>
+
+      <div>
+        {state === "idle" && <EmptyState title="Your result appears here" description="Enter something on the left and analyze." />}
+        {state === "loading" && (
+          <div className="flex h-full min-h-48 items-center justify-center rounded-card border border-border">
+            <Spinner className="size-6 text-muted-foreground" />
+          </div>
+        )}
+        {state === "error" && (
+          <Alert variant="danger">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+        {state === "done" && result && (
+          <Card className="p-6">
+            <div className="flex items-baseline justify-between">
+              <span className="text-sm font-medium text-muted-foreground">Overall score</span>
+              <span className="font-display text-3xl font-extrabold tracking-tight">{result.score}/100</span>
+            </div>
+            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
+              <div className="h-full rounded-full bg-foreground" style={{ width: `${result.score}%` }} />
+            </div>
+            {result.summary && <p className="mt-4 text-sm text-foreground/90">{result.summary}</p>}
+            {result.checks.length > 0 && (
+              <ul className="mt-5 flex flex-col gap-2.5">
+                {result.checks.map((c) => (
+                  <li key={c.label} className="flex items-center justify-between text-sm">
+                    <span>{c.label}</span>
+                    <Badge variant={c.verdict === "good" ? "success" : "warning"}>{c.verdict === "good" ? "Good" : "Improve"}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {result.suggestions.length > 0 && (
+              <div className="mt-5 border-t border-border pt-4">
+                <p className="text-sm font-medium">Suggestions</p>
+                <ul className="mt-2 flex flex-col gap-2">
+                  {result.suggestions.map((s, i) => (
+                    <li key={i} className="rounded-card border border-border bg-muted/40 p-3 text-sm text-foreground/90">
+                      {s}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* -------------------------------- Router -------------------------------- */
 export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (status === "Soon") {
@@ -525,6 +645,7 @@ export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (slug === "schema-generator") return <SchemaGenerator />;
   if (slug === "readability-checker") return <ReadabilityChecker />;
   if (slug === "seo-audit") return <SeoAuditRunner />;
+  if (aiConfigs[slug]) return <AiAnalyzer slug={slug} />;
   if (demoConfigs[slug]) return <DemoAnalyzer slug={slug} />;
   return (
     <EmptyState
