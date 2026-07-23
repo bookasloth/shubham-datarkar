@@ -1,4 +1,3 @@
 export { Header } from "./header";
-export { BurgerMenu } from "./burger-menu";
-export { MoreMenu } from "./more-menu";
+export { BrainDrawer } from "./brain-drawer";
 export { Search } from "./search";

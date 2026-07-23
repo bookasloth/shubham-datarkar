@@ -57,10 +57,22 @@ export type NavGroup = {
   items: NavItem[];
 };
 
-/** Primary mega-menu groups (desktop dropdowns + mobile accordion). */
-export const navGroups: NavGroup[] = [
+// Dual-brain navigation. The header shows two entry points: a left burger
+// (Growth & Systems — the analytical, business-of-building side) and a right
+// kebab (Ideas & Play — the creative, human side). Each opens a themed drawer;
+// a toggle inside flips between the two on any screen size.
+export const leftBrain: NavGroup[] = [
   {
-    label: "Work",
+    label: "Services",
+    items: [
+      { label: "All Services", href: "/services", description: "How I can help" },
+      { label: "SEO & Organic Growth", href: "/services/seo", description: "Compounding traffic systems" },
+      { label: "Performance Marketing", href: "/services/performance", description: "Paid that pays back" },
+      { label: "AI Automation", href: "/services/ai-workflows", description: "Leverage at every layer" },
+    ],
+  },
+  {
+    label: "Proof",
     items: [
       { label: "Work", href: "/work", description: "Everything I've shipped" },
       { label: "Case Studies", href: "/case-studies", description: "Real outcomes, real numbers" },
@@ -69,48 +81,41 @@ export const navGroups: NavGroup[] = [
     ],
   },
   {
-    label: "Services",
+    label: "Products",
     items: [
-      { label: "All Services", href: "/services", description: "How I can help" },
-      { label: "SEO & Organic Growth", href: "/services/seo", description: "Compounding traffic systems" },
-      { label: "Performance Marketing", href: "/services/performance", description: "Paid that pays back" },
-      { label: "AI Automation", href: "/services/ai-workflows", description: "Leverage at every layer" },
-      { label: "Speaking", href: "/speaking", description: "Talks & workshops" },
+      { label: "Products", href: "/products", description: "Timewheel SaaS" },
+      { label: "Free Tools", href: "/tools", description: "Use them, no signup" },
+      { label: "Components", href: "/components", description: "The design system" },
+      { label: "Changelog", href: "/changelog", description: "What changed, and when" },
     ],
   },
+];
+
+export const rightBrain: NavGroup[] = [
   {
     label: "Content",
     items: [
       { label: "Blog", href: "/blog", description: "Essays, playbooks, teardowns" },
       { label: "Newsletter", href: "/newsletter", description: "One signal every Tuesday" },
       { label: "Resources", href: "/resources", description: "Frameworks & templates" },
-      { label: "Community", href: "/community", description: "Build-in-public feed" },
-      { label: "Changelog", href: "/changelog", description: "What changed, and when" },
     ],
   },
   {
-    label: "Build",
+    label: "Community & Play",
     items: [
-      { label: "Products", href: "/products", description: "Timewheel SaaS" },
-      { label: "Free Tools", href: "/tools", description: "Use them, no signup" },
+      { label: "Community", href: "/community", description: "Build-in-public feed" },
       { label: "Games", href: "/games", description: "Daily word puzzles" },
       { label: "AI Experiments", href: "/ai-experiments", description: "The lab" },
-      { label: "Components", href: "/components", description: "The design system" },
     ],
   },
-];
-
-// Flat top-level links shown directly in the bar. Anchor text is kept
-// keyword-aligned with each destination (one consistent label per route) so it
-// sends a clean internal-link signal — no cutesy renames that collide across
-// menus (e.g. /work was both "Case Files" here and "Projects" in navGroups).
-export const primaryNav: NavItem[] = [
-  { label: "About", href: "/about" },
-  { label: "Projects", href: "/projects" },
-  { label: "Work", href: "/work" },
-  { label: "Services", href: "/services" },
-  { label: "Blog", href: "/blog" },
-  { label: "Contact", href: "/contact" },
+  {
+    label: "Story",
+    items: [
+      { label: "About", href: "/about", description: "The operating system behind me" },
+      { label: "My Story", href: "/my-story", description: "How I got here" },
+      { label: "Speaking", href: "/speaking", description: "Talks & workshops" },
+    ],
+  },
 ];
 
 export const footerNav: NavGroup[] = [
