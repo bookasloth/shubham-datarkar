@@ -190,106 +190,6 @@ function SchemaGenerator() {
   );
 }
 
-/* --------------------- Demo analyzer (simulated result) --------------------- */
-type DemoConfig = {
-  inputType: "url" | "text" | "keyword";
-  label: string;
-  placeholder: string;
-  cta: string;
-};
-
-const demoConfigs: Record<string, DemoConfig> = {
-  "content-brief": { inputType: "keyword", label: "Target keyword", placeholder: "e.g. saas seo india", cta: "Get the complete brief with competitor angles" },
-};
-
-function scoreFrom(seed: string) {
-  // Deterministic pseudo-score from input so results feel real and stable.
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) % 1000;
-  return 62 + (h % 34); // 62–95
-}
-
-function DemoAnalyzer({ slug }: { slug: string }) {
-  const cfg = demoConfigs[slug];
-  const [value, setValue] = React.useState("");
-  const [state, setState] = React.useState<"idle" | "loading" | "done">("idle");
-  const [score, setScore] = React.useState(0);
-
-  async function run(e: React.FormEvent) {
-    e.preventDefault();
-    if (!value.trim()) return;
-    setState("loading");
-    await new Promise((r) => setTimeout(r, 900));
-    setScore(scoreFrom(value));
-    setState("done");
-  }
-
-  const checks = [
-    { label: "Clarity of message", ok: score > 70 },
-    { label: "Search intent match", ok: score > 66 },
-    { label: "Structure & scannability", ok: score > 74 },
-    { label: "Call-to-action strength", ok: score > 80 },
-  ];
-
-  return (
-    <div className="grid gap-6 lg:grid-cols-2">
-      <form onSubmit={run} className="grid gap-3">
-        <Label htmlFor="demo-input">{cfg.label}</Label>
-        {cfg.inputType === "text" ? (
-          <Textarea id="demo-input" value={value} onChange={(e) => setValue(e.target.value)} placeholder={cfg.placeholder} className="min-h-32" />
-        ) : (
-          <Input
-            id="demo-input"
-            type={cfg.inputType === "url" ? "url" : "text"}
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder={cfg.placeholder}
-          />
-        )}
-        <Button type="submit" loading={state === "loading"} className="w-fit">
-          Analyze
-          {state !== "loading" && <ArrowRight />}
-        </Button>
-        <Badge variant="muted" className="w-fit">
-          Sample analysis · runs in your browser
-        </Badge>
-      </form>
-
-      <div>
-        {state === "idle" && (
-          <EmptyState title="Your result appears here" description="Enter something on the left and hit analyze." />
-        )}
-        {state === "loading" && (
-          <div className="flex h-full min-h-48 items-center justify-center rounded-card border border-border">
-            <Spinner className="size-6 text-muted-foreground" />
-          </div>
-        )}
-        {state === "done" && (
-          <Card className="p-6">
-            <div className="flex items-baseline justify-between">
-              <span className="text-sm font-medium text-muted-foreground">Overall score</span>
-              <span className="font-display text-3xl font-extrabold tracking-tight">{score}/100</span>
-            </div>
-            <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-              <div className="h-full rounded-full bg-foreground" style={{ width: `${score}%` }} />
-            </div>
-            <ul className="mt-5 flex flex-col gap-2.5">
-              {checks.map((c) => (
-                <li key={c.label} className="flex items-center justify-between text-sm">
-                  <span>{c.label}</span>
-                  <Badge variant={c.ok ? "success" : "warning"}>{c.ok ? "Good" : "Improve"}</Badge>
-                </li>
-              ))}
-            </ul>
-            <Alert variant="accent" className="mt-5">
-              <AlertDescription className="text-foreground">{cfg.cta} — it&apos;s in the newsletter.</AlertDescription>
-            </Alert>
-          </Card>
-        )}
-      </div>
-    </div>
-  );
-}
 
 /* ------------------------- Readability Checker (real) ------------------------- */
 function ReadabilityChecker() {
@@ -656,6 +556,123 @@ function AiAnalyzer({ slug }: { slug: string }) {
   );
 }
 
+/* ---------------------- Content Brief (real, Haiku) ---------------------- */
+type Brief = {
+  title: string;
+  intent: string;
+  wordCount: string;
+  outline: { heading: string; points: string[] }[];
+  questions: string[];
+  keywords: string[];
+};
+
+function ContentBriefRunner() {
+  const [keyword, setKeyword] = React.useState("");
+  const [state, setState] = React.useState<"idle" | "loading" | "done" | "error">("idle");
+  const [brief, setBrief] = React.useState<Brief | null>(null);
+  const [error, setError] = React.useState("");
+
+  async function run(e: React.FormEvent) {
+    e.preventDefault();
+    if (!keyword.trim()) return;
+    setState("loading");
+    setError("");
+    try {
+      const res = await fetch("/api/tools/content-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Couldn't generate a brief.");
+        setState("error");
+        return;
+      }
+      setBrief(data as Brief);
+      setState("done");
+    } catch {
+      setError("Couldn't generate a brief. Check your connection and try again.");
+      setState("error");
+    }
+  }
+
+  return (
+    <div className="grid gap-6">
+      <form onSubmit={run} className="flex flex-col gap-3 sm:flex-row">
+        <Input value={keyword} onChange={(e) => setKeyword(e.target.value)} placeholder="e.g. saas seo india" className="flex-1" />
+        <Button type="submit" loading={state === "loading"} className="w-fit shrink-0">
+          Generate brief
+          {state !== "loading" && <ArrowRight />}
+        </Button>
+      </form>
+      <Badge variant="muted" className="w-fit">Real brief · Claude Haiku</Badge>
+
+      {state === "error" && (
+        <Alert variant="danger">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {state === "done" && brief && (
+        <Card className="p-6">
+          <div className="text-xs uppercase tracking-wider text-muted-foreground">Suggested title</div>
+          <h3 className="mt-1 text-xl font-bold tracking-tight">{brief.title || keyword}</h3>
+          <div className="mt-3 flex flex-wrap gap-2 text-sm">
+            {brief.intent && <Badge variant="muted">Intent: {brief.intent}</Badge>}
+            {brief.wordCount && <Badge variant="muted">{brief.wordCount} words</Badge>}
+          </div>
+
+          {brief.outline.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Outline</p>
+              <div className="mt-3 flex flex-col gap-4">
+                {brief.outline.map((s, i) => (
+                  <div key={i}>
+                    <div className="font-semibold">{s.heading}</div>
+                    {s.points.length > 0 && (
+                      <ul className="mt-1 flex flex-col gap-1">
+                        {s.points.map((p, j) => (
+                          <li key={j} className="flex gap-2 text-sm text-muted-foreground">
+                            <span className="mt-2.5 size-1 shrink-0 rounded-full bg-foreground/40" aria-hidden />
+                            <span>{p}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {brief.questions.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Questions to answer</p>
+              <ul className="mt-3 flex flex-col gap-2">
+                {brief.questions.map((q, i) => (
+                  <li key={i} className="rounded-card border border-border p-3 text-sm">{q}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {brief.keywords.length > 0 && (
+            <div className="mt-6">
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Related keywords</p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {brief.keywords.map((k, i) => (
+                  <Badge key={i} variant="outline">{k}</Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </Card>
+      )}
+    </div>
+  );
+}
+
 /* -------------------------------- Router -------------------------------- */
 export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (status === "Soon") {
@@ -672,8 +689,8 @@ export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (slug === "schema-generator") return <SchemaGenerator />;
   if (slug === "readability-checker") return <ReadabilityChecker />;
   if (slug === "seo-audit") return <SeoAuditRunner />;
+  if (slug === "content-brief") return <ContentBriefRunner />;
   if (aiConfigs[slug]) return <AiAnalyzer slug={slug} />;
-  if (demoConfigs[slug]) return <DemoAnalyzer slug={slug} />;
   return (
     <EmptyState
       icon={<Clock />}
