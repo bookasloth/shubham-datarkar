@@ -3,7 +3,7 @@
 import * as React from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import { gridLines, drawVariants, EASE } from "./blueprint-geometry";
+import { gridLines, drawVariants, motionActivation, EASE } from "./blueprint-geometry";
 
 // Fixed viewBox; SVG scales to fill the parent via width/height 100%.
 const W = 1000;
@@ -17,16 +17,19 @@ export function CrosshairGrid({
   cell = 50,
   circles = true,
   draw = true,
+  trigger = "inView",
   className,
 }: {
   cell?: number;
   circles?: boolean;
   draw?: boolean;
+  trigger?: "inView" | "mount";
   className?: string;
 }) {
   const reduce = useReducedMotion();
   const animate = draw && !reduce;
   const v = drawVariants(!!reduce || !draw);
+  const act = motionActivation(trigger);
   const scaled = cell * (W / 200); // keep ~visual density independent of viewBox
   const { v: vx, h: hy } = gridLines(W, H, scaled);
 
@@ -48,8 +51,7 @@ export function CrosshairGrid({
           strokeWidth={1}
           variants={v}
           initial="initial"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          {...act}
           transition={{ duration: animate ? 0.8 : 0, ease: EASE, delay: animate ? i * 0.03 : 0 }}
         />
       ))}
@@ -64,8 +66,7 @@ export function CrosshairGrid({
           strokeWidth={1}
           variants={v}
           initial="initial"
-          whileInView="visible"
-          viewport={{ once: true, margin: "-80px" }}
+          {...act}
           transition={{ duration: animate ? 0.8 : 0, ease: EASE, delay: animate ? i * 0.03 : 0 }}
         />
       ))}

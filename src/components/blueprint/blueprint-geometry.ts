@@ -33,3 +33,13 @@ export function drawVariants(reduce: boolean) {
     visible: { pathLength: 1, opacity: 1 },
   };
 }
+
+/**
+ * How a draw-in should activate. `inView` waits for scroll (heroes, sections);
+ * `mount` fires immediately (loading skeletons, which are visible on mount).
+ */
+export function motionActivation(trigger: "inView" | "mount") {
+  return trigger === "mount"
+    ? ({ animate: "visible" } as const)
+    : ({ whileInView: "visible", viewport: { once: true, margin: "-80px" } } as const);
+}
