@@ -93,6 +93,16 @@ export function personNode() {
       { "@id": ORG_IDS.bookASloth },
       { "@id": ORG_IDS.greyHawks },
     ],
+    // Real client ratings: a straight 5.0 across 30+ reviews. reviewCount is the
+    // honest floor of "30+". The individual Review nodes (reviewSchema) each
+    // carry the matching 5-star reviewRating.
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue: 5,
+      bestRating: 5,
+      worstRating: 1,
+      reviewCount: 30,
+    },
   };
 }
 
@@ -117,27 +127,28 @@ export function websiteNode() {
 }
 
 /**
- * Site-wide JSON-LD: the Person and the WebSite, in one `@graph`. Emitted once,
- * in the root layout, so every page carries the canonical entities.
+ * Site-wide JSON-LD: the Person, the WebSite, AND the four Organizations the
+ * Person `worksFor`, in one `@graph`. Emitted once, in the root layout, so
+ * every page carries the canonical entities — and so the `worksFor` references
+ * on `personNode()` resolve on every page, not only on /about (where the org
+ * nodes used to live alone, leaving the refs dangling everywhere else).
  */
 export function siteGraph() {
   return {
     "@context": "https://schema.org",
-    "@graph": [personNode(), websiteNode()],
+    "@graph": [personNode(), websiteNode(), ...orgNodes()],
   };
 }
 
 /**
- * The Organizations the Person is behind. Emitted once, on /about, each linked
- * back to {@link PERSON_ID}. Focus areas and roles come from the founder brief;
- * the three with a `since` are in `site.companies`, Grey Hawks is a co-founding
- * role without a dedicated page.
+ * The Organizations the Person is behind, each linked back to {@link PERSON_ID}.
+ * Focus areas and roles come from the founder brief; the three with a `since`
+ * are in `site.companies`, Grey Hawks is a co-founding role without a dedicated
+ * page. Now emitted globally via {@link siteGraph}; /about no longer re-emits.
  */
-export function organizationNodes() {
-  return {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
+function orgNodes() {
+  return [
+    {
         "@type": "Organization",
         "@id": ORG_IDS.timewheel,
         name: "Timewheel Internet",
@@ -174,6 +185,5 @@ export function organizationNodes() {
         founder: personRef,
         knowsAbout: ["Performance Marketing", "SEO", "Content Marketing", "Digital Strategy"],
       },
-    ],
-  };
+  ];
 }

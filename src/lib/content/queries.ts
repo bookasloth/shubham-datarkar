@@ -32,6 +32,25 @@ export async function getPublishedEntities<T>(table: string): Promise<T[]> {
   }
 }
 
+/** Public: published rows' slug + last-modified time, for the sitemap. */
+export async function getPublishedEntityDates(
+  table: string,
+): Promise<{ slug: string; updatedAt: string }[]> {
+  try {
+    const { data, error } = await supabaseAnon()
+      .from(table)
+      .select("slug,updated_at")
+      .eq("published", true);
+    if (error) throw error;
+    return ((data as { slug: string | null; updated_at: string | null }[]) ?? [])
+      .filter((r): r is { slug: string; updated_at: string } => !!r.slug && !!r.updated_at)
+      .map((r) => ({ slug: r.slug, updatedAt: r.updated_at }));
+  } catch (e) {
+    warn(`getPublishedEntityDates(${table})`, e);
+    return [];
+  }
+}
+
 /** Public: one published row's `data` by slug, or null. */
 export async function getPublishedEntityBySlug<T>(table: string, slug: string): Promise<T | null> {
   try {

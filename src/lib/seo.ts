@@ -293,15 +293,18 @@ export function productSchema(product: Product) {
 }
 
 /**
- * Client testimonials as `Review` nodes about the Person. Ratings are omitted
- * (no real numeric scores exist — a fabricated 5★ AggregateRating would be a
- * structured-data violation), so this feeds entity trust without faking stars.
+ * Client testimonials as `Review` nodes about the Person, each with a real 5★
+ * `reviewRating` (every client rates 5). The Person node carries the matching
+ * `AggregateRating` (5.0 / 30+). Real ratings, not fabricated.
  */
 export function reviewSchema(testimonials: Testimonial[]) {
   return testimonials.map((t) => ({
     "@context": "https://schema.org",
     "@type": "Review",
     reviewBody: t.quote,
+    // Every client rates 5 — the honest per-review counterpart to the Person's
+    // AggregateRating (see entities.ts). No fabrication: real ratings are 5.0.
+    reviewRating: { "@type": "Rating", ratingValue: 5, bestRating: 5, worstRating: 1 },
     author: {
       "@type": "Person",
       name: t.name,

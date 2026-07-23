@@ -2,8 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, companies } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema, profilePageSchema } from "@/lib/seo";
-import { organizationNodes } from "@/lib/seo/entities";
+import { buildMetadata, breadcrumbSchema, faqSchema, profilePageSchema } from "@/lib/seo";
 import { principles, stats } from "@/lib/data/site-content";
 import { experience } from "@/lib/data/experience";
 import { Container, Section } from "@/components/layout/container";
@@ -29,13 +28,43 @@ export const metadata = buildMetadata({
   type: "profile",
 });
 
+// Entity-answer FAQ: the questions an AI answer engine asks to resolve "who is
+// this" — fed as FAQPage JSON-LD + visible copy so the answers are citable.
+const aboutFaqs = [
+  {
+    question: "Who is Shubham Datarkar?",
+    answer:
+      "Shubham Datarkar is a founder, marketer, and copywriter based in Nagpur, India, known online as The Kalamwala. He writes the copy, runs the marketing, and builds the software across a creative studio (The Bogus Company), a booking SaaS (Book A Sloth, where he is CMO), and his own internet company (Timewheel Internet).",
+  },
+  {
+    question: "What does 'The Kalamwala' mean?",
+    answer:
+      "Kalam means pen; wala means one who works with it. The Kalamwala is Shubham Datarkar's alias for content and writing — Indian heritage, global execution. The alias is for content; the name Shubham Datarkar is for business.",
+  },
+  {
+    question: "What does Shubham Datarkar do?",
+    answer:
+      "He builds compounding growth systems — SEO, AEO/GEO, performance marketing, content, and AI workflows — for founder-led companies, and builds his own products alongside. The through-line: a marketer who can build and a builder who can market, with AI wired underneath.",
+  },
+  {
+    question: "What companies is Shubham Datarkar behind?",
+    answer:
+      "The Bogus Company (a creative and advertising studio), Book A Sloth (a booking and scheduling SaaS, where he is CMO), and Timewheel Internet (his internet and SaaS studio). He has also co-founded Grey Hawks Media, a performance marketing agency.",
+  },
+  {
+    question: "Where is Shubham Datarkar based?",
+    answer:
+      "Nagpur, Maharashtra, India — working with founders and teams worldwide.",
+  },
+];
+
 export default function AboutPage() {
   return (
     <>
       <JsonLd
         data={[
-          organizationNodes(),
           profilePageSchema(),
+          faqSchema(aboutFaqs),
           breadcrumbSchema([{ name: "Home", path: "/" }, { name: "About", path: "/about" }]),
         ]}
       />
@@ -162,6 +191,21 @@ export default function AboutPage() {
               <ArrowRight className="size-4" />
             </Link>
           </div>
+        </Container>
+      </Section>
+
+      {/* Entity FAQ — feeds AI answer engines a citable "who is Shubham" block */}
+      <Section>
+        <Container size="narrow">
+          <SectionHeading eyebrow="FAQ" title="About Shubham Datarkar" />
+          <dl className="mt-10 flex flex-col">
+            {aboutFaqs.map((f) => (
+              <div key={f.question} className="border-b border-border py-6 first:pt-0 last:border-b-0">
+                <dt className="text-lg font-semibold tracking-tight">{f.question}</dt>
+                <dd className="mt-2 text-[17px] leading-8 text-muted-foreground">{f.answer}</dd>
+              </div>
+            ))}
+          </dl>
         </Container>
       </Section>
 
