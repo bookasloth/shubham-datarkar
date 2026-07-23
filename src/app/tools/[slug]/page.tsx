@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRight } from "lucide-react";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, softwareAppSchema, faqSchema } from "@/lib/seo";
 import { tools, getTool } from "@/lib/data/tools";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -37,6 +37,7 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
   const related = tools.filter((t) => t.slug !== tool.slug && t.category === tool.category).slice(0, 3);
   const fallback = tools.filter((t) => t.slug !== tool.slug).slice(0, 3);
   const more = related.length ? related : fallback;
+  const c = tool.content;
 
   return (
     <>
@@ -47,6 +48,18 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           { name: tool.name, path: `/tools/${tool.slug}` },
         ])}
       />
+      {c && (
+        <JsonLd
+          data={softwareAppSchema({
+            name: tool.name,
+            description: tool.seo?.description ?? tool.description,
+            path: `/tools/${tool.slug}`,
+            category: c.appCategory,
+            features: c.features,
+          })}
+        />
+      )}
+      {c?.faq?.length ? <JsonLd data={faqSchema(c.faq)} /> : null}
       <PageHero
         eyebrow={`${tool.category} tool`}
         title={tool.name}
@@ -60,6 +73,64 @@ export default async function ToolDetailPage({ params }: { params: Promise<{ slu
           </Card>
         </Container>
       </Section>
+
+      {c && (
+        <Section>
+          <Container size="narrow">
+            {c.overview?.length ? (
+              <div className="flex flex-col gap-5">
+                {c.overview.map((p) => (
+                  <p key={p.slice(0, 24)} className="text-[17px] leading-8 text-foreground/90">
+                    {p}
+                  </p>
+                ))}
+              </div>
+            ) : null}
+
+            {c.features?.length ? (
+              <div className="mt-12 border-t border-border pt-8">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">What it does</h2>
+                <ul className="mt-5 grid gap-3 sm:grid-cols-2">
+                  {c.features.map((f) => (
+                    <li key={f} className="flex gap-3 text-[17px] leading-8 text-foreground/90">
+                      <span className="mt-3 size-1.5 shrink-0 rounded-full bg-foreground/40" aria-hidden />
+                      <span>{f}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
+            {c.howTo?.length ? (
+              <div className="mt-12 border-t border-border pt-8">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">How to use it</h2>
+                <ol className="mt-5 flex flex-col gap-3">
+                  {c.howTo.map((step, i) => (
+                    <li key={step} className="flex gap-4 text-[17px] leading-8 text-foreground/90">
+                      <span className="mt-1 font-display text-sm font-bold text-muted-foreground">{String(i + 1).padStart(2, "0")}</span>
+                      <span>{step}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ) : null}
+
+            {c.faq?.length ? (
+              <div className="mt-12 border-t border-border pt-8">
+                <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">FAQ</h2>
+                <dl className="mt-5 flex flex-col">
+                  {c.faq.map((f) => (
+                    <div key={f.question} className="border-b border-border py-5 first:pt-0 last:border-b-0">
+                      <dt className="font-semibold tracking-tight">{f.question}</dt>
+                      <dd className="mt-2 text-muted-foreground">{f.answer}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            ) : null}
+          </Container>
+        </Section>
+      )}
 
       <Section bleed className="border-t border-border bg-card py-16">
         <Container>
