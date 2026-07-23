@@ -838,3 +838,16 @@
 .dark [data-game="alfazy"], .torch [data-game="alfazy"] { --brand: #22c55e; }
 .dark [data-game="hit-and-blow"], .torch [data-game="hit-and-blow"] { --brand: #3b82f6; }
 .dark [data-game="integra"], .torch [data-game="integra"] { --brand: #8b5cf6; }
+
+/* ================================================================== */
+/*  View Transitions — kill all motion under reduced-motion so the     */
+/*  shared-element morph degrades to an instant, browser-default swap.  */
+/* ================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

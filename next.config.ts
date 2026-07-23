@@ -27,6 +27,9 @@ const nextConfig: NextConfig = {
   // Tree-shake large icon/UI barrels so each page ships only the components it
   // uses — smaller client bundles and faster dev compiles.
   experimental: {
+    // Enables React's <ViewTransition> for shared-element morphs on navigation.
+    // Additive: without browser support, pages work normally, just un-animated.
+    viewTransition: true,
     optimizePackageImports: [
       "lucide-react",
       "@phosphor-icons/react",

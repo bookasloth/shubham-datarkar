@@ -1,3 +1,4 @@
+import { ViewTransition } from "react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
@@ -91,9 +92,11 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
             className="mb-8"
           />
           <Badge variant="muted">{cat?.label}</Badge>
-          <h1 className="mt-4 text-balance text-3xl font-extrabold leading-tight tracking-tight md:text-4xl">
-            {post.title}
-          </h1>
+          <ViewTransition name={`post-title-${post.slug}`}>
+            <h1 className="mt-4 text-balance text-3xl font-extrabold leading-tight tracking-tight md:text-4xl">
+              {post.title}
+            </h1>
+          </ViewTransition>
           <p className="mt-4 text-lg text-muted-foreground">{post.excerpt}</p>
           <div className="mt-6 flex items-center gap-3">
             <Avatar>
