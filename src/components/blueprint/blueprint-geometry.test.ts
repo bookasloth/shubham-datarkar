@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { EASE, trianglePoints, gridLines, drawVariants } from "./blueprint-geometry";
+import { EASE, trianglePoints, gridLines, drawVariants, motionActivation } from "./blueprint-geometry";
 
 describe("blueprint-geometry", () => {
   it("EASE matches the system ease-out-quint", () => {
@@ -34,5 +34,17 @@ describe("blueprint-geometry", () => {
     const dv = drawVariants(true);
     expect(dv.initial.pathLength).toBe(1);
     expect(dv.initial.opacity).toBe(1);
+  });
+
+  it("motionActivation('mount') animates immediately, not on scroll", () => {
+    const m = motionActivation("mount");
+    expect(m.animate).toBe("visible");
+    expect("whileInView" in m).toBe(false);
+  });
+
+  it("motionActivation('inView') animates on scroll into view, once", () => {
+    const m = motionActivation("inView");
+    expect(m.whileInView).toBe("visible");
+    expect(m.viewport).toEqual({ once: true, margin: "-80px" });
   });
 });
