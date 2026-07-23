@@ -9,6 +9,7 @@ import { getPublishedPosts } from "@/lib/blog/queries";
 import { stats, capabilities } from "@/lib/data/site-content";
 
 import { Container, Section } from "@/components/layout/container";
+import { WebVitalsStrip } from "@/components/analytics/web-vitals-strip";
 import { SectionHeading } from "@/components/layout/section-heading";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
@@ -274,6 +275,12 @@ export default async function BuildingInPublicPage() {
               </p>
             </div>
           </Reveal>
+        </Container>
+      </Section>
+
+      <Section className="pt-0">
+        <Container size="narrow">
+          <WebVitalsStrip />
         </Container>
       </Section>
 
