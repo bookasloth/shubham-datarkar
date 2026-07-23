@@ -7,6 +7,7 @@ import { getPublishedEntities } from "@/lib/content/queries";
 
 import { Container, Section } from "@/components/layout/container";
 import { SectionHeading } from "@/components/layout/section-heading";
+import { CrosshairGrid } from "@/components/blueprint";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -115,7 +116,7 @@ export default async function HomePage() {
     <>
       {/* 1 — Hero */}
       <Section bleed className="relative overflow-hidden border-b border-border">
-        <div className="bg-grid pointer-events-none absolute inset-0 opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />
+        <CrosshairGrid className="opacity-50 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" />
         <Container className="relative py-24 md:py-32">
           <div className="mx-auto max-w-5xl text-center">
             <Reveal>

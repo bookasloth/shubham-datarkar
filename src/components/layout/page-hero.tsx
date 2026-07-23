@@ -3,7 +3,10 @@ import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb, type Crumb } from "@/components/ui/breadcrumb";
 import { Reveal } from "@/components/motion/reveal";
 import { Badge } from "@/components/ui/badge";
+import { CrosshairGrid } from "@/components/blueprint";
 import { cn } from "@/lib/utils";
+
+const HERO_MASK = "[mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]";
 
 /** Consistent page header used across every interior page. */
 export function PageHero({
@@ -13,6 +16,7 @@ export function PageHero({
   crumbs,
   actions,
   align = "left",
+  blueprint = false,
   className,
 }: {
   eyebrow?: string;
@@ -21,11 +25,20 @@ export function PageHero({
   crumbs?: Crumb[];
   actions?: React.ReactNode;
   align?: "left" | "center";
+  /** Swap the flat CSS grid for the animated blueprint crosshair grid. */
+  blueprint?: boolean;
   className?: string;
 }) {
   return (
     <Section bleed className={cn("relative overflow-hidden border-b border-border", className)}>
-      <div className="bg-grid pointer-events-none absolute inset-0 opacity-40 [mask-image:radial-gradient(ellipse_at_top,#000_20%,transparent_70%)]" aria-hidden />
+      {blueprint ? (
+        <CrosshairGrid className={cn("opacity-40", HERO_MASK)} />
+      ) : (
+        <div
+          className={cn("bg-grid pointer-events-none absolute inset-0 opacity-40", HERO_MASK)}
+          aria-hidden
+        />
+      )}
       <Container className="relative py-14 md:py-20">
         {crumbs && <Breadcrumb items={crumbs} className="mb-6" />}
         <div className={cn("flex flex-col gap-4", align === "center" && "items-center text-center")}>
