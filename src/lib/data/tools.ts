@@ -256,7 +256,7 @@ export const tools: Tool[] = [
     seo: {
       title: "Free Readability Checker Tool",
       description:
-        "Check reading level, sentence length, and rhythm before you publish — a free readability checker that scores your text with Flesch–Kincaid and flags clunky sentences.",
+        "Check reading level, sentence length, and rhythm before you publish — a free readability checker that scores your text with Flesch–Kincaid.",
     },
     content: {
       appCategory: "BusinessApplication",
