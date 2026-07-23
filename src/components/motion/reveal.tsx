@@ -1,9 +1,40 @@
 "use client";
 
 import * as React from "react";
-import { motion, useReducedMotion, type Variants } from "framer-motion";
+import { cn } from "@/lib/utils";
 
-const EASE = [0.22, 1, 0.36, 1] as const;
+/**
+ * Fade-up-on-scroll, done with IntersectionObserver + CSS instead of
+ * framer-motion — same API as before (Reveal / Stagger / StaggerItem), but no
+ * animation-library JS ships to every marketing page. Reduced-motion is handled
+ * in globals.css (`.reveal` rules), so it stays honest for those users.
+ */
+function useInViewOnce<T extends HTMLElement>() {
+  const ref = React.useRef<T>(null);
+  const [inView, setInView] = React.useState(false);
+  React.useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") {
+      // Feature-detection fallback for environments without IO — show at once.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInView(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: "0px 0px -80px 0px" },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+  return { ref, inView };
+}
 
 /** Single element fade-up on scroll into view. Reduced-motion safe. */
 export function Reveal({
@@ -17,29 +48,22 @@ export function Reveal({
   y?: number;
   className?: string;
 }) {
-  const reduce = useReducedMotion();
+  const { ref, inView } = useInViewOnce<HTMLDivElement>();
   return (
-    <motion.div
-      className={className}
-      initial={reduce ? undefined : { opacity: 0, y }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-80px" }}
-      transition={{ duration: 0.5, delay, ease: EASE }}
+    <div
+      ref={ref}
+      className={cn("reveal", inView && "is-visible", className)}
+      style={
+        {
+          "--reveal-y": `${y}px`,
+          transitionDelay: delay ? `${Math.round(delay * 1000)}ms` : undefined,
+        } as React.CSSProperties
+      }
     >
       {children}
-    </motion.div>
+    </div>
   );
 }
-
-const groupVariants: Variants = {
-  hidden: {},
-  show: { transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: EASE } },
-};
 
 /** Wrap a list to stagger children as the group scrolls into view. */
 export function Stagger({
@@ -51,18 +75,12 @@ export function Stagger({
   className?: string;
   as?: "div" | "ul" | "ol";
 }) {
-  const reduce = useReducedMotion();
-  const MotionTag = motion[as];
+  const { ref, inView } = useInViewOnce<HTMLElement>();
+  const Tag = as as React.ElementType;
   return (
-    <MotionTag
-      className={className}
-      variants={reduce ? undefined : groupVariants}
-      initial={reduce ? undefined : "hidden"}
-      whileInView={reduce ? undefined : "show"}
-      viewport={{ once: true, margin: "-60px" }}
-    >
+    <Tag ref={ref} className={cn("reveal-group", inView && "is-visible", className)}>
       {children}
-    </MotionTag>
+    </Tag>
   );
 }
 
@@ -75,11 +93,6 @@ export function StaggerItem({
   className?: string;
   as?: "div" | "li";
 }) {
-  const reduce = useReducedMotion();
-  const MotionTag = motion[as];
-  return (
-    <MotionTag className={className} variants={reduce ? undefined : itemVariants}>
-      {children}
-    </MotionTag>
-  );
+  const Tag = as as React.ElementType;
+  return <Tag className={cn("reveal-item", className)}>{children}</Tag>;
 }

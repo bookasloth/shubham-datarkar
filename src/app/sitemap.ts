@@ -29,13 +29,25 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies"];
   const WEEKLY_PATHS = new Set(["/", "/me", "/blog"]);
 
+  // Routes that ship a dedicated opengraph-image — a real representative image
+  // for the image sitemap (Google Images). Everything else has only the shared
+  // root card, which isn't page-specific, so it's left out.
+  const OG_STATIC = new Set(["/", "/me", "/book"]);
+  const OG_DYNAMIC = [/^\/services\/[^/]+$/, /^\/case-studies\/[^/]+$/, /^\/products\/[^/]+$/, /^\/blog\/[^/]+\/[^/]+$/];
+  const ogImage = (route: string) => {
+    if (!OG_STATIC.has(route) && !OG_DYNAMIC.some((re) => re.test(route))) return undefined;
+    return `${base}${route === "/" ? "" : route}/opengraph-image`;
+  };
+
   return pages
     .filter((p) => isIndexable(p.route))
     .map((p) => {
       const modified = lastMod.get(p.route);
+      const image = ogImage(p.route);
       return {
         url: `${base}${p.route === "/" ? "" : p.route}`,
         ...(modified ? { lastModified: modified } : {}),
+        ...(image ? { images: [image] } : {}),
         changeFrequency: (WEEKLY_PATHS.has(p.route) ? "weekly" : "monthly") as MetadataRoute.Sitemap[number]["changeFrequency"],
         priority: p.route === "/"
           ? 1

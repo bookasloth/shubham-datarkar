@@ -16,6 +16,12 @@ const nextConfig: NextConfig = {
         hostname: "company-assets.bookasloth.in",
         pathname: "/images/**",
       },
+      // Project logos + website assets (also in the CSP img-src allowlist).
+      {
+        protocol: "https",
+        hostname: "website-assets.shubhamdatarkar.com",
+        pathname: "/images/**",
+      },
     ],
   },
   // Tree-shake large icon/UI barrels so each page ships only the components it

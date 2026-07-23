@@ -5,8 +5,6 @@ import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata } from "@/lib/seo";
 import { platforms } from "@/lib/data/platforms";
-import type { CaseStudy, Testimonial } from "@/lib/data/types";
-import { getPublishedEntities } from "@/lib/content/queries";
 import { getPublishedPosts } from "@/lib/blog/queries";
 import { stats, capabilities } from "@/lib/data/site-content";
 
@@ -16,25 +14,27 @@ import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { buttonVariants } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Icon } from "@/lib/icons";
-import { Marquee } from "@/components/sections/marquee";
 import { ClientsMarquee } from "@/components/sections/clients-marquee";
 import { ToolStackGrid } from "@/components/sections/tool-stack-grid";
 import { StatGrid } from "@/components/sections/stat-grid";
 import { NewsletterForm } from "@/components/sections/newsletter-form";
 import { CtaBand } from "@/components/sections/cta-band";
 import { PlatformCard } from "@/components/cards/platform-card";
-import { CaseStudyCard } from "@/components/cards/case-study-card";
 import { PostCard } from "@/components/cards/post-card";
-import { TestimonialCard } from "@/components/cards/testimonial-card";
 import { cn } from "@/lib/utils";
 
+// /me is the build-in-public / personal hub — deliberately distinct from the
+// buyer home at `/` (which sells SEO/AEO work). This page is the journey: what
+// I'm building, what I'm writing, the stack, and the numbers — not a second
+// pitch page. Keeping the intent separate avoids the two homepages cannibalizing
+// each other on "Shubham Datarkar".
 export const metadata = buildMetadata({
   title: "Building in Public",
   description:
-    "Growth systems for startups just getting started — platforms, essays, tools, and the work behind them, documented while building in public.",
+    "The build-in-public side of Shubham Datarkar — the products I'm shipping, the essays and playbooks I'm writing, the stack I use, and the numbers behind it. Documented in the open.",
   ogTitle: "Building in Public",
   ogDescription:
-    "Developer, strategist, storyteller, builder. Growth systems for early startups — frameworks, tools, and lessons, documented in public.",
+    "What I'm building, writing, and learning — documented in the open. Products, essays, tools, and the numbers behind them.",
   path: "/me",
 });
 
@@ -47,17 +47,17 @@ function ViewAll({ href, label }: { href: string; label: string }) {
   );
 }
 
+// Live threads of the build — each links to a real, already-shipped area.
+const currently = [
+  { href: "/projects", label: "Projects", detail: "The products, platforms, and communities I'm building right now." },
+  { href: "/now", label: "Now", detail: "What I'm focused on this month — the short version." },
+  { href: "/roadmap", label: "Roadmap", detail: "What's shipped, what's next, and what changed." },
+];
+
 export const revalidate = 300; // ISR: static HTML from CDN, refresh every 5 min
 
-export default async function HomePage() {
-  // Fire all three reads in parallel — they're independent, so serial awaits
-  // just stack their latencies onto TTFB.
-  const [allCaseStudies, testimonials, allPosts] = await Promise.all([
-    getPublishedEntities<CaseStudy>("case_studies"),
-    getPublishedEntities<Testimonial>("testimonials"),
-    getPublishedPosts(),
-  ]);
-  const featuredCaseStudies = allCaseStudies.filter((c) => c.featured);
+export default async function BuildingInPublicPage() {
+  const allPosts = await getPublishedPosts();
   // Writing rail: lead with one featured post, then fill with the most recent —
   // 3 total. allPosts is newest-first, so the recent slice is just the top rows
   // minus whatever's already featured. Falls back to 3 recent if none featured.
@@ -73,18 +73,24 @@ export default async function HomePage() {
           <div className="mx-auto max-w-5xl text-center">
             <Reveal>
               <h1 className="text-balance text-4xl font-extrabold leading-[1.08] tracking-tight sm:text-5xl md:text-6xl">
-                I build growth systems for startups that are just getting started.
+                Everything I&rsquo;m building, out loud.
               </h1>
             </Reveal>
             <Reveal delay={0.1}>
               <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-                I&rsquo;m Shubham Datarkar — developer, digital strategist, storyteller &amp; builder. I focus on how
-                brands communicate clearly, convert intentionally, and build structures that compound over time. This
-                space documents my thinking, frameworks, tools, and lessons from building in public.
+                I&rsquo;m Shubham Datarkar. This is the build-in-public side of the work — the products I&rsquo;m shipping,
+                the essays and playbooks I write while doing it, and the stack and numbers behind it all. Less pitch,
+                more receipts.
               </p>
             </Reveal>
             <Reveal delay={0.15}>
-              <p className="mt-4 text-sm text-muted-foreground">If you value clarity over noise, we&rsquo;ll work well together.</p>
+              <p className="mt-4 text-sm text-muted-foreground">
+                Looking to work together?{" "}
+                <Link href="/" className="font-medium text-foreground underline-offset-4 hover:underline">
+                  Start here
+                </Link>
+                .
+              </p>
             </Reveal>
             <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <Link href="/newsletter" className={cn(buttonVariants({ size: "lg" }))}>
@@ -109,8 +115,34 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 3 — Platforms & Products */}
+      {/* 3 — Currently building */}
       <Section>
+        <Container>
+          <SectionHeading
+            eyebrow="Currently"
+            title="What I'm building right now"
+            description="The live threads. Each of these is a real, in-progress area — follow whichever one you care about."
+          />
+          <Stagger className="mt-10 grid gap-4 sm:grid-cols-3">
+            {currently.map((c) => (
+              <StaggerItem key={c.href}>
+                <Link href={c.href} className="group block h-full">
+                  <Card interactive className="flex h-full flex-col p-6">
+                    <h3 className="flex items-center gap-1 text-lg font-semibold tracking-tight">
+                      {c.label}
+                      <ArrowRight className="size-4 text-muted-foreground transition-ui group-hover:translate-x-0.5" />
+                    </h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.detail}</p>
+                  </Card>
+                </Link>
+              </StaggerItem>
+            ))}
+          </Stagger>
+        </Container>
+      </Section>
+
+      {/* 4 — Platforms & Products */}
+      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
         <Container>
           <SectionHeading
             eyebrow="Platforms & products"
@@ -127,8 +159,8 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 4 — What I build */}
-      <Section bleed className="border-y border-border bg-card py-16 md:py-24">
+      {/* 5 — What I build */}
+      <Section>
         <Container>
           <SectionHeading
             eyebrow="What I do"
@@ -145,29 +177,6 @@ export default async function HomePage() {
                   <h3 className="mt-5 text-lg font-semibold tracking-tight">{c.title}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{c.text}</p>
                 </Card>
-              </StaggerItem>
-            ))}
-          </Stagger>
-        </Container>
-      </Section>
-
-      {/* 5 — Selected work */}
-      <Section>
-        <Container>
-          <div className="flex items-end justify-between gap-4">
-            <SectionHeading
-              eyebrow="Cases"
-              title="Selected work"
-              description="A look at the systems behind the outcomes. Load more when depth matters."
-            />
-            <div className="hidden sm:block">
-              <ViewAll href="/case-studies" label="All cases" />
-            </div>
-          </div>
-          <Stagger className="mt-12 grid gap-4 md:grid-cols-3">
-            {featuredCaseStudies.map((c) => (
-              <StaggerItem key={c.slug}>
-                <CaseStudyCard study={c} />
               </StaggerItem>
             ))}
           </Stagger>
@@ -207,20 +216,8 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 8 — Testimonials */}
+      {/* 8 — Booking */}
       <Section bleed className="border-y border-border bg-card py-16 md:py-24">
-        <Container className="mb-10">
-          <SectionHeading eyebrow="Vouch for the cat" title="What it's like to work together" align="center" />
-        </Container>
-        <Marquee duration={48}>
-          {testimonials.map((t) => (
-            <TestimonialCard key={t.name} testimonial={t} className="w-[340px] shrink-0" />
-          ))}
-        </Marquee>
-      </Section>
-
-      {/* 9 — Booking */}
-      <Section>
         <Container>
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <Reveal>
@@ -259,12 +256,12 @@ export default async function HomePage() {
         </Container>
       </Section>
 
-      {/* 10 — Stats + newsletter */}
-      <Section bleed className="border-t border-border bg-card py-16 md:py-24">
+      {/* 9 — Stats + newsletter */}
+      <Section>
         <Container>
           <StatGrid stats={stats} />
           <Reveal className="mt-16">
-            <div className="mx-auto max-w-2xl rounded-card border border-border bg-background p-8 text-center md:p-12">
+            <div className="mx-auto max-w-2xl rounded-card border border-border bg-card p-8 text-center md:p-12">
               <h2 className="text-2xl font-bold tracking-tight md:text-3xl">Join the Builders List</h2>
               <p className="mx-auto mt-3 max-w-md text-muted-foreground">
                 Clear thinking for people building real things. Frameworks that compound — one email per fortnight.

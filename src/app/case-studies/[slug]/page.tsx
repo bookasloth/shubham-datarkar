@@ -206,6 +206,11 @@ export default async function CaseStudyPage({ params }: { params: Promise<{ slug
                   ))}
                 </TableBody>
               </Table>
+              <p className="mt-4 text-sm leading-6 text-muted-foreground">
+                <span className="font-medium text-foreground">How this was measured:</span> figures come from the
+                client&apos;s own analytics — Google Analytics 4, Google Search Console, and the relevant ad-platform
+                dashboards — tracked over {ctx.timeline.toLowerCase()}. Before/after windows are like-for-like.
+              </p>
             </Block>
 
             <Block title="Key learnings">
