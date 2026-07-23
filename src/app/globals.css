@@ -678,6 +678,8 @@
   }
   @keyframes sheet-in-right { from { transform: translateX(100%); } to { transform: translateX(0); } }
   @keyframes sheet-out-right { from { transform: translateX(0); } to { transform: translateX(100%); } }
+  @keyframes sheet-in-left { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+  @keyframes sheet-out-left { from { transform: translateX(0); } to { transform: translateX(-100%); } }
   @keyframes accordion-down { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
   @keyframes accordion-up { from { height: var(--radix-accordion-content-height); } to { height: 0; } }
 
@@ -687,6 +689,10 @@
   .pop-anim[data-state="closed"] { animation: pop-out var(--dur-fast) ease-in; }
   .sheet-anim[data-state="open"] { animation: sheet-in-right var(--dur-slow) var(--ease-out-quint); }
   .sheet-anim[data-state="closed"] { animation: sheet-out-right var(--dur-base) ease-in; }
+  .drawer-right[data-state="open"] { animation: sheet-in-right var(--dur-slow) var(--ease-out-quint); }
+  .drawer-right[data-state="closed"] { animation: sheet-out-right var(--dur-base) ease-in; }
+  .drawer-left[data-state="open"] { animation: sheet-in-left var(--dur-slow) var(--ease-out-quint); }
+  .drawer-left[data-state="closed"] { animation: sheet-out-left var(--dur-base) ease-in; }
   .acc-anim[data-state="open"] { animation: accordion-down var(--dur-base) var(--ease-out-quint); }
   .acc-anim[data-state="closed"] { animation: accordion-up var(--dur-fast) var(--ease-out-quint); }
 

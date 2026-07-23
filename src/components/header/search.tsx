@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Standalone search field. Submits to the /search route. Reusable inside the
- * MoreMenu or anywhere a lightweight search entry point is needed.
+ * right-brain drawer or anywhere a lightweight search entry point is needed.
  */
 export function Search({
   className,
