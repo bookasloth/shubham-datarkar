@@ -1,4 +1,5 @@
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { site } from "@/lib/site";
 import { tools } from "@/lib/data/tools";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -15,10 +16,36 @@ export const metadata = buildMetadata({
   path: "/tools",
 });
 
+// ItemList of the free tools — a clean, citable list for "free marketing tools"
+// intent. Each live tool is a free SoftwareApplication.
+function toolsItemList() {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Free Marketing & SEO Tools by Shubham Datarkar",
+    itemListElement: tools
+      .filter((t) => t.status !== "Soon")
+      .map((t, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        item: {
+          "@type": "SoftwareApplication",
+          name: t.name,
+          description: t.seo?.description ?? t.description,
+          applicationCategory: t.content?.appCategory ?? "BusinessApplication",
+          operatingSystem: "Web",
+          url: `${site.url}/tools/${t.slug}`,
+          offers: { "@type": "Offer", price: 0, priceCurrency: "INR" },
+        },
+      })),
+  };
+}
+
 export default function ToolsPage() {
   return (
     <>
       <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Tools", path: "/tools" }])} />
+      <JsonLd data={toolsItemList()} />
       <PageHero
         eyebrow="Free tools"
         title="Tools that earn trust"
