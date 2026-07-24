@@ -154,3 +154,25 @@ export function communityDigest(a: { items: { title: string; href: string; meta?
       `\n\n${SITE}/community`,
   };
 }
+
+/** Someone followed you. Humour: Medium. */
+export function followed(a: { name?: string | null; author: string; href: string }): RenderedEmail {
+  const first = firstName(a.name);
+  return {
+    subject: `${a.author} followed you`,
+    html: renderEmail({
+      preheader: "One more person will now see what you post.",
+      headerTagline: "Community",
+      title: `${esc(a.author)} followed you`,
+      footerNote: TXN_FOOTER,
+      bodyHtml:
+        p(`Hey ${esc(first)},`) +
+        p(`<strong>${esc(a.author)}</strong> just followed you in the community.`) +
+        p("Which means your posts now turn up in their feed, unprompted.") +
+        p("No pressure. That's a lie, obviously — there's some pressure."),
+      cta: { label: "See their profile", href: a.href },
+      afterCta: emailGif(EMAIL_GIFS.newComment, "A notification bell ringing", 340),
+    }),
+    text: `Hey ${first}, ${a.author} followed you in the community. Your posts now show up in their feed. See their profile: ${a.href}`,
+  };
+}

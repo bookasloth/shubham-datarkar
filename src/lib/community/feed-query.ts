@@ -14,6 +14,8 @@ export type FeedQuery = {
   bookmarked?: boolean;
   liked?: boolean;
   reblogged?: boolean;
+  /** Following tab — the feed filtered to people the viewer follows. */
+  following?: boolean;
   /** Shuffle seed for `sort=hot`. Fixed per browsing session (it lives in the
    *  URL), which is what makes offset paging over a random order correct. */
   seed?: number;
@@ -54,7 +56,7 @@ export function newSeed(): number {
  * and likes those are from auth.uid(), so they can't be pointed at anyone else.
  */
 export function sanitizeQuery(q: FeedQuery | null | undefined): Required<
-  Pick<FeedQuery, "sort" | "window" | "bookmarked" | "liked" | "reblogged" | "seed">
+  Pick<FeedQuery, "sort" | "window" | "bookmarked" | "liked" | "reblogged" | "seed" | "following">
 > & { author?: string } {
   const author = typeof q?.author === "string" ? q.author.toLowerCase() : undefined;
   return {
@@ -65,5 +67,6 @@ export function sanitizeQuery(q: FeedQuery | null | undefined): Required<
     bookmarked: q?.bookmarked === true,
     liked: q?.liked === true,
     reblogged: q?.reblogged === true,
+    following: q?.following === true,
   };
 }

@@ -12,6 +12,7 @@ describe("sanitizeQuery", () => {
       bookmarked: false,
       liked: false,
       reblogged: false,
+      following: false,
       seed: 0,
     });
   });
@@ -83,6 +84,67 @@ describe("seeded shuffle paging", () => {
 
   // Stand-in for `hashtext(row_id || seed)`: any stable hash has the same
   // stability property, which is the thing under test.
+  const key = (row: string, seed: number) => {
+    let h = 0;
+    for (const ch of `${row}${seed}`) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;
+    return h;
+  };
+  const order = (seed: number) => [...rows].sort((a, b) => key(a, seed) - key(b, seed));
+  const page = (seed: number, offset: number, limit: number) =>
+    order(seed).slice(offset, offset + limit);
+
+  it("pages a fixed seed without repeating or skipping a row", () => {
+    const seen: string[] = [];
+    for (let offset = 0; offset < rows.length; offset += 10) seen.push(...page(41273, offset, 10));
+    expect(seen).toHaveLength(rows.length);
+    expect(new Set(seen).size).toBe(rows.length);
+  });
+
+  it("gives the same page twice for the same seed", () => {
+    expect(page(41273, 20, 10)).toEqual(page(41273, 20, 10));
+  });
+
+  it("gives a different order for a different seed", () => {
+    expect(order(41273)).not.toEqual(order(99));
+  });
+
+  it("mints seeds inside the clamp range", () => {
+    for (let i = 0; i < 50; i++) {
+      const s = newSeed();
+      expect(s).toBe(clampSeed(s));
+    }
+  });
+
+  it("clamps the shuffle seed to a postgres int", () => {
+    expect(sanitizeQuery({ seed: 41273 }).seed).toBe(41273);
+    expect(sanitizeQuery({ seed: -1 }).seed).toBe(0);
+    expect(sanitizeQuery({ seed: 9_999_999_999 }).seed).toBe(2_147_483_647);
+  });
+
+  it("treats a junk seed as 0 rather than erroring", () => {
+    // @ts-expect-error — this is what a hand-edited ?seed= sends
+    expect(sanitizeQuery({ seed: "abc" }).seed).toBe(0);
+    expect(clampSeed(NaN)).toBe(0);
+    expect(clampSeed(Infinity)).toBe(0);
+    expect(clampSeed(null)).toBe(0);
+    expect(clampSeed("41273")).toBe(41273);
+    expect(clampSeed(12.9)).toBe(12);
+  });
+
+  it("reads the Following tab flag as a real boolean", () => {
+    expect(sanitizeQuery({ following: true }).following).toBe(true);
+    // @ts-expect-error — a truthy non-boolean must not turn the tab on
+    expect(sanitizeQuery({ following: "yes" }).following).toBe(false);
+    expect(sanitizeQuery({}).following).toBe(false);
+  });
+});
+
+// The shuffle's whole correctness claim: a fixed seed means limit/offset paging
+// over a random order never duplicates or skips a card. hashtext() lives in
+// Postgres, so mirror its contract — a deterministic key per (row, seed) — and
+// assert the property the feed depends on.
+describe("seeded shuffle paging", () => {
+  const rows = Array.from({ length: 97 }, (_, i) => `row-${i}`);
   const key = (row: string, seed: number) => {
     let h = 0;
     for (const ch of `${row}${seed}`) h = (Math.imul(h, 31) + ch.charCodeAt(0)) | 0;

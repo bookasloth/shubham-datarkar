@@ -87,6 +87,7 @@ export async function listFeed(opts: {
   reblogged?: boolean;
   liked?: boolean;
   seed?: number;
+  following?: boolean;
 }): Promise<FeedPost[]> {
   // Call as the request user (cookie-scoped): the RPC derives the viewer from
   // auth.uid(), so vote/bookmark state can't be spoofed for another user.
@@ -107,6 +108,7 @@ export async function listFeed(opts: {
   // Same rule for p_seed: PostgREST resolves an RPC by exact key set, so a key
   // the deployed function doesn't have 404s the whole call. Only 'hot' reads it.
   if (opts.sort === "hot" && opts.seed) params.p_seed = opts.seed;
+  if (opts.following) params.p_following = true;
   const { data, error } = await sb.rpc("community_feed", params);
   if (error) {
     console.warn("community_feed failed:", error.message);
@@ -249,4 +251,177 @@ export async function listAds(): Promise<AdSlot[]> {
     imagePath: a.image_path,
     linkUrl: a.link_url,
   }));
+}
+
+// ---------------------------------------------------------------------------
+// Follows and mutes
+// ---------------------------------------------------------------------------
+
+export type SocialCounts = {
+  followers: number;
+  following: number;
+  /** Whether the VIEWER follows this profile. Null when signed out. */
+  viewerFollows: boolean | null;
+  viewerMutes: boolean;
+};
+
+/** Follower/following counts for a profile, plus the viewer's relationship to
+ *  it. Counts are HEAD queries — no rows cross the wire for a number. */
+export async function getSocialCounts(userId: string): Promise<SocialCounts> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+
+  const [followers, following, follow, mute] = await Promise.all([
+    sb.from("community_follows").select("follower_id", { count: "exact", head: true }).eq("followee_id", userId),
+    sb.from("community_follows").select("followee_id", { count: "exact", head: true }).eq("follower_id", userId),
+    user
+      ? sb.from("community_follows").select("followee_id").eq("follower_id", user.id).eq("followee_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+    user
+      ? sb.from("community_mutes").select("muted_id").eq("muter_id", user.id).eq("muted_id", userId).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  return {
+    followers: followers.count ?? 0,
+    following: following.count ?? 0,
+    viewerFollows: user ? Boolean(follow.data) : null,
+    viewerMutes: Boolean(mute.data),
+  };
+}
+
+export type MiniProfile = {
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  badge: Badge;
+};
+
+function mapMini(r: Record<string, unknown>): MiniProfile {
+  return {
+    id: r.id as string,
+    username: r.username as string,
+    displayName: (r.display_name as string) ?? null,
+    avatarUrl: (r.avatar_url as string) ?? null,
+    badge: ((r.badge as Badge) ?? "grey") satisfies Badge,
+  };
+}
+
+/** One page of a profile's followers or followees.
+ *
+ *  Two queries rather than a join: PostgREST can't join community_follows to
+ *  profiles without a declared FK relationship name, and the id list is at most
+ *  `limit` long, so the second query is a bounded `.in()`. */
+async function listFollowSide(
+  userId: string,
+  side: "followers" | "following",
+  limit: number,
+  offset: number,
+): Promise<MiniProfile[]> {
+  const sb = await supabaseAuthServer();
+  const [matchCol, idCol] =
+    side === "followers" ? ["followee_id", "follower_id"] : ["follower_id", "followee_id"];
+
+  const { data: rows } = await sb
+    .from("community_follows")
+    .select(idCol)
+    .eq(matchCol, userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  const ids = ((rows ?? []) as unknown as Record<string, unknown>[]).map((r) => r[idCol] as string);
+  if (ids.length === 0) return [];
+
+  const { data: people } = await sb
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .in("id", ids)
+    .eq("banned", false);
+  // Preserve the follow order — .in() returns whatever order it likes.
+  const byId = new Map(((people ?? []) as Record<string, unknown>[]).map((p) => [p.id as string, p]));
+  return ids
+    .map((id) => byId.get(id))
+    .filter((p): p is Record<string, unknown> => Boolean(p))
+    .map(mapMini);
+}
+
+export const listFollowers = (userId: string, limit = 50, offset = 0) =>
+  listFollowSide(userId, "followers", limit, offset);
+export const listFollowing = (userId: string, limit = 50, offset = 0) =>
+  listFollowSide(userId, "following", limit, offset);
+
+/** Members the viewer has muted — their own list, readable only by them (the
+ *  mutes RLS policy is self-only). */
+export async function listMutedProfiles(): Promise<MiniProfile[]> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return [];
+
+  const { data: rows } = await sb
+    .from("community_mutes")
+    .select("muted_id")
+    .eq("muter_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  const ids = (rows ?? []).map((r) => r.muted_id as string);
+  if (ids.length === 0) return [];
+
+  const { data: people } = await sb
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .in("id", ids);
+  return ((people ?? []) as Record<string, unknown>[]).map(mapMini);
+}
+
+/** Handles to suggest when the Following feed is empty: the most-followed
+ *  members, minus yourself and anyone you already follow.
+ *
+ *  ponytail: most-followed is the whole ranking. No affinity, no ML — with a
+ *  few hundred members "who does everyone else read" is the honest answer, and
+ *  it needs one grouped read instead of a recommender. */
+export async function listSuggestedProfiles(n = 3): Promise<MiniProfile[]> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return [];
+
+  const [{ data: edges }, { data: mine }] = await Promise.all([
+    sb.from("community_follows").select("followee_id").limit(2000),
+    sb.from("community_follows").select("followee_id").eq("follower_id", user.id),
+  ]);
+
+  const skip = new Set([user.id, ...(mine ?? []).map((r) => r.followee_id as string)]);
+  const tally = new Map<string, number>();
+  for (const e of edges ?? []) {
+    const id = e.followee_id as string;
+    if (skip.has(id)) continue;
+    tally.set(id, (tally.get(id) ?? 0) + 1);
+  }
+
+  const ranked = [...tally.entries()].sort((a, b) => b[1] - a[1]).slice(0, n).map(([id]) => id);
+  // Nobody follows anybody yet — fall back to the newest handles so the empty
+  // state still has something to point at.
+  if (ranked.length === 0) {
+    const { data: fresh } = await sb
+      .from("profiles")
+      .select("id, username, display_name, avatar_url")
+      .eq("banned", false)
+      .not("username", "is", null)
+      .neq("id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(n);
+    return ((fresh ?? []) as Record<string, unknown>[]).map(mapMini);
+  }
+
+  const { data: people } = await sb
+    .from("profiles")
+    .select("id, username, display_name, avatar_url")
+    .in("id", ranked)
+    .eq("banned", false);
+  return ((people ?? []) as Record<string, unknown>[]).map(mapMini);
 }
