@@ -117,6 +117,18 @@ export const faqs: Faq[] = [
 
 export const changelog: ChangelogEntry[] = [
   {
+    date: "2026-07-24",
+    version: "v3.6",
+    title: "A new way to navigate — and faster pages",
+    type: "Improved",
+    notes: [
+      "The header now has two menus instead of one. The left one is the work side — services, proof, products. The right one is the human side — writing, community, story.",
+      "Both open as a centered panel under the navbar: three clean columns on desktop, a simple title stack on mobile, with YouTube, Spotify, socials, and Book a call always one tap away.",
+      "Pages paint sooner — styles now ship inside the HTML instead of waiting on a separate stylesheet request.",
+      "Cut ~14KB of dead JavaScript that only existed to support browsers nobody here uses.",
+    ],
+  },
+  {
     date: "2026-07-23",
     version: "v3.5",
     title: "The free tools actually work now",
