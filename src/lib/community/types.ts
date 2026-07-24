@@ -4,7 +4,25 @@
 export type FeedSort = "new" | "hot" | "top";
 export type FeedWindow = "all" | "today" | "week" | "month" | "year";
 export type Badge = "grey" | "orange" | "gold";
-export type PostType = "text" | "image" | "poll" | "youtube";
+// "quote", "link" and "chat" exist in the DB check constraint as of the
+// social-layer migration; the composer that can produce them lands in §7, so
+// nothing writes them yet.
+export type PostType = "text" | "image" | "poll" | "youtube" | "quote" | "link" | "chat";
+
+/** Optional, type-scoped composer fields. One jsonb column rather than six
+ *  nullable ones for values that never appear together. */
+export type PostMeta = {
+  title?: string;
+  /** Attribution line on a quote post. */
+  source?: string;
+  /** Link post: the URL, plus whatever the server-side unfurl resolved. */
+  url?: string;
+  link_title?: string;
+  link_desc?: string;
+  link_image?: string;
+  /** Free-text place label. Never coordinates — there is no geolocation call. */
+  place?: string;
+};
 
 export type PollData = {
   options: { i: number; label: string }[];
@@ -47,6 +65,8 @@ export type FeedPost = {
   reblogCount: number;
   bookmarkCount: number;
   reblogOf: string | null;
+  meta: PostMeta | null;
+  tags: string[] | null;
   createdAt: string;
   viewerVote: -1 | 0 | 1;
   viewerBookmarked: boolean;

@@ -33,6 +33,11 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     bookmarkCount: (r.bookmark_count as number) ?? 0,
     reblogOf: (r.reblog_of as string) ?? null,
     createdAt: r.created_at as string,
+    // Both default rather than assert: the dormant community_post(uuid) shim
+    // doesn't return them, and neither does a DB that hasn't run the social-layer
+    // migration yet.
+    meta: (r.meta as FeedPost["meta"]) ?? null,
+    tags: (r.tags as string[]) ?? null,
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
     viewerReblogged: Boolean(r.viewer_reblogged),
@@ -81,6 +86,7 @@ export async function listFeed(opts: {
   bookmarked?: boolean;
   reblogged?: boolean;
   liked?: boolean;
+  seed?: number;
 }): Promise<FeedPost[]> {
   // Call as the request user (cookie-scoped): the RPC derives the viewer from
   // auth.uid(), so vote/bookmark state can't be spoofed for another user.
@@ -98,6 +104,9 @@ export async function listFeed(opts: {
   // pages (which set these) require migration 20260711000003 to be applied.
   if (opts.reblogged) params.p_reblogged = true;
   if (opts.liked) params.p_liked = true;
+  // Same rule for p_seed: PostgREST resolves an RPC by exact key set, so a key
+  // the deployed function doesn't have 404s the whole call. Only 'hot' reads it.
+  if (opts.sort === "hot" && opts.seed) params.p_seed = opts.seed;
   const { data, error } = await sb.rpc("community_feed", params);
   if (error) {
     console.warn("community_feed failed:", error.message);

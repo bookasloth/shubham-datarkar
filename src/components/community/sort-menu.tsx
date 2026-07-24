@@ -9,10 +9,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
 
-const SORTS: { key: FeedSort; label: string }[] = [
-  { key: "new", label: "New" },
-  { key: "hot", label: "Hot" },
-  { key: "top", label: "Top" },
+const SORTS: { key: FeedSort; label: string; hint?: string }[] = [
+  { key: "new", label: "New", hint: "Newest first" },
+  // Hot is a seeded shuffle, not a ranking — say so, or it reads as a bug when
+  // an old post surfaces above a fresh one.
+  { key: "hot", label: "Hot", hint: "Shuffled" },
+  { key: "top", label: "Top", hint: "Most liked" },
 ];
 const WINDOWS: { key: FeedWindow; label: string }[] = [
   { key: "today", label: "Today" },
@@ -27,6 +29,10 @@ export function SortMenu({ sort, window }: { sort: FeedSort; window: FeedWindow 
   const sp = useSearchParams();
   const go = (next: Record<string, string>) => {
     const params = new URLSearchParams(sp.toString());
+    // Drop the old shuffle seed on any sort change — otherwise picking Hot again
+    // replays the exact order you just left, which is the opposite of the point.
+    // The page mints a fresh one and redirects.
+    params.delete("seed");
     for (const [k, v] of Object.entries(next)) params.set(k, v);
     router.push(`/community?${params.toString()}`);
   };
@@ -39,8 +45,13 @@ export function SortMenu({ sort, window }: { sort: FeedSort; window: FeedWindow 
         </DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           {SORTS.map((s) => (
-            <DropdownMenuItem key={s.key} onClick={() => go({ sort: s.key })}>
-              {s.label}
+            <DropdownMenuItem
+              key={s.key}
+              onClick={() => go({ sort: s.key })}
+              className="flex-col items-start gap-0"
+            >
+              <span>{s.label}</span>
+              {s.hint && <span className="text-xs text-muted-foreground">{s.hint}</span>}
             </DropdownMenuItem>
           ))}
         </DropdownMenuContent>

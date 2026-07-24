@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { getMemberContext } from "@/lib/members/session";
 import { getShellUser } from "@/lib/app-shell/user";
 import {
@@ -7,6 +8,7 @@ import {
   viewerCanPost,
 } from "@/lib/community/queries";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
+import { clampSeed, newSeed } from "@/lib/community/feed-query";
 import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { SignInWall } from "@/components/community/sign-in-wall";
@@ -22,7 +24,7 @@ const PREVIEW = 3;
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; window?: string }>;
+  searchParams: Promise<{ sort?: string; window?: string; seed?: string }>;
 }) {
   const sp = await searchParams;
   const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "new";
@@ -30,13 +32,23 @@ export default async function CommunityPage({
     ? (sp.window as FeedWindow)
     : "all";
 
+  // Hot is a seeded shuffle. The seed lives in the URL so SSR and the
+  // loadFeedPage client action agree without extra plumbing, a refresh keeps the
+  // order, and a shared link reproduces exactly what the sharer saw. Arriving at
+  // ?sort=hot with no seed mints one and redirects, which is what makes a fresh
+  // visit a fresh shuffle.
+  if (sort === "hot" && !sp.seed) {
+    redirect(`/community?sort=hot&seed=${newSeed()}`);
+  }
+  const seed = clampSeed(sp.seed);
+
   const { user } = await getMemberContext();
 
   // Logged out: a random handful, then the wall. Sorting is the signed-in
   // feed's job — a sort menu over three random posts is furniture.
   const [canPost, posts, shellUser] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    user ? listFeed({ sort, window, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
+    user ? listFeed({ sort, window, seed, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
     user ? getShellUser() : Promise.resolve(null),
   ]);
   const pollResults = await listPollResults(
@@ -72,7 +84,7 @@ export default async function CommunityPage({
           No posts yet. Be the first once posting opens.
         </p>
       ) : user ? (
-        <FeedStream query={{ sort, window }} initialCount={posts.length}>
+        <FeedStream query={{ sort, window, seed }} initialCount={posts.length}>
           {cards}
         </FeedStream>
       ) : (
