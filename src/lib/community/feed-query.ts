@@ -14,6 +14,9 @@ export type FeedQuery = {
   bookmarked?: boolean;
   liked?: boolean;
   reblogged?: boolean;
+  /** Shuffle seed for `sort=hot`. Fixed per browsing session (it lives in the
+   *  URL), which is what makes offset paging over a random order correct. */
+  seed?: number;
 };
 
 const SORTS: readonly FeedSort[] = ["new", "hot", "top"];
@@ -21,6 +24,24 @@ const WINDOWS: readonly FeedWindow[] = ["all", "today", "week", "month", "year"]
 
 /** Handles are lowercase alnum plus dot/underscore/dash — real ones contain dots. */
 const HANDLE_RE = /^[a-z0-9._-]{1,64}$/;
+
+/** Postgres `int` — the seed is concatenated into hashtext() as p_seed::text,
+ *  so anything outside this range is an RPC-level overflow, not a bad sort. */
+const MAX_SEED = 2_147_483_647;
+
+/** Coerce an untrusted seed to a usable int. Non-numbers, NaN and out-of-range
+ *  values become 0, which is a valid (if unshuffled-looking) seed rather than
+ *  an error — a bad URL should still render a feed. */
+export function clampSeed(v: unknown): number {
+  const n = typeof v === "string" ? Number(v) : v;
+  if (typeof n !== "number" || !Number.isFinite(n)) return 0;
+  return Math.min(Math.max(Math.trunc(n), 0), MAX_SEED);
+}
+
+/** A fresh seed for a new `?sort=hot` visit. */
+export function newSeed(): number {
+  return Math.floor(Math.random() * MAX_SEED);
+}
 
 /**
  * Coerce an untrusted query into one the RPC can be handed.
@@ -33,10 +54,11 @@ const HANDLE_RE = /^[a-z0-9._-]{1,64}$/;
  * and likes those are from auth.uid(), so they can't be pointed at anyone else.
  */
 export function sanitizeQuery(q: FeedQuery | null | undefined): Required<
-  Pick<FeedQuery, "sort" | "window" | "bookmarked" | "liked" | "reblogged">
+  Pick<FeedQuery, "sort" | "window" | "bookmarked" | "liked" | "reblogged" | "seed">
 > & { author?: string } {
   const author = typeof q?.author === "string" ? q.author.toLowerCase() : undefined;
   return {
+    seed: clampSeed(q?.seed),
     sort: SORTS.includes(q?.sort as FeedSort) ? (q!.sort as FeedSort) : "new",
     window: WINDOWS.includes(q?.window as FeedWindow) ? (q!.window as FeedWindow) : "all",
     author: author && HANDLE_RE.test(author) ? author : undefined,
