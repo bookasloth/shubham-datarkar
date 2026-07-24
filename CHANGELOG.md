@@ -4,6 +4,29 @@ Engineering changelog. The user-facing version history lives on-site at
 [`/changelog`](https://shubhamdatarkar.com/changelog) (sourced from
 `src/lib/data/site-content.ts`); this file tracks the technical detail.
 
+## v3.6 — 2026-07-24 — Dual-brain nav + first-paint perf
+
+### Navigation
+- **Dual-brain header** — the single mega-menu is replaced by two entry points:
+  a left burger ("Growth & Systems": services, proof, products) and a right
+  kebab ("Ideas & Play": content, community, story). Nav data moves to
+  `leftBrain`/`rightBrain` groups in `site.ts`; dead `navGroups`/`primaryNav`
+  dropped. `DesktopNav`, the old `BurgerMenu`, and `MoreMenu` are removed and
+  folded into the new menu. (#308)
+- Both menus render as a **centered panel under the navbar** — three columns on
+  desktop (one per group), a bare title stack on mobile — with a single
+  one-line action row (YouTube · Spotify · Book a call on the left; socials ·
+  Book a call on the right). The latest-cases / recent-writing aside is gone,
+  so the header no longer pulls `caseStudies` or `getLatestPostsForNav`. (#308)
+
+### Performance
+- `experimental.inlineCss` — Tailwind's atomic CSS is emitted as `<style>` in
+  `<head>` instead of a render-blocking `<link>` (~-570ms render block, shorter
+  font critical chain). Trade-off: no separate CSS cache for repeat visits. (#309)
+- `browserslist` pinned to Chrome/Edge 111+, Firefox 111+, Safari 16.4+ — stops
+  SWC injecting core-js polyfills for natively-supported methods, dropping the
+  ~14KiB legacy-JS payload. (#309)
+
 ## v3.5 — 2026-07-23 — Real tools + growth loop + OG redesign
 
 Made every free tool real (they were mostly hash-of-input demos), wrapped them
