@@ -2,7 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowUp, Loader2 } from "lucide-react";
+import Link from "next/link";
+import { ArrowUp, Loader2, CheckCheck } from "lucide-react";
 import { loadFeedPage, countNewNotes, type FeedPageResult } from "@/lib/community/feed-actions";
 import type { FeedQuery } from "@/lib/community/feed-query";
 
@@ -167,9 +168,30 @@ export function FeedStream({
       )}
 
       {done && (
-        <p className="px-4 py-10 text-center text-sm text-muted-foreground">
-          You&apos;re all caught up.
-        </p>
+        <div className="mx-4 my-8 flex flex-col items-center gap-3 rounded-card border border-border bg-card px-6 py-10 text-center">
+          <div className="flex size-12 items-center justify-center rounded-card bg-muted">
+            <CheckCheck className="size-6 text-muted-foreground" />
+          </div>
+          <h2 className="font-display text-lg font-semibold">You&apos;re all caught up.</h2>
+          <p className="max-w-sm text-sm text-muted-foreground">
+            That&apos;s everything new. No infinite scroll here — go build something.
+          </p>
+          <div className="mt-1 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              className="rounded-btn border border-border px-4 py-2 text-sm font-medium transition-ui hover:bg-accent"
+            >
+              Back to top
+            </button>
+            <Link
+              href="/community/compose"
+              className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
+            >
+              Compose
+            </Link>
+          </div>
+        </div>
       )}
     </>
   );

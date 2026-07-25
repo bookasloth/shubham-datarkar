@@ -14,6 +14,7 @@ import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { SignInWall } from "@/components/community/sign-in-wall";
 import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
+import { feedContextLine } from "@/lib/community/feed-context";
 import Link from "next/link";
 import { ComposerFab } from "@/components/community/composer-fab";
 import { SuggestedFollows } from "@/components/community/suggested-follows";
@@ -95,6 +96,12 @@ export default async function CommunityPage({
       {user && !canPost && (
         <p className="border-b border-border px-4 py-3 text-sm text-muted-foreground">
           Verify your email to post.
+        </p>
+      )}
+
+      {posts.length > 0 && (
+        <p className="border-b border-border px-4 py-2 text-xs text-muted-foreground">
+          {feedContextLine({ sort, window, following, tag }, Boolean(user))}
         </p>
       )}
 
