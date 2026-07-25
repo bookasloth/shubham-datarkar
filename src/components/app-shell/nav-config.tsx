@@ -27,7 +27,7 @@ export const APP_NAV: AppNavSection[] = [
     label: "Community",
     icon: Users,
     items: [
-      { label: "Home", href: "/community" },
+      { label: "Feed", href: "/community" },
       { label: "Likes", href: "/community/likes", gated: true },
       { label: "Shares", href: "/community/reblogs", gated: true },
       { label: "Saved", href: "/community/bookmarks", gated: true },
