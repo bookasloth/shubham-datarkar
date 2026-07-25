@@ -1,15 +1,12 @@
 "use server";
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
-import { supabaseAdmin } from "@/lib/supabase/server";
 import { validatePost } from "./validate";
 import { notifyPostCreated, notifyMentions } from "./community-notify";
 import { unfurl } from "./unfurl";
 import { youtubeEmbeddable } from "./youtube-embed";
-import { validateImageFile, imageExt } from "@/lib/media/image-upload";
+import { uploadCommunityImages } from "./upload-images";
 import type { PostMeta } from "./types";
-
-const BUCKET = "community-media";
 
 export type CreatePostState =
   | { error?: string; ok?: boolean; state?: "live" | "draft" | "scheduled" }
@@ -76,24 +73,10 @@ export async function createPost(
   // Upload only after validation passes, so rejected posts leave no orphans.
   let imageUrls: string[] | null = null;
   if (valid.type === "image") {
-    for (const f of files) {
-      const err = validateImageFile(f);
-      if (err) return { error: err };
-    }
-    const admin = supabaseAdmin();
-    const urls: string[] = [];
-    for (const f of files) {
-      const ext = imageExt(f);
-      const path = `${user.id}/${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-      const { error } = await admin.storage.from(BUCKET).upload(path, f, {
-        contentType: f.type || "application/octet-stream",
-        upsert: false,
-      });
-      if (error) return { error: `Upload failed: ${error.message}` };
-      urls.push(admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl);
-    }
+    const up = await uploadCommunityImages(user.id, files);
+    if ("error" in up) return { error: up.error };
     // Full public URLs — next.config already allows this host for next/image.
-    imageUrls = urls;
+    imageUrls = up.urls;
   }
 
   // Insert as the user: the community_posts_insert RLS policy is the final gate.
