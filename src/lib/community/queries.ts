@@ -138,6 +138,20 @@ export async function listFeed(opts: {
   return (data ?? []).map(mapRow);
 }
 
+/** A thread's notes as full feed cards, oldest → newest (the story order).
+ *  Uses the isolated community_thread RPC so a thread page never rides the main
+ *  feed's sort machinery. Viewer state resolves from auth.uid() (null = logged
+ *  out → read-only cards), same as listFeed. */
+export async function listThreadFeed(thread: string): Promise<FeedPost[]> {
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_thread", { p_thread: thread });
+  if (error) {
+    console.warn("community_thread failed:", error.message);
+    return [];
+  }
+  return (data ?? []).map(mapRow);
+}
+
 /** Resolve a post by its public_id (the routing key). */
 export async function getPostByPublicId(publicId: string): Promise<FeedPost | null> {
   const sb = await supabaseAuthServer();

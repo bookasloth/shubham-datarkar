@@ -23,7 +23,6 @@ async function listBy(col: "thread" | "version", val: string, asc: boolean): Pro
   }));
 }
 
-/** A thread arc reads oldest → newest (the story). */
-export const listThreadNotes = (thread: string) => listBy("thread", thread, true);
-/** Release notes read newest first. */
+/** Release notes read newest first. (Thread pages hydrate full cards via
+ *  listThreadFeed instead — a thread is a story, a release is a changelog list.) */
 export const listReleaseNotes = (version: string) => listBy("version", version, false);

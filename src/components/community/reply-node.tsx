@@ -35,45 +35,54 @@ export function ReplyNode({
 }) {
   const [open, setOpen] = useState(false);
 
-  // depth 1 → 0, 2 → 1, 3 → 2, capped at 2 steps. 16px on mobile, 28px ≥sm via
-  // the CSS var so the indent is gentle on a phone and clearer on desktop.
-  const step = Math.min(depth - 1, 2);
+  // depth 1 → 0, 2 → 1, 3 → 2 guide rails, capped at 2. Each rail is a column
+  // carrying a vertical connector line, Reddit-style: consecutive same-depth
+  // nodes stack their segments into one continuous line, and a deeper reply
+  // shows one more rail than its parent.
+  const rails = Math.min(depth - 1, 2);
 
   return (
-    <div
-      style={{ ["--indent" as string]: `${step}` }}
-      className="pl-[calc(var(--indent)*16px)] sm:pl-[calc(var(--indent)*28px)]"
-    >
-      {depth > 1 && parentHandle && (
-        <p className="flex items-center gap-1 pl-4 pt-2 text-xs text-muted-foreground">
-          <CornerDownRight className="size-3" />
-          replying to <span className="font-medium">@{parentHandle}</span>
-        </p>
-      )}
+    <div className="flex">
+      {Array.from({ length: rails }).map((_, i) => (
+        <div
+          key={i}
+          aria-hidden
+          className="w-4 shrink-0 border-r border-border sm:w-7"
+        />
+      ))}
 
-      {children}
+      <div className="min-w-0 flex-1">
+        {depth > 1 && parentHandle && (
+          <p className="flex items-center gap-1 pl-4 pt-2 text-xs text-muted-foreground">
+            <CornerDownRight className="size-3" />
+            replying to <span className="font-medium">@{parentHandle}</span>
+          </p>
+        )}
 
-      {canReply && (
-        <div className="pl-4">
-          {open ? (
-            <ReplyBox
-              postId={replyToId}
-              seed={viewerSeed}
-              avatarSrc={viewerAvatar}
-              placeholder={`Reply${parentHandle ? ` to @${parentHandle}` : ""}…`}
-              onDone={() => setOpen(false)}
-            />
-          ) : (
-            <button
-              type="button"
-              onClick={() => setOpen(true)}
-              className="-mt-1 mb-1 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent"
-            >
-              Reply
-            </button>
-          )}
-        </div>
-      )}
+        {children}
+
+        {canReply && (
+          <div className="pl-4">
+            {open ? (
+              <ReplyBox
+                postId={replyToId}
+                seed={viewerSeed}
+                avatarSrc={viewerAvatar}
+                placeholder={`Reply${parentHandle ? ` to @${parentHandle}` : ""}…`}
+                onDone={() => setOpen(false)}
+              />
+            ) : (
+              <button
+                type="button"
+                onClick={() => setOpen(true)}
+                className="-mt-1 mb-1 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent"
+              >
+                Reply
+              </button>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
