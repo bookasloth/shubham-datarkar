@@ -22,12 +22,19 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          // Honor "remember me": if the user opted out (sd_remember=0), keep the
+          // refreshed auth cookies session-only instead of re-persisting them.
+          const sessionOnly = request.cookies.get("sd_remember")?.value === "0";
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(
+              name,
+              value,
+              sessionOnly ? { ...options, maxAge: undefined, expires: undefined } : options,
+            ),
           );
         },
       },

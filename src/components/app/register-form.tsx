@@ -3,7 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { useActionState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail, Lock, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,7 @@ export function RegisterForm({ next = "" }: { next?: string }) {
     <div className="mx-auto w-full max-w-sm">
       <div className="mb-8 flex flex-col items-center text-center">
         <Logo showWordmark />
-        <h1 className="mt-5 text-2xl font-bold tracking-tight">Create your account</h1>
+        <h1 className="mt-5 text-3xl font-bold tracking-tight">Create your account</h1>
         <p className="mt-1 text-sm text-muted-foreground">Join in a few seconds.</p>
       </div>
 
@@ -36,12 +36,12 @@ export function RegisterForm({ next = "" }: { next?: string }) {
             <Label htmlFor="register-name">
               Name <span className="font-normal text-muted-foreground">(optional)</span>
             </Label>
-            <Input id="register-name" name="name" type="text" autoComplete="name" placeholder="Your name" autoFocus />
+            <Input id="register-name" name="name" type="text" autoComplete="name" placeholder="Your name" icon={<User />} autoFocus />
           </div>
 
           <div className="grid gap-1.5">
             <Label htmlFor="register-email">Email</Label>
-            <Input id="register-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" required />
+            <Input id="register-email" name="email" type="email" autoComplete="email" placeholder="you@example.com" icon={<Mail />} required />
           </div>
 
           <PasswordField
@@ -50,6 +50,7 @@ export function RegisterForm({ next = "" }: { next?: string }) {
             label="Password"
             autoComplete="new-password"
             placeholder="At least 8 characters"
+            icon={<Lock />}
             required
             meter
           />
@@ -60,7 +61,7 @@ export function RegisterForm({ next = "" }: { next?: string }) {
             </p>
           )}
 
-          <Button type="submit" size="lg" loading={pending} className="w-full">
+          <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
             Create account
             {!pending && <ArrowRight />}
           </Button>

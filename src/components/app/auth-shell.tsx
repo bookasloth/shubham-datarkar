@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { ShieldCheck } from "lucide-react";
 
 const LOGO_WHITE = "https://company-assets.bookasloth.in/images/sd/website/logo-white.webp";
 
@@ -14,8 +15,13 @@ const LOGO_WHITE = "https://company-assets.bookasloth.in/images/sd/website/logo-
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-[100dvh] lg:grid-cols-2">
-      <div className="flex items-center justify-center px-6 py-12 [&_input]:rounded-btn">
-        <div className="w-full max-w-sm">{children}</div>
+      <div className="flex flex-col px-6 py-8 [&_input]:rounded-btn">
+        <div className="flex flex-1 items-center justify-center">
+          <div className="w-full max-w-sm">{children}</div>
+        </div>
+        <p className="mt-6 flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="size-3.5" /> Your data is secure and private
+        </p>
       </div>
 
       <div className="relative hidden overflow-hidden bg-[#FE5100] lg:block" aria-hidden>

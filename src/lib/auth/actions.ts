@@ -1,6 +1,6 @@
 "use server";
 
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -31,12 +31,24 @@ export async function signIn(
   const email = String(formData.get("email") ?? "").trim();
   const password = String(formData.get("password") ?? "");
   const next = String(formData.get("next") ?? "");
+  // Remember me: checked (default) → persistent session; unchecked → the auth
+  // cookies become session-only. A preference cookie carries the choice so the
+  // proxy's per-request refresh doesn't re-persist a session-only login.
+  const remember = formData.get("remember") === "on";
 
   if (!email || !password) {
     return { error: "Email and password are required." };
   }
 
-  const supabase = await supabaseAuthServer();
+  const cookieStore = await cookies();
+  cookieStore.set("sd_remember", remember ? "1" : "0", {
+    httpOnly: true,
+    sameSite: "lax",
+    path: "/",
+    ...(remember ? { maxAge: 60 * 60 * 24 * 365 } : {}),
+  });
+
+  const supabase = await supabaseAuthServer({ remember });
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
