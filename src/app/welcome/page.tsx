@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
-import { Container, Section } from "@/components/layout/container";
+import { AuthShell } from "@/components/app/auth-shell";
 import { getMemberContext } from "@/lib/members/session";
 import { getActivePlans } from "@/lib/members/membership-server";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
@@ -37,16 +37,14 @@ export default async function WelcomePage({
   const plans = await getActivePlans();
 
   return (
-    <Section className="flex min-h-[80vh] items-center">
-      <Container size="narrow">
-        <WelcomeWizard
-          initialUsername={profile?.username ?? ""}
-          plans={plans}
-          email={user.email ?? undefined}
-          isPremium={role === "premium" || role === "admin"}
-          next={safeNext(next ?? null)}
-        />
-      </Container>
-    </Section>
+    <AuthShell>
+      <WelcomeWizard
+        initialUsername={profile?.username ?? ""}
+        plans={plans}
+        email={user.email ?? undefined}
+        isPremium={role === "premium" || role === "admin"}
+        next={safeNext(next ?? null)}
+      />
+    </AuthShell>
   );
 }

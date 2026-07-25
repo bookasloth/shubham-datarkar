@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { MailCheck, ExternalLink, ArrowRight } from "lucide-react";
 import { buildMetadata } from "@/lib/seo";
-import { Container, Section } from "@/components/layout/container";
+import { AuthShell } from "@/components/app/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { orderedProviders } from "@/lib/auth/mail-providers";
@@ -34,9 +34,8 @@ export default async function VerifyEmailPage({
   const skipHref = loginDestination(safeNext(next ?? null), user.email);
 
   return (
-    <Section className="flex min-h-[80vh] items-center">
-      <Container size="narrow">
-        <div className="mx-auto w-full max-w-sm">
+    <AuthShell>
+      <div className="w-full">
           <div className="mb-8 flex flex-col items-center text-center">
             <Logo />
             <MailCheck className="mt-5 size-8 text-foreground" />
@@ -78,7 +77,6 @@ export default async function VerifyEmailPage({
             </Link>
           </p>
         </div>
-      </Container>
-    </Section>
+    </AuthShell>
   );
 }
