@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
 import { notifyReply, notifyMentions } from "./community-notify";
+import { clampParentDepth } from "./reply-depth";
 import { GATE } from "./gate-messages";
 
 export type EngageResult = { ok: true } | { error: string };
@@ -226,32 +227,64 @@ export async function createReply(postId: string, body: string): Promise<EngageR
   const valid = validatePost({ type: "text", body, imageCount: 0, youtubeUrl: "" });
   if (!valid.ok) return { error: valid.error };
 
-  // 1-level threading: you may only reply to a root post.
-  const { data: parent } = await sb
-    .from("community_posts")
-    .select("id, parent_id, user_id, public_id")
-    .eq("id", postId)
-    .maybeSingle();
-  if (!parent) return { error: "That post no longer exists." };
-  if (parent.parent_id) return { error: "You can't reply to a reply." };
+  // Threading is capped at depth 3 (root → reply → reply → reply). Walk the
+  // target's ancestry to find its depth, then parent the new reply so it lands
+  // at depth ≤ 3: reply under the target when that keeps it in bounds, else
+  // re-point to the target's depth-2 ancestor so it becomes a depth-3 sibling.
+  // Silent re-parenting beats the old dead-end "you can't reply to a reply".
+  const chain = await ancestryChain(sb, postId);
+  if (chain.length === 0) return { error: "That post no longer exists." };
+  const target = chain[0]; // depth of target = chain.length - 1 (root post = 0)
+  const targetDepth = chain.length - 1;
+  // chain is target-first (depth targetDepth, …, 0). The clamped parent depth
+  // picks the ancestor to attach under so the new reply lands at depth ≤ 3.
+  const parentNode = chain[targetDepth - clampParentDepth(targetDepth)];
+  const parentId = parentNode.id;
 
   const { error: err } = await sb.from("community_posts").insert({
     user_id: user.id,
-    parent_id: postId,
+    parent_id: parentId,
     type: "text",
     body: valid.body,
   });
   if (err) return { error: err.message };
-  await notifyReply(postId, user.id, valid.body ?? "");
+  // Notify the DIRECT parent author only (whoever owns the row we attached to),
+  // never the whole ancestor chain — one email per reply.
+  await notifyReply(parentId, user.id, valid.body ?? "");
   // Exclude the parent author: notifyReply already emailed them about this same
   // reply, and mentioning them in it shouldn't earn a second copy.
   await notifyMentions(
     valid.body ?? "",
     user.id,
-    `https://shubhamdatarkar.com/community/p/${parent.public_id}`,
-    [parent.user_id as string],
+    `https://shubhamdatarkar.com/community/p/${target.public_id}`,
+    [parentNode.user_id],
   );
   revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");
   return { ok: true };
+}
+
+type AncestorRow = { id: string; user_id: string; public_id: string; parent_id: string | null };
+
+/** The target post plus its ancestors, target-first up to the root, bounded to
+ *  the 4 rows a depth-3 thread can hold. One query per hop — rare (only on a
+ *  reply write) and never more than 4 deep, so no recursive RPC is warranted. */
+async function ancestryChain(
+  sb: Awaited<ReturnType<typeof supabaseAuthServer>>,
+  postId: string,
+): Promise<AncestorRow[]> {
+  const chain: AncestorRow[] = [];
+  let cursor: string | null = postId;
+  for (let hop = 0; hop < 5 && cursor; hop++) {
+    const { data } = await sb
+      .from("community_posts")
+      .select("id, user_id, public_id, parent_id")
+      .eq("id", cursor)
+      .maybeSingle();
+    if (!data) break;
+    const row = data as AncestorRow;
+    chain.push(row);
+    cursor = row.parent_id;
+  }
+  return chain;
 }

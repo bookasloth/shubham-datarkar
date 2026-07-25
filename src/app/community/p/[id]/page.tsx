@@ -4,6 +4,7 @@ import { getShellUser } from "@/lib/app-shell/user";
 import { getPostByPublicId, listPollResults, listReplies, viewerCanPost } from "@/lib/community/queries";
 import { PostCard } from "@/components/community/post-card";
 import { ReplyBox } from "@/components/community/reply-box";
+import { ReplyNode } from "@/components/community/reply-node";
 import { ReplyPrompt } from "@/components/community/reply-prompt";
 import { MeterGate } from "@/components/community/meter-gate";
 import { buildMetadata } from "@/lib/seo";
@@ -83,9 +84,32 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
         {replies.length === 0 ? (
           <p className="px-4 py-10 text-center text-sm text-muted-foreground">No replies yet.</p>
         ) : (
-          replies.map((reply) => (
-            <PostCard key={reply.rowId} post={reply} viewerId={user?.id ?? null} />
-          ))
+          (() => {
+            // Replies arrive pre-ordered (RPC path traversal). Track the handle
+            // seen at each depth so a node's parent handle is stack[depth-1];
+            // depth-1 replies answer the root post itself.
+            const stack: string[] = [post.username];
+            return replies.map((reply) => {
+              const depth = reply.depth ?? 1;
+              stack[depth - 1] = stack[depth - 1] ?? post.username;
+              const parentHandle = stack[depth - 1] ?? post.username;
+              stack[depth] = reply.username;
+              stack.length = depth + 1; // drop stale deeper entries
+              return (
+                <ReplyNode
+                  key={reply.rowId}
+                  depth={depth}
+                  parentHandle={depth > 1 ? parentHandle : null}
+                  replyToId={reply.id}
+                  canReply={canPost}
+                  viewerSeed={shellUser?.username ?? ""}
+                  viewerAvatar={shellUser?.avatarUrl ?? null}
+                >
+                  <PostCard post={reply} viewerId={user?.id ?? null} />
+                </ReplyNode>
+              );
+            });
+          })()
         )}
       </MeterGate>
     </div>
