@@ -8,6 +8,7 @@ import { ensureShortLinks, SHORT_HOST } from "@/lib/community/short-link";
 import { BadgeTick } from "./badge-tick";
 import { CommunityAvatar } from "./community-avatar";
 import { EngagementBar } from "./engagement-bar";
+import { NoteBadges } from "./note-badges";
 import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
 import { PostCardFrame } from "./post-card-frame";
@@ -169,6 +170,8 @@ export async function PostCard({
           {post.quoted && <QuotedCard quoted={post.quoted} />}
 
           <PostTags tags={post.tags} />
+
+          <NoteBadges thread={post.thread} version={post.version} />
 
           <EngagementBar
             post={post}
