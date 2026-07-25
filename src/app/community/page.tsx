@@ -109,7 +109,14 @@ export default async function CommunityPage({
           </p>
         )
       ) : user ? (
-        <FeedStream query={{ sort, window, seed, following, tag }} initialCount={posts.length}>
+        <FeedStream
+          query={{ sort, window, seed, following, tag }}
+          initialCount={posts.length}
+          initialSince={posts[0]?.createdAt}
+          // New sort only, and not on a tag drill-down — the count RPC mirrors
+          // the main feed's filters, not the tag filter.
+          showNewPill={sort === "new" && !tag}
+        >
           {cards}
         </FeedStream>
       ) : (
