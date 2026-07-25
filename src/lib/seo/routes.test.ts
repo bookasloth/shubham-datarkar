@@ -71,8 +71,8 @@ describe("pageTypeOf", () => {
 
   it("classifies auth and account routes under public subtrees as app", () => {
     for (const route of [
-      "/games/login", "/games/profile",
-      "/members/login", "/members/account", "/members/upgrade", "/members/tools",
+      "/games/profile",
+      "/members/account", "/members/upgrade", "/members/tools",
       "/community/compose", "/community/me", "/community/bookmarks",
       "/unsubscribe", "/subscriber-assets",
     ]) {
@@ -120,7 +120,6 @@ describe("isPrivate", () => {
 
 describe("isIndexable", () => {
   it("excludes app routes", () => {
-    expect(isIndexable("/games/login")).toBe(false);
     expect(isIndexable("/members/account")).toBe(false);
     expect(isIndexable("/unsubscribe")).toBe(false);
     expect(isIndexable("/admin")).toBe(false);
@@ -154,7 +153,7 @@ describe("ROBOTS_DISALLOW_PREFIXES", () => {
   it("does NOT disallow app routes that must stay crawlable to be seen as noindex", () => {
     // Googlebot cannot read a `noindex` tag on a URL it is forbidden to fetch.
     // These are linked from public nav, so they must be crawlable AND noindexed.
-    for (const route of ["/games/login", "/members/account", "/community/compose", "/unsubscribe"]) {
+    for (const route of ["/members/account", "/community/compose", "/unsubscribe"]) {
       expect(pageTypeOf(route)).toBe("app");
       expect(ROBOTS_DISALLOW_PREFIXES.some((p) => route.startsWith(p))).toBe(false);
     }

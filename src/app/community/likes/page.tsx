@@ -9,7 +9,7 @@ export const metadata = buildMetadata({ title: "Likes", path: "/community/likes"
 
 export default async function LikesPage() {
   const { user } = await getMemberContext();
-  if (!user) redirect("/members/login?next=/community/likes");
+  if (!user) redirect("/login?next=/community/likes");
 
   const [canPost, posts] = await Promise.all([
     viewerCanPost(),

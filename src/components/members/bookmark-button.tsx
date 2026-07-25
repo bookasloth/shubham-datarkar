@@ -23,7 +23,7 @@ export function BookmarkButton({
 
   function onClick() {
     if (!signedIn) {
-      router.push(`/members/login?next=${encodeURIComponent(returnPath)}`);
+      router.push(`/login?next=${encodeURIComponent(returnPath)}`);
       return;
     }
     const next = !bookmarked;

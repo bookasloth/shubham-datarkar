@@ -24,7 +24,7 @@ export const metadata = buildMetadata({ title: "Profile", path: "/community/me",
 
 export default async function ProfilePage() {
   const { user } = await getMemberContext();
-  if (!user) redirect("/members/login?next=/community/me");
+  if (!user) redirect("/login?next=/community/me");
 
   const handle = await viewerHandle();
   if (!handle) redirect("/community");

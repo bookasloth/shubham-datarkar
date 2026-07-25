@@ -9,7 +9,7 @@ export const metadata = buildMetadata({ title: "Bookmarks", path: "/community/bo
 
 export default async function BookmarksPage() {
   const { user } = await getMemberContext();
-  if (!user) redirect("/members/login?next=/community/bookmarks");
+  if (!user) redirect("/login?next=/community/bookmarks");
 
   const [canPost, posts] = await Promise.all([
     viewerCanPost(),

@@ -87,7 +87,7 @@ export const getMemberContext = cache(async (): Promise<MemberContext> => {
 export async function requireMember(next?: string): Promise<MemberContext> {
   const ctx = await getMemberContext();
   if (!ctx.user) {
-    redirect(`/members/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
+    redirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   }
   return ctx;
 }

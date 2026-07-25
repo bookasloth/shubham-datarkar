@@ -37,8 +37,6 @@ const run = (path: string, hasUser: boolean) => {
 describe("proxy", () => {
   it.each([
     ["/admin", false, "/login"],
-    ["/games/login", true, "/games"],
-    ["/members/login", true, "/members"],
   ])("%s carries rotated auth cookies onto the redirect", async (
     path,
     hasUser,

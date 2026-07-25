@@ -4,7 +4,7 @@ import { ROBOTS_DISALLOW_PREFIXES } from "@/lib/seo/routes";
 
 export default function robots(): MetadataRoute.Robots {
   // Only the server-private subtrees are disallowed. Other app routes
-  // (/games/login, /members/account, ...) stay crawlable so Googlebot can read
+  // (/members/account, /community/compose, ...) stay crawlable so Googlebot can read
   // the `noindex` each of them serves — a disallowed URL is never fetched, so
   // its noindex is never seen, and it can still be indexed URL-only.
   const disallow = [...ROBOTS_DISALLOW_PREFIXES];
