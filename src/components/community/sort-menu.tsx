@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
+import { cn } from "@/lib/utils";
 
 const SORTS: { key: FeedSort; label: string; hint?: string }[] = [
   { key: "new", label: "New", hint: "Newest first" },
@@ -24,7 +25,15 @@ const WINDOWS: { key: FeedWindow; label: string }[] = [
   { key: "all", label: "All Time" },
 ];
 
-export function SortMenu({ sort, window }: { sort: FeedSort; window: FeedWindow }) {
+export function SortMenu({
+  sort,
+  window,
+  tab = "foryou",
+}: {
+  sort: FeedSort;
+  window: FeedWindow;
+  tab?: "foryou" | "following";
+}) {
   const router = useRouter();
   const sp = useSearchParams();
   const go = (next: Record<string, string>) => {
@@ -36,9 +45,46 @@ export function SortMenu({ sort, window }: { sort: FeedSort; window: FeedWindow 
     for (const [k, v] of Object.entries(next)) params.set(k, v);
     router.push(`/community?${params.toString()}`);
   };
+
+  const goTab = (nextTab: "foryou" | "following") => {
+    const params = new URLSearchParams(sp.toString());
+    params.delete("seed");
+    if (nextTab === "following") params.set("tab", "following");
+    else params.delete("tab");
+    router.push(`/community?${params.toString()}`);
+  };
   const current = SORTS.find((s) => s.key === sort)?.label ?? "New";
   return (
-    <div className="flex items-center gap-2 border-b border-border px-4 py-2">
+    <div>
+      {/* Tabs, not a fourth sort entry: Following is a different SET of posts,
+          and it composes with whichever sort is active. */}
+      <div className="grid grid-cols-2 border-b border-border" role="tablist">
+        {(
+          [
+            ["foryou", "For you"],
+            ["following", "Following"],
+          ] as const
+        ).map(([key, label]) => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={tab === key}
+            onClick={() => goTab(key)}
+            className={cn(
+              "relative py-3 text-sm font-medium transition-ui hover:bg-accent",
+              tab === key ? "text-foreground" : "text-muted-foreground",
+            )}
+          >
+            {label}
+            {tab === key && (
+              <span className="absolute inset-x-0 bottom-0 mx-auto h-0.5 w-14 rounded-full bg-primary" />
+            )}
+          </button>
+        ))}
+      </div>
+
+      <div className="flex items-center gap-2 border-b border-border px-4 py-2">
       <DropdownMenu>
         <DropdownMenuTrigger className="inline-flex items-center gap-1 rounded-btn px-2 py-1 text-sm font-medium transition-ui hover:bg-accent">
           {current} <ChevronDown className="size-4" />
@@ -72,6 +118,7 @@ export function SortMenu({ sort, window }: { sort: FeedSort; window: FeedWindow 
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+      </div>
     </div>
   );
 }

@@ -2,7 +2,7 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { getUserEmail } from "@/lib/email/user-email";
 import { sendTemplate } from "@/lib/email/send-template";
-import { communityWelcome, postPublished, newComment, mentioned } from "@/lib/email/templates/community";
+import { communityWelcome, postPublished, newComment, mentioned, followed } from "@/lib/email/templates/community";
 import { mentionedHandles } from "@/lib/community/linkify";
 import { claim, istParts } from "@/lib/email/dispatch/dedupe";
 
@@ -119,3 +119,27 @@ export async function notifyReply(parentPostId: string, replierUserId: string, r
     console.warn("[community] reply email failed:", (e as Error).message);
   }
 }
+
+/** Fire after a follow row is inserted. Emails the followee (never on unfollow,
+ *  and never for a re-follow of someone you already followed — toggleFollow only
+ *  calls this on the insert path). Best-effort. */
+export async function notifyFollow(followeeId: string, followerId: string): Promise<void> {
+  try {
+    if (followeeId === followerId) return;
+    const admin = supabaseAdmin();
+    const email = await getUserEmail(followeeId);
+    if (!email) return;
+
+    const { data: follower } = await admin
+      .from("profiles")
+      .select("display_name, username")
+      .eq("id", followerId)
+      .maybeSingle();
+    if (!follower?.username) return;
+    const author = follower.display_name || `@${follower.username}`;
+    await sendTemplate(email, followed({ author, href: `${SITE}/community/u/${follower.username}` }));
+  } catch (e) {
+    console.warn("[community] follow email failed:", (e as Error).message);
+  }
+}
+

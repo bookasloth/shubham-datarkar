@@ -152,6 +152,7 @@ export async function PostCard({
               <PostMenu
                 postId={post.id}
                 publicId={post.publicId}
+                authorHandle={post.username}
                 isLoggedIn={Boolean(viewerId)}
                 isOwner={viewerId === post.userId}
                 isAdmin={isAdmin}

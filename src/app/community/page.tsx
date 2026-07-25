@@ -5,6 +5,7 @@ import {
   listFeed,
   listPollResults,
   listRandomFeed,
+  listSuggestedProfiles,
   viewerCanPost,
 } from "@/lib/community/queries";
 import type { FeedSort, FeedWindow } from "@/lib/community/types";
@@ -14,6 +15,7 @@ import { PostCard } from "@/components/community/post-card";
 import { SignInWall } from "@/components/community/sign-in-wall";
 import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
 import { ComposerFab } from "@/components/community/composer-fab";
+import { SuggestedFollows } from "@/components/community/suggested-follows";
 
 const SORTS = new Set<FeedSort>(["new", "hot", "top"]);
 const WINDOWS = new Set<FeedWindow>(["all", "today", "week", "month", "year"]);
@@ -24,7 +26,7 @@ const PREVIEW = 3;
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; window?: string; seed?: string }>;
+  searchParams: Promise<{ sort?: string; window?: string; seed?: string; tab?: string }>;
 }) {
   const sp = await searchParams;
   const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "new";
@@ -41,6 +43,7 @@ export default async function CommunityPage({
     redirect(`/community?sort=hot&seed=${newSeed()}`);
   }
   const seed = clampSeed(sp.seed);
+  const following = sp.tab === "following";
 
   const { user } = await getMemberContext();
 
@@ -48,7 +51,7 @@ export default async function CommunityPage({
   // feed's job — a sort menu over three random posts is furniture.
   const [canPost, posts, shellUser] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    user ? listFeed({ sort, window, seed, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
+    user ? listFeed({ sort, window, seed, following, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
     user ? getShellUser() : Promise.resolve(null),
   ]);
   const pollResults = await listPollResults(
@@ -68,7 +71,7 @@ export default async function CommunityPage({
 
   return (
     <div>
-      {user && <SortMenu sort={sort} window={window} />}
+      {user && <SortMenu sort={sort} window={window} tab={following ? "following" : "foryou"} />}
 
       {canPost && (
         <ComposerFab name={shellUser?.displayName ?? null} username={shellUser?.username ?? null} />
@@ -80,11 +83,17 @@ export default async function CommunityPage({
       )}
 
       {posts.length === 0 ? (
-        <p className="px-4 py-16 text-center text-sm text-muted-foreground">
-          No posts yet. Be the first once posting opens.
-        </p>
+        following ? (
+          // An empty Following feed is the one empty state that can fix itself:
+          // give it handles to follow rather than a dead sentence.
+          <SuggestedFollows people={await listSuggestedProfiles(3)} />
+        ) : (
+          <p className="px-4 py-16 text-center text-sm text-muted-foreground">
+            No posts yet. Be the first once posting opens.
+          </p>
+        )
       ) : user ? (
-        <FeedStream query={{ sort, window, seed }} initialCount={posts.length}>
+        <FeedStream query={{ sort, window, seed, following }} initialCount={posts.length}>
           {cards}
         </FeedStream>
       ) : (

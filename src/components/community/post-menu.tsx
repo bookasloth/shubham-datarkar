@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { reportPost, deleteOwnPost } from "@/lib/community/engage-actions";
+import { toggleMute } from "@/lib/community/social-actions";
 import { setPostHidden, setPostDemoted, adminDeletePost } from "@/lib/community/admin-actions";
 import { usePostCardFrame } from "./post-card-frame";
 import { useToast } from "@/components/ui/toast";
@@ -17,6 +18,7 @@ import { useToast } from "@/components/ui/toast";
 export function PostMenu({
   postId,
   publicId,
+  authorHandle,
   isLoggedIn,
   isOwner,
   isAdmin = false,
@@ -24,6 +26,9 @@ export function PostMenu({
 }: {
   postId: string;
   publicId: string;
+  /** Handle of the post's AUTHOR — the mute target. On a reblog this is the
+   *  source author, which is whose posts muting actually removes. */
+  authorHandle: string;
   isLoggedIn: boolean;
   isOwner: boolean;
   isAdmin?: boolean;
@@ -92,6 +97,21 @@ export function PostMenu({
     });
   }
 
+  // Mute removes every post by this author from the feed, so unlike the other
+  // card actions it can't just hide one card — the action revalidates and the
+  // router picks up a feed without them.
+  function onMute() {
+    if (!window.confirm(`Mute @${authorHandle}? Their posts disappear from your feed. They won't be told.`)) return;
+    start(async () => {
+      const r = await toggleMute(authorHandle);
+      if ("error" in r) {
+        toast({ title: "Couldn't mute", description: r.error, variant: "danger" });
+        return;
+      }
+      router.refresh();
+    });
+  }
+
   function onDelete() {
     if (!window.confirm("Delete this post? This can't be undone.")) return;
     removeThenRun(() => deleteOwnPost(postId), "Couldn't delete the post");
@@ -149,6 +169,9 @@ export function PostMenu({
           ) : isLoggedIn ? (
             <>
               <DropdownMenuItem onClick={onReport}>Report</DropdownMenuItem>
+              {!isOwner && (
+                <DropdownMenuItem onClick={onMute}>Mute @{authorHandle}</DropdownMenuItem>
+              )}
               {isOwner && <DropdownMenuItem onClick={onDelete}>Delete</DropdownMenuItem>}
             </>
           ) : null}
