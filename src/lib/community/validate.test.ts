@@ -107,4 +107,64 @@ describe("validatePost", () => {
       });
     });
   });
+
+
+  describe("§7 composer types + fields", () => {
+    it("accepts a quote with a source", () => {
+      const r = validatePost({ ...base, type: "quote", body: "Ship it", source: "me, 3am" });
+      expect(r).toMatchObject({ ok: true, type: "quote", body: "Ship it" });
+      if (r.ok) expect(r.meta?.source).toBe("me, 3am");
+    });
+    it("rejects an empty quote", () =>
+      expect(validatePost({ ...base, type: "quote", body: "" })).toMatchObject({ ok: false }));
+
+    it("accepts a link and normalises the url into meta", () => {
+      const r = validatePost({ ...base, type: "link", body: "", linkUrl: "https://example.com/x" });
+      expect(r).toMatchObject({ ok: true, type: "link" });
+      if (r.ok) expect(r.meta?.url).toBe("https://example.com/x");
+    });
+    it("rejects a non-http link scheme", () =>
+      expect(validatePost({ ...base, type: "link", body: "", linkUrl: "javascript:alert(1)" })).toMatchObject({
+        ok: false,
+      }));
+    it("rejects a junk link", () =>
+      expect(validatePost({ ...base, type: "link", body: "", linkUrl: "not a url" })).toMatchObject({ ok: false }));
+
+    it("accepts a chat with a speaker line", () =>
+      expect(validatePost({ ...base, type: "chat", body: "Me: hi\nYou: bye" })).toMatchObject({
+        ok: true,
+        type: "chat",
+      }));
+    it("rejects a chat with no speaker lines", () =>
+      expect(validatePost({ ...base, type: "chat", body: "just a sentence" })).toMatchObject({ ok: false }));
+
+    it("keeps up to 5 clean tags, lowercased and de-hashed", () => {
+      const r = validatePost({ ...base, tags: ["#SEO", "growth", "seo"] });
+      if (r.ok) expect(r.tags).toEqual(["seo", "growth"]);
+    });
+    it("rejects a 6th tag", () =>
+      expect(validatePost({ ...base, tags: ["a", "b", "c", "d", "e", "f"] })).toMatchObject({ ok: false }));
+    it("rejects a tag with illegal characters", () =>
+      expect(validatePost({ ...base, tags: ["not a tag"] })).toMatchObject({ ok: false }));
+
+    it("carries a title and place into meta", () => {
+      const r = validatePost({ ...base, title: "Big news", place: "Nagpur" });
+      if (r.ok) expect(r.meta).toMatchObject({ title: "Big news", place: "Nagpur" });
+    });
+
+    it("defaults audience to everyone and honours followers", () => {
+      expect(validatePost(base)).toMatchObject({ audience: "everyone" });
+      expect(validatePost({ ...base, audience: "followers" })).toMatchObject({ audience: "followers" });
+      expect(validatePost({ ...base, audience: "nonsense" })).toMatchObject({ audience: "everyone" });
+    });
+
+    it("encodes draft / scheduled / now via publishAt", () => {
+      expect(validatePost({ ...base, saveDraft: true })).toMatchObject({ publishAt: null });
+      const r = validatePost({ ...base, publishAt: future });
+      if (r.ok) expect(typeof r.publishAt).toBe("string");
+      expect(validatePost(base)).toMatchObject({ publishAt: undefined });
+    });
+    it("rejects a scheduled time in the past", () =>
+      expect(validatePost({ ...base, publishAt: past })).toMatchObject({ ok: false }));
+  });
 });

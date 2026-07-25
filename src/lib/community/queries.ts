@@ -103,6 +103,7 @@ export async function listFeed(opts: {
   liked?: boolean;
   seed?: number;
   following?: boolean;
+  tag?: string;
 }): Promise<FeedPost[]> {
   // Call as the request user (cookie-scoped): the RPC derives the viewer from
   // auth.uid(), so vote/bookmark state can't be spoofed for another user.
@@ -124,6 +125,7 @@ export async function listFeed(opts: {
   // the deployed function doesn't have 404s the whole call. Only 'hot' reads it.
   if (opts.sort === "hot" && opts.seed) params.p_seed = opts.seed;
   if (opts.following) params.p_following = true;
+  if (opts.tag) params.p_tag = opts.tag;
   const { data, error } = await sb.rpc("community_feed", params);
   if (error) {
     console.warn("community_feed failed:", error.message);
@@ -265,6 +267,47 @@ export async function listAds(): Promise<AdSlot[]> {
     slot: a.slot as 1 | 2,
     imagePath: a.image_path,
     linkUrl: a.link_url,
+  }));
+}
+
+export type DraftPost = {
+  id: string;
+  publicId: string;
+  type: string;
+  body: string | null;
+  /** null = draft; ISO in the future = scheduled. */
+  publishAt: string | null;
+  createdAt: string;
+};
+
+/** The viewer's own unpublished posts — drafts (publish_at null) and scheduled
+ *  (publish_at in the future). The feed RPC filters both out, so this reads the
+ *  table directly; RLS restricts it to the caller's rows either way. */
+export async function listOwnUnpublished(): Promise<DraftPost[]> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return [];
+
+  const nowIso = new Date().toISOString();
+  const { data } = await sb
+    .from("community_posts")
+    .select("id, public_id, type, body, publish_at, created_at")
+    .eq("user_id", user.id)
+    .is("parent_id", null)
+    .is("reblog_of", null)
+    .or(`publish_at.is.null,publish_at.gt.${nowIso}`)
+    .order("created_at", { ascending: false })
+    .limit(50);
+
+  return ((data ?? []) as Record<string, unknown>[]).map((r) => ({
+    id: r.id as string,
+    publicId: String(r.public_id),
+    type: r.type as string,
+    body: (r.body as string) ?? null,
+    publishAt: (r.publish_at as string) ?? null,
+    createdAt: r.created_at as string,
   }));
 }
 
