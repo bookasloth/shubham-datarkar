@@ -41,6 +41,8 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
     viewerReblogged: Boolean(r.viewer_reblogged),
+    // Only community_replies returns depth; feed rows leave it undefined.
+    depth: r.depth != null ? (r.depth as number) : undefined,
     // Present only for a quote: the RPC populates quoted_* when this row is a
     // reblog that carries its own body. quoted_id is the SOURCE's public_id.
     quoted:

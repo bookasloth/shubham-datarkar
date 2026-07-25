@@ -13,10 +13,15 @@ export function ReplyBox({
   postId,
   seed,
   avatarSrc = null,
+  placeholder = "Post your reply",
+  onDone,
 }: {
   postId: string;
   seed: string;
   avatarSrc?: string | null;
+  placeholder?: string;
+  /** Fired after a successful post — a nested box uses it to collapse itself. */
+  onDone?: () => void;
 }) {
   const router = useRouter();
   const { toast } = useToast();
@@ -46,6 +51,7 @@ export function ReplyBox({
         toast({ title: "Reply didn't post", description: r.error, variant: "danger" });
       } else {
         setError(null);
+        onDone?.();
         // Single-post route: refetch just this thread to swap the optimistic echo
         // for the real reply and bump the parent's comment count. Cheap — one
         // post, not the feed.
@@ -70,9 +76,9 @@ export function ReplyBox({
               value={body}
               onChange={setBody}
               onEnterSubmit={submit}
-              placeholder="Post your reply"
+              placeholder={placeholder}
               maxLength={MAX}
-              aria-label="Post your reply"
+              aria-label={placeholder}
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
           </div>

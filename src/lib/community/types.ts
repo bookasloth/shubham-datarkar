@@ -71,6 +71,9 @@ export type FeedPost = {
   viewerVote: -1 | 0 | 1;
   viewerBookmarked: boolean;
   viewerReblogged: boolean;
+  /** 1-based nesting level within a thread (root reply = 1, capped at 3).
+   *  Only set by community_replies; feed rows leave it undefined. */
+  depth?: number;
   /** The embedded source of a QUOTE reblog — this row has its own body AND
    *  points at another post. Null for a plain post or a bare reblog (a bare
    *  reblog resolves to its source instead, via rebloggedBy). */
