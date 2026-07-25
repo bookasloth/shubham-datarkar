@@ -207,11 +207,21 @@ export async function viewerCanPost(): Promise<boolean> {
  *  instead of rendering an empty feed for a user who doesn't exist. */
 export async function getProfileByUsername(
   username: string,
-): Promise<{ id: string; username: string; displayName: string | null; avatarUrl: string | null; badge: Badge } | null> {
+): Promise<{
+  id: string;
+  username: string;
+  displayName: string | null;
+  avatarUrl: string | null;
+  headline: string | null;
+  coverUrl: string | null;
+  createdAt: string;
+  bio: string | null;
+  badge: Badge;
+} | null> {
   const sb = await supabaseAuthServer();
   const { data } = await sb
     .from("profiles")
-    .select("id, username, display_name, avatar_url")
+    .select("id, username, display_name, avatar_url, headline, cover_url, created_at, bio")
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!data) return null;
@@ -224,6 +234,10 @@ export async function getProfileByUsername(
     username: data.username as string,
     displayName: (data.display_name as string) ?? null,
     avatarUrl: (data.avatar_url as string) ?? null,
+    headline: (data.headline as string) ?? null,
+    coverUrl: (data.cover_url as string) ?? null,
+    createdAt: data.created_at as string,
+    bio: (data.bio as string) ?? null,
     badge: ((badge as Badge) ?? "grey") satisfies Badge,
   };
 }
@@ -482,4 +496,30 @@ export async function listSuggestedProfiles(n = 3): Promise<MiniProfile[]> {
     .in("id", ranked)
     .eq("banned", false);
   return ((people ?? []) as Record<string, unknown>[]).map(mapMini);
+}
+
+/** Image URLs the author has posted, newest first, for the Media tab. Reads the
+ *  same `images` text[] the feed shows. Excludes replies (parent_id) so the grid
+ *  mirrors the profile's post list; moderated rows are dropped by the not-null
+ *  guard below plus the feed's own moderation (best-effort — the Media grid is
+ *  cosmetic, not an access-control surface). */
+export async function listAuthorMedia(
+  userId: string,
+  limit = 24,
+): Promise<{ url: string; publicId: string }[]> {
+  const sb = await supabaseAuthServer();
+  const { data } = await sb
+    .from("community_posts")
+    .select("public_id, images, created_at")
+    .eq("user_id", userId)
+    .is("parent_id", null)
+    .not("images", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  const out: { url: string; publicId: string }[] = [];
+  for (const row of data ?? []) {
+    const imgs = (row.images as string[]) ?? [];
+    for (const url of imgs) out.push({ url, publicId: String(row.public_id) });
+  }
+  return out.slice(0, limit);
 }
