@@ -25,14 +25,16 @@ import {
 import { MentionField } from "./mention-field";
 import { cn } from "@/lib/utils";
 
+// Tumblr-style per-type colour, but on the LINEAR lucide glyphs (not solid
+// fills). One accent per format so the row reads at a glance.
 const TABS = [
-  { key: "text", label: "Text", Icon: Type },
-  { key: "image", label: "Photo", Icon: ImageIcon },
-  { key: "quote", label: "Quote", Icon: QuoteIcon },
-  { key: "link", label: "Link", Icon: Link2 },
-  { key: "chat", label: "Chat", Icon: MessagesSquare },
-  { key: "poll", label: "Poll", Icon: BarChart3 },
-  { key: "youtube", label: "Video", Icon: Video },
+  { key: "text", label: "Text", Icon: Type, color: "text-foreground" },
+  { key: "image", label: "Photo", Icon: ImageIcon, color: "text-red-500" },
+  { key: "quote", label: "Quote", Icon: QuoteIcon, color: "text-amber-500" },
+  { key: "link", label: "Link", Icon: Link2, color: "text-emerald-500" },
+  { key: "chat", label: "Chat", Icon: MessagesSquare, color: "text-sky-500" },
+  { key: "poll", label: "Poll", Icon: BarChart3, color: "text-violet-500" },
+  { key: "youtube", label: "Video", Icon: Video, color: "text-pink-500" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
@@ -143,7 +145,7 @@ export function Composer({
                   : "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
               )}
             >
-              <t.Icon className="size-5" />
+              <t.Icon className={cn("size-5", t.color)} />
               {t.label}
             </button>
           );
