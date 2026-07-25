@@ -202,7 +202,9 @@ export function AppSidebar({
               signedIn={signedIn}
               onNavigate={onNavigate}
             />
-            {active && (
+            {/* Children only for signed-in members — logged out, a section is
+                just a name that navigates, no dropdown. */}
+            {active && signedIn && (
               <SectionChildren
                 section={s}
                 pathname={pathname}
@@ -223,7 +225,7 @@ export function AppSidebar({
         signedIn={signedIn}
         onNavigate={onNavigate}
       />
-      {section === "account" && (
+      {section === "account" && signedIn && (
         <nav className="space-y-0.5 pb-1 pl-4 pt-1">
           {accountItems(isPremium).map((item) => (
             <SidebarLink
