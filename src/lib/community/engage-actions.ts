@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
+import { uploadCommunityImages } from "./upload-images";
 import { notifyReply, notifyMentions } from "./community-notify";
 import { clampParentDepth } from "./reply-depth";
 import { GATE } from "./gate-messages";
@@ -220,12 +221,26 @@ export async function voteOnPoll(postId: string, optionIndex: number): Promise<E
   return { ok: true };
 }
 
-export async function createReply(postId: string, body: string): Promise<EngageResult> {
+export async function createReply(
+  postId: string,
+  body: string,
+  images: File[] = [],
+): Promise<EngageResult> {
   const { sb, user, error } = await gate();
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
-  const valid = validatePost({ type: "text", body, imageCount: 0, youtubeUrl: "" });
+  const files = images.filter((f) => f && f.size > 0);
+  const type = files.length ? "image" : "text";
+  const valid = validatePost({ type, body, imageCount: files.length, youtubeUrl: "" });
   if (!valid.ok) return { error: valid.error };
+
+  // Upload only after validation passes, so a rejected reply leaves no orphans.
+  let imageUrls: string[] | null = null;
+  if (files.length) {
+    const up = await uploadCommunityImages(user.id, files);
+    if ("error" in up) return { error: up.error };
+    imageUrls = up.urls;
+  }
 
   // Threading is capped at depth 3 (root → reply → reply → reply). Walk the
   // target's ancestry to find its depth, then parent the new reply so it lands
@@ -244,8 +259,9 @@ export async function createReply(postId: string, body: string): Promise<EngageR
   const { error: err } = await sb.from("community_posts").insert({
     user_id: user.id,
     parent_id: parentId,
-    type: "text",
+    type,
     body: valid.body,
+    images: imageUrls,
   });
   if (err) return { error: err.message };
   // Notify the DIRECT parent author only (whoever owns the row we attached to),

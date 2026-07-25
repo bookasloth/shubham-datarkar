@@ -21,7 +21,7 @@ export function ReplyPrompt() {
     <div className="border-b border-border px-4 py-3">
       <div className="flex items-center gap-3">
         <CommunityAvatar seed="guest" size={36} />
-        <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-4 pr-1.5 transition-ui focus-within:border-brand">
+        <div className="flex flex-1 items-center gap-2 rounded-btn border border-border bg-muted/40 py-1 pl-4 pr-1.5 transition-ui focus-within:border-brand">
           <button
             type="button"
             onClick={() => setJoining(true)}
@@ -29,7 +29,7 @@ export function ReplyPrompt() {
           >
             Post your reply
           </button>
-          <Button type="button" size="sm" className="rounded-full" onClick={() => setJoining(true)}>
+          <Button type="button" size="sm" className="rounded-btn" onClick={() => setJoining(true)}>
             Reply
           </Button>
         </div>
