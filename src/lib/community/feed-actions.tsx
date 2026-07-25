@@ -2,6 +2,7 @@
 
 import { getMemberContext } from "@/lib/members/session";
 import { listFeed, listPollResults, viewerCanPost } from "@/lib/community/queries";
+import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { sanitizeQuery, type FeedQuery } from "@/lib/community/feed-query";
 import { PostCard } from "@/components/community/post-card";
 
@@ -63,4 +64,32 @@ export async function loadFeedPage(
     // end of a feed beats a phantom "caught up" on an exact multiple of the page.
     done: posts.length < safeLimit,
   };
+}
+
+/**
+ * How many feed-eligible notes arrived after `sinceIso` — the number behind the
+ * "N New Notes" pill.
+ *
+ * SECURITY — same public-endpoint discipline as loadFeedPage: signed-in only,
+ * and it hands the RPC nothing but a timestamp and a boolean. The RPC derives
+ * the viewer from auth.uid() and applies the same mute/audience/publish filters
+ * as the feed, so it can't be used to probe another viewer's feed or count
+ * hidden posts.
+ */
+export async function countNewNotes(query: FeedQuery, sinceIso: string): Promise<number> {
+  const { user } = await getMemberContext();
+  if (!user) return 0;
+
+  // Reject a junk watermark rather than trusting it into the query.
+  const since = new Date(sinceIso);
+  if (Number.isNaN(since.getTime())) return 0;
+
+  const q = sanitizeQuery(query);
+  const sb = await supabaseAuthServer();
+  const { data, error } = await sb.rpc("community_new_count", {
+    p_since: since.toISOString(),
+    p_following: q.following,
+  });
+  if (error) return 0;
+  return typeof data === "number" ? data : 0;
 }
