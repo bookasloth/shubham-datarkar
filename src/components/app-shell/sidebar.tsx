@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Home, Gem, PenSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "@/lib/auth/actions";
 import {
@@ -170,8 +171,27 @@ export function AppSidebar({
       : main;
   const account = APP_NAV.find((s) => s.key === "account")!;
 
+  // Create opens the composer; gated behind login like the composer FAB.
+  const composeHref = signedIn
+    ? "/community/compose"
+    : `/login?next=${encodeURIComponent("/community/compose")}`;
+
   return (
-    <div className="space-y-1">
+    <div className="flex h-full flex-col">
+      <div className="flex-1 space-y-1">
+      {/* Standalone Home row above the sections (Tumblr-style). */}
+      <Link
+        href="/"
+        onClick={onNavigate}
+        aria-current={pathname === "/" ? "page" : undefined}
+        className={cn(
+          "flex items-center gap-3 rounded-input px-3 py-2 text-sm font-medium transition-ui",
+          pathname === "/" ? "bg-brand text-brand-foreground" : "hover:bg-accent",
+        )}
+      >
+        <Home className="size-4" /> Home
+      </Link>
+
       {ordered.map((s) => {
         const active = s.key === section;
         return (
@@ -225,6 +245,27 @@ export function AppSidebar({
           </form>
         </nav>
       )}
+      </div>
+
+      {/* Bottom CTAs — pinned under the scrollable nav (Tumblr's Go Premium / Create). */}
+      <div className="mt-2 space-y-2 border-t border-border pt-3">
+        {!isPremium && (
+          <Link
+            href="/members/upgrade"
+            onClick={onNavigate}
+            className="flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-ui hover:bg-accent"
+          >
+            <Gem className="size-4" /> Go Premium
+          </Link>
+        )}
+        <Link
+          href={composeHref}
+          onClick={onNavigate}
+          className="flex items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
+        >
+          <PenSquare className="size-4" /> Create
+        </Link>
+      </div>
     </div>
   );
 }
