@@ -52,8 +52,8 @@
   /* Radii — exact spec: btn 4 / input 8 / card 12 / img 12 */
   --radius-btn: 4px;
   --radius-input: 8px;
-  --radius-card: 12px;
-  --radius-img: 12px;
+  --radius-card: 8px;
+  --radius-img: 8px;
 
   /* Elevation — paper floating above glass (very subtle) */
   --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.04);
