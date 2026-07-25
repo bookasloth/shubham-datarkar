@@ -5,6 +5,7 @@ import { supabaseAdmin } from "@/lib/supabase/server";
 import { validatePost } from "./validate";
 import { notifyPostCreated, notifyMentions } from "./community-notify";
 import { unfurl } from "./unfurl";
+import { youtubeEmbeddable } from "./youtube-embed";
 import { validateImageFile, imageExt } from "@/lib/media/image-upload";
 import type { PostMeta } from "./types";
 
@@ -47,6 +48,17 @@ export async function createPost(
     saveDraft: formData.get("saveDraft") === "1",
   });
   if (!valid.ok) return { error: valid.error };
+
+  // Catch an embed-disabled YouTube video at compose time, so the poster finds
+  // out now rather than seeing "Video unavailable" on their own live card. Only
+  // a definitive "disabled" blocks — the check fails open otherwise.
+  if (valid.type === "youtube" && valid.youtubeId) {
+    if (!(await youtubeEmbeddable(valid.youtubeId))) {
+      return {
+        error: "That video's owner has disabled embedding, so it can't play here. Try another link.",
+      };
+    }
+  }
 
   // Unfurl a link post server-side (SSRF-safe fetch, best-effort) and fold the
   // OG card into meta. Done here, not in validatePost, so validation stays pure.
