@@ -149,6 +149,32 @@ export function extractTweet(body: string | null | undefined): string | null {
   return line ? line.slice(0, 500) : null;
 }
 
+/** Opt-in `Thread:` line → a URL-safe slug grouping notes into one arc. Mirrors
+ *  extractTweet's single-line match; slugified so it's a clean route segment. */
+export function extractThread(body: string | null | undefined): string | null {
+  if (!body) return null;
+  const m = body.match(/^[ \t]*Thread:[ \t]*(\S.*)$/im);
+  if (!m) return null;
+  const slug = m[1]
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 48)
+    .replace(/-+$/g, "");
+  return slug || null;
+}
+
+/** Opt-in `Version:` line → a short release tag (v3.6, 3.6.1). Rejects free text
+ *  so a stray "Version: soon" never mints a bogus release view. */
+export function extractVersion(body: string | null | undefined): string | null {
+  if (!body) return null;
+  const m = body.match(/^[ \t]*Version:[ \t]*(\S.*)$/im);
+  if (!m) return null;
+  const v = m[1].trim().slice(0, 16);
+  return /^v?\d[\w.]*$/.test(v) ? v : null;
+}
+
 /**
  * `@` is stripped where it would start a word, because {title} is a PR subject
  * echoed into a public post and the feed linkifies @handles. A title like

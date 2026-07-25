@@ -78,6 +78,10 @@ export type FeedPost = {
    *  points at another post. Null for a plain post or a bare reblog (a bare
    *  reblog resolves to its source instead, via rebloggedBy). */
   quoted: QuotedPost | null;
+  /** Build-in-public spine: the feature arc this note belongs to (slug), and the
+   *  release it shipped in. Both opt-in via PR `Thread:` / `Version:` lines. */
+  thread: string | null;
+  version: string | null;
 };
 
 /** The inset card a quote reblog wraps. Deliberately thinner than FeedPost:

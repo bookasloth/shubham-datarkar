@@ -38,6 +38,10 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     // migration yet.
     meta: (r.meta as FeedPost["meta"]) ?? null,
     tags: (r.tags as string[]) ?? null,
+    // Build-in-public spine: null until the spine migration + a Thread:/Version:
+    // line tag the note. Dormant shim RPCs that don't return them → null.
+    thread: (r.thread as string) ?? null,
+    version: (r.version as string) ?? null,
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
     viewerReblogged: Boolean(r.viewer_reblogged),
