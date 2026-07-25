@@ -73,7 +73,7 @@ export default async function CommunityProfilePage({
 
       {tab === "posts" && <PostsTab profile={profile} user={user} />}
       {tab === "about" && <AboutTab profile={profile} />}
-      {tab === "media" && <MediaTab userId={profile.id} />}
+      {tab === "media" && <MediaTab userId={profile.id} user={user} username={profile.username} />}
       {tab === "network" && <NetworkTab profile={profile} social={social} />}
       {tab === "financial" && <FinancialTab />}
     </div>
@@ -158,7 +158,18 @@ function AboutTab({
   );
 }
 
-async function MediaTab({ userId }: { userId: string }) {
+async function MediaTab({
+  userId,
+  user,
+  username,
+}: {
+  userId: string;
+  user: Awaited<ReturnType<typeof getMemberContext>>["user"];
+  username: string;
+}) {
+  if (!user) {
+    return <SignInWall returnPath={`/community/u/${username}?tab=media`} />;
+  }
   const media = await listAuthorMedia(userId);
   if (media.length === 0) {
     return <p className="px-4 py-16 text-center text-sm text-muted-foreground">No media yet.</p>;
