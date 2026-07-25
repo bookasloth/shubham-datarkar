@@ -77,7 +77,7 @@ describe("buildMetadata OG overrides", () => {
   });
 
   it("noIndex still produces index:false, follow:false", () => {
-    const m = buildMetadata({ title: "Login", noIndex: true, path: "/games/login" });
+    const m = buildMetadata({ title: "Login", noIndex: true, path: "/login" });
     expect(m.robots).toEqual({ index: false, follow: false });
   });
 });

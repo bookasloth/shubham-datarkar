@@ -12,8 +12,8 @@ export type PageType = "pillar" | "hub" | "utility" | "app";
 /**
  * Subtrees that are entirely application UI, and that robots.txt disallows.
  *
- * Only these. App routes under public subtrees (`/games/login`,
- * `/members/account`) must stay crawlable: Googlebot cannot read a `noindex`
+ * Only these. App routes under public subtrees (`/members/account`,
+ * `/community/compose`) must stay crawlable: Googlebot cannot read a `noindex`
  * tag on a URL it is forbidden to fetch, so disallowing them would leave them
  * eligible for URL-only indexing from inbound links. They carry `noIndex`
  * metadata instead.
@@ -30,14 +30,12 @@ export const ROBOTS_DISALLOW_PREFIXES = [
 
 /** Application routes sitting under an otherwise-public subtree. */
 const APP_ROUTES = new Set([
-  "/games/login",
   "/games/profile",
   // `/members` itself is the member dashboard: its page calls requireMember() and
   // its layout already serves `robots: { index: false }`. Classifying it as a hub
   // put an auth-gated, noindexed page into the sitemap — the same contradiction
   // PR #109 removed everywhere else.
   "/members",
-  "/members/login",
   "/members/account",
   "/members/bookmarks",
   "/members/downloads",

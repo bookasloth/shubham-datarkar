@@ -32,7 +32,7 @@ export default async function FollowersPage({
   // and leaving it open would be a way to enumerate the membership.
   const { user } = await getMemberContext();
   if (!user)
-    redirect(`/members/login?next=/community/u/${profile.username}/followers`);
+    redirect(`/login?next=/community/u/${profile.username}/followers`);
 
   const people = await listFollowers(profile.id);
 

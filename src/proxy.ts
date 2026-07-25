@@ -86,21 +86,9 @@ export async function proxy(request: NextRequest) {
   // signed-in non-admin (games/members account — same Supabase cookie) would
   // ping-pong: /admin -> /login -> /admin. signIn() redirects to /admin itself.
 
-  // Games: bounce logged-in users away from the games login page.
-  if (path === "/games/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/games";
-    url.search = "";
-    return redirectWithCookies(url);
-  }
-
-  // Members: bounce logged-in users away from the members login page.
-  if (path === "/members/login" && user) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/members";
-    url.search = "";
-    return redirectWithCookies(url);
-  }
+  // Login is consolidated at /login (its page redirects a signed-in visitor to
+  // their destination), so the old segment-scoped /games/login and /members/login
+  // shims are gone — no bounce branches needed here.
 
   return response;
 }

@@ -37,7 +37,7 @@ export function Paywall({
             </Link>
           ) : (
             <Link
-              href={`/members/login?next=${encodeURIComponent(returnPath)}`}
+              href={`/login?next=${encodeURIComponent(returnPath)}`}
               className="rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
             >
               Sign in

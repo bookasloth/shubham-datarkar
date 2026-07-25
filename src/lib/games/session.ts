@@ -18,7 +18,7 @@ export const getGameUser = cache(async (): Promise<User | null> => {
 export async function requireGameUser(next?: string): Promise<User> {
   const user = await getGameUser();
   if (!user) {
-    redirect(`/games/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
+    redirect(`/login${next ? `?next=${encodeURIComponent(next)}` : ""}`);
   }
   return user;
 }

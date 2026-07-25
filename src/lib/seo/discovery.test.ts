@@ -45,7 +45,7 @@ describe("sitemap membership", () => {
   it("excludes auth and account routes that used to leak into the sitemap", async () => {
     const pages = await discoverPages();
     const leaked = pages.filter((p) => p.inSitemap).map((p) => p.route);
-    for (const route of ["/games/login", "/members/login", "/members/account", "/community/compose", "/unsubscribe", "/subscriber-assets"]) {
+    for (const route of ["/members/account", "/community/compose", "/unsubscribe", "/subscriber-assets"]) {
       expect(leaked).not.toContain(route);
     }
   });

@@ -8,7 +8,7 @@ export const metadata = buildMetadata({ title: "New post", path: "/community/com
 
 export default async function ComposePage() {
   const { user } = await getMemberContext();
-  if (!user) redirect("/members/login?next=/community/compose");
+  if (!user) redirect("/login?next=/community/compose");
   if (!(await viewerCanPost())) redirect("/community");
   return (
     <div>

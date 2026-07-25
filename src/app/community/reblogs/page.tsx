@@ -9,7 +9,7 @@ export const metadata = buildMetadata({ title: "Reblogs", path: "/community/rebl
 
 export default async function ReblogsPage() {
   const { user } = await getMemberContext();
-  if (!user) redirect("/members/login?next=/community/reblogs");
+  if (!user) redirect("/login?next=/community/reblogs");
 
   const [canPost, posts] = await Promise.all([
     viewerCanPost(),

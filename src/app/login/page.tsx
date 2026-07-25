@@ -20,7 +20,7 @@ export default async function LoginPage({
   const { reset, check, error, next } = await searchParams;
 
   // Already signed in? Skip the form and go straight to the destination. This
-  // is the single entry point — /members/login and /games/login redirect here.
+  // is the single login entry point for every surface (members, games, community).
   const {
     data: { user },
   } = await (await supabaseAuthServer()).auth.getUser();

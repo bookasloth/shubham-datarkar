@@ -51,7 +51,7 @@ export function KalamaiTeaser() {
             </div>
             <div className="flex shrink-0 gap-3">
               <Link
-                href="/members/login?next=/tools/kalamai"
+                href="/login?next=/tools/kalamai"
                 className="rounded-btn border border-border px-4 py-2 text-sm font-medium transition-ui hover:bg-muted"
               >
                 Sign in
