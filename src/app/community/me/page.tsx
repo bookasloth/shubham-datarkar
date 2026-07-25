@@ -6,6 +6,7 @@ import {
   getSocialCounts,
   listFeed,
   listMutedProfiles,
+  listOwnUnpublished,
   listPollResults,
   viewerCanPost,
   viewerHandle,
@@ -16,6 +17,7 @@ import { CommunityAvatar } from "@/components/community/community-avatar";
 import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
 import { PeopleList } from "@/components/community/people-list";
 import { UnmuteButton } from "@/components/community/unmute-button";
+import { DraftsList } from "@/components/community/drafts-list";
 import Link from "next/link";
 
 export const metadata = buildMetadata({ title: "Profile", path: "/community/me", noIndex: true });
@@ -34,7 +36,7 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .maybeSingle();
 
-  const [canPost, posts, total, social, muted] = await Promise.all([
+  const [canPost, posts, total, social, muted, drafts] = await Promise.all([
     viewerCanPost(),
     listFeed({ sort: "new", window: "all", author: handle, limit: FEED_PAGE }),
     // Not posts.length: that only ever counts the first page. Same bug the
@@ -42,6 +44,7 @@ export default async function ProfilePage() {
     countAuthorPosts(user.id),
     getSocialCounts(user.id),
     listMutedProfiles(),
+    listOwnUnpublished(),
   ]);
   const pollResults = await listPollResults(
     posts.filter((p) => p.type === "poll").map((p) => p.id),
@@ -80,6 +83,15 @@ export default async function ProfilePage() {
           </p>
         </div>
       </header>
+
+      {drafts.length > 0 && (
+        <section className="mb-2 border-b border-border">
+          <h2 className="px-4 pt-3 text-sm font-semibold text-muted-foreground">
+            Drafts &amp; scheduled ({drafts.length})
+          </h2>
+          <DraftsList drafts={drafts} />
+        </section>
+      )}
 
       {muted.length > 0 && (
         <section className="mb-2 border-b border-border">

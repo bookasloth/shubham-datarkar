@@ -14,6 +14,7 @@ import { SortMenu } from "@/components/community/sort-menu";
 import { PostCard } from "@/components/community/post-card";
 import { SignInWall } from "@/components/community/sign-in-wall";
 import { FeedStream, FEED_PAGE } from "@/components/community/feed-stream";
+import Link from "next/link";
 import { ComposerFab } from "@/components/community/composer-fab";
 import { SuggestedFollows } from "@/components/community/suggested-follows";
 
@@ -26,7 +27,7 @@ const PREVIEW = 3;
 export default async function CommunityPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string; window?: string; seed?: string; tab?: string }>;
+  searchParams: Promise<{ sort?: string; window?: string; seed?: string; tab?: string; tag?: string }>;
 }) {
   const sp = await searchParams;
   const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "new";
@@ -44,6 +45,10 @@ export default async function CommunityPage({
   }
   const seed = clampSeed(sp.seed);
   const following = sp.tab === "following";
+  // Tag filter (?tag=seo) — sanitized to the tag charset, else ignored.
+  const tag = typeof sp.tag === "string" && /^[a-z0-9-]{1,32}$/.test(sp.tag.toLowerCase())
+    ? sp.tag.toLowerCase()
+    : undefined;
 
   const { user } = await getMemberContext();
 
@@ -51,7 +56,7 @@ export default async function CommunityPage({
   // feed's job — a sort menu over three random posts is furniture.
   const [canPost, posts, shellUser] = await Promise.all([
     user ? viewerCanPost() : Promise.resolve(false),
-    user ? listFeed({ sort, window, seed, following, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
+    user ? listFeed({ sort, window, seed, following, tag, limit: FEED_PAGE }) : listRandomFeed(PREVIEW),
     user ? getShellUser() : Promise.resolve(null),
   ]);
   const pollResults = await listPollResults(
@@ -73,6 +78,17 @@ export default async function CommunityPage({
     <div>
       {user && <SortMenu sort={sort} window={window} tab={following ? "following" : "foryou"} />}
 
+      {tag && (
+        <div className="flex items-center justify-between border-b border-border px-4 py-2 text-sm">
+          <span>
+            Posts tagged <span className="font-semibold">#{tag}</span>
+          </span>
+          <Link href="/community" className="text-muted-foreground hover:underline">
+            Clear
+          </Link>
+        </div>
+      )}
+
       {canPost && (
         <ComposerFab name={shellUser?.displayName ?? null} username={shellUser?.username ?? null} />
       )}
@@ -93,7 +109,7 @@ export default async function CommunityPage({
           </p>
         )
       ) : user ? (
-        <FeedStream query={{ sort, window, seed, following }} initialCount={posts.length}>
+        <FeedStream query={{ sort, window, seed, following, tag }} initialCount={posts.length}>
           {cards}
         </FeedStream>
       ) : (

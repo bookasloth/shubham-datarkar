@@ -16,6 +16,8 @@ export type FeedQuery = {
   reblogged?: boolean;
   /** Following tab — the feed filtered to people the viewer follows. */
   following?: boolean;
+  /** Filter to posts carrying this tag (`?tag=seo`). */
+  tag?: string;
   /** Shuffle seed for `sort=hot`. Fixed per browsing session (it lives in the
    *  URL), which is what makes offset paging over a random order correct. */
   seed?: number;
@@ -26,6 +28,8 @@ const WINDOWS: readonly FeedWindow[] = ["all", "today", "week", "month", "year"]
 
 /** Handles are lowercase alnum plus dot/underscore/dash — real ones contain dots. */
 const HANDLE_RE = /^[a-z0-9._-]{1,64}$/;
+/** A tag slug — same charset the composer allows, capped. */
+const TAG_RE = /^[a-z0-9-]{1,32}$/;
 
 /** Postgres `int` — the seed is concatenated into hashtext() as p_seed::text,
  *  so anything outside this range is an RPC-level overflow, not a bad sort. */
@@ -57,13 +61,15 @@ export function newSeed(): number {
  */
 export function sanitizeQuery(q: FeedQuery | null | undefined): Required<
   Pick<FeedQuery, "sort" | "window" | "bookmarked" | "liked" | "reblogged" | "seed" | "following">
-> & { author?: string } {
+> & { author?: string; tag?: string } {
   const author = typeof q?.author === "string" ? q.author.toLowerCase() : undefined;
+  const tag = typeof q?.tag === "string" ? q.tag.toLowerCase() : undefined;
   return {
     seed: clampSeed(q?.seed),
     sort: SORTS.includes(q?.sort as FeedSort) ? (q!.sort as FeedSort) : "new",
     window: WINDOWS.includes(q?.window as FeedWindow) ? (q!.window as FeedWindow) : "all",
     author: author && HANDLE_RE.test(author) ? author : undefined,
+    tag: tag && TAG_RE.test(tag) ? tag : undefined,
     bookmarked: q?.bookmarked === true,
     liked: q?.liked === true,
     reblogged: q?.reblogged === true,

@@ -12,6 +12,7 @@ import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
 import { PostCardFrame } from "./post-card-frame";
 import { QuotedCard } from "./quoted-card";
+import { PostTitle, PostTags, ChatBody, QuoteBody, LinkCard } from "./post-extras";
 
 export async function PostCard({
   post,
@@ -70,7 +71,17 @@ export async function PostCard({
             <span className="text-muted-foreground">· {timeAgo(post.createdAt)}</span>
           </div>
 
-          {post.body && (
+          <PostTitle title={post.meta?.title} />
+
+          {/* Standalone quote and chat posts render their body their own way;
+              everything else (including a quote-reblog's commentary) uses the
+              tokenized paragraph. A quote-reblog has post.quoted set, so it is
+              NOT treated as a standalone quote here. */}
+          {post.type === "quote" && !post.quoted && post.body ? (
+            <QuoteBody body={post.body} source={post.meta?.source} />
+          ) : post.type === "chat" && post.body ? (
+            <ChatBody body={post.body} />
+          ) : post.body ? (
             <p className="mt-1 whitespace-pre-wrap break-words text-sm">
               {tokens.map((t, i) => {
                 if (t.type === "mention") {
@@ -99,7 +110,9 @@ export async function PostCard({
                 );
               })}
             </p>
-          )}
+          ) : null}
+
+          {post.type === "link" && post.meta ? <LinkCard meta={post.meta} /> : null}
 
           {post.type === "image" && post.images?.length ? (
             post.images.length === 1 ? (
@@ -148,6 +161,8 @@ export async function PostCard({
           ) : null}
 
           {post.quoted && <QuotedCard quoted={post.quoted} />}
+
+          <PostTags tags={post.tags} />
 
           <EngagementBar
             post={post}
