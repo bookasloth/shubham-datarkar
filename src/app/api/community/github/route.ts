@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifyGithubSignature } from "@/lib/community/auto/github-verify";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, buildBrief } from "@/lib/community/auto/pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, extractThread, extractVersion, buildBrief } from "@/lib/community/auto/pr";
 import { autoPost } from "@/lib/community/auto/post";
 import { writeNote } from "@/lib/community/auto/note-llm";
 import { pick } from "@/lib/community/auto/templates";
@@ -72,6 +72,11 @@ export async function POST(request: Request) {
     pick("pr", { title: humanizeSubject(parsePrTitle(title).subject), project });
   // Key includes the repo: PR #5 exists in every repo, and a bare `pr:5` would
   // make the second repo's PR #5 dedupe against the first and never post.
-  await autoPost({ sourceKey: `pr:${repo}#${pr.number}`, body });
+  await autoPost({
+    sourceKey: `pr:${repo}#${pr.number}`,
+    body,
+    thread: extractThread(pr.body),
+    version: extractVersion(pr.body),
+  });
   return NextResponse.json({ ok: true, posted: true });
 }
