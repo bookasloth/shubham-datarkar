@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
-import { Container, Section } from "@/components/layout/container";
+import { AuthShell } from "@/components/app/auth-shell";
 import { LoginForm } from "@/components/app/login-form";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { loginDestination, safeNext } from "@/lib/auth/redirect";
@@ -27,15 +27,13 @@ export default async function LoginPage({
   if (user) redirect(loginDestination(next ?? null, user.email));
 
   return (
-    <Section className="flex min-h-[80vh] items-center">
-      <Container size="narrow">
-        <LoginForm
-          next={safeNext(next ?? null) ?? ""}
-          check={check === "1"}
-          reset={reset === "1"}
-          errorParam={error}
-        />
-      </Container>
-    </Section>
+    <AuthShell>
+      <LoginForm
+        next={safeNext(next ?? null) ?? ""}
+        check={check === "1"}
+        reset={reset === "1"}
+        errorParam={error}
+      />
+    </AuthShell>
   );
 }

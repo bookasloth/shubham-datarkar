@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
-import { Container, Section } from "@/components/layout/container";
+import { AuthShell } from "@/components/app/auth-shell";
 import { RegisterForm } from "@/components/app/register-form";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { loginDestination, safeNext } from "@/lib/auth/redirect";
@@ -25,10 +25,8 @@ export default async function RegisterPage({
   if (user) redirect(loginDestination(next ?? null, user.email));
 
   return (
-    <Section className="flex min-h-[80vh] items-center">
-      <Container size="narrow">
-        <RegisterForm next={safeNext(next ?? null) ?? ""} />
-      </Container>
-    </Section>
+    <AuthShell>
+      <RegisterForm next={safeNext(next ?? null) ?? ""} />
+    </AuthShell>
   );
 }

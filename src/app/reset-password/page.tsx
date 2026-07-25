@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { buildMetadata } from "@/lib/seo";
-import { Container, Section } from "@/components/layout/container";
+import { AuthShell } from "@/components/app/auth-shell";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { ResetPasswordForm } from "./reset-password-form";
@@ -20,9 +20,8 @@ export default async function ResetPasswordPage({
   const { code } = await searchParams;
 
   return (
-    <Section className="flex min-h-[80vh] items-center">
-      <Container size="narrow">
-        <div className="mx-auto w-full max-w-sm">
+    <AuthShell>
+      <div className="w-full">
           <div className="mb-8 flex flex-col items-center text-center">
             <Logo showWordmark={false} />
             <h1 className="mt-5 text-2xl font-bold tracking-tight">Choose a new password</h1>
@@ -44,7 +43,6 @@ export default async function ResetPasswordPage({
             )}
           </Card>
         </div>
-      </Container>
-    </Section>
+    </AuthShell>
   );
 }
