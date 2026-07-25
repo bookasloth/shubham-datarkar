@@ -5,6 +5,7 @@ import { createReply } from "@/lib/community/engage-actions";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/toast";
 import { CommunityAvatar } from "./community-avatar";
+import { MentionField } from "./mention-field";
 
 const MAX = 500;
 
@@ -60,20 +61,21 @@ export function ReplyBox({
         {/* Pill wraps input + button so the whole row reads as one control;
             focus-within lifts the border to brand like the composer. */}
         <div className="flex flex-1 items-center gap-2 rounded-full border border-border bg-muted/40 py-1 pl-4 pr-1.5 transition-ui focus-within:border-brand">
-          <input
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                submit();
-              }
-            }}
-            placeholder="Post your reply"
-            maxLength={MAX}
-            aria-label="Post your reply"
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
+          {/* flex-1 wrapper so the mention listbox anchors to the input, not the
+              whole pill. Enter submits only when the mention list is closed —
+              the field swallows Enter while suggesting. */}
+          <div className="min-w-0 flex-1">
+            <MentionField
+              as="input"
+              value={body}
+              onChange={setBody}
+              onEnterSubmit={submit}
+              placeholder="Post your reply"
+              maxLength={MAX}
+              aria-label="Post your reply"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
           <Button
             type="button"
             size="sm"

@@ -41,6 +41,19 @@ function mapRow(r: Record<string, unknown>): FeedPost {
     viewerVote: ((r.viewer_vote as number) ?? 0) as -1 | 0 | 1,
     viewerBookmarked: Boolean(r.viewer_bookmarked),
     viewerReblogged: Boolean(r.viewer_reblogged),
+    // Present only for a quote: the RPC populates quoted_* when this row is a
+    // reblog that carries its own body. quoted_id is the SOURCE's public_id.
+    quoted:
+      r.quoted_id != null
+        ? {
+            publicId: String(r.quoted_id),
+            username: r.quoted_username as string,
+            body: (r.quoted_body as string) ?? null,
+            type: r.quoted_type as FeedPost["type"],
+            images: (r.quoted_images as string[]) ?? null,
+            createdAt: r.quoted_created_at as string,
+          }
+        : null,
   };
 }
 

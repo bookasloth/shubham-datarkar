@@ -6,6 +6,13 @@ import { cn, compactNumber } from "@/lib/utils";
 import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
 import { JoinModal } from "@/components/community/join-modal";
+import { QuoteModal } from "@/components/community/quote-modal";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { GATE } from "@/lib/community/gate-messages";
 import { useToast } from "@/components/ui/toast";
 
@@ -53,6 +60,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
   const [reblogFx, setReblogFx] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [joining, setJoining] = useState(false);
+  const [quoting, setQuoting] = useState(false);
 
   // A logged-out tap is the one "error" worth acting on rather than reporting:
   // it means someone wanted in. Everything else surfaces as a toast.
@@ -149,17 +157,26 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
           {compactNumber(post.replyCount)}
         </Link>
 
-        <button
-          type="button"
-          onClick={onReblog}
-          aria-label="Reblog"
-          aria-pressed={state.reblogged}
-          title="Reblog"
-          className={cn(ITEM, state.reblogged && "text-brand")}
-        >
-          <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
-          {compactNumber(state.reblogs)}
-        </button>
+        {/* Reblog splits into a menu: bare Reblog (instant toggle, as before) or
+            Quote (opens the composer). The pressed/filled state still tracks the
+            BARE reblog only, so the toggle never lies about a quote. */}
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Reblog or quote"
+            aria-pressed={state.reblogged}
+            title="Reblog"
+            className={cn(ITEM, state.reblogged && "text-brand")}
+          >
+            <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
+            {compactNumber(state.reblogs)}
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="start">
+            <DropdownMenuItem onClick={onReblog}>
+              {state.reblogged ? "Undo reblog" : "Reblog"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setQuoting(true)}>Quote</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
         <button
           type="button"
@@ -207,6 +224,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
       </div>
       {error && <p className="mt-1 text-xs text-danger">{error}</p>}
       <JoinModal open={joining} onOpenChange={setJoining} />
+      <QuoteModal post={post} open={quoting} onOpenChange={setQuoting} />
     </div>
   );
 }
