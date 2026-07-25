@@ -3,8 +3,8 @@ import { useActionState, useEffect, useState } from "react";
 import { X, Type, Image as ImageIcon, Video, BarChart3 } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { Dropzone } from "@/components/ui/dropzone";
+import { MentionField } from "./mention-field";
 import { cn } from "@/lib/utils";
 
 const TABS = [
@@ -98,13 +98,14 @@ export function Composer({
       </div>
 
       {type === "text" && (
-        <Textarea
+        <MentionField
+          as="textarea"
           name="body"
           value={body}
-          onChange={(e) => setBody(e.target.value)}
-          placeholder="What are you building?"
+          onChange={setBody}
+          placeholder="What are you building? Tag someone with @"
           rows={3}
-          className="resize-none"
+          className="w-full resize-none rounded-input border border-border bg-transparent px-3 py-2 text-sm focus:border-brand focus:outline-none"
         />
       )}
 

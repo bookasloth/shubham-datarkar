@@ -71,6 +71,22 @@ export type FeedPost = {
   viewerVote: -1 | 0 | 1;
   viewerBookmarked: boolean;
   viewerReblogged: boolean;
+  /** The embedded source of a QUOTE reblog — this row has its own body AND
+   *  points at another post. Null for a plain post or a bare reblog (a bare
+   *  reblog resolves to its source instead, via rebloggedBy). */
+  quoted: QuotedPost | null;
+};
+
+/** The inset card a quote reblog wraps. Deliberately thinner than FeedPost:
+ *  the embed is non-interactive except a click-through, so it carries only what
+ *  it renders. `publicId` is the source's permalink key. */
+export type QuotedPost = {
+  publicId: string;
+  username: string;
+  body: string | null;
+  type: PostType;
+  images: string[] | null;
+  createdAt: string;
 };
 
 export type AdSlot = { slot: 1 | 2; imagePath: string | null; linkUrl: string | null };

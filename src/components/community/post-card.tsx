@@ -11,6 +11,7 @@ import { EngagementBar } from "./engagement-bar";
 import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
 import { PostCardFrame } from "./post-card-frame";
+import { QuotedCard } from "./quoted-card";
 
 export async function PostCard({
   post,
@@ -145,6 +146,8 @@ export async function PostCard({
               <Poll post={post} result={pollResult} canVote={canVote} closed={post.pollClosed} />
             </div>
           ) : null}
+
+          {post.quoted && <QuotedCard quoted={post.quoted} />}
 
           <EngagementBar
             post={post}

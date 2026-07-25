@@ -101,6 +101,55 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
   return { ok: true };
 }
 
+/**
+ * Quote reblog — a reblog row that carries the quoter's own words.
+ *
+ * Unlike toggleReblog this is NOT idempotent: you may quote the same post more
+ * than once (each quote is a distinct comment on it), so it always inserts and
+ * there is no toggle. The bare-reblog button's filled state keeps reflecting
+ * bare reblogs only, so the toggle never lies about a quote.
+ */
+export async function createQuote(postId: string, body: string): Promise<EngageResult> {
+  const { sb, user, error } = await gate();
+  if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
+
+  // A quote must say something — reuse the text-post rules (500 cap, non-empty,
+  // blocklist). The DB row is type 'quote'; validation only vets the body.
+  const valid = validatePost({ type: "text", body, imageCount: 0, youtubeUrl: "" });
+  if (!valid.ok) return { error: valid.error };
+
+  // The source must exist and be a real root/quotable post. Quoting a reblog
+  // points at the reblog's source instead, so one level of nesting renders.
+  const { data: source } = await sb
+    .from("community_posts")
+    .select("id, reblog_of, hidden, public_id, user_id, body")
+    .eq("id", postId)
+    .maybeSingle();
+  if (!source || source.hidden) return { error: "That post no longer exists." };
+  // Quoting a quote/reblog: attach to the ultimate source so the embed is one
+  // level deep, matching the render (the spec's "collapse to a link" rule).
+  const target = source.reblog_of ?? source.id;
+
+  const { error: err } = await sb.from("community_posts").insert({
+    user_id: user.id,
+    type: "quote",
+    reblog_of: target,
+    body: valid.body,
+  });
+  if (err) return { error: err.message };
+
+  // Same notify contract as a reply/mention: tell the quoted author, and anyone
+  // @-mentioned in the quote body, once each.
+  await notifyMentions(
+    valid.body ?? "",
+    user.id,
+    `https://shubhamdatarkar.com/community/p/${source.public_id}`,
+    [source.user_id as string],
+  );
+  revalidatePath("/community");
+  return { ok: true };
+}
+
 /** Report a post. Deliberately does NOT require community_can_post — a banned
  *  user must still be able to report abuse. */
 export async function reportPost(postId: string, reason: string): Promise<EngageResult> {
