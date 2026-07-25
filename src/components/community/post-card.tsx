@@ -172,6 +172,7 @@ export async function PostCard({
 
           <EngagementBar
             post={post}
+            showCounts={viewerId === post.userId}
             endSlot={
               <PostMenu
                 postId={post.id}

@@ -54,7 +54,17 @@ function reduce(s: Engagement, a: Action): Engagement {
   return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? s.reblogs - 1 : s.reblogs + 1 };
 }
 
-export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: React.ReactNode }) {
+export function EngagementBar({
+  post,
+  endSlot,
+  showCounts = false,
+}: {
+  post: FeedPost;
+  endSlot?: React.ReactNode;
+  /** Render the like/reblog/reply/bookmark numerals. Only the post's own author
+   *  sees them — everyone else gets the icons alone (no metrics theater). */
+  showCounts?: boolean;
+}) {
   const { toast } = useToast();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
@@ -154,7 +164,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
       <div className="flex items-center justify-between">
         <Link href={`/community/p/${post.publicId}`} className={ITEM} aria-label="Comments" title="Comments">
           <MessagesSquare className="size-4" />
-          {compactNumber(post.replyCount)}
+          {showCounts && compactNumber(post.replyCount)}
         </Link>
 
         {/* Reblog splits into a menu: bare Reblog (instant toggle, as before) or
@@ -168,7 +178,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
             className={cn(ITEM, state.reblogged && "text-brand")}
           >
             <Repeat2 className={cn("size-4", reblogFx && "animate-reblog-spin")} />
-            {compactNumber(state.reblogs)}
+            {showCounts && compactNumber(state.reblogs)}
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuItem onClick={onReblog}>
@@ -201,7 +211,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
               ))}
             </span>
           )}
-          {compactNumber(state.up)}
+          {showCounts && compactNumber(state.up)}
         </button>
 
         <button
@@ -213,7 +223,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
           className={cn(ITEM, state.marked && "text-brand")}
         >
           <Bookmark className={cn("size-4", state.marked && "fill-current animate-pop")} />
-          {compactNumber(state.bookmarks)}
+          {showCounts && compactNumber(state.bookmarks)}
         </button>
 
         <Link href="/support" className={ITEM} aria-label="Award this post" title="Award">
