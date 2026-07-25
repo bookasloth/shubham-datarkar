@@ -253,7 +253,7 @@ export function AppSidebar({
           <Link
             href="/members/upgrade"
             onClick={onNavigate}
-            className="flex items-center justify-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-medium transition-ui hover:bg-accent"
+            className="flex items-center justify-center gap-2 rounded-btn border border-border px-4 py-2 text-sm font-medium transition-ui hover:bg-accent"
           >
             <Gem className="size-4" /> Go Premium
           </Link>
@@ -261,7 +261,7 @@ export function AppSidebar({
         <Link
           href={composeHref}
           onClick={onNavigate}
-          className="flex items-center justify-center gap-2 rounded-full bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
+          className="flex items-center justify-center gap-2 rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
         >
           <PenSquare className="size-4" /> Create
         </Link>
