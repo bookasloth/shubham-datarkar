@@ -15,7 +15,8 @@ const H = 600;
  */
 export function CrosshairGrid({
   cell = 50,
-  circles = true,
+  // Grid/calendar style: no circles by default — just the grid lines.
+  circles = false,
   draw = true,
   trigger = "inView",
   className,

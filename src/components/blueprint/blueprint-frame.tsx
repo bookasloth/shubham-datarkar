@@ -22,7 +22,8 @@ function Corner({ className }: { className?: string }) {
  */
 export function BlueprintFrame({
   variant = "dashed",
-  markers = true,
+  // Grid/calendar style: plain framed box, no blueprint `+` corner ticks.
+  markers = false,
   className,
   children,
 }: {
