@@ -24,8 +24,8 @@ type View = "signin" | "magic";
 
 /** Per-view chrome. */
 const HEADINGS: Record<View, { title: string; sub: string; wordmark: boolean }> = {
-  signin: { title: "Welcome back", sub: "Sign in to your account.", wordmark: false },
-  magic: { title: "Sign in with a link", sub: "We'll email you a one-time link.", wordmark: false },
+  signin: { title: "Welcome back", sub: "Sign in to your account.", wordmark: true },
+  magic: { title: "Sign in with a link", sub: "We'll email you a one-time link.", wordmark: true },
 };
 
 export function LoginForm({
