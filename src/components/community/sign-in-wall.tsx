@@ -13,9 +13,11 @@ export function SignInWall({ returnPath }: { returnPath: string }) {
   const login = `/login?next=${encodeURIComponent(returnPath)}`;
   const register = `/register?next=${encodeURIComponent(returnPath)}`;
   return (
-    <div className="relative -mt-24 pt-24">
-      {/* Sits above the feed's last card and dissolves it into the page. */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-transparent to-background" />
+    <div className="relative -mt-28 pt-14">
+      {/* Rides up over the last preview card so the box covers its bottom edge —
+          pulled up 112px, padded down 56px, so the card overlaps by ~56px. The
+          gradient fades the exposed slice of the note into the card above it. */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-transparent to-background" />
 
       <div className="flex flex-col items-center rounded-card border border-border bg-card px-6 py-10 text-center shadow-xs">
         <div className="flex size-12 items-center justify-center rounded-card bg-muted">
