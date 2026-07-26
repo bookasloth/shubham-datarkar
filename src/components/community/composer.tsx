@@ -4,11 +4,11 @@ import {
   X,
   Type,
   Image as ImageIcon,
-  Video,
   BarChart3,
   Quote as QuoteIcon,
   Link2,
   MessagesSquare,
+  ListChecks,
   Smile,
   MapPin,
   CalendarClock,
@@ -34,18 +34,35 @@ const TABS = [
   { key: "link", label: "Link", Icon: Link2, color: "text-emerald-500" },
   { key: "chat", label: "Chat", Icon: MessagesSquare, color: "text-sky-500" },
   { key: "poll", label: "Poll", Icon: BarChart3, color: "text-violet-500" },
-  { key: "youtube", label: "Video", Icon: Video, color: "text-pink-500" },
+  { key: "quiz", label: "Quiz", Icon: ListChecks, color: "text-pink-500" },
 ] as const;
 type TabKey = (typeof TABS)[number]["key"];
 
 // Types that take a title and support the emoji picker on their main text field.
 const TITLED: TabKey[] = ["text", "quote", "link", "chat"];
 
-const EMOJI = ["😀", "😂", "🔥", "🎉", "💡", "🚀", "👀", "❤️", "😅", "🙌", "🤔", "😎", "👍", "💯", "✨", "🧠"];
+const EMOJI = [
+  // smileys & people
+  "😀","😃","😄","😁","😆","😅","😂","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤗","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃",
+  // gestures & body
+  "👋","🤚","🖐️","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🙏","💪","🦾","✍️","🤳","💅",
+  // hearts & symbols
+  "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","💯","💥","💫","⭐","🌟","✨","⚡","🔥","🌈","☀️","🌙","💧","🎉","🎊","🎁","🏆","🥇","🎯","🚀","💡","🧠","👀","🙈","🙉","🙊","💬","💭","👑","💎","🔔","📌","📍","✅","❌","❓","❗","➕","➖","💰","📈","📉","🕹️","🎮","🎲","🎵","🎶","📚","✏️","🔗","⏰","🗓️",
+  // food & drink
+  "☕","🍵","🍺","🍻","🥂","🍷","🍕","🍔","🍟","🌮","🍩","🍪","🎂","🍰","🍫","🍿","🍎","🍌","🥑","🌶️","🧊",
+  // animals & nature
+  "🐶","🐱","🦊","🐼","🐨","🦁","🐯","🦄","🐢","🐝","🦋","🌸","🌷","🌻","🌵","🍀","🌿","🌊","🏔️",
+];
 
 const MAX = 500;
 const MAX_OPTIONS = 4;
 const MAX_TAGS = 5;
+
+/** Pull #hashtags out of the body text so they post as tags, like every other
+ *  social app. Lowercased, deduped by the caller, capped to the tag charset. */
+function extractHashtags(text: string): string[] {
+  return Array.from(text.matchAll(/#([a-z0-9_-]{1,32})/gi), (m) => m[1].toLowerCase());
+}
 
 const inputCls =
   "w-full rounded-input border border-border bg-transparent px-3 py-1.5 text-sm focus:border-brand focus:outline-none";
@@ -67,7 +84,6 @@ export function Composer({
   const [type, setType] = useState<TabKey>("text");
   const [body, setBody] = useState(initialBody ?? "");
   const [options, setOptions] = useState<string[]>(["", ""]);
-  const [quiz, setQuiz] = useState(false);
   const [correct, setCorrect] = useState<number | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [tagDraft, setTagDraft] = useState("");
@@ -109,13 +125,29 @@ export function Composer({
   const canEmoji = TITLED.includes(type) || type === "image";
 
   return (
-    <form ref={formRef} action={formAction} className="border-b border-border px-4 py-3">
-      <input type="hidden" name="type" value={type} />
+    <form
+      ref={formRef}
+      action={formAction}
+      className="border-b border-border px-4 py-3"
+      // Every rounded-* utility reads these vars, so overriding them here caps
+      // the radius of every control in the composer at 2px.
+      style={{
+        ["--radius-input" as string]: "2px",
+        ["--radius-btn" as string]: "2px",
+        ["--radius-card" as string]: "2px",
+        ["--radius-img" as string]: "2px",
+      }}
+    >
+      <input type="hidden" name="type" value={type === "quiz" ? "poll" : type} />
       <input type="hidden" name="saveDraft" ref={draftRef} value="" />
-      {type === "poll" && <input type="hidden" name="pollMode" value={quiz ? "quiz" : "poll"} />}
-      {tags.map((t) => (
-        <input key={t} type="hidden" name="tags" value={t} />
-      ))}
+      {(type === "poll" || type === "quiz") && (
+        <input type="hidden" name="pollMode" value={type === "quiz" ? "quiz" : "poll"} />
+      )}
+      {Array.from(new Set([...tags, ...extractHashtags(body)]))
+        .slice(0, MAX_TAGS)
+        .map((t) => (
+          <input key={t} type="hidden" name="tags" value={t} />
+        ))}
 
       <div className="mb-3">
         <h2 className="text-base font-semibold text-foreground">
@@ -152,12 +184,18 @@ export function Composer({
         })}
       </div>
 
+      {/* Fixed-height editor area so switching formats doesn't jump the card. */}
+      <div className="min-h-[200px]">
+      <div className={cn("mb-1 text-right text-xs", over ? "text-danger" : "text-muted-foreground")}>
+        {body.length}/{MAX}
+      </div>
       {showTitle && (
         <input
           type="text"
           name="title"
           maxLength={120}
-          placeholder="Title (optional)"
+          placeholder="Title"
+          required
           className={cn(inputCls, "mb-2 font-medium")}
         />
       )}
@@ -235,42 +273,8 @@ export function Composer({
         </div>
       )}
 
-      {type === "youtube" && (
+      {(type === "poll" || type === "quiz") && (
         <div className="space-y-2">
-          <input type="url" name="youtubeUrl" placeholder="https://youtube.com/watch?v=..." className={inputCls} />
-          <input
-            type="text"
-            name="body"
-            value={body}
-            onChange={(e) => setBody(e.target.value)}
-            maxLength={MAX}
-            placeholder="Add a caption…"
-            className={inputCls}
-          />
-        </div>
-      )}
-
-      {type === "poll" && (
-        <div className="space-y-2">
-          <div className="grid grid-cols-2 gap-1 rounded-card border border-border p-1">
-            {([false, true] as const).map((q) => (
-              <button
-                key={String(q)}
-                type="button"
-                onClick={() => setQuiz(q)}
-                aria-pressed={quiz === q}
-                className={cn(
-                  "rounded-btn px-3 py-1.5 text-sm transition-ui",
-                  quiz === q
-                    ? "bg-foreground font-medium text-background"
-                    : "text-muted-foreground hover:bg-accent",
-                )}
-              >
-                {q ? "Quiz" : "Poll"}
-              </button>
-            ))}
-          </div>
-
           <input
             type="text"
             name="body"
@@ -283,7 +287,7 @@ export function Composer({
 
           {options.map((o, i) => (
             <div key={i} className="flex items-center gap-2">
-              {quiz && (
+              {type === "quiz" && (
                 <input
                   type="radio"
                   name="pollCorrect"
@@ -326,7 +330,7 @@ export function Composer({
             </button>
           )}
 
-          {quiz && (
+          {type === "quiz" && (
             <p className="text-xs text-muted-foreground">Pick the radio next to the correct answer.</p>
           )}
 
@@ -374,6 +378,8 @@ export function Composer({
         </div>
       </div>
 
+      </div>
+
       {/* Emoji + location row */}
       <div className="mt-2 flex items-center gap-2">
         {canEmoji && (
@@ -384,7 +390,7 @@ export function Composer({
             >
               <Smile className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="grid grid-cols-8 gap-0.5 p-1">
+            <DropdownMenuContent align="start" className="grid max-h-64 w-[288px] grid-cols-8 gap-0.5 overflow-y-auto p-1">
               {EMOJI.map((e) => (
                 <button
                   key={e}
@@ -424,9 +430,6 @@ export function Composer({
 
       <div className="mt-3 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className={cn("text-xs", over ? "text-danger" : "text-muted-foreground")}>
-            {body.length}/{MAX}
-          </span>
           {/* Audience only bites once Follow exists (it does, PR B) — a
               followers-only post is hidden from everyone else in the feed RPC. */}
           <select
@@ -435,8 +438,8 @@ export function Composer({
             aria-label="Who can see this"
             className="rounded-btn border border-border bg-transparent px-2 py-1 text-xs text-foreground focus:border-brand focus:outline-none"
           >
-            <option value="everyone">For everyone</option>
-            <option value="followers">Followers only</option>
+            <option value="everyone">Everyone</option>
+            <option value="followers">Followers</option>
           </select>
         </div>
 
@@ -468,7 +471,19 @@ export function Composer({
             ? "Saved to drafts."
             : state.state === "scheduled"
               ? "Scheduled."
-              : "Posted."}
+              : state.publicId ? (
+                  <>
+                    Your post is live.{" "}
+                    <a
+                      href={`/community/p/${state.publicId}`}
+                      className="font-medium underline underline-offset-2"
+                    >
+                      View post
+                    </a>
+                  </>
+                ) : (
+                  "Your post is live."
+                )}
         </p>
       )}
     </form>

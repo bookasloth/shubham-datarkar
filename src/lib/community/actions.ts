@@ -8,7 +8,7 @@ import { uploadCommunityImages } from "./upload-images";
 import type { PostMeta } from "./types";
 
 export type CreatePostState =
-  | { error?: string; ok?: boolean; state?: "live" | "draft" | "scheduled" }
+  | { error?: string; ok?: boolean; state?: "live" | "draft" | "scheduled"; publicId?: string }
   | undefined;
 
 export async function createPost(
@@ -107,7 +107,11 @@ export async function createPost(
 
   revalidatePath("/community");
   revalidatePath("/community/me");
-  return { ok: true, state: isLive ? "live" : valid.publishAt === null ? "draft" : "scheduled" };
+  return {
+    ok: true,
+    state: isLive ? "live" : valid.publishAt === null ? "draft" : "scheduled",
+    publicId: inserted?.public_id != null ? String(inserted.public_id) : undefined,
+  };
 }
 
 /** Publish a draft/scheduled post now: flip publish_at to now(). This is a state
