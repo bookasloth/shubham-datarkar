@@ -40,7 +40,7 @@ export function ResetPasswordForm({ code }: { code: string }) {
         </p>
       )}
 
-      <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
+      <Button type="submit" size="lg" loading={pending} className="w-full">
         Update password
         {!pending && <ArrowRight />}
       </Button>

@@ -61,7 +61,7 @@ export function RegisterForm({ next = "" }: { next?: string }) {
             </p>
           )}
 
-          <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
+          <Button type="submit" size="lg" loading={pending} className="w-full">
             Create account
             {!pending && <ArrowRight />}
           </Button>

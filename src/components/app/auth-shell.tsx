@@ -24,9 +24,9 @@ export function AuthShell({ children }: { children: ReactNode }) {
         </p>
       </div>
 
-      <div className="relative hidden overflow-hidden bg-[#FE5100] lg:block" aria-hidden>
+      <div className="relative hidden overflow-hidden bg-[#0f0f10] lg:block" aria-hidden>
         <svg
-          className="absolute inset-0 h-full w-full text-white"
+          className="absolute inset-0 h-full w-full text-[#FE5100]"
           viewBox="0 0 400 600"
           preserveAspectRatio="xMidYMid slice"
           fill="none"

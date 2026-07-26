@@ -203,7 +203,7 @@ function CredentialsForm({
         </p>
       )}
 
-      <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
+      <Button type="submit" size="lg" loading={pending} className="w-full">
         Sign in
         {!pending && <ArrowRight />}
       </Button>

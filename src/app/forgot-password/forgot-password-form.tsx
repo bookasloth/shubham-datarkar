@@ -50,7 +50,7 @@ export function ForgotPasswordForm() {
         </p>
       )}
 
-      <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
+      <Button type="submit" size="lg" loading={pending} className="w-full">
         Send reset link
         {!pending && <ArrowRight />}
       </Button>
