@@ -84,7 +84,7 @@ const nextConfig: NextConfig = {
       "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://www.openstreetmap.org",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com",
-      "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube-nocookie.com https://www.openstreetmap.org",
+      "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://www.openstreetmap.org",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",
