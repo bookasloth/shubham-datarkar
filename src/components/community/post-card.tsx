@@ -12,7 +12,7 @@ import { Poll } from "./poll";
 import { PostMenu } from "./post-menu";
 import { PostCardFrame } from "./post-card-frame";
 import { QuotedCard } from "./quoted-card";
-import { PostTitle, PostTags, ChatBody, QuoteBody, LinkCard } from "./post-extras";
+import { PostTitle, ChatBody, QuoteBody, LinkCard } from "./post-extras";
 
 export async function PostCard({
   post,
@@ -89,7 +89,18 @@ export async function PostCard({
                     <Link
                       key={i}
                       href={`/community/u/${t.handle}`}
-                      className="relative z-10 font-medium text-foreground hover:underline"
+                      className="relative z-10 font-medium text-[#fe4000] hover:underline"
+                    >
+                      {t.value}
+                    </Link>
+                  );
+                }
+                if (t.type === "hashtag") {
+                  return (
+                    <Link
+                      key={i}
+                      href={`/community?tag=${t.tag}`}
+                      className="relative z-10 font-medium text-[#fe4000] hover:underline"
                     >
                       {t.value}
                     </Link>
@@ -103,7 +114,7 @@ export async function PostCard({
                     href={slug ? `/s/${slug}` : t.href}
                     target="_blank"
                     rel="noopener noreferrer nofollow ugc"
-                    className="relative z-10 text-foreground underline underline-offset-2 hover:opacity-70"
+                    className="relative z-10 text-[#fe4000] underline underline-offset-2 hover:opacity-70"
                   >
                     {slug ? `${SHORT_HOST}/s/${slug}` : prettyLabel(t.href)}
                   </a>
@@ -149,8 +160,6 @@ export async function PostCard({
           ) : null}
 
           {post.quoted && <QuotedCard quoted={post.quoted} />}
-
-          <PostTags tags={post.tags} />
 
           <EngagementBar
             post={post}
