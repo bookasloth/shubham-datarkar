@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,6 +38,7 @@ export function ForgotPasswordForm() {
           type="email"
           autoComplete="email"
           placeholder="you@example.com"
+          icon={<Mail />}
           required
           autoFocus
         />
@@ -49,7 +50,7 @@ export function ForgotPasswordForm() {
         </p>
       )}
 
-      <Button type="submit" size="lg" loading={pending} className="w-full">
+      <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
         Send reset link
         {!pending && <ArrowRight />}
       </Button>

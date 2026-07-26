@@ -33,6 +33,7 @@ export function PasswordField({
   required,
   autoFocus,
   meter = false,
+  icon,
   onValueChange,
 }: {
   id: string;
@@ -43,6 +44,7 @@ export function PasswordField({
   required?: boolean;
   autoFocus?: boolean;
   meter?: boolean;
+  icon?: React.ReactNode;
   onValueChange?: (value: string) => void;
 }) {
   const [show, setShow] = React.useState(false);
@@ -69,6 +71,7 @@ export function PasswordField({
           required={required}
           autoFocus={autoFocus}
           minLength={meter ? PASSWORD_MIN : undefined}
+          icon={icon}
           className="pr-10"
           onChange={(e) => {
             setValue(e.target.value);

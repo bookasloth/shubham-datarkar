@@ -17,7 +17,7 @@ export default function ForgotPasswordPage() {
     <AuthShell>
       <div className="w-full">
           <div className="mb-8 flex flex-col items-center text-center">
-            <Logo showWordmark={false} />
+            <Logo />
             <h1 className="mt-5 text-2xl font-bold tracking-tight">Reset your password</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               We&apos;ll email you a link to set a new one.

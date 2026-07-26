@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useActionState } from "react";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/app/password-field";
 import { updatePassword, type UpdatePasswordState } from "@/lib/auth/actions";
@@ -28,6 +28,7 @@ export function ResetPasswordForm({ code }: { code: string }) {
         label="New password"
         autoComplete="new-password"
         placeholder="At least 8 characters"
+        icon={<Lock />}
         required
         autoFocus
         meter
@@ -39,7 +40,7 @@ export function ResetPasswordForm({ code }: { code: string }) {
         </p>
       )}
 
-      <Button type="submit" size="lg" loading={pending} className="w-full">
+      <Button type="submit" variant="brand" size="lg" loading={pending} className="w-full">
         Update password
         {!pending && <ArrowRight />}
       </Button>
