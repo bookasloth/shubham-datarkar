@@ -6,6 +6,20 @@ describe("tokenizeLinks", () => {
     expect(tokenizeLinks("just some words")).toEqual([{ type: "text", value: "just some words" }]);
   });
 
+  it("tokenizes a #hashtag, lowercased, and leaves trailing punctuation as text", () => {
+    expect(tokenizeLinks("love #SEO.")).toEqual([
+      { type: "text", value: "love " },
+      { type: "hashtag", tag: "seo", value: "#seo" },
+      { type: "text", value: "." },
+    ]);
+  });
+
+  it("handles a hashtag and a mention together", () => {
+    const t = tokenizeLinks("#launch by @sam");
+    expect(t[0]).toEqual({ type: "hashtag", tag: "launch", value: "#launch" });
+    expect(t.some((x) => x.type === "mention" && x.handle === "sam")).toBe(true);
+  });
+
   it("splits a URL out of surrounding text", () => {
     expect(tokenizeLinks("read https://x.com/a now")).toEqual([
       { type: "text", value: "read " },

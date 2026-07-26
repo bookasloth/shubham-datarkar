@@ -10,6 +10,8 @@ export type LinkToken =
   // it, so a caller that only special-cases links (the OG card route) renders a
   // mention as plain text instead of dropping it.
   | { type: "mention"; handle: string; value: string }
+  // `tag` is the lowercased slug; `value` is the literal "#tag" as typed.
+  | { type: "hashtag"; tag: string; value: string }
   | { type: "link"; href: string; text: string };
 
 const URL_RE = /https?:\/\/[^\s]+/g;
@@ -23,7 +25,10 @@ const TRAIL_RE = /[.,;:!?)\]}'"]+$/;
 // to "@shubham" and link to a user that doesn't exist.
 // The leading (^|\s) is what keeps "mail me at foo@bar.com" from parsing as a
 // mention of @bar.com — an @ mid-token is an email, not a handle.
-const MENTION_RE = /(^|\s)@([a-z0-9][a-z0-9._+-]{2,29})/gi;
+// One pass for both @mentions and #hashtags. `(^|\s)` keeps "foo@bar.com" from
+// matching and lets a hashtag start a word too. The captured run is validated
+// per sigil below (mentions vs the tighter hashtag charset).
+const ENTITY_RE = /(^|\s)([@#])([a-z0-9][a-z0-9._+-]{0,63})/gi;
 // A handle can't end in punctuation, so "ping @sam." mentions @sam and leaves ".".
 const HANDLE_TRAIL_RE = /[._+-]+$/;
 
@@ -50,18 +55,29 @@ export function tokenizeLinks(input: string): LinkToken[] {
  *  links, so a URL containing "/@handle" is already consumed and can't match. */
 function pushText(out: LinkToken[], value: string): void {
   let last = 0;
-  for (const m of value.matchAll(MENTION_RE)) {
+  for (const m of value.matchAll(ENTITY_RE)) {
     const lead = m[1];
+    const sigil = m[2];
     // Offset past the leading whitespace the pattern had to capture to prove the
-    // @ starts a word — that space belongs to the preceding text token.
+    // sigil starts a word — that space belongs to the preceding text token.
     const start = (m.index ?? 0) + lead.length;
-    let handle = m[2];
-    const trail = handle.match(HANDLE_TRAIL_RE)?.[0] ?? "";
-    if (trail) handle = handle.slice(0, -trail.length);
-    if (handle.length < 3) continue;
-    if (start > last) out.push({ type: "text", value: value.slice(last, start) });
-    out.push({ type: "mention", handle: handle.toLowerCase(), value: `@${handle}` });
-    last = start + 1 + handle.length;
+    if (sigil === "@") {
+      let handle = m[3];
+      const trail = handle.match(HANDLE_TRAIL_RE)?.[0] ?? "";
+      if (trail) handle = handle.slice(0, -trail.length);
+      if (handle.length < 3) continue;
+      if (start > last) out.push({ type: "text", value: value.slice(last, start) });
+      out.push({ type: "mention", handle: handle.toLowerCase(), value: `@${handle}` });
+      last = start + 1 + handle.length;
+    } else {
+      // Hashtag: only [a-z0-9_-] is a valid tag char, so cut the captured run at
+      // the first char outside it (a "." or "+" ends the tag and becomes text).
+      const tag = (m[3].match(/^[a-z0-9_-]+/i)?.[0] ?? "").toLowerCase();
+      if (!tag) continue;
+      if (start > last) out.push({ type: "text", value: value.slice(last, start) });
+      out.push({ type: "hashtag", tag, value: `#${tag}` });
+      last = start + 1 + tag.length;
+    }
   }
   if (last < value.length) out.push({ type: "text", value: value.slice(last) });
 }
