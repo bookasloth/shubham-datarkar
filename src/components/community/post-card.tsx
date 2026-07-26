@@ -141,24 +141,6 @@ export async function PostCard({
             )
           ) : null}
 
-          {post.type === "youtube" && post.youtubeId ? (
-            <div className="relative z-10 mt-2 aspect-video overflow-hidden rounded-card">
-              {/* Standard youtube.com/embed, not youtube-nocookie: the
-                  privacy-enhanced domain shows "playback on other websites has
-                  been disabled" for videos that embed fine on the normal one.
-                  rel=0 keeps related videos to the same channel. A video whose
-                  OWNER disabled embedding still can't play inline anywhere —
-                  that's a YouTube policy no domain overrides. */}
-              <iframe
-                className="h-full w-full"
-                src={`https://www.youtube.com/embed/${post.youtubeId}?rel=0`}
-                title="YouTube video"
-                loading="lazy"
-                allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          ) : null}
 
           {post.type === "poll" && post.poll ? (
             <div className="relative z-10">
