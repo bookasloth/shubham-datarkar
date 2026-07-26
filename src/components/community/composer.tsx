@@ -10,7 +10,7 @@ import {
   MessagesSquare,
   ListChecks,
   Smile,
-  Clock,
+  Check,
 } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ import { Dropzone } from "@/components/ui/dropzone";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MentionField } from "./mention-field";
@@ -84,7 +83,6 @@ export function Composer({
   const [body, setBody] = useState(initialBody ?? "");
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [correct, setCorrect] = useState<number | null>(null);
-  const [showSchedule, setShowSchedule] = useState(false);
   const draftRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -179,7 +177,7 @@ export function Composer({
       {/* Fixed-height editor area so switching formats doesn't jump the card.
           `relative` anchors the emoji picker to its bottom-right corner. */}
       <div className="relative min-h-[240px] pb-8">
-      <div className={cn("mb-1 text-right text-xs", over ? "text-danger" : "text-muted-foreground")}>
+      <div className={cn("absolute right-2 top-2 z-10 text-xs", over ? "text-danger" : "text-muted-foreground")}>
         {body.length}/{MAX}
       </div>
       {showTitle && (
@@ -200,7 +198,7 @@ export function Composer({
           value={body}
           onChange={setBody}
           placeholder="What are you building? Tag someone with @"
-          rows={3}
+          rows={8}
           className={areaCls}
         />
       )}
@@ -278,40 +276,56 @@ export function Composer({
             className={inputCls}
           />
 
-          {options.map((o, i) => (
-            <div key={i} className="flex items-center gap-2">
-              {type === "quiz" && (
+          {type === "quiz" && (
+            <p className="text-xs text-muted-foreground">Mark the correct answer with the green tick.</p>
+          )}
+
+          <div className="grid grid-cols-2 gap-2">
+            {options.map((o, i) => (
+              <div key={i} className="flex items-center gap-1">
                 <input
-                  type="radio"
-                  name="pollCorrect"
-                  value={i}
-                  checked={correct === i}
-                  onChange={() => setCorrect(i)}
-                  aria-label={`Mark option ${i + 1} correct`}
-                  className="size-4 shrink-0 accent-foreground"
+                  type="text"
+                  name="pollOptions"
+                  value={o}
+                  onChange={(e) => setOption(i, e.target.value)}
+                  maxLength={80}
+                  placeholder={`Option ${i + 1}`}
+                  className={cn(inputCls, "min-w-0 flex-1")}
                 />
-              )}
-              <input
-                type="text"
-                name="pollOptions"
-                value={o}
-                onChange={(e) => setOption(i, e.target.value)}
-                maxLength={80}
-                placeholder={`Option ${i + 1}`}
-                className={inputCls}
-              />
-              {options.length > 2 && (
-                <button
-                  type="button"
-                  aria-label={`Remove option ${i + 1}`}
-                  onClick={() => removeOption(i)}
-                  className="rounded-btn p-1 text-muted-foreground transition-ui hover:bg-accent"
-                >
-                  <X className="size-4" />
-                </button>
-              )}
-            </div>
-          ))}
+                {type === "quiz" && (
+                  <button
+                    type="button"
+                    onClick={() => setCorrect(i)}
+                    aria-label={`Mark option ${i + 1} correct`}
+                    aria-pressed={correct === i}
+                    className={cn(
+                      "flex size-6 shrink-0 items-center justify-center rounded-full border transition-ui",
+                      correct === i
+                        ? "border-green-600 bg-green-600 text-white"
+                        : "border-border text-transparent hover:text-muted-foreground",
+                    )}
+                  >
+                    <Check className="size-3.5" strokeWidth={3} />
+                  </button>
+                )}
+                {options.length > 2 && (
+                  <button
+                    type="button"
+                    aria-label={`Remove option ${i + 1}`}
+                    onClick={() => removeOption(i)}
+                    className="rounded-btn p-1 text-muted-foreground transition-ui hover:bg-accent"
+                  >
+                    <X className="size-4" />
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {/* Submit the selected correct-answer index (the tick is a button, not a radio). */}
+          {type === "quiz" && correct !== null && (
+            <input type="hidden" name="pollCorrect" value={correct} />
+          )}
 
           {options.length < MAX_OPTIONS && (
             <button
@@ -321,10 +335,6 @@ export function Composer({
             >
               Add option
             </button>
-          )}
-
-          {type === "quiz" && (
-            <p className="text-xs text-muted-foreground">Pick the radio next to the correct answer.</p>
           )}
 
           <label className="block text-xs text-muted-foreground">
@@ -340,7 +350,7 @@ export function Composer({
 
       {/* Emoji picker — bottom-right corner of the editor box. */}
       {canEmoji && (
-        <div className="absolute bottom-2 right-2 z-10">
+        <div className="absolute bottom-2 left-2 z-10">
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Add emoji"
@@ -348,7 +358,7 @@ export function Composer({
             >
               <Smile className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="grid max-h-64 w-[288px] grid-cols-8 gap-0.5 overflow-y-auto p-1">
+            <DropdownMenuContent align="start" className="grid max-h-64 w-[288px] grid-cols-8 gap-0.5 overflow-y-auto p-1">
               {EMOJI.map((e) => (
                 <button
                   key={e}
@@ -365,18 +375,6 @@ export function Composer({
       )}
       </div>
 
-
-      {/* Schedule (revealed from the Post-now menu) */}
-      {showSchedule && (
-        <label className="mt-2 block text-xs text-muted-foreground">
-          Publish at
-          <input
-            type="datetime-local"
-            name="publishAt"
-            className="mt-1 block w-full rounded-input border border-border bg-transparent px-3 py-1.5 text-sm text-foreground focus:border-brand focus:outline-none"
-          />
-        </label>
-      )}
 
       <div className="mt-3 space-y-2">
         {/* Audience only bites once Follow exists (it does, PR B) — a
@@ -395,21 +393,13 @@ export function Composer({
           Post now
         </Button>
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Schedule or save as draft"
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-btn border border-border text-sm font-medium text-foreground transition-ui hover:bg-accent"
-          >
-            <Clock className="size-4" />
-            Schedule
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-full">
-            <DropdownMenuItem onClick={() => setShowSchedule((s) => !s)}>
-              {showSchedule ? "Cancel schedule" : "Schedule…"}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={saveDraft}>Save draft</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <button
+          type="button"
+          onClick={saveDraft}
+          className="flex h-12 w-full items-center justify-center rounded-btn border border-border text-sm font-medium text-foreground transition-ui hover:bg-accent"
+        >
+          Save draft
+        </button>
       </div>
 
       {state?.error && <p className="mt-2 text-sm text-danger">{state.error}</p>}
