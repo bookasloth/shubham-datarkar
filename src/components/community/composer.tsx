@@ -10,8 +10,7 @@ import {
   MessagesSquare,
   ListChecks,
   Smile,
-  MapPin,
-  CalendarClock,
+  Clock,
 } from "lucide-react";
 import { createPost, type CreatePostState } from "@/lib/community/actions";
 import { Button } from "@/components/ui/button";
@@ -85,8 +84,6 @@ export function Composer({
   const [body, setBody] = useState(initialBody ?? "");
   const [options, setOptions] = useState<string[]>(["", ""]);
   const [correct, setCorrect] = useState<number | null>(null);
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagDraft, setTagDraft] = useState("");
   const [showSchedule, setShowSchedule] = useState(false);
   const draftRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -109,11 +106,6 @@ export function Composer({
     setCorrect((c) => (c === null ? c : c === r ? null : c > r ? c - 1 : c));
   }
 
-  function commitTag() {
-    const t = tagDraft.trim().replace(/^#/, "").toLowerCase();
-    if (t && tags.length < MAX_TAGS && !tags.includes(t)) setTags([...tags, t]);
-    setTagDraft("");
-  }
 
   // Submit as a draft: flip the hidden flag, then let the same form action run.
   function saveDraft() {
@@ -143,7 +135,7 @@ export function Composer({
       {(type === "poll" || type === "quiz") && (
         <input type="hidden" name="pollMode" value={type === "quiz" ? "quiz" : "poll"} />
       )}
-      {Array.from(new Set([...tags, ...extractHashtags(body)]))
+      {Array.from(new Set(extractHashtags(body)))
         .slice(0, MAX_TAGS)
         .map((t) => (
           <input key={t} type="hidden" name="tags" value={t} />
@@ -184,8 +176,9 @@ export function Composer({
         })}
       </div>
 
-      {/* Fixed-height editor area so switching formats doesn't jump the card. */}
-      <div className="min-h-[200px]">
+      {/* Fixed-height editor area so switching formats doesn't jump the card.
+          `relative` anchors the emoji picker to its bottom-right corner. */}
+      <div className="relative min-h-[240px] pb-8">
       <div className={cn("mb-1 text-right text-xs", over ? "text-danger" : "text-muted-foreground")}>
         {body.length}/{MAX}
       </div>
@@ -345,52 +338,17 @@ export function Composer({
         </div>
       )}
 
-      {/* Tags */}
-      <div className="mt-3">
-        <div className="flex flex-wrap items-center gap-1.5">
-          {tags.map((t) => (
-            <span
-              key={t}
-              className="inline-flex items-center gap-1 rounded-full bg-accent px-2 py-0.5 text-xs text-foreground"
-            >
-              #{t}
-              <button type="button" aria-label={`Remove tag ${t}`} onClick={() => setTags(tags.filter((x) => x !== t))}>
-                <X className="size-3" />
-              </button>
-            </span>
-          ))}
-          {tags.length < MAX_TAGS && (
-            <input
-              type="text"
-              value={tagDraft}
-              onChange={(e) => setTagDraft(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === "," || e.key === " ") {
-                  e.preventDefault();
-                  commitTag();
-                }
-              }}
-              onBlur={commitTag}
-              placeholder={tags.length ? "add tag" : "#add tags"}
-              className="min-w-[80px] flex-1 bg-transparent text-xs outline-none placeholder:text-muted-foreground"
-            />
-          )}
-        </div>
-      </div>
-
-      </div>
-
-      {/* Emoji + location row */}
-      <div className="mt-2 flex items-center gap-2">
-        {canEmoji && (
+      {/* Emoji picker — bottom-right corner of the editor box. */}
+      {canEmoji && (
+        <div className="absolute bottom-2 right-2 z-10">
           <DropdownMenu>
             <DropdownMenuTrigger
               aria-label="Add emoji"
-              className="rounded-btn p-1.5 text-muted-foreground transition-ui hover:bg-accent"
+              className="rounded-btn p-1.5 text-muted-foreground transition-ui hover:bg-accent hover:text-foreground"
             >
               <Smile className="size-4" />
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="grid max-h-64 w-[288px] grid-cols-8 gap-0.5 overflow-y-auto p-1">
+            <DropdownMenuContent align="end" className="grid max-h-64 w-[288px] grid-cols-8 gap-0.5 overflow-y-auto p-1">
               {EMOJI.map((e) => (
                 <button
                   key={e}
@@ -403,18 +361,10 @@ export function Composer({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        )}
-        <span className="inline-flex flex-1 items-center gap-1.5 rounded-input border border-border px-2 focus-within:border-brand">
-          <MapPin className="size-3.5 text-muted-foreground" />
-          <input
-            type="text"
-            name="place"
-            maxLength={60}
-            placeholder="Add location (optional)"
-            className="flex-1 bg-transparent py-1 text-xs outline-none placeholder:text-muted-foreground"
-          />
-        </span>
+        </div>
+      )}
       </div>
+
 
       {/* Schedule (revealed from the Post-now menu) */}
       {showSchedule && (
@@ -428,40 +378,38 @@ export function Composer({
         </label>
       )}
 
-      <div className="mt-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          {/* Audience only bites once Follow exists (it does, PR B) — a
-              followers-only post is hidden from everyone else in the feed RPC. */}
-          <select
-            name="audience"
-            defaultValue="everyone"
-            aria-label="Who can see this"
-            className="rounded-btn border border-border bg-transparent px-2 py-1 text-xs text-foreground focus:border-brand focus:outline-none"
-          >
-            <option value="everyone">Everyone</option>
-            <option value="followers">Followers</option>
-          </select>
-        </div>
+      <div className="mt-3 space-y-2">
+        {/* Audience only bites once Follow exists (it does, PR B) — a
+            followers-only post is hidden from everyone else in the feed RPC. */}
+        <select
+          name="audience"
+          defaultValue="everyone"
+          aria-label="Who can see this"
+          className="rounded-btn border border-border bg-transparent px-2 py-1 text-xs text-foreground focus:border-brand focus:outline-none"
+        >
+          <option value="everyone">Everyone</option>
+          <option value="followers">Followers</option>
+        </select>
 
-        <div className="flex items-center">
-          <Button type="submit" size="sm" loading={pending} disabled={over} className="rounded-r-none">
-            Post now
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger
-              aria-label="More post options"
-              className="flex h-8 items-center rounded-r-btn border-l border-background/20 bg-foreground px-1.5 text-background"
-            >
-              <CalendarClock className="size-4" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setShowSchedule((s) => !s)}>
-                {showSchedule ? "Cancel schedule" : "Schedule…"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={saveDraft}>Save draft</DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        <Button type="submit" size="lg" loading={pending} disabled={over} className="w-full">
+          Post now
+        </Button>
+
+        <DropdownMenu>
+          <DropdownMenuTrigger
+            aria-label="Schedule or save as draft"
+            className="flex h-12 w-full items-center justify-center gap-2 rounded-btn border border-border text-sm font-medium text-foreground transition-ui hover:bg-accent"
+          >
+            <Clock className="size-4" />
+            Schedule
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-full">
+            <DropdownMenuItem onClick={() => setShowSchedule((s) => !s)}>
+              {showSchedule ? "Cancel schedule" : "Schedule…"}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={saveDraft}>Save draft</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {state?.error && <p className="mt-2 text-sm text-danger">{state.error}</p>}
