@@ -72,12 +72,15 @@ export function Composer({
   username,
   onPosted,
   initialBody,
+  initialTitle,
 }: {
   name?: string | null;
   username?: string | null;
   onPosted?: () => void;
   /** Seeds the box — used by /community?compose=, e.g. a shared game result. */
   initialBody?: string;
+  /** Seeds the title field — game shares split title from body. */
+  initialTitle?: string;
 }) {
   const [type, setType] = useState<TabKey>("text");
   const [body, setBody] = useState(initialBody ?? "");
@@ -187,6 +190,7 @@ export function Composer({
           maxLength={120}
           placeholder="Title"
           required
+          defaultValue={initialTitle}
           className={cn(inputCls, "mb-2 font-medium")}
         />
       )}

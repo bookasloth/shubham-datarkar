@@ -16,6 +16,7 @@ export function ComposerFab({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [seed, setSeed] = useState("");
+  const [seedTitle, setSeedTitle] = useState("");
   // Where to send the player after they post — the game's "Share to Community"
   // link carries ?returnTo=/games/<slug>/leaderboard.
   const [returnTo, setReturnTo] = useState<string | null>(null);
@@ -28,10 +29,14 @@ export function ComposerFab({
     const text = params.get("compose");
     const rt = params.get("returnTo");
     // Same-origin paths only — never redirect off-site from a URL param.
+    // Mount-only URL-param read — deriving initial state, not a render loop.
+    /* eslint-disable react-hooks/set-state-in-effect */
     if (rt && rt.startsWith("/") && !rt.startsWith("//")) setReturnTo(rt);
     if (!text) return;
     setSeed(text);
+    setSeedTitle(params.get("composeTitle") ?? "");
     setOpen(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
     // Drop the param so a refresh (or a back-nav) doesn't re-open the sheet.
     window.history.replaceState(null, "", window.location.pathname);
   }, []);
@@ -64,7 +69,7 @@ export function ComposerFab({
         >
           <DialogTitle className="sr-only">Compose post</DialogTitle>
           {/* key: remount when the seed arrives so useState picks the new initial body up */}
-          <Composer key={seed} name={name} username={username} initialBody={seed} onPosted={afterPosted} />
+          <Composer key={seed} name={name} username={username} initialBody={seed} initialTitle={seedTitle} onPosted={afterPosted} />
         </DialogContent>
       </Dialog>
     </>

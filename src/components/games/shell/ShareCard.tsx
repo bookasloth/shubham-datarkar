@@ -5,6 +5,8 @@ import { Check, Copy, Download, Share2, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   buildShareText,
+  buildShareBody,
+  shareTitle,
   gameLeaderboardUrl,
   gameShareUrl,
   type ShareInput,
@@ -56,7 +58,9 @@ export function ShareCard({ share }: { share: ShareInput }) {
   const text = buildShareText(share);
   const url = gameShareUrl(share.game);
   const enc = encodeURIComponent(text);
-  const community = `/community?compose=${enc}&returnTo=${encodeURIComponent(gameLeaderboardUrl(share.game))}`;
+  // Community gets title + body split (composer has its own title field) plus a
+  // hashtagged "Try now" line; other targets keep the one plain-text string.
+  const community = `/community?compose=${encodeURIComponent(buildShareBody(share))}&composeTitle=${encodeURIComponent(shareTitle(share))}&returnTo=${encodeURIComponent(gameLeaderboardUrl(share.game))}`;
 
   const [copied, setCopied] = useState(false);
   // The PNG is rendered on demand — only when an image button is pressed — and
