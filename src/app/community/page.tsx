@@ -31,7 +31,7 @@ export default async function CommunityPage({
   searchParams: Promise<{ sort?: string; window?: string; seed?: string; tab?: string; tag?: string }>;
 }) {
   const sp = await searchParams;
-  const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "new";
+  const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "hot";
   const window: FeedWindow = WINDOWS.has(sp.window as FeedWindow)
     ? (sp.window as FeedWindow)
     : "all";
