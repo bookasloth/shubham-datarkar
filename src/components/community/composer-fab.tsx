@@ -61,6 +61,10 @@ export function ComposerFab({
         {/* Mobile: bottom sheet (full-width, anchored bottom, flat bottom corners).
             sm+: reverts to the default centered modal. */}
         <DialogContent
+          // Don't discard a half-written post on a stray click/Escape — only the
+          // X button closes the composer.
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
           className={cn(
             "max-h-[90dvh] overflow-y-auto p-0",
             "bottom-0 left-0 top-auto w-full max-w-none translate-x-0 translate-y-0 rounded-b-none rounded-t-card",
