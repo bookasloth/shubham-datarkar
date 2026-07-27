@@ -43,3 +43,15 @@ export function shareTitle(i: ShareInput): string {
 export function buildShareText(i: ShareInput): string {
   return `${shareTitle(i)}\n${i.grid}\n\nTry now at ${gameShareUrl(i.game)}`;
 }
+
+/** Game name as a single hashtag: "Hit and Blow" → "#HitandBlow". */
+export function gameHashtag(game: GameKey): string {
+  const name = gameByKey(game)?.name ?? "Game";
+  return `#${name.replace(/\s+/g, "")}`;
+}
+
+/** Community-post body: grid + a hashtagged "Try now" line. The title rides
+ *  separately (the composer has its own title field). */
+export function buildShareBody(i: ShareInput): string {
+  return `${i.grid}\n\nTry now ${gameHashtag(i.game)} at ${gameShareUrl(i.game)}`;
+}

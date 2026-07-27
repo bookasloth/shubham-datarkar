@@ -1,6 +1,17 @@
 import { describe, it, expect } from "vitest";
-import { buildShareText, gameLeaderboardUrl, gameShareUrl } from "@/lib/games/share";
+import { buildShareText, buildShareBody, gameHashtag, gameLeaderboardUrl, gameShareUrl } from "@/lib/games/share";
 import { GAMES } from "@/lib/games/registry";
+
+describe("community share (title/body split)", () => {
+  it("body is grid + a hashtagged Try-now line, no title", () => {
+    expect(
+      buildShareBody({ game: "alfazy", puzzleNumber: 87, status: "won", tries: 5, maxGuesses: 6, grid: "GRID" }),
+    ).toBe("GRID\n\nTry now #Alfazy at https://shubhamdatarkar.com/g/alfz");
+  });
+  it("collapses spaces in the game name to one hashtag", () => {
+    expect(gameHashtag("hit_and_blow")).toBe("#HitandBlow");
+  });
+});
 
 describe("buildShareText", () => {
   it("reads as a solve, with the score, grid and link", () => {
