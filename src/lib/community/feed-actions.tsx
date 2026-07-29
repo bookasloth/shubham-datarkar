@@ -57,6 +57,9 @@ export async function loadFeedPage(
         pollResult={pollResults[post.id]}
         canVote={canPost}
         viewerId={user.id}
+        // On the bookmarks list, un-bookmarking pulls the card. Keyed off the
+        // sanitized query so appended pages behave like the first one.
+        removeOnUnbookmark={q.bookmarked === true}
       />
     )),
     // A short page means the source is exhausted; a full one might be the last,

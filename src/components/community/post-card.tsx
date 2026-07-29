@@ -20,6 +20,7 @@ export async function PostCard({
   canVote = false,
   viewerId = null,
   standalone = false,
+  removeOnUnbookmark = false,
 }: {
   post: FeedPost;
   pollResult?: PollResult;
@@ -28,6 +29,8 @@ export async function PostCard({
   /** The root card on a single-post page. Deleting it navigates away instead of
    *  hiding it in place (hiding would leave the page's replies orphaned). */
   standalone?: boolean;
+  /** On /community/bookmarks, un-bookmarking removes the card. */
+  removeOnUnbookmark?: boolean;
 }) {
   // Cached per request (getAdminUser is React.cache) — one auth check per render
   // regardless of how many cards map over it.
@@ -163,6 +166,7 @@ export async function PostCard({
 
           <EngagementBar
             post={post}
+            removeOnUnbookmark={removeOnUnbookmark}
             endSlot={
               <PostMenu
                 postId={post.id}

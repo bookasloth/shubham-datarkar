@@ -8,6 +8,7 @@ import type { FeedPost } from "@/lib/community/types";
 import { toggleVote, toggleBookmark, toggleReblog } from "@/lib/community/engage-actions";
 import { JoinModal } from "@/components/community/join-modal";
 import { QuoteModal } from "@/components/community/quote-modal";
+import { usePostCardFrame } from "./post-card-frame";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,26 +38,45 @@ type Engagement = {
 
 type Action = { kind: "vote"; value: 1 | -1 } | { kind: "bookmark" } | { kind: "reblog" };
 
+// Every count floors at 0. A post can carry viewer state (marked / reblogged /
+// voted) whose stored counter is already 0 — the DB counters floor at 0 via
+// `greatest(0, …)`, so with >1 actor a post can read count 0 while you still
+// hold a row. Un-toggling then subtracts from 0; without this clamp the card
+// flashes -1.
+const dn = (n: number) => Math.max(0, n - 1);
+
 function reduce(s: Engagement, a: Action): Engagement {
   if (a.kind === "vote") {
     const v = a.value;
     if (s.vote === v) {
       // clicking the same arrow again removes the vote
-      return { ...s, vote: 0, up: v === 1 ? s.up - 1 : s.up, down: v === -1 ? s.down - 1 : s.down };
+      return { ...s, vote: 0, up: v === 1 ? dn(s.up) : s.up, down: v === -1 ? dn(s.down) : s.down };
     }
     if (s.vote === 0) {
       return { ...s, vote: v, up: v === 1 ? s.up + 1 : s.up, down: v === -1 ? s.down + 1 : s.down };
     }
     // switching sides moves the count across
-    return { ...s, vote: v, up: v === 1 ? s.up + 1 : s.up - 1, down: v === -1 ? s.down + 1 : s.down - 1 };
+    return { ...s, vote: v, up: v === 1 ? s.up + 1 : dn(s.up), down: v === -1 ? s.down + 1 : dn(s.down) };
   }
   if (a.kind === "bookmark")
-    return { ...s, marked: !s.marked, bookmarks: s.marked ? s.bookmarks - 1 : s.bookmarks + 1 };
-  return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? s.reblogs - 1 : s.reblogs + 1 };
+    return { ...s, marked: !s.marked, bookmarks: s.marked ? dn(s.bookmarks) : s.bookmarks + 1 };
+  return { ...s, reblogged: !s.reblogged, reblogs: s.reblogged ? dn(s.reblogs) : s.reblogs + 1 };
 }
 
-export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: React.ReactNode }) {
+export function EngagementBar({
+  post,
+  endSlot,
+  removeOnUnbookmark = false,
+}: {
+  post: FeedPost;
+  endSlot?: React.ReactNode;
+  /** On the /community/bookmarks surface, un-bookmarking must drop the card —
+   *  it no longer belongs in a list OF bookmarks. Elsewhere (the feed) it just
+   *  un-fills the icon and the post stays. */
+  removeOnUnbookmark?: boolean;
+}) {
   const { toast } = useToast();
+  const frame = usePostCardFrame();
   const [burst, setBurst] = useState<"up" | "down" | null>(null);
   const [reblogFx, setReblogFx] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +128,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
     action: Action,
     call: () => ReturnType<typeof toggleVote>,
     fields: (keyof Engagement)[],
+    onFail?: () => void,
   ) {
     const before = sRef.current;
     set(reduce(before, action)); // instant, synchronous — no flash
@@ -121,6 +142,7 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
         const rolled = { ...sRef.current };
         Object.assign(rolled, Object.fromEntries(fields.map((f) => [f, before[f]])));
         set(rolled);
+        onFail?.();
         report(r.error);
       }
     });
@@ -133,7 +155,17 @@ export function EngagementBar({ post, endSlot }: { post: FeedPost; endSlot?: Rea
   }
 
   function onBookmark() {
-    run(bmChain, { kind: "bookmark" }, () => toggleBookmark(post.id), ["marked", "bookmarks"]);
+    // On the bookmarks list, un-bookmarking pulls the card immediately (and puts
+    // it back if the write fails). The feed keeps the card either way.
+    const pulling = removeOnUnbookmark && sRef.current.marked;
+    if (pulling) frame?.remove();
+    run(
+      bmChain,
+      { kind: "bookmark" },
+      () => toggleBookmark(post.id),
+      ["marked", "bookmarks"],
+      pulling ? () => frame?.restore() : undefined,
+    );
   }
 
   function onReblog() {
