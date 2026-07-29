@@ -35,25 +35,22 @@ export function ReplyNode({
 }) {
   const [open, setOpen] = useState(false);
 
-  // depth 1 → 0, 2 → 1, 3 → 2 guide rails, capped at 2. Each rail is a column
-  // carrying a vertical connector line, Reddit-style: consecutive same-depth
-  // nodes stack their segments into one continuous line, and a deeper reply
-  // shows one more rail than its parent.
-  const rails = Math.min(depth - 1, 2);
+  // Twitter-style: a gentle single indent per level (capped at 2 so a deep
+  // thread never marches off a phone), and ONE thread line hugging the content
+  // — not an empty gutter column. `border-l` on the nested block means the line
+  // touches the reply and consecutive same-depth nodes stack into one continuous
+  // vertical line, connecting a reply to its parent instead of floating in space.
+  const step = Math.min(depth - 1, 2);
+  const nested = depth > 1;
 
   return (
-    <div className="flex">
-      {Array.from({ length: rails }).map((_, i) => (
-        <div
-          key={i}
-          aria-hidden
-          className="w-4 shrink-0 border-r border-border sm:w-7"
-        />
-      ))}
-
-      <div className="min-w-0 flex-1">
-        {depth > 1 && parentHandle && (
-          <p className="flex items-center gap-1 pl-4 pt-2 text-xs text-muted-foreground">
+    <div
+      style={{ ["--indent" as string]: `${step}` }}
+      className="ml-[calc(var(--indent)*14px)] sm:ml-[calc(var(--indent)*20px)]"
+    >
+      <div className={nested ? "border-l-2 border-border pl-2 sm:pl-3" : undefined}>
+        {nested && parentHandle && (
+          <p className="flex items-center gap-1 pl-3 pt-2 text-xs text-muted-foreground">
             <CornerDownRight className="size-3" />
             replying to <span className="font-medium">@{parentHandle}</span>
           </p>
@@ -62,7 +59,7 @@ export function ReplyNode({
         {children}
 
         {canReply && (
-          <div className="pl-4">
+          <div className="pl-3">
             {open ? (
               <ReplyBox
                 postId={replyToId}

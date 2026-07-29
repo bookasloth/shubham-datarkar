@@ -21,6 +21,7 @@ export async function PostCard({
   viewerId = null,
   standalone = false,
   removeOnUnbookmark = false,
+  flat = false,
 }: {
   post: FeedPost;
   pollResult?: PollResult;
@@ -31,6 +32,10 @@ export async function PostCard({
   standalone?: boolean;
   /** On /community/bookmarks, un-bookmarking removes the card. */
   removeOnUnbookmark?: boolean;
+  /** Thread rendering (replies): a flat row with a hairline divider instead of a
+   *  floating rounded card box, so a thread reads as one continuous Twitter-style
+   *  column rather than a stack of separate cards. */
+  flat?: boolean;
 }) {
   // Cached per request (getAdminUser is React.cache) — one auth check per render
   // regardless of how many cards map over it.
@@ -45,7 +50,13 @@ export async function PostCard({
   );
   return (
     <PostCardFrame>
-    <article className="group relative mb-3 rounded-card border border-border bg-card p-4 transition-ui hover:bg-muted/30">
+    <article
+      className={
+        flat
+          ? "group relative border-b border-border bg-card px-4 py-3 transition-ui hover:bg-muted/30"
+          : "group relative mb-3 rounded-card border border-border bg-card p-4 transition-ui hover:bg-muted/30"
+      }
+    >
       {/* Whole-card click target → single post (Twitter-style). Absolutely
           positioned and z-10 so it paints over the static header/body/media
           (and the `relative` image cells) to catch clicks anywhere on the card.
