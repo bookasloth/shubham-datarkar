@@ -105,7 +105,7 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
                   viewerSeed={shellUser?.username ?? ""}
                   viewerAvatar={shellUser?.avatarUrl ?? null}
                 >
-                  <PostCard post={reply} viewerId={user?.id ?? null} />
+                  <PostCard post={reply} viewerId={user?.id ?? null} flat />
                 </ReplyNode>
               );
             });
