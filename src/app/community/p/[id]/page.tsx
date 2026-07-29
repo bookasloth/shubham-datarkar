@@ -89,12 +89,17 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
             // seen at each depth so a node's parent handle is stack[depth-1];
             // depth-1 replies answer the root post itself.
             const stack: string[] = [post.username];
-            return replies.map((reply) => {
+            return replies.map((reply, i) => {
               const depth = reply.depth ?? 1;
               stack[depth - 1] = stack[depth - 1] ?? post.username;
               const parentHandle = stack[depth - 1] ?? post.username;
               stack[depth] = reply.username;
               stack.length = depth + 1; // drop stale deeper entries
+              // Avatar-column thread line: reach UP when this reply's parent is
+              // another reply (depth > 1; a depth-1 reply's parent is the root,
+              // which the composer separates), and DOWN when the next reply in
+              // the pre-ordered list is a child (deeper).
+              const nextDepth = replies[i + 1]?.depth ?? 0;
               return (
                 <ReplyNode
                   key={reply.rowId}
@@ -105,7 +110,13 @@ export default async function PostPage({ params }: { params: Promise<{ id: strin
                   viewerSeed={shellUser?.username ?? ""}
                   viewerAvatar={shellUser?.avatarUrl ?? null}
                 >
-                  <PostCard post={reply} viewerId={user?.id ?? null} flat />
+                  <PostCard
+                    post={reply}
+                    viewerId={user?.id ?? null}
+                    flat
+                    connectAbove={depth > 1}
+                    connectBelow={nextDepth > depth}
+                  />
                 </ReplyNode>
               );
             });

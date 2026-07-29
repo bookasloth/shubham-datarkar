@@ -22,11 +22,17 @@ export async function PostCard({
   standalone = false,
   removeOnUnbookmark = false,
   flat = false,
+  connectAbove = false,
+  connectBelow = false,
 }: {
   post: FeedPost;
   pollResult?: PollResult;
   canVote?: boolean;
   viewerId?: string | null;
+  /** Thread connector: draw the avatar-column line reaching UP to the parent. */
+  connectAbove?: boolean;
+  /** Thread connector: draw the avatar-column line reaching DOWN to a child. */
+  connectBelow?: boolean;
   /** The root card on a single-post page. Deleting it navigates away instead of
    *  hiding it in place (hiding would leave the page's replies orphaned). */
   standalone?: boolean;
@@ -76,7 +82,21 @@ export async function PostCard({
         </p>
       )}
       <div className="flex gap-3">
-        <CommunityAvatar seed={post.username} src={post.avatarUrl} size={40} />
+        {connectAbove || connectBelow ? (
+          // Twitter-style thread connector running through the avatar column:
+          // a hairline centred under the avatar, a short segment reaching up into
+          // the card above and a fill-to-bottom segment below. Consecutive
+          // replies join into one continuous avatar-to-avatar line. Flexbox keeps
+          // it centred on the avatar with no pixel-tuning. z-10 so the card-wide
+          // click overlay doesn't sit on top of the avatar link.
+          <div className="relative z-10 flex flex-col items-center">
+            <span aria-hidden className={connectAbove ? "h-2 w-0.5 bg-border" : "h-2 w-0.5"} />
+            <CommunityAvatar seed={post.username} src={post.avatarUrl} size={40} />
+            {connectBelow && <span aria-hidden className="w-0.5 flex-1 bg-border" />}
+          </div>
+        ) : (
+          <CommunityAvatar seed={post.username} src={post.avatarUrl} size={40} />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1 text-sm">
             <span className="truncate font-semibold text-foreground">{name}</span>

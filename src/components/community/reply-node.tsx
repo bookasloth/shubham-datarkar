@@ -35,51 +35,46 @@ export function ReplyNode({
 }) {
   const [open, setOpen] = useState(false);
 
-  // Twitter-style: a gentle single indent per level (capped at 2 so a deep
-  // thread never marches off a phone), and ONE thread line hugging the content
-  // — not an empty gutter column. `border-l` on the nested block means the line
-  // touches the reply and consecutive same-depth nodes stack into one continuous
-  // vertical line, connecting a reply to its parent instead of floating in space.
-  const step = Math.min(depth - 1, 2);
+  // Flat, Twitter-style: replies share ONE column so the thread line drawn in
+  // the avatar column (by PostCard's connectAbove/connectBelow) runs continuously
+  // avatar-to-avatar. No per-level indent — depth is conveyed by "replying to
+  // @handle", not by marching the card rightward. The reply affordance is
+  // aligned under the content (pl-[52px] ≈ avatar width + gap) so it doesn't
+  // sit on the thread line.
   const nested = depth > 1;
 
   return (
-    <div
-      style={{ ["--indent" as string]: `${step}` }}
-      className="ml-[calc(var(--indent)*14px)] sm:ml-[calc(var(--indent)*20px)]"
-    >
-      <div className={nested ? "border-l-2 border-border pl-2 sm:pl-3" : undefined}>
-        {nested && parentHandle && (
-          <p className="flex items-center gap-1 pl-3 pt-2 text-xs text-muted-foreground">
-            <CornerDownRight className="size-3" />
-            replying to <span className="font-medium">@{parentHandle}</span>
-          </p>
-        )}
+    <div>
+      {nested && parentHandle && (
+        <p className="flex items-center gap-1 pl-[52px] pt-2 text-xs text-muted-foreground">
+          <CornerDownRight className="size-3" />
+          replying to <span className="font-medium">@{parentHandle}</span>
+        </p>
+      )}
 
-        {children}
+      {children}
 
-        {canReply && (
-          <div className="pl-3">
-            {open ? (
-              <ReplyBox
-                postId={replyToId}
-                seed={viewerSeed}
-                avatarSrc={viewerAvatar}
-                placeholder={`Reply${parentHandle ? ` to @${parentHandle}` : ""}…`}
-                onDone={() => setOpen(false)}
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => setOpen(true)}
-                className="-mt-1 mb-1 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent"
-              >
-                Reply
-              </button>
-            )}
-          </div>
-        )}
-      </div>
+      {canReply && (
+        <div className="pl-[52px]">
+          {open ? (
+            <ReplyBox
+              postId={replyToId}
+              seed={viewerSeed}
+              avatarSrc={viewerAvatar}
+              placeholder={`Reply${parentHandle ? ` to @${parentHandle}` : ""}…`}
+              onDone={() => setOpen(false)}
+            />
+          ) : (
+            <button
+              type="button"
+              onClick={() => setOpen(true)}
+              className="-mt-1 mb-1 rounded-btn px-2 py-1 text-xs text-muted-foreground transition-ui hover:bg-accent"
+            >
+              Reply
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
