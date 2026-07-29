@@ -90,9 +90,12 @@ export async function PostCard({
           // it centred on the avatar with no pixel-tuning. z-10 so the card-wide
           // click overlay doesn't sit on top of the avatar link.
           <div className="relative z-10 flex flex-col items-center">
-            <span aria-hidden className={connectAbove ? "h-2 w-0.5 bg-border" : "h-2 w-0.5"} />
+            {/* -mt-3 / -mb-3 let the segments eat the card's py-3, so the line
+                bridges the divider and runs unbroken avatar-to-avatar (measured:
+                1px gap). h-5 above reaches the card top without moving the avatar. */}
+            <span aria-hidden className={connectAbove ? "-mt-3 h-5 w-0.5 bg-border" : "h-2 w-0.5"} />
             <CommunityAvatar seed={post.username} src={post.avatarUrl} size={40} />
-            {connectBelow && <span aria-hidden className="w-0.5 flex-1 bg-border" />}
+            {connectBelow && <span aria-hidden className="-mb-3 w-0.5 flex-1 bg-border" />}
           </div>
         ) : (
           <CommunityAvatar seed={post.username} src={post.avatarUrl} size={40} />
