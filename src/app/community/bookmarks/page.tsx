@@ -26,6 +26,7 @@ export default async function BookmarksPage() {
       pollResult={pollResults[post.id]}
       canVote={canPost}
       viewerId={user.id}
+      removeOnUnbookmark
     />
   ));
 
