@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Flame } from "lucide-react";
 import { puzzleNumberFor } from "@/lib/daily";
 import { GAMES, gameIcon } from "@/lib/games/registry";
@@ -64,8 +65,7 @@ export default async function GamesHub() {
                 </div>
               </div>
               <div className={`flex w-24 shrink-0 items-center justify-center ${g.tint}`}>
-                {/* plain <img>: CDN host is CSP-allowed but not a next/image remote pattern */}
-                <img
+                <Image
                   src={gameIcon(g.slug)}
                   alt=""
                   aria-hidden="true"

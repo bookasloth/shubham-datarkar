@@ -119,7 +119,7 @@ export default async function PersonProfilePage({ params }: { params: Promise<{ 
                   {[c.projectType, c.budget].filter(Boolean).join(" · ")}
                 </p>
               )}
-              <p className="mt-1.5 whitespace-pre-wrap text-sm text-admin-text break-words">{c.message}</p>
+              <p className="mt-1.5 whitespace-pre-wrap text-sm text-admin-text wrap-break-word">{c.message}</p>
             </div>
           ))}
         </section>
@@ -139,7 +139,7 @@ export default async function PersonProfilePage({ params }: { params: Promise<{ 
                 <StatusBadge tone={KIND_TONE[e.kind] ?? "neutral"}>{e.kind}</StatusBadge>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-admin-text">{e.title}</p>
-                  {e.detail && <p className="mt-0.5 text-sm text-admin-text-muted break-words">{e.detail}</p>}
+                  {e.detail && <p className="mt-0.5 text-sm text-admin-text-muted wrap-break-word">{e.detail}</p>}
                 </div>
                 <span className="shrink-0 text-xs text-admin-text-muted">{e.occurredAt ? formatDate(e.occurredAt) : "—"}</span>
               </li>
