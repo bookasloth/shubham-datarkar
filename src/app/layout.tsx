@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import { Suspense } from "react";
 import { Plus_Jakarta_Sans, Poppins } from "next/font/google";
 import "./globals.css";
 
@@ -9,10 +8,8 @@ import { siteGraph } from "@/lib/seo/entities";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Header } from "@/components/header";
 import { Footer } from "@/components/layout/footer";
-import { CommandMenu } from "@/components/layout/command-menu";
 import { ChromeGate } from "@/components/layout/chrome-gate";
-import { NavProgress } from "@/components/layout/nav-progress";
-import { TorchOverlay } from "@/components/layout/torch-overlay";
+import { ShellExtras } from "@/components/layout/shell-extras";
 import { ToastProvider } from "@/components/ui/toast";
 import { JsonLd } from "@/components/seo/json-ld";
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -84,10 +81,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     >
       <body className="min-h-dvh bg-background text-foreground antialiased">
         <ThemeProvider>
-          <Suspense fallback={null}>
-            <NavProgress />
-          </Suspense>
-          <TorchOverlay />
           <ToastProvider>
             {/* Accessibility: skip directly to main content */}
             <a
@@ -96,7 +89,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             >
               Skip to content
             </a>
-            <CommandMenu />
+            {/* Lazy, client-only shell widgets (SEO C1) — needs the toast/theme
+                context that CommandMenu uses, so it sits inside the providers. */}
+            <ShellExtras />
             <div className="flex min-h-dvh flex-col">
               <ChromeGate><Header /></ChromeGate>
               <main id="main" className="flex-1">
