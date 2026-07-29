@@ -16,11 +16,14 @@ const nextConfig: NextConfig = {
         hostname: "company-assets.bookasloth.in",
         pathname: "/images/**",
       },
-      // Project logos + website assets (also in the CSP img-src allowlist).
+      // Project logos, game icons + website assets (also in the CSP img-src
+      // allowlist). Our own CDN — `/**` covers /images and /logos/games (the
+      // game icons #352 moved to next/image, which the old /images-only pattern
+      // silently rejected, blanking the games page).
       {
         protocol: "https",
         hostname: "website-assets.shubhamdatarkar.com",
-        pathname: "/images/**",
+        pathname: "/**",
       },
     ],
   },
