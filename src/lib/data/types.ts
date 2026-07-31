@@ -19,7 +19,15 @@ export type SeoFields = {
 
 export type IconName = string;
 
-export type BlogCategory = "seo" | "ai" | "performance" | "content" | "saas" | "founder" | "build-in-public";
+export type BlogCategory =
+  | "seo"
+  | "ai"
+  | "performance"
+  | "content"
+  | "saas"
+  | "founder"
+  | "build-in-public"
+  | "updates";
 
 /* ------------------------------------------------------------------ */
 /*  Inline rich text — serializable spans a CMS would emit.            */
