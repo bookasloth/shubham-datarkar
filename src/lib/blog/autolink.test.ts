@@ -68,7 +68,7 @@ describe("autolinkBlocks", () => {
   it("matches a hyphenated slug tag against its natural-language form", () => {
     const idx = [{ term: "book-a-sloth", href: "/blog/build-in-public/x" }];
     const blocks: ContentBlock[] = [{ type: "p", text: "Today on Book A Sloth I broke prod." }];
-    const [b] = autolinkBlocks(blocks, idx) as [{ text: unknown }];
+    const [b] = autolinkBlocks(blocks, idx) as [{ type: string; text: unknown }];
     expect(b.text).toEqual([
       "Today on ",
       { t: "a", text: "Book A Sloth", href: "/blog/build-in-public/x" },

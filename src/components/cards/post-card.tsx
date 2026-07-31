@@ -5,6 +5,7 @@ import type { Post } from "@/lib/data/types";
 import { blogCategories } from "@/lib/data/posts";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { MonoImage } from "@/components/content/editorial-media";
 import { formatDate, readingTime } from "@/lib/utils";
 
 export function PostCard({ post }: { post: Post }) {
@@ -13,6 +14,9 @@ export function PostCard({ post }: { post: Post }) {
 
   return (
     <Card interactive className="group flex h-full flex-col p-6">
+      <div className="mb-5">
+        <MonoImage seed={post.slug} alt={post.title} ratio="16/9" />
+      </div>
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
         <Badge variant="muted">{category?.label ?? post.category}</Badge>
         <span aria-hidden>·</span>
