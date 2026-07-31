@@ -19,6 +19,7 @@ export type Capability =
   | "access_beta_features"
   | "early_access"
   | "use_kalamai"
+  | "create_challenge"
   | "admin_only";
 
 export const ALL_CAPABILITIES: Capability[] = [
@@ -27,7 +28,7 @@ export const ALL_CAPABILITIES: Capability[] = [
   "view_premium_resource", "download_assets", "download_templates",
   "access_prompt_library", "play_unlimited_games", "earn_achievements",
   "streak_history", "join_private_community", "attend_live_sessions",
-  "access_beta_features", "early_access", "use_kalamai", "admin_only",
+  "access_beta_features", "early_access", "use_kalamai", "create_challenge", "admin_only",
 ];
 
 /** Everything a plan may grant (admin_only is never plan-granted). */

@@ -40,3 +40,18 @@ export function isChallengeWin(game: ChallengeGame, fb: Feedback): boolean {
   if (fb.kind === "code") return hnb.isWin(fb.hits);
   return game === "integra" ? integra.isWin(fb.tiles) : alfazy.isWin(fb.tiles);
 }
+
+/**
+ * Pure decision: given the guess count BEFORE this guess, whether this guess
+ * ends the attempt and how. Lives here (not in the "use server" actions file,
+ * where every export must be async) so it stays importable + unit-testable.
+ */
+export function nextAttemptState(
+  prevGuesses: number,
+  isWin: boolean,
+  max: number,
+): { status: "won" | "lost" | "in_progress"; finished: boolean } {
+  if (isWin) return { status: "won", finished: true };
+  if (prevGuesses + 1 >= max) return { status: "lost", finished: true };
+  return { status: "in_progress", finished: false };
+}
