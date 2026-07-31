@@ -65,6 +65,17 @@ describe("autolinkBlocks", () => {
     expect(autolinkBlocks(blocks, index)).toEqual(blocks);
   });
 
+  it("matches a hyphenated slug tag against its natural-language form", () => {
+    const idx = [{ term: "book-a-sloth", href: "/blog/build-in-public/x" }];
+    const blocks: ContentBlock[] = [{ type: "p", text: "Today on Book A Sloth I broke prod." }];
+    const [b] = autolinkBlocks(blocks, idx) as [{ text: unknown }];
+    expect(b.text).toEqual([
+      "Today on ",
+      { t: "a", text: "Book A Sloth", href: "/blog/build-in-public/x" },
+      " I broke prod.",
+    ]);
+  });
+
   it("is a no-op with an empty index", () => {
     const blocks: ContentBlock[] = [{ type: "p", text: "supabase" }];
     expect(autolinkBlocks(blocks, [])).toBe(blocks);

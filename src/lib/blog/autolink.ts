@@ -64,7 +64,10 @@ function linkString(
 ): { nodes: InlineNode[]; linked: boolean } {
   for (const { term, href } of index) {
     if (usedHref.has(href)) continue;
-    const m = new RegExp(`\\b${escapeRe(term)}\\b`, "i").exec(text);
+    // Tags are hyphenated slugs (book-a-sloth); match their natural-language
+    // form too, so "-" fires on a space or hyphen in prose ("Book A Sloth").
+    const pattern = escapeRe(term).replace(/-/g, "[\\s-]+");
+    const m = new RegExp(`\\b${pattern}\\b`, "i").exec(text);
     if (!m) continue;
     usedHref.add(href);
     const before = text.slice(0, m.index);
