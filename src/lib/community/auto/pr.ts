@@ -16,6 +16,7 @@ const SKIP_SCOPES = new Set(["deps", "ci", "build", "test", "docs", "refactor", 
 const PR_REPOS = new Map<string, string>([
   ["bookasloth/shubham-datarkar", "the site"],
   ["bookasloth/book-a-sloth", "Book A Sloth"],
+  ["bookasloth/wecos-online", "Wecos"],
 ]);
 
 /** Project label for an allowlisted repo `full_name`, or null if not allowed. */

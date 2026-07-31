@@ -50,6 +50,7 @@ You are given a brief for one merged pull request (JSON: project, type, subject,
 WHICH PROJECT (say it softly, through vocabulary — never a bolted-on label):
 - project "the site" → speak first person: I, me, the site. The absence of a product name means it's about here.
 - project "Book A Sloth" → live in that product's nouns: the Sloth, a booking, a host, the booking engine. The noun doing comedic work IS the context.
+- project "Wecos" → live in its world: founders, startups, the community, the ecosystem, a pitch, a cofounder. Wecos is where startup founders gather; the noun doing comedic work IS the context.
 
 THE PALETTE — flavours you may reach for WHEN THE CHANGE HANDS YOU ONE. Pick the one or two that genuinely fit this PR; blend when natural; never force one that doesn't fit (a forced category reads as reaching and is worse than a plain sentence):
 ${PALETTE}.
