@@ -5,8 +5,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { chooseNote, type NoteDrafts, type PrBrief } from "./pr";
 import { VOICE_SYSTEM } from "./voice";
 
-/** Cheap, fast, and good enough — quality comes from the voice prompt + examples. */
-const NOTE_MODEL = "claude-haiku-4-5-20251001";
+/** Sonnet 5 + thinking: comedy/voice is where the bigger model earns its keep. */
+const NOTE_MODEL = "claude-sonnet-5";
 
 let client: Anthropic | undefined;
 function getClient(): Anthropic {
@@ -42,8 +42,10 @@ export async function writeNote(brief: PrBrief): Promise<string | null> {
   try {
     const res = await getClient().messages.create({
       model: NOTE_MODEL,
-      max_tokens: 1024,
-      // thinking omitted: on Haiku 4.5 that means no thinking (the cheap path).
+      // max_tokens caps thinking + output together on Sonnet 5, so give the
+      // adaptive thinking room to breathe above the ~300-token JSON payload.
+      max_tokens: 4096,
+      thinking: { type: "adaptive" },
       output_config: { format: { type: "json_schema", schema: NOTE_SCHEMA } },
       system: VOICE_SYSTEM,
       messages: [{ role: "user", content: JSON.stringify(brief) }],
