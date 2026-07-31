@@ -4,7 +4,9 @@ import { notFound } from "next/navigation";
 import { site } from "@/lib/site";
 import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
 import { blogCategories, author } from "@/lib/data/posts";
-import { getPublishedPost, getPublishedPostsByCategory, getPublishedPosts } from "@/lib/blog/queries";
+import { getPublishedPost, getPublishedPosts } from "@/lib/blog/queries";
+import { autolinkBlocks, buildLinkIndex } from "@/lib/blog/autolink";
+import type { Post } from "@/lib/data/types";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
 import { Badge } from "@/components/ui/badge";
@@ -49,14 +51,23 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
   if (!post || post.category !== category) notFound();
 
   const cat = blogCategories.find((c) => c.slug === post.category);
-  const sameCat = await getPublishedPostsByCategory(post.category);
-  // Read Next: same-category posts first, then top up from the rest, up to 4.
-  const sameCatRelated = sameCat.filter((p) => p.slug !== post.slug);
   const allPublished = await getPublishedPosts();
-  const others = allPublished.filter(
-    (p) => p.slug !== post.slug && !sameCatRelated.some((s) => s.slug === p.slug),
-  );
-  const relatedPosts = [...sameCatRelated, ...others].slice(0, 4);
+  const candidates = allPublished.filter((p) => p.slug !== post.slug);
+
+  // Read Next: rank by shared-tag overlap (topical relevance), then same
+  // category, then recency — stronger SEO signal than category+recency alone.
+  const overlap = (p: Post) => p.tags.filter((t) => post.tags.includes(t)).length;
+  const relatedPosts = [...candidates]
+    .sort(
+      (a, b) =>
+        overlap(b) - overlap(a) ||
+        Number(b.category === post.category) - Number(a.category === post.category) ||
+        b.date.localeCompare(a.date),
+    )
+    .slice(0, 4);
+
+  // Automatic in-body internal links to canonical posts for shared tags.
+  const linkedBody = autolinkBlocks(post.body, buildLinkIndex(post, candidates));
   const affiliateDomains = await getAffiliateDomains();
 
   return (
@@ -123,7 +134,7 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
       <Section>
         <Container size="prose">
           <article>
-            <ArticleBody blocks={post.body} affiliateDomains={affiliateDomains} relatedPosts={allPublished} />
+            <ArticleBody blocks={linkedBody} affiliateDomains={affiliateDomains} relatedPosts={allPublished} />
           </article>
         </Container>
       </Section>
