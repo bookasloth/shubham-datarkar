@@ -1,38 +1,57 @@
 import {
   Braces,
+  Bug,
   Calendar,
+  Clock,
   CreditCard,
   Database,
   FlaskConical,
   Gauge,
+  GitBranch,
   Hammer,
+  KeyRound,
   Layers,
   type LucideIcon,
   Mail,
   NotebookPen,
+  Palette,
   PenLine,
   Rocket,
   Search,
   ShieldCheck,
   Sparkles,
+  TrendingUp,
   Triangle,
   Users,
 } from "lucide-react";
+import type { BlogCategory } from "@/lib/data/types";
 
 /**
- * Generated "blueprint" cover for blog cards — dark base, faint grid/dots, and
- * white icon-chips wired together like a schematic. Deterministic from the post
- * slug + tags, in the site's orange accent. No assets, deps, or uploads.
- *
- * Icons come from the post's (enriched) tags so the cover hints at the topic;
- * falls back to the category when a post has no mapped tags.
+ * Generated "blueprint" cover for blog cards — dark schematic with white
+ * icon-chips wired together. One system, every card distinct: a slug-seeded
+ * PRNG varies the pattern, layout, connectors, chip size and stray wiring, and
+ * the accent color comes from the post's category. Icons come from the post's
+ * (enriched) tags. Deterministic — no assets, deps, or uploads.
  */
 
-const BRAND = "#ff4800";
 const BASE = "#0a0a0a";
 const HAIR = "rgba(255,255,255,0.14)";
+const W = 600;
+const H = 338;
 
-// tag/category slug -> icon. Order-independent; first matches win per post.
+// Per-category accent. Cohesive mid-saturation set that reads on the white
+// chips and as a glow on the dark base. SEO keeps the site's brand orange.
+const CATEGORY_ACCENT: Record<BlogCategory, string> = {
+  seo: "#ff4800",
+  "build-in-public": "#3b82f6",
+  updates: "#64748b",
+  performance: "#f59e0b",
+  content: "#8b5cf6",
+  ai: "#06b6d4",
+  saas: "#10b981",
+  founder: "#ef4444",
+};
+
 const ICONS: Record<string, LucideIcon> = {
   supabase: Database,
   database: Database,
@@ -59,59 +78,148 @@ const ICONS: Record<string, LucideIcon> = {
   founder: Rocket,
 };
 
+// Context match: substring in the lowercased title -> icon. Scanned after tags,
+// so a post's actual subject shows up even when its tags are coarse buckets.
+const KEYWORDS: [string, LucideIcon][] = [
+  ["bug", Bug],
+  ["error", Bug],
+  ["test", FlaskConical],
+  ["deploy", Rocket],
+  ["ship", Rocket],
+  ["launch", Rocket],
+  ["email", Mail],
+  ["otp", Mail],
+  ["inbox", Mail],
+  ["password", KeyRound],
+  ["reset", KeyRound],
+  ["login", KeyRound],
+  ["auth", KeyRound],
+  ["pric", CreditCard],
+  ["discount", CreditCard],
+  ["commission", CreditCard],
+  ["pay", CreditCard],
+  ["cache", Database],
+  ["database", Database],
+  ["design", Palette],
+  ["css", Palette],
+  ["theme", Palette],
+  ["feed", Users],
+  ["community", Users],
+  ["comment", Users],
+  ["seo", Search],
+  ["search", Search],
+  ["rank", TrendingUp],
+  ["growth", TrendingUp],
+  ["fast", Gauge],
+  ["slow", Gauge],
+  ["speed", Gauge],
+  ["perf", Gauge],
+  ["secur", ShieldCheck],
+  ["permission", ShieldCheck],
+  ["ai", Sparkles],
+  ["claude", Sparkles],
+  ["kalam", Sparkles],
+  ["blog", PenLine],
+  ["write", PenLine],
+  ["post", PenLine],
+  ["commit", GitBranch],
+  ["repo", GitBranch],
+  ["code", Braces],
+  ["day", Clock],
+  ["streak", Clock],
+];
+
 function hash(seed: string): number {
   let h = 2166136261;
   for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619);
-  return Math.abs(h);
+  return h >>> 0;
 }
 
-function pickIcons(tags: string[], category: string): LucideIcon[] {
+/** Deterministic LCG seeded off the slug — same card, same draw, every render. */
+function makeRng(seed: number) {
+  let s = seed || 1;
+  return () => {
+    s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
+    return s / 4294967296;
+  };
+}
+
+function pickIcons(tags: string[], title: string, category: string): LucideIcon[] {
   const picked: LucideIcon[] = [];
   const seen = new Set<LucideIcon>();
-  for (const key of [...tags, category]) {
-    const Icon = ICONS[key];
-    if (Icon && !seen.has(Icon)) {
+  const add = (Icon?: LucideIcon) => {
+    if (Icon && !seen.has(Icon) && picked.length < 3) {
       seen.add(Icon);
       picked.push(Icon);
     }
-    if (picked.length === 3) break;
-  }
+  };
+  // tags first (topical), then title context, then category fallback.
+  for (const key of tags) add(ICONS[key]);
+  const lower = title.toLowerCase();
+  for (const [kw, Icon] of KEYWORDS) if (lower.includes(kw)) add(Icon);
+  add(ICONS[category]);
   if (picked.length === 0) picked.push(Hammer);
   return picked;
 }
 
-// Chip layouts by icon count, in the 600x338 (16/9) viewBox.
-const LAYOUTS: Record<number, { x: number; y: number }[]> = {
-  1: [{ x: 260, y: 129 }],
+// Rough base positions per chip count; jittered per card below.
+const BASES: Record<number, { x: number; y: number }[]> = {
+  1: [{ x: 300, y: 169 }],
   2: [
-    { x: 205, y: 129 },
-    { x: 315, y: 129 },
+    { x: 232, y: 150 },
+    { x: 368, y: 188 },
   ],
   3: [
-    { x: 200, y: 88 },
-    { x: 320, y: 88 },
-    { x: 260, y: 178 },
+    { x: 236, y: 120 },
+    { x: 382, y: 150 },
+    { x: 300, y: 214 },
   ],
 };
-const CHIP = 80;
-const ICON = 46;
 
 export function BlueprintThumb({
   seed,
   tags = [],
+  title,
   category,
   alt,
 }: {
   seed: string;
   tags?: string[];
-  category: string;
+  title: string;
+  category: BlogCategory;
   alt: string;
 }) {
-  const h = hash(seed);
-  const icons = pickIcons(tags, category);
-  const chips = LAYOUTS[icons.length];
-  const pid = `bp-${seed.replace(/[^a-z0-9]/gi, "").slice(0, 10)}-${h % 1000}`;
-  const dots = h % 2 === 0;
+  const rng = makeRng(hash(seed));
+  const accent = CATEGORY_ACCENT[category] ?? "#ff4800";
+  const icons = pickIcons(tags, title, category);
+  const uid = `${seed.replace(/[^a-z0-9]/gi, "").slice(0, 8)}${hash(seed) % 1000}`;
+
+  // ---- varied knobs ----
+  const pattern = Math.floor(rng() * 4); // 0 grid, 1 dots, 2 diagonal, 3 crosshatch
+  const chip = Math.round(66 + rng() * 20); // 66–86
+  const icon = Math.round(chip * 0.56);
+  const rx = Math.round(chip * 0.17);
+  const gx = Math.round(120 + rng() * 360); // glow center
+  const gy = Math.round(60 + rng() * 220);
+
+  // chip centers = base template + per-chip jitter
+  const centers = BASES[icons.length].map((b) => ({
+    cx: Math.max(chip, Math.min(W - chip, b.x + (rng() - 0.5) * 56)),
+    cy: Math.max(chip * 0.7, Math.min(H - chip * 0.7, b.y + (rng() - 0.5) * 40)),
+  }));
+
+  // 1–2 stray schematic wires ending in a node dot
+  const strays = Array.from({ length: 1 + Math.floor(rng() * 2) }, () => {
+    const from = centers[Math.floor(rng() * centers.length)];
+    const angle = rng() * Math.PI * 2;
+    const len = 70 + rng() * 90;
+    return {
+      x1: from.cx,
+      y1: from.cy,
+      x2: Math.max(24, Math.min(W - 24, from.cx + Math.cos(angle) * len)),
+      y2: Math.max(24, Math.min(H - 24, from.cy + Math.sin(angle) * len)),
+    };
+  });
 
   return (
     <div
@@ -120,51 +228,69 @@ export function BlueprintThumb({
       role="img"
       aria-label={alt}
     >
-      <svg viewBox="0 0 600 338" preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden>
+      <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" className="absolute inset-0 size-full" aria-hidden>
         <defs>
-          <pattern id={pid} width={dots ? 22 : 26} height={dots ? 22 : 26} patternUnits="userSpaceOnUse">
-            {dots ? (
-              <circle cx={11} cy={11} r={0.9} fill={HAIR} />
-            ) : (
+          <radialGradient id={`glow-${uid}`} cx={`${(gx / W) * 100}%`} cy={`${(gy / H) * 100}%`} r="60%">
+            <stop offset="0%" stopColor={accent} stopOpacity={0.28} />
+            <stop offset="100%" stopColor={accent} stopOpacity={0} />
+          </radialGradient>
+          <pattern id={`pat-${uid}`} width={pattern === 1 ? 22 : 26} height={pattern === 1 ? 22 : 26} patternUnits="userSpaceOnUse">
+            {pattern === 0 && (
               <>
                 <line x1={26} y1={0} x2={26} y2={26} stroke={HAIR} strokeWidth={0.4} />
                 <line x1={0} y1={26} x2={26} y2={26} stroke={HAIR} strokeWidth={0.4} />
               </>
             )}
+            {pattern === 1 && <circle cx={11} cy={11} r={0.9} fill={HAIR} />}
+            {pattern === 2 && <line x1={0} y1={26} x2={26} y2={0} stroke={HAIR} strokeWidth={0.5} />}
+            {pattern === 3 && (
+              <>
+                <line x1={0} y1={13} x2={26} y2={13} stroke={HAIR} strokeWidth={0.35} />
+                <line x1={13} y1={0} x2={13} y2={26} stroke={HAIR} strokeWidth={0.35} />
+              </>
+            )}
           </pattern>
         </defs>
-        <rect width={600} height={338} fill={BASE} />
-        <rect width={600} height={338} fill={`url(#${pid})`} />
 
-        {/* connector lines between chip centers, drawn behind the chips */}
-        {chips.map((c, i) => {
-          const n = chips[(i + 1) % chips.length];
-          if (chips.length < 2) return null;
-          return (
+        <rect width={W} height={H} fill={BASE} />
+        <rect width={W} height={H} fill={`url(#glow-${uid})`} />
+        <rect width={W} height={H} fill={`url(#pat-${uid})`} />
+
+        {/* stray wires with end nodes */}
+        {strays.map((s, i) => (
+          <g key={`s-${i}`}>
+            <line x1={s.x1} y1={s.y1} x2={s.x2} y2={s.y2} stroke={HAIR} strokeWidth={1} />
+            <circle cx={s.x2} cy={s.y2} r={3} fill="none" stroke={HAIR} strokeWidth={1} />
+          </g>
+        ))}
+
+        {/* connectors chaining the chips */}
+        {centers.map((c, i) =>
+          centers.length > 1 ? (
             <line
-              key={`l-${i}`}
-              x1={c.x + CHIP / 2}
-              y1={c.y + CHIP / 2}
-              x2={n.x + CHIP / 2}
-              y2={n.y + CHIP / 2}
+              key={`c-${i}`}
+              x1={c.cx}
+              y1={c.cy}
+              x2={centers[(i + 1) % centers.length].cx}
+              y2={centers[(i + 1) % centers.length].cy}
               stroke={HAIR}
               strokeWidth={1.2}
             />
-          );
-        })}
+          ) : null,
+        )}
 
-        {chips.map((c, i) => {
+        {/* icon chips */}
+        {centers.map((c, i) => {
           const Icon = icons[i];
-          const pad = (CHIP - ICON) / 2;
           return (
-            <g key={`c-${i}`}>
-              <rect x={c.x} y={c.y} width={CHIP} height={CHIP} rx={13} fill="#fff" />
+            <g key={`chip-${i}`}>
+              <rect x={c.cx - chip / 2} y={c.cy - chip / 2} width={chip} height={chip} rx={rx} fill="#fff" />
               <Icon
-                x={c.x + pad}
-                y={c.y + pad}
-                width={ICON}
-                height={ICON}
-                color={BRAND}
+                x={c.cx - icon / 2}
+                y={c.cy - icon / 2}
+                width={icon}
+                height={icon}
+                color={accent}
                 strokeWidth={1.8}
                 absoluteStrokeWidth
               />
