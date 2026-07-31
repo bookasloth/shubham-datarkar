@@ -50,6 +50,9 @@ export async function createChallenge(input: CreateInput): Promise<CreateOutcome
 
 export async function startChallengeAttempt(code: string): Promise<{ ok: boolean }> {
   const user = await getGameUser();
+  // If a signed-in player still carries a guest cookie, fold any guest attempts
+  // into their account before they start a new one. No-ops without a guest cookie.
+  if (user) await attachGuestAttempts(user.id);
   const admin = supabaseAdmin();
   const { data: ch } = await admin
     .from("game_challenges")
