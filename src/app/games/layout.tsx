@@ -6,7 +6,6 @@ import { requestNow } from "@/lib/request-now";
 import { AppShell } from "@/components/app-shell/shell";
 import AlfazyThemeProvider from "@/components/games/AlfazyThemeProvider";
 import { GameRail } from "@/components/games/rail/GameRail";
-import { GameSubnav } from "@/components/games/challenge/GameSubnav";
 import { GAMES, type GameKey } from "@/lib/games/registry";
 
 export const metadata: Metadata = {
@@ -36,10 +35,7 @@ export default async function GamesLayout({ children }: { children: React.ReactN
   return (
     <AlfazyThemeProvider now={now}>
       <AppShell user={user} rail={game ? <GameRail /> : undefined}>
-        <div data-games className="py-8">
-          <GameSubnav />
-          {children}
-        </div>
+        <div data-games className="py-8">{children}</div>
       </AppShell>
     </AlfazyThemeProvider>
   );
