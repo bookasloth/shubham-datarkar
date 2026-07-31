@@ -35,8 +35,9 @@ whether to triplicate or introduce a shared `[game]` segment is a plan decision)
   - **Create** panel — members only; non-members see an upgrade prompt.
   - **My challenges** — creator's list with crack-count + crackers; close/delete.
   - **Browse** — opt-in public challenges, newest first, paginated.
-- `/games/[game]/c/[code]` — play one challenge: server-scored board + that
-  challenge's leaderboard + share button.
+- `/games/[game]/challenge/[code]` — play one challenge: server-scored board +
+  that challenge's leaderboard + share button. This nested path is also the share
+  link.
 
 Reuses the existing shell: `GameStage`, `GameHeader`, the per-game boards
 (`AlfazyBoard` / `HitAndBlowBoard` / `IntegraBoard`), `LeaderboardView`,
@@ -49,7 +50,7 @@ Supabase, RLS on. Migrations follow the manual-SQL workflow (write file, hand SQ
 to run — never applied directly).
 
 ### `game_challenges`
-- `id` (uuid pk), `code` (text, unique — powers `/c/<code>` + share)
+- `id` (uuid pk), `code` (text, unique — powers `/games/[game]/challenge/<code>` + share)
 - `game` (text, GameKey), `creator_user_id` (uuid → auth.users)
 - `secret` (text) — the authored answer. **RLS denies select to anon/auth.**
   Read only inside security-definer RPCs.
@@ -117,9 +118,9 @@ Secret is written via a security-definer create RPC — never a plain insert tha
 could expose it in a returning payload.
 
 Limits (abuse control), enforced in the create RPC:
-- Max open challenges per member (default 20).
-- Auto `expires_at` (default 30 days). Expired/closed challenges are unplayable
-  but their leaderboard remains viewable.
+- Max **15 challenges created per member per rolling 30 days** (rate cap).
+- Auto `expires_at` = **30 days** from creation. Expired/closed challenges are
+  unplayable but their leaderboard remains viewable.
 
 ## Play flow
 
@@ -163,7 +164,8 @@ Limits (abuse control), enforced in the create RPC:
   `score_challenge_guess`, create/close/delete, browse/leaderboard queries).
 - `src/lib/games/challenges/` — new module: types, queries, server actions,
   per-game secret validation + feedback (thin wrappers over existing engines).
-- Routes: `src/app/games/[game]/challenge/`, `src/app/games/[game]/c/[code]/`.
+- Routes: `src/app/games/[game]/challenge/` (tab) and
+  `src/app/games/[game]/challenge/[code]/` (play + share).
   (Games currently use per-game folders; either add the quintet to each of the
   three, or introduce a shared `[game]` segment — decide in the plan.)
 - `src/components/games/rail/GameRail.tsx` — add the Challenge nav item.
