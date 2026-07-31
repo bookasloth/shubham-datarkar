@@ -59,6 +59,7 @@ export const APP_NAV: AppNavSection[] = [
           { label: "Play", href: "/games/alfazy" },
           { label: "Archive", href: "/games/alfazy/archive" },
           { label: "Leaderboard", href: "/games/alfazy/leaderboard" },
+          { label: "Challenge", href: "/games/alfazy/challenge" },
         ],
       },
       {
@@ -68,6 +69,7 @@ export const APP_NAV: AppNavSection[] = [
           { label: "Play", href: "/games/hit-and-blow" },
           { label: "Archive", href: "/games/hit-and-blow/archive" },
           { label: "Leaderboard", href: "/games/hit-and-blow/leaderboard" },
+          { label: "Challenge", href: "/games/hit-and-blow/challenge" },
         ],
       },
       {
@@ -77,6 +79,7 @@ export const APP_NAV: AppNavSection[] = [
           { label: "Play", href: "/games/integra" },
           { label: "Archive", href: "/games/integra/archive" },
           { label: "Leaderboard", href: "/games/integra/leaderboard" },
+          { label: "Challenge", href: "/games/integra/challenge" },
         ],
       },
     ],
