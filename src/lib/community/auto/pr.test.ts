@@ -105,6 +105,7 @@ describe("projectFor", () => {
   it("maps allowlisted repos to a project name", () => {
     expect(projectFor("bookasloth/shubham-datarkar")).toBe("the site");
     expect(projectFor("bookasloth/book-a-sloth")).toBe("Book A Sloth");
+    expect(projectFor("bookasloth/wecos-online")).toBe("Wecos");
   });
   it("is case-insensitive on the repo name", () => {
     expect(projectFor("BookASloth/Book-A-Sloth")).toBe("Book A Sloth");
