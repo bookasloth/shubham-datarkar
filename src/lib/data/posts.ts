@@ -14,4 +14,5 @@ export const blogCategories: { slug: BlogCategory; label: string; description: s
   { slug: "saas", label: "SaaS", description: "Building, pricing, and growing internet products." },
   { slug: "founder", label: "Founder", description: "Operating ventures, mental models, and lessons from the field." },
   { slug: "build-in-public", label: "Build in Public", description: "Rebuilding Book A Sloth in real time — daily field notes from shipping a SaaS." },
+  { slug: "updates", label: "Updates", description: "The daily log — what shipped, what broke, and what it taught me." },
 ];
