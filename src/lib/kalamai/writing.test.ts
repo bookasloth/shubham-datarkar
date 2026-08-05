@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   extractSourceFacts, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
   buildSectionDraftPrompt, buildSectionRewritePrompt, buildCachePrefix, FAKE_SECTION_DRAFT,
+  bandFor, CONTENT_TYPES, CONTENT_LABELS,
 } from "./writing";
 import { FAKE_BRIEF } from "./brief";
 import type { ContentBlock } from "@/lib/data/types";
@@ -47,6 +48,7 @@ describe("extractSourceFacts", () => {
     expect(c.system).toMatch(/not supported by the source facts/i);
     expect(c.system).toMatch(/1000-2200 words/);
     expect(c.user).toContain("250 million");
+
   });
 });
 
@@ -132,5 +134,22 @@ describe("FAKE_SECTION_DRAFT", () => {
     expect(Array.isArray(arr)).toBe(true);
     expect(arr.length).toBeGreaterThan(0);
     expect(arr.length).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("content types", () => {
+  it("bandFor returns the per-type word band", () => {
+    expect(bandFor("blog")).toEqual([1000, 2200]);
+    expect(bandFor("landing")).toEqual([500, 1200]);
+    expect(bandFor("product")).toEqual([120, 500]);
+  });
+  it("unknown type falls back to blog band", () => {
+    // @ts-expect-error deliberately wrong
+    expect(bandFor("nope")).toEqual([1000, 2200]);
+  });
+  it("labels + list cover all three", () => {
+    expect(CONTENT_TYPES).toEqual(["blog", "landing", "product"]);
+    expect(CONTENT_LABELS.landing).toBe("Landing Page");
+    expect(CONTENT_LABELS.product).toBe("Product Description");
   });
 });

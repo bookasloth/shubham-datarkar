@@ -10,11 +10,28 @@ import { countWords } from "@/lib/blog/words";
  * params block is the cache prefix — keep it byte-identical across W2-W4.
  */
 
+export type ContentType = "blog" | "landing" | "product";
+export const CONTENT_TYPES: readonly ContentType[] = ["blog", "landing", "product"];
+export const CONTENT_LABELS: Record<ContentType, string> = {
+  blog: "Blog",
+  landing: "Landing Page",
+  product: "Product Description",
+};
+const BANDS: Record<ContentType, [number, number]> = {
+  blog: [1000, 2200],
+  landing: [500, 1200],
+  product: [120, 500],
+};
+export function bandFor(t: ContentType): [number, number] {
+  return BANDS[t] ?? BANDS.blog;
+}
+
 export type ArticleParams = {
   targetWords: number;
   tone: string; // e.g. "professional", "conversational"
   audience: string; // e.g. "small business owners in Nagpur"
   brandFacts?: string; // optional facts about the client to weave in
+  contentType?: ContentType; // default "blog" when absent
 };
 
 export type SectionPlan = {
