@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CONTENT_TYPES, CONTENT_LABELS } from "@/lib/kalamai/writing";
 
 const COUNTRIES = [
   { code: "IN", label: "India" },
@@ -24,6 +25,7 @@ const inputClass =
 /** Flow A entry: create an analysis, then hand off to the report page's poller. */
 export function NewAnalysisForm() {
   const router = useRouter();
+  const [contentType, setContentType] = useState<"blog" | "landing" | "product">("blog");
   const [keyword, setKeyword] = useState("");
   const [country, setCountry] = useState("IN");
   const [targetWords, setTargetWords] = useState(1500);
@@ -52,7 +54,7 @@ export function NewAnalysisForm() {
       }
       sessionStorage.setItem(
         `kalamai-article-params:${data.id}`,
-        JSON.stringify({ targetWords, tone, audience: audience.trim(), brandFacts: brandFacts.trim() }),
+        JSON.stringify({ targetWords, tone, audience: audience.trim(), brandFacts: brandFacts.trim(), contentType }),
       );
       router.push(`/tools/kalamai/a/${data.id}`);
     } catch {
@@ -63,7 +65,13 @@ export function NewAnalysisForm() {
 
   return (
     <form onSubmit={submit} className="rounded-card border border-border bg-card p-6">
-      <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+      <div className="space-y-1">
+        <label htmlFor="ct" className="text-xs font-medium text-muted-foreground">Content type</label>
+        <select id="ct" className={inputClass} value={contentType} onChange={(e) => setContentType(e.target.value as typeof contentType)}>
+          {CONTENT_TYPES.map((t) => (<option key={t} value={t}>{CONTENT_LABELS[t]}</option>))}
+        </select>
+      </div>
+      <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto]">
         <div className="space-y-1">
           <label htmlFor="kw" className="text-xs font-medium text-muted-foreground">
             Keyword

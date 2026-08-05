@@ -4,8 +4,8 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SEO_TIPS } from "@/lib/kalamai/seo-tips";
 
-type Params = { targetWords: number; tone: string; audience: string; brandFacts: string };
-const DEFAULT_PARAMS: Params = { targetWords: 1500, tone: "professional", audience: "", brandFacts: "" };
+type Params = { targetWords: number; tone: string; audience: string; brandFacts: string; contentType: "blog" | "landing" | "product" };
+const DEFAULT_PARAMS: Params = { targetWords: 1500, tone: "professional", audience: "", brandFacts: "", contentType: "blog" };
 
 const PHASES = [
   { key: "research", label: "Researching competitors" },
