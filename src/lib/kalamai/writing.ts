@@ -228,20 +228,34 @@ export function buildCritiquePrompt(
   sourceFacts: SourceFact[] = [],
 ): { system: string; user: string; cachePrefix: string } {
   const wordCount = countWords(blocks);
+  const ct: ContentType = params.contentType ?? "blog";
+  const [lo, hi] = bandFor(ct);
   const system =
-    "You are a demanding SEO/AEO editor. Compare the draft against the brief and source facts, and return JSON per the " +
-    "schema. In 'issues', flag every instance of:\n" +
-    "1. A statistic or factual claim NOT supported by the source facts, or hedged with 'studies/surveys/experts suggest' " +
-    "and similar with no concrete figure or named source — quote the offending phrase.\n" +
-    "2. A statistic drawn from a source fact that is NOT backlinked to its source URL — those claims must cite their source.\n" +
-    "3. Any single keyword or phrase repeated so often it reads as stuffing — name the term and roughly how many times.\n" +
-    "4. Generic filler that could apply to any topic — demand a concrete specific, example, or figure instead.\n" +
-    "5. Any section that does not open with a direct one-sentence answer.\n" +
-    "6. A missing or weak Conclusion — it must state a genuine point of view and list low-hanging-fruit actions.\n" +
-    `7. Length outside 1000-2200 words (this draft is ${wordCount} words) — flag if over 2200 or under 1000.\n` +
-    "Also list recommended terms not used and brief outline sections not covered. Set ok=true ONLY if the draft is " +
-    "specific, grounded, backlinked, free of stuffing, within the word band, ends with a POV conclusion, and every " +
-    "section leads with a direct answer. A merely competent, generic draft is NOT ok — be strict.";
+    ct === "blog"
+      ? "You are a demanding SEO/AEO editor. Compare the draft against the brief and source facts, and return JSON per the " +
+        "schema. In 'issues', flag every instance of:\n" +
+        "1. A statistic or factual claim NOT supported by the source facts, or hedged with 'studies/surveys/experts suggest' " +
+        "and similar with no concrete figure or named source — quote the offending phrase.\n" +
+        "2. A statistic drawn from a source fact that is NOT backlinked to its source URL — those claims must cite their source.\n" +
+        "3. Any single keyword or phrase repeated so often it reads as stuffing — name the term and roughly how many times.\n" +
+        "4. Generic filler that could apply to any topic — demand a concrete specific, example, or figure instead.\n" +
+        "5. Any section that does not open with a direct one-sentence answer.\n" +
+        "6. A missing or weak Conclusion — it must state a genuine point of view and list low-hanging-fruit actions.\n" +
+        `7. Length outside ${lo}-${hi} words (this draft is ${wordCount} words) — flag if over ${hi} or under ${lo}.\n` +
+        "Also list recommended terms not used and brief outline sections not covered. Set ok=true ONLY if the draft is " +
+        "specific, grounded, backlinked, free of stuffing, within the word band, ends with a POV conclusion, and every " +
+        "section leads with a direct answer. A merely competent, generic draft is NOT ok — be strict."
+      : "You are a demanding conversion-copy editor. Compare the draft against the brief and source facts, and return JSON per the " +
+        "schema. In 'issues', flag every instance of:\n" +
+        "1. A statistic or factual claim NOT supported by the source facts, or hedged with 'studies/surveys/experts suggest' — quote the offending phrase.\n" +
+        "2. A statistic drawn from a source fact that is NOT backlinked to its source URL.\n" +
+        "3. Any single keyword or phrase repeated so often it reads as stuffing — name the term.\n" +
+        "4. Generic filler that could describe any product/offer — demand a concrete benefit, feature, or figure instead.\n" +
+        "5. Copy that explains instead of persuading — it must lead with benefits to the reader.\n" +
+        "6. A missing or weak call to action — the copy must end asking the reader to act.\n" +
+        `7. Length outside ${lo}-${hi} words (this draft is ${wordCount} words) — flag if over ${hi} or under ${lo}.\n` +
+        "Also list recommended terms not used. Set ok=true ONLY if the copy is specific, grounded, backlinked, benefit-led, " +
+        "free of stuffing, within the word band, and ends with a clear call to action. A generic draft is NOT ok — be strict.";
   const user = ["Draft (markdown):", blocksToMarkdown(blocks), factsBlock(sourceFacts)].join("\n");
   return { system, user, cachePrefix: buildCachePrefix(brief, params) };
 }
@@ -259,16 +273,29 @@ export function buildSectionDraftPrompt(
   const section = plan.sections[sectionIndex];
   const isFirst = sectionIndex === 0;
   const isLast = sectionIndex === plan.sections.length - 1;
+  const ct: ContentType = params.contentType ?? "blog";
   // ponytail: non-last sections never emit a faq block, so drop it from the allowed-type list
-  // rather than confusing the model with an option it must ignore.
-  const sectionBlockSpec = isLast ? BLOCK_SPEC : BLOCK_SPEC.replace(' {"type":"faq","items":[{"q":string,"a":string}]}', "");
+  // rather than confusing the model with an option it must ignore; landing/product never emit
+  // faq at all (they use a CTA paragraph on the last section instead).
+  const stripFaq = !isLast || ct !== "blog";
+  const sectionBlockSpec = stripFaq ? BLOCK_SPEC.replace(' {"type":"faq","items":[{"q":string,"a":string}]}', "") : BLOCK_SPEC;
+  const answerRule = ct === "blog" ? "then a direct one-sentence answer, then expand; " : "";
+  const voice =
+    ct === "landing" ? "Write benefit-led, persuasive conversion copy. "
+    : ct === "product" ? "Write concise, scannable product copy that leads with benefits and features. "
+    : "";
+  const lastRule = !isLast ? "" :
+    ct === "blog"
+      ? "Because this is the FINAL section, AFTER the section content also emit a closing 'faq' block answering the brief's questions. "
+      : "Because this is the FINAL section, AFTER the section content emit a closing call-to-action paragraph. ";
   const system =
     `You are an expert ${params.tone} SEO writer for an audience of ${params.audience}. ` +
+    voice +
     "Write ONLY the ONE section described below, as a JSON array of ContentBlocks — not the whole article. " +
     `Aim for about ${section?.words ?? 400} words for this section. ` +
-    "Open the section with its 'h2' heading, then a direct one-sentence answer, then expand; use 'h3' for sub-points. " +
+    `Open the section with its 'h2' heading, ${answerRule}use 'h3' for sub-points. ` +
     (isFirst ? "Because this is the FIRST section, emit an opening 'lead' block BEFORE the section's h2. " : "") +
-    (isLast ? "Because this is the FINAL section, AFTER the section content also emit a closing 'faq' block answering the brief's questions. " : "") +
+    lastRule +
     "Do NOT repeat anything already covered by the earlier sections listed under 'Already written'. \n" +
     "GROUNDING: base any statistic, percentage, year, or factual claim on the Source facts below; never invent numbers " +
     "or cite unnamed 'studies'. When you state a statistic from a Source fact, BACKLINK it with an " +

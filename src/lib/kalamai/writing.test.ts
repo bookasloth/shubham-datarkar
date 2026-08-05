@@ -177,3 +177,27 @@ describe("buildOutlinePrompt per type", () => {
     expect(system).toContain("1000 and 2200");
   });
 });
+
+describe("draft + critique per type", () => {
+  const base = { targetWords: 800, tone: "professional", audience: "marketers" };
+  const plan = { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [{ heading: "H", points: [], words: 300 }] };
+
+  it("blog draft keeps the direct-answer rule", () => {
+    const { system } = buildSectionDraftPrompt(FAKE_BRIEF, { ...base, contentType: "blog" }, plan, 0, [], []);
+    expect(system).toContain("direct one-sentence answer");
+  });
+  it("landing draft drops direct-answer, asks for benefit-led + CTA", () => {
+    const { system } = buildSectionDraftPrompt(FAKE_BRIEF, { ...base, contentType: "landing" }, plan, 0, [], []);
+    expect(system).not.toContain("direct one-sentence answer");
+    expect(system.toLowerCase()).toContain("benefit");
+  });
+  it("blog critique flags length against 1000-2200", () => {
+    const { system } = buildCritiquePrompt(FAKE_BRIEF, { ...base, contentType: "blog" }, [{ type: "p", text: "hi" }], []);
+    expect(system).toContain("1000-2200");
+  });
+  it("product critique flags length against its band + checks CTA", () => {
+    const { system } = buildCritiquePrompt(FAKE_BRIEF, { ...base, contentType: "product" }, [{ type: "p", text: "hi" }], []);
+    expect(system).toContain("120-500");
+    expect(system.toLowerCase()).toContain("call to action");
+  });
+});
