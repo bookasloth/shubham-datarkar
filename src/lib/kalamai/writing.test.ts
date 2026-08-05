@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   extractSourceFacts, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
   buildSectionDraftPrompt, buildSectionRewritePrompt, buildCachePrefix, FAKE_SECTION_DRAFT,
-  bandFor, CONTENT_TYPES, CONTENT_LABELS,
+  bandFor, CONTENT_TYPES, CONTENT_LABELS, buildOutlinePrompt,
 } from "./writing";
 import { FAKE_BRIEF } from "./brief";
 import type { ContentBlock } from "@/lib/data/types";
@@ -151,5 +151,29 @@ describe("content types", () => {
     expect(CONTENT_TYPES).toEqual(["blog", "landing", "product"]);
     expect(CONTENT_LABELS.landing).toBe("Landing Page");
     expect(CONTENT_LABELS.product).toBe("Product Description");
+  });
+});
+
+describe("buildOutlinePrompt per type", () => {
+  const base = { targetWords: 1600, tone: "professional", audience: "marketers" };
+  it("blog keeps the SEO/AEO strategist framing + 2200 ceiling", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "blog" });
+    expect(system).toContain("1000 and 2200");
+    expect(system).toContain("Conclusion");
+  });
+  it("landing targets a conversion structure + its band", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "landing" });
+    expect(system).toContain("500 and 1200");
+    expect(system.toLowerCase()).toContain("call to action");
+    expect(system.toLowerCase()).toContain("benefit");
+  });
+  it("product targets a short product structure + its band", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "product" });
+    expect(system).toContain("120 and 500");
+    expect(system.toLowerCase()).toContain("features");
+  });
+  it("missing contentType behaves as blog", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, base);
+    expect(system).toContain("1000 and 2200");
   });
 });

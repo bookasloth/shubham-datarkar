@@ -166,15 +166,34 @@ export const OUTLINE_SCHEMA: Record<string, unknown> = {
 };
 
 export function buildOutlinePrompt(brief: Brief, params: ArticleParams): { system: string; user: string } {
-  const system =
-    "You are an expert SEO/AEO content strategist. Produce a section-by-section writing plan as JSON matching the schema. " +
-    `Allocate 'words' across sections to total ${params.targetWords} — the whole article must stay between 1000 and 2200 ` +
-    "words, never over 2200. Ground every section in the brief's outline, entities, and recommended terms. " +
-    "The FINAL section must be a Conclusion that takes a clear point of view (a recommendation the writer stands behind, " +
-    "not a neutral summary) and calls out the low-hanging fruit — the highest-leverage actions the reader can act on " +
-    "immediately. title must be <= 60 chars; description 120-160 chars. " +
-    "Also produce ogTitle and ogDescription — social-share variants that are punchier and more curiosity-driven than the meta title/description (ogTitle <= 70 chars; ogDescription 110-160 chars). " +
-    "Do not invent facts.";
+  const ct: ContentType = params.contentType ?? "blog";
+  const [lo, hi] = bandFor(ct);
+  let system: string;
+  if (ct === "landing") {
+    system =
+      "You are an expert conversion copywriter. Produce a section-by-section landing-page plan as JSON matching the schema. " +
+      `Allocate 'words' across sections to total about ${params.targetWords} — the whole page must stay between ${lo} and ${hi} words, never over ${hi}. ` +
+      "Structure the page for conversion: open with a hero value-proposition, then benefits, then features, then social proof, then objection handling, and END with a strong call to action. " +
+      "Lead with benefits (what the reader gains), not neutral explanation. Ground claims in the brief's entities and recommended terms. " +
+      "title must be <= 60 chars; description 120-160 chars. Also produce ogTitle (<= 70 chars) and ogDescription (110-160 chars) that are punchier and curiosity-driven. Do not invent facts.";
+  } else if (ct === "product") {
+    system =
+      "You are an expert e-commerce product copywriter. Produce a section-by-section product-description plan as JSON matching the schema. " +
+      `Allocate 'words' across sections to total about ${params.targetWords} — the whole description must stay between ${lo} and ${hi} words, never over ${hi}. ` +
+      "Keep it short and scannable: open with a benefit hook, then key features, then specifications, then a use case, and END with a call to action. " +
+      "Lead with concrete benefits and features, not filler. Ground claims in the brief's entities and recommended terms. " +
+      "title must be <= 60 chars; description 120-160 chars. Also produce ogTitle (<= 70 chars) and ogDescription (110-160 chars). Do not invent facts.";
+  } else {
+    system =
+      "You are an expert SEO/AEO content strategist. Produce a section-by-section writing plan as JSON matching the schema. " +
+      `Allocate 'words' across sections to total ${params.targetWords} — the whole article must stay between 1000 and 2200 ` +
+      "words, never over 2200. Ground every section in the brief's outline, entities, and recommended terms. " +
+      "The FINAL section must be a Conclusion that takes a clear point of view (a recommendation the writer stands behind, " +
+      "not a neutral summary) and calls out the low-hanging fruit — the highest-leverage actions the reader can act on " +
+      "immediately. title must be <= 60 chars; description 120-160 chars. " +
+      "Also produce ogTitle and ogDescription — social-share variants that are punchier and more curiosity-driven than the meta title/description (ogTitle <= 70 chars; ogDescription 110-160 chars). " +
+      "Do not invent facts.";
+  }
   const user = [
     `Tone: ${params.tone}. Audience: ${params.audience}.`,
     params.brandFacts ? `Brand facts: ${params.brandFacts}` : "",
