@@ -213,4 +213,13 @@ select public.community_owner_id(), 'text', $$Signup now asks your batch and hou
  where public.community_owner_id() is not null
 on conflict (auto_key) where auto_key is not null do nothing;
 
+-- The feed's tag filter (?tag=nnawca) matches the tags[] column, not body text,
+-- so the embedded #NNAWCA must also land as a real tag. Set it on these rows
+-- (idempotent — safe whether the inserts above just ran or ran earlier).
+update public.community_posts
+   set tags = array['nnawca']
+ where auto_key like 'pr:bookasloth/the-parliament#%'
+   and user_id = public.community_owner_id()
+   and (tags is null or not (tags @> array['nnawca']));
+
 commit;

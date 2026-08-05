@@ -72,11 +72,14 @@ export async function POST(request: Request) {
     pick("pr", { title: humanizeSubject(parsePrTitle(title).subject), project });
   // Key includes the repo: PR #5 exists in every repo, and a bare `pr:5` would
   // make the second repo's PR #5 dedupe against the first and never post.
+  const hashtag = hashtagFor(repo); // "#NNAWCA"
   await autoPost({
     sourceKey: `pr:${repo}#${pr.number}`,
-    body: withHashtag(body, hashtagFor(repo)),
+    body: withHashtag(body, hashtag),
     thread: extractThread(pr.body),
     version: extractVersion(pr.body),
+    // The embedded hashtag as a real tag so ?tag=nnawca finds the note.
+    tags: hashtag ? [hashtag.replace(/^#/, "").toLowerCase()] : null,
   });
   return NextResponse.json({ ok: true, posted: true });
 }

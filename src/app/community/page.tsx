@@ -31,7 +31,7 @@ export default async function CommunityPage({
   searchParams: Promise<{ sort?: string; window?: string; seed?: string; tab?: string; tag?: string }>;
 }) {
   const sp = await searchParams;
-  const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "hot";
+  const sort: FeedSort = SORTS.has(sp.sort as FeedSort) ? (sp.sort as FeedSort) : "new";
   const window: FeedWindow = WINDOWS.has(sp.window as FeedWindow)
     ? (sp.window as FeedWindow)
     : "all";
@@ -42,10 +42,9 @@ export default async function CommunityPage({
   // ?sort=hot with no seed mints one and redirects, which is what makes a fresh
   // visit a fresh shuffle.
   //
-  // PRESERVE every other param when redirecting — hot is the DEFAULT sort now,
-  // so this fires on a bare /community too, and "Share to Community" lands here
-  // carrying ?compose/composeTitle/returnTo. A blind /community?sort=hot&seed=X
-  // would drop them and the composer would never open.
+  // PRESERVE every other param when redirecting — "Share to Community" can land on
+  // ?sort=hot carrying ?compose/composeTitle/returnTo. A blind
+  // /community?sort=hot&seed=X would drop them and the composer would never open.
   if (sort === "hot" && !sp.seed) {
     const params = new URLSearchParams();
     for (const [k, v] of Object.entries(sp)) if (typeof v === "string" && v) params.set(k, v);
