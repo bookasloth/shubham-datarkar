@@ -57,7 +57,7 @@ export async function POST(request: Request) {
 
   const title = pr.title ?? "";
   const labels = Array.isArray(pr.labels) ? pr.labels.map((l) => String(l?.name ?? "")) : [];
-  if (!shouldAnnounce(title, labels)) {
+  if (!shouldAnnounce(title, labels, repo)) {
     return NextResponse.json({ ok: true, ignored: "filtered" });
   }
 

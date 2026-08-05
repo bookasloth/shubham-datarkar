@@ -7,6 +7,14 @@ const ANNOUNCE_TYPES = new Set(["feat", "fix", "perf", "chore"]);
 const SKIP_SCOPES = new Set(["deps", "ci", "build", "test", "docs", "refactor", "style"]);
 
 /**
+ * Repos whose merges announce regardless of title format. Some repos don't use
+ * Conventional-Commit titles, so the type/scope gate would silently drop every
+ * PR. For these, any merged PR posts (Haiku writes the note from the raw title);
+ * the `no-announce` label is still the per-PR opt-out.
+ */
+const ANNOUNCE_ALL_REPOS = new Set(["bookasloth/the-parliament"]);
+
+/**
  * Repos allowed to auto-post, mapped to the project name used in the copy.
  * Allowlist, not just a lookup: a repo absent here can never post, so a leaked
  * webhook secret alone is not enough to write to the public feed.
@@ -146,8 +154,9 @@ export function chooseNote(j: NoteDrafts): string | null {
   return null;
 }
 
-export function shouldAnnounce(title: string, labels: string[]): boolean {
+export function shouldAnnounce(title: string, labels: string[], repo?: string | null): boolean {
   if (labels.some((l) => l.toLowerCase() === "no-announce")) return false;
+  if (repo && ANNOUNCE_ALL_REPOS.has(repo.toLowerCase())) return true;
   const { type, scope } = parsePrTitle(title);
   if (!type || !ANNOUNCE_TYPES.has(type)) return false;
   if (scope && SKIP_SCOPES.has(scope)) return false;

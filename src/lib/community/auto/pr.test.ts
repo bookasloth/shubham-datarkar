@@ -32,6 +32,18 @@ describe("shouldAnnounce", () => {
     expect(shouldAnnounce("feat(community): x", ["no-announce"])).toBe(false);
     expect(shouldAnnounce("feat(community): x", ["No-Announce"])).toBe(false);
   });
+  it("announce-all repos bypass the title gate", () => {
+    const repo = "bookasloth/the-parliament";
+    // A non-conventional title that would normally be filtered:
+    expect(shouldAnnounce("Signup House + Batch fields, auth restyle", [], repo)).toBe(true);
+    expect(shouldAnnounce("random title", [], repo)).toBe(true);
+    // Case-insensitive on the repo name:
+    expect(shouldAnnounce("random title", [], "BookASloth/The-Parliament")).toBe(true);
+    // no-announce still wins for lenient repos:
+    expect(shouldAnnounce("random title", ["no-announce"], repo)).toBe(false);
+    // Repos not on the list keep the strict gate:
+    expect(shouldAnnounce("random title", [], "bookasloth/shubham-datarkar")).toBe(false);
+  });
 });
 
 describe("humanizeSubject", () => {
