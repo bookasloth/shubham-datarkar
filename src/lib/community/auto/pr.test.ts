@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, missingTweet } from "./pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, hashtagFor, withHashtag, extractTweet, missingTweet } from "./pr";
 import { pick } from "./templates";
 
 describe("parsePrTitle", () => {
@@ -118,6 +118,32 @@ describe("projectFor", () => {
   it("is not fooled by prototype keys", () => {
     expect(projectFor("constructor")).toBeNull();
     expect(projectFor("__proto__")).toBeNull();
+  });
+});
+
+describe("hashtagFor / withHashtag", () => {
+  it("maps each allowlisted repo to its tag", () => {
+    expect(hashtagFor("bookasloth/shubham-datarkar")).toBe("#SD");
+    expect(hashtagFor("bookasloth/book-a-sloth")).toBe("#BookASloth");
+    expect(hashtagFor("bookasloth/wecos-online")).toBe("#WeCos");
+    expect(hashtagFor("bookasloth/the-parliament")).toBe("#NNAWCA");
+    expect(hashtagFor("BOOKASLOTH/WECOS-ONLINE")).toBe("#WeCos"); // case-insensitive
+    expect(hashtagFor("someone/other")).toBeNull();
+  });
+
+  it("appends the tag on its own line", () => {
+    expect(withHashtag("Shipped a thing.", "#SD")).toBe("Shipped a thing.\n\n#SD");
+  });
+
+  it("is a no-op without a tag or when already present", () => {
+    expect(withHashtag("Shipped.", null)).toBe("Shipped.");
+    expect(withHashtag("Shipped. #SD", "#SD")).toBe("Shipped. #SD");
+  });
+
+  it("keeps the tag inside the 500-char cap", () => {
+    const out = withHashtag("x".repeat(500), "#BookASloth");
+    expect(out.length).toBeLessThanOrEqual(500);
+    expect(out.endsWith("#BookASloth")).toBe(true);
   });
 });
 

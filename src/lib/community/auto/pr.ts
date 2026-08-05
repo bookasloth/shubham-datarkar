@@ -25,6 +25,33 @@ export function projectFor(repoFullName: string | null | undefined): string | nu
   return PR_REPOS.get((repoFullName ?? "").toLowerCase()) ?? null;
 }
 
+/**
+ * Per-repo hashtag stamped on every auto-note so feed readers can tell which
+ * project shipped. Keyed by repo `full_name`; null for repos without one.
+ */
+const PR_HASHTAGS = new Map<string, string>([
+  ["bookasloth/shubham-datarkar", "#SD"],
+  ["bookasloth/book-a-sloth", "#BookASloth"],
+  ["bookasloth/wecos-online", "#WeCos"],
+  ["bookasloth/the-parliament", "#NNAWCA"],
+]);
+
+/** Hashtag for an allowlisted repo `full_name`, or null. */
+export function hashtagFor(repoFullName: string | null | undefined): string | null {
+  return PR_HASHTAGS.get((repoFullName ?? "").toLowerCase()) ?? null;
+}
+
+/**
+ * Append a repo hashtag to a note body, unless it's already present. Trims the
+ * body so the combined string stays within the 500-char post cap and the tag
+ * itself never gets clipped by autoPost's slice.
+ */
+export function withHashtag(body: string, hashtag: string | null): string {
+  if (!hashtag || body.includes(hashtag)) return body;
+  const suffix = `\n\n${hashtag}`;
+  return `${body.trimEnd().slice(0, 500 - suffix.length)}${suffix}`;
+}
+
 export function parsePrTitle(title: string): { type: string | null; scope: string | null; subject: string } {
   const m = title.trim().match(/^(\w+)(?:\(([^)]+)\))?!?:\s*(.+)$/);
   if (!m) return { type: null, scope: null, subject: title.trim() };

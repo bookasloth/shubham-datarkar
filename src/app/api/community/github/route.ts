@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { verifyGithubSignature } from "@/lib/community/auto/github-verify";
-import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, extractTweet, extractThread, extractVersion, buildBrief } from "@/lib/community/auto/pr";
+import { parsePrTitle, shouldAnnounce, humanizeSubject, projectFor, hashtagFor, withHashtag, extractTweet, extractThread, extractVersion, buildBrief } from "@/lib/community/auto/pr";
 import { autoPost } from "@/lib/community/auto/post";
 import { writeNote } from "@/lib/community/auto/note-llm";
 import { pick } from "@/lib/community/auto/templates";
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
   // make the second repo's PR #5 dedupe against the first and never post.
   await autoPost({
     sourceKey: `pr:${repo}#${pr.number}`,
-    body,
+    body: withHashtag(body, hashtagFor(repo)),
     thread: extractThread(pr.body),
     version: extractVersion(pr.body),
   });
