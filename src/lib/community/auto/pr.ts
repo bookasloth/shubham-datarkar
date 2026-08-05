@@ -17,6 +17,7 @@ const PR_REPOS = new Map<string, string>([
   ["bookasloth/shubham-datarkar", "the site"],
   ["bookasloth/book-a-sloth", "Book A Sloth"],
   ["bookasloth/wecos-online", "Wecos"],
+  ["bookasloth/the-parliament", "The Parliament"],
 ]);
 
 /** Project label for an allowlisted repo `full_name`, or null if not allowed. */
