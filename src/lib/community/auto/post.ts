@@ -14,6 +14,7 @@ export async function autoPost(input: {
   body: string;
   thread?: string | null;
   version?: string | null;
+  tags?: string[] | null;
 }): Promise<void> {
   try {
     const owner = await getOwnerProfileId();
@@ -27,6 +28,9 @@ export async function autoPost(input: {
         auto_key: input.sourceKey,
         thread: input.thread ?? null,
         version: input.version ?? null,
+        // The feed's tag filter (?tag=sd) matches the tags[] column, not body
+        // text — so the embedded #hashtag must also land here to be findable.
+        tags: input.tags?.length ? input.tags : null,
       });
     if (error && error.code !== "23505") {
       console.warn("[auto] insert failed", input.sourceKey, error.message);
