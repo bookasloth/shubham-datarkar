@@ -157,9 +157,9 @@ export async function GET(
           <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "4px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               <span style={{ fontWeight: 700, fontSize: "44px", letterSpacing: "-0.02em" }}>{name}</span>
-              <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={1.6} strokeLinejoin="round" style={{ marginTop: "3px" }}>
-                <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
-                <path d="M9 12l2 2 4-4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              <svg width={44} height={44} viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ marginTop: "3px" }}>
+                <path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z" />
+                <path d="m9 12 2 2 4-4" />
               </svg>
             </div>
             <span style={{ color: MUTED, fontSize: "32px" }}>@{post.username}</span>
@@ -169,8 +169,24 @@ export async function GET(
         {/* body + shortened links */}
         <div style={{ display: "flex", flexDirection: "column", marginTop: "72px" }}>
           {text && (
-            <div style={{ display: "flex", fontWeight: 700, fontSize: `${body}px`, lineHeight: 1.18, letterSpacing: "-0.03em" }}>
-              {text}
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", fontWeight: 700, fontSize: `${body}px`, lineHeight: 1.18, letterSpacing: "-0.03em" }}>
+              {text.split(/\s+/).map((w, i) => {
+                const tag = /^#[^\s#]+$/.test(w);
+                return (
+                  <span
+                    key={i}
+                    style={{
+                      display: "flex",
+                      color: tag ? BRAND : TEXT,
+                      // ~one space to the right; a hashtag gets double space on both sides.
+                      marginRight: tag ? "0.5em" : "0.26em",
+                      marginLeft: tag ? "0.26em" : "0",
+                    }}
+                  >
+                    {w}
+                  </span>
+                );
+              })}
             </div>
           )}
           {links.map((l, i) => (
