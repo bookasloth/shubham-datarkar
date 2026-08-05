@@ -3,6 +3,7 @@ import { getMemberContext } from "@/lib/members/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { resolveKalamaiRole, checkAndConsume } from "@/lib/kalamai/quota-server";
 import { logEvent } from "@/lib/kalamai/events-server";
+import { CONTENT_TYPES, bandFor } from "@/lib/kalamai/writing";
 
 export const dynamic = "force-dynamic";
 
@@ -23,11 +24,14 @@ export async function POST(req: NextRequest) {
   const analysisId = String(body.analysisId ?? "");
   if (!analysisId) return NextResponse.json({ error: "Missing analysisId." }, { status: 400 });
 
+  const contentType = (CONTENT_TYPES as readonly string[]).includes(body.contentType) ? body.contentType : "blog";
+  const [lo, hi] = bandFor(contentType);
   const params = {
-    targetWords: clamp(Math.round(Number(body.targetWords) || 1600), 1000, 2200),
+    targetWords: clamp(Math.round(Number(body.targetWords) || Math.round((lo + hi) / 2)), lo, hi),
     tone: String(body.tone ?? "professional").slice(0, 40) || "professional",
     audience: String(body.audience ?? "").slice(0, 200),
     brandFacts: String(body.brandFacts ?? "").slice(0, 1000) || undefined,
+    contentType,
   };
 
   // The article is only writable from a completed analysis the caller owns.

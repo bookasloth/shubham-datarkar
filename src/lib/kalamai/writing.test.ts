@@ -83,6 +83,12 @@ describe("buildArticleMeta — OG fields", () => {
     expect(meta.ogTitle).toBe(meta.title);
     expect(meta.ogDescription).toBe(meta.description);
   });
+
+  it("records the content type (default blog)", () => {
+    const meta = buildArticleMeta(FAKE_BRIEF, FAKE_OUTLINE, "landing");
+    expect(meta.contentType).toBe("landing");
+    expect(buildArticleMeta(FAKE_BRIEF, FAKE_OUTLINE).contentType).toBe("blog");
+  });
 });
 
 const briefStub = {

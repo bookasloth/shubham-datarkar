@@ -49,7 +49,7 @@ export type Critique = {
   ok: boolean;
 };
 
-export type ArticleMeta = { title: string; description: string; ogTitle: string; ogDescription: string; jsonld: string };
+export type ArticleMeta = { title: string; description: string; ogTitle: string; ogDescription: string; jsonld: string; contentType: ContentType };
 
 /** Stable cached block shared by W2-W4: the brief + the writer's params. */
 export function buildCachePrefix(brief: Brief, params: ArticleParams): string {
@@ -115,7 +115,7 @@ export function enforceWordCap(blocks: ContentBlock[], cap = 2200): ContentBlock
 }
 
 /** Meta is a straight pull from the brief + the plan the model already chose. */
-export function buildArticleMeta(brief: Brief, plan: SectionPlan): ArticleMeta {
+export function buildArticleMeta(brief: Brief, plan: SectionPlan, contentType: ContentType = "blog"): ArticleMeta {
   const title = plan.title || brief.metaTitles[0] || "";
   const description = plan.description || brief.metaDescriptions[0] || "";
   return {
@@ -124,6 +124,7 @@ export function buildArticleMeta(brief: Brief, plan: SectionPlan): ArticleMeta {
     ogTitle: plan.ogTitle || title,
     ogDescription: plan.ogDescription || description,
     jsonld: brief.schemaJsonLd || "",
+    contentType,
   };
 }
 
