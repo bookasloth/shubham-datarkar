@@ -28,7 +28,7 @@ export default async function KalamaiHistoryPage() {
       <PageHero
         eyebrow="KalamAI"
         title="History"
-        description="Your past analyses."
+        description="Your content."
         crumbs={[
           { label: "Home", href: "/" },
           { label: "KalamAI", href: "/tools/kalamai" },
