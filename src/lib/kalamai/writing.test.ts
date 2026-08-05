@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   extractSourceFacts, buildCritiquePrompt, enforceWordCap, buildArticleMeta, FAKE_OUTLINE,
   buildSectionDraftPrompt, buildSectionRewritePrompt, buildCachePrefix, FAKE_SECTION_DRAFT,
+  bandFor, CONTENT_TYPES, CONTENT_LABELS, buildOutlinePrompt,
 } from "./writing";
 import { FAKE_BRIEF } from "./brief";
 import type { ContentBlock } from "@/lib/data/types";
@@ -47,6 +48,7 @@ describe("extractSourceFacts", () => {
     expect(c.system).toMatch(/not supported by the source facts/i);
     expect(c.system).toMatch(/1000-2200 words/);
     expect(c.user).toContain("250 million");
+
   });
 });
 
@@ -80,6 +82,12 @@ describe("buildArticleMeta — OG fields", () => {
     const meta = buildArticleMeta(brief, plan);
     expect(meta.ogTitle).toBe(meta.title);
     expect(meta.ogDescription).toBe(meta.description);
+  });
+
+  it("records the content type (default blog)", () => {
+    const meta = buildArticleMeta(FAKE_BRIEF, FAKE_OUTLINE, "landing");
+    expect(meta.contentType).toBe("landing");
+    expect(buildArticleMeta(FAKE_BRIEF, FAKE_OUTLINE).contentType).toBe("blog");
   });
 });
 
@@ -132,5 +140,70 @@ describe("FAKE_SECTION_DRAFT", () => {
     expect(Array.isArray(arr)).toBe(true);
     expect(arr.length).toBeGreaterThan(0);
     expect(arr.length).toBeLessThanOrEqual(4);
+  });
+});
+
+describe("content types", () => {
+  it("bandFor returns the per-type word band", () => {
+    expect(bandFor("blog")).toEqual([1000, 2200]);
+    expect(bandFor("landing")).toEqual([500, 1200]);
+    expect(bandFor("product")).toEqual([120, 500]);
+  });
+  it("unknown type falls back to blog band", () => {
+    // @ts-expect-error deliberately wrong
+    expect(bandFor("nope")).toEqual([1000, 2200]);
+  });
+  it("labels + list cover all three", () => {
+    expect(CONTENT_TYPES).toEqual(["blog", "landing", "product"]);
+    expect(CONTENT_LABELS.landing).toBe("Landing Page");
+    expect(CONTENT_LABELS.product).toBe("Product Description");
+  });
+});
+
+describe("buildOutlinePrompt per type", () => {
+  const base = { targetWords: 1600, tone: "professional", audience: "marketers" };
+  it("blog keeps the SEO/AEO strategist framing + 2200 ceiling", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "blog" });
+    expect(system).toContain("1000 and 2200");
+    expect(system).toContain("Conclusion");
+  });
+  it("landing targets a conversion structure + its band", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "landing" });
+    expect(system).toContain("500 and 1200");
+    expect(system.toLowerCase()).toContain("call to action");
+    expect(system.toLowerCase()).toContain("benefit");
+  });
+  it("product targets a short product structure + its band", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, { ...base, contentType: "product" });
+    expect(system).toContain("120 and 500");
+    expect(system.toLowerCase()).toContain("features");
+  });
+  it("missing contentType behaves as blog", () => {
+    const { system } = buildOutlinePrompt(FAKE_BRIEF, base);
+    expect(system).toContain("1000 and 2200");
+  });
+});
+
+describe("draft + critique per type", () => {
+  const base = { targetWords: 800, tone: "professional", audience: "marketers" };
+  const plan = { title: "t", description: "d", ogTitle: "og", ogDescription: "ogd", sections: [{ heading: "H", points: [], words: 300 }] };
+
+  it("blog draft keeps the direct-answer rule", () => {
+    const { system } = buildSectionDraftPrompt(FAKE_BRIEF, { ...base, contentType: "blog" }, plan, 0, [], []);
+    expect(system).toContain("direct one-sentence answer");
+  });
+  it("landing draft drops direct-answer, asks for benefit-led + CTA", () => {
+    const { system } = buildSectionDraftPrompt(FAKE_BRIEF, { ...base, contentType: "landing" }, plan, 0, [], []);
+    expect(system).not.toContain("direct one-sentence answer");
+    expect(system.toLowerCase()).toContain("benefit");
+  });
+  it("blog critique flags length against 1000-2200", () => {
+    const { system } = buildCritiquePrompt(FAKE_BRIEF, { ...base, contentType: "blog" }, [{ type: "p", text: "hi" }], []);
+    expect(system).toContain("1000-2200");
+  });
+  it("product critique flags length against its band + checks CTA", () => {
+    const { system } = buildCritiquePrompt(FAKE_BRIEF, { ...base, contentType: "product" }, [{ type: "p", text: "hi" }], []);
+    expect(system).toContain("120-500");
+    expect(system.toLowerCase()).toContain("call to action");
   });
 });

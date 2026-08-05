@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { requireMember } from "@/lib/members/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
@@ -13,8 +13,15 @@ import { listArticlesForAnalysis } from "@/lib/kalamai/queries-server";
 export const metadata = buildMetadata({ title: "KalamAI Analysis", path: "/tools/kalamai", noIndex: true });
 export const dynamic = "force-dynamic";
 
-export default async function KalamaiAnalysisPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function KalamaiAnalysisPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ view?: string }>;
+}) {
   const { id } = await params;
+  const { view } = await searchParams;
   const ctx = await requireMember(`/tools/kalamai/a/${id}`);
   const isAdmin = ctx.role === "admin";
 
@@ -28,6 +35,9 @@ export default async function KalamaiAnalysisPage({ params }: { params: Promise<
 
   const terminal = a.status === "complete" || a.status === "failed";
   const articles = a.status === "complete" ? await listArticlesForAnalysis(a.id) : [];
+
+  const done = articles.find((art) => art.status === "complete");
+  if (done && view !== "brief") redirect(`/tools/kalamai/w/${done.id}`);
 
   return (
     <>

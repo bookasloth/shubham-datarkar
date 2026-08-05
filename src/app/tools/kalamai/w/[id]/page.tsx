@@ -29,7 +29,7 @@ export default async function KalamaiArticlePage({ params }: { params: Promise<{
 
   let q = supabaseAdmin()
     .from("kalamai_articles")
-    .select("id, status, progress, blocks, meta, score")
+    .select("id, status, progress, blocks, meta, score, analysis_id")
     .eq("id", id);
   if (ctx.role !== "admin") q = q.eq("user_id", ctx.user!.id); // admin can view any user's article
   const { data: article } = await q.maybeSingle();
@@ -104,9 +104,19 @@ export default async function KalamaiArticlePage({ params }: { params: Promise<{
             <ArticlePoller id={article.id} initialStatus={article.status} initialProgress={article.progress ?? 0} />
           )}
 
-          <Link href="/tools/kalamai/history" className="mt-6 inline-block text-sm font-medium hover:underline">
-            Back to history
-          </Link>
+          <div className="mt-6 flex flex-wrap gap-4">
+            <Link href="/tools/kalamai/history" className="inline-block text-sm font-medium hover:underline">
+              Back to history
+            </Link>
+            {article.analysis_id && (
+              <Link
+                href={`/tools/kalamai/a/${article.analysis_id}?view=brief`}
+                className="inline-block text-sm font-medium hover:underline"
+              >
+                Write another version from this research
+              </Link>
+            )}
+          </div>
         </Container>
       </Section>
     </>

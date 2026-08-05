@@ -92,6 +92,7 @@ vi.mock("@/lib/supabase/server", () => ({ supabaseAdmin: () => mockDb }));
 
 import { runArticleStep } from "./writing-server";
 import { FAKE_BRIEF } from "./brief";
+import { countWords } from "@/lib/blog/words";
 
 function seed(over: { article?: Row; analysisReport?: unknown } = {}): void {
   store.kalamai_analyses.push({ id: "an-1", user_id: "user-1", report: over.analysisReport ?? { brief: FAKE_BRIEF } });
@@ -168,6 +169,16 @@ describe("runArticleStep", () => {
     expect(store.kalamai_llm_calls.some((c) => c.stage === "W4")).toBe(true);
     const art = store.kalamai_articles[0];
     expect((art.stage_state as { blocks: unknown[] }).blocks.length).toBeGreaterThan(0);
+  });
+
+  it("walks a product-type article to completion within its word band", async () => {
+    seed({ article: { params: { targetWords: 300, tone: "professional", audience: "Nagpur SMB owners", contentType: "product" } } });
+    const seq = await drive("art-1");
+
+    expect(seq[seq.length - 1]).toBe("complete");
+    const art = store.kalamai_articles[0];
+    expect(countWords(art.blocks as import("@/lib/data/types").ContentBlock[])).toBeLessThanOrEqual(500);
+    expect((art.meta as { contentType: string }).contentType).toBe("product");
   });
 
   it("hard-fails and refunds (status→failed) when the source analysis has no brief", async () => {

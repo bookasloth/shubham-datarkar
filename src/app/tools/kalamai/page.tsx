@@ -2,12 +2,13 @@ import Link from "next/link";
 import { buildMetadata } from "@/lib/seo";
 import { getMemberContext } from "@/lib/members/session";
 import { resolveKalamaiRole, getQuotaUsage } from "@/lib/kalamai/quota-server";
-import { listRecentAnalyses } from "@/lib/kalamai/queries-server";
+import { listRecentArticles } from "@/lib/kalamai/queries-server";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { QuotaBadge } from "@/components/kalamai/quota-badge";
 import { KalamaiTeaser } from "@/components/kalamai/teaser";
 import { NewAnalysisForm } from "@/components/kalamai/new-analysis-form";
+import { ContentTypeBadge } from "@/components/kalamai/content-type-badge";
 
 // noindex — gated tool; the public /tools grid card is the discoverable surface.
 export const metadata = buildMetadata({
@@ -24,7 +25,7 @@ export default async function KalamaiHomePage() {
   if (!ctx.user) return <KalamaiTeaser />;
 
   const role = await resolveKalamaiRole(ctx);
-  const [usage, recent] = await Promise.all([getQuotaUsage(ctx.user.id, role), listRecentAnalyses(ctx.user.id, 8)]);
+  const [usage, recent] = await Promise.all([getQuotaUsage(ctx.user.id, role), listRecentArticles(ctx.user.id, 8)]);
 
   return (
     <>
@@ -41,7 +42,7 @@ export default async function KalamaiHomePage() {
 
           <div className="mt-8">
             <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold tracking-tight">Recent analyses</h2>
+              <h2 className="text-sm font-semibold tracking-tight">Your content</h2>
               {recent.length > 0 && (
                 <Link href="/tools/kalamai/history" className="text-sm font-medium hover:underline">
                   All history
@@ -49,15 +50,21 @@ export default async function KalamaiHomePage() {
               )}
             </div>
             {recent.length === 0 ? (
-              <p className="mt-3 text-sm text-muted-foreground">You haven&rsquo;t run an analysis yet.</p>
+              <p className="mt-3 text-sm text-muted-foreground">You haven&rsquo;t created any content yet.</p>
             ) : (
               <ul className="mt-3 divide-y divide-border rounded-card border border-border bg-card">
                 {recent.map((r) => (
-                  <li key={r.id}>
-                    <Link href={`/tools/kalamai/a/${r.id}`} className="flex items-center justify-between gap-3 p-4 transition-ui hover:bg-muted">
-                      <span className="truncate text-sm">{r.keyword}</span>
-                      <span className="shrink-0 rounded-btn bg-muted px-2 py-0.5 text-[11px] capitalize text-muted-foreground">
-                        {r.status}
+                  <li key={r.articleId}>
+                    <Link href={`/tools/kalamai/w/${r.articleId}`} className="flex items-center justify-between gap-3 p-4 transition-ui hover:bg-muted">
+                      <span className="min-w-0">
+                        <span className="block truncate text-sm">{r.title !== "Untitled article" ? r.title : r.keyword}</span>
+                        <span className="text-xs text-muted-foreground">{r.keyword}</span>
+                      </span>
+                      <span className="flex shrink-0 items-center gap-2">
+                        <ContentTypeBadge type={r.contentType} />
+                        <span className="rounded-btn bg-muted px-2 py-0.5 text-[11px] capitalize text-muted-foreground">
+                          {r.overall != null ? `${r.status} · ${r.overall}/100` : r.status}
+                        </span>
                       </span>
                     </Link>
                   </li>

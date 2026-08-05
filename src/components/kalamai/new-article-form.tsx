@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { CONTENT_TYPES, CONTENT_LABELS } from "@/lib/kalamai/writing";
 
 const inputClass =
   "h-10 w-full rounded-input border border-border bg-background px-3 text-sm outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring";
@@ -17,6 +18,7 @@ const LENGTHS = [
 /** Write an article from a completed analysis, then hand off to the /w poller. */
 export function NewArticleForm({ analysisId }: { analysisId: string }) {
   const router = useRouter();
+  const [contentType, setContentType] = useState<"blog" | "landing" | "product">("blog");
   const [targetWords, setTargetWords] = useState(1500);
   const [tone, setTone] = useState("professional");
   const [audience, setAudience] = useState("");
@@ -33,7 +35,7 @@ export function NewArticleForm({ analysisId }: { analysisId: string }) {
       const res = await fetch("/api/kalamai/articles", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ analysisId, targetWords, tone, audience: audience.trim(), brandFacts: brandFacts.trim() }),
+        body: JSON.stringify({ analysisId, targetWords, tone, audience: audience.trim(), brandFacts: brandFacts.trim(), contentType }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
@@ -51,7 +53,13 @@ export function NewArticleForm({ analysisId }: { analysisId: string }) {
   return (
     <form onSubmit={submit} className="rounded-card border border-border bg-card p-6">
       <p className="text-sm font-medium text-foreground">Write an article from this brief</p>
-      <div className="mt-4 grid gap-3 sm:grid-cols-2">
+      <div className="mt-4 space-y-1">
+        <label htmlFor="ct" className="text-xs font-medium text-muted-foreground">Content type</label>
+        <select id="ct" className={inputClass} value={contentType} onChange={(e) => setContentType(e.target.value as typeof contentType)}>
+          {CONTENT_TYPES.map((t) => (<option key={t} value={t}>{CONTENT_LABELS[t]}</option>))}
+        </select>
+      </div>
+      <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div className="space-y-1">
           <label htmlFor="len" className="text-xs font-medium text-muted-foreground">Length</label>
           <select id="len" className={inputClass} value={targetWords} onChange={(e) => setTargetWords(Number(e.target.value))}>
