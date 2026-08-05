@@ -6,47 +6,45 @@ import { ensureShortLinks, SHORT_HOST } from "@/lib/community/short-link";
 import { getPostByPublicId } from "@/lib/community/queries";
 
 // Downloadable share card for a single community post. Instagram portrait
-// (1080x1350, 4:5), flat grey, quote-card look: brand logo top-right · square
-// rounded avatar with name/@handle stacked beside it · 3-dots · body with
-// shortened link · engagement bar (fake, descending) · "Read More @" CTA.
+// (1080x1350, 4:5), X/Twitter-style dark quote card: circular real avatar with
+// name/@handle beside it · "Sd" mark top-right · big body text · timestamp.
 // Same next/og (Satori) pipeline as the blog OG images, so no new deps. Runs on
 // the default (nodejs) runtime so the DB read + short-link RPC work — do NOT
 // switch to edge.
 
 export const size = { width: 1080, height: 1350 };
 
-// One const so the mark is swappable in one line.
-const LOGO_URL = "https://website-assets.shubhamdatarkar.com/logos/favicon.png";
-
 const BRAND = "#ff4800";
-const BG = "#e8e8e8"; // flat grey — backdrop + card, no floating panel
-const TEXT = "#171717";
-const MUTED = "#6b6b70";
+const GOLD = "#e0a516";
+const BG = "#0d0d10"; // near-black backdrop
+const TEXT = "#f5f5f5";
+const MUTED = "#7a7a80";
 
-// Fake engagement — always 2 digits, descending left→right (likes highest).
+// Body scales down as the post gets longer so short posts read huge and long
+// ones still fit the 1350px canvas. ponytail: fixed buckets, not per-char fit.
+function bodySize(len: number): number {
+  if (len <= 90) return 78;
+  if (len <= 180) return 58;
+  if (len <= 300) return 46;
+  return 38;
+}
+
+// Fake engagement — 2-digit, descending left→right (likes highest).
 // ponytail: static display numbers, not real post counts (share-card polish).
 const FAKE = { like: 87, reply: 64, reblog: 42, bookmark: 21 };
-
-// One inline SVG icon (lucide path) — Satori renders <svg>/<path>.
-function Icon({ d, fill = "none", stroke = MUTED, size = 40 }: { d: string; fill?: string; stroke?: string; size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke={stroke} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
-      <path d={d} />
-    </svg>
-  );
-}
 
 const HEART = "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z";
 const REPLY = "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z";
 const REBLOG = "M17 2l4 4-4 4 M3 11v-1a4 4 0 0 1 4-4h14 M7 22l-4-4 4-4 M21 13v1a4 4 0 0 1-4 4H3";
 const BOOKMARK = "M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z";
 
-// One engagement pill (icon + count). Icons stay uncoloured (grey outline);
-// the count reads in the card's text colour.
+// One engagement pill (icon + count) — grey outline icon, light count.
 function Stat({ d, n }: { d: string; n: number }) {
   return (
     <span style={{ display: "flex", alignItems: "center", gap: "12px", color: TEXT, fontSize: "32px", fontWeight: 700 }}>
-      <Icon d={d} stroke={MUTED} fill="none" />
+      <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={MUTED} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+        <path d={d} />
+      </svg>
       {compactNumber(n)}
     </span>
   );
@@ -77,11 +75,16 @@ export async function GET(
     const slug = short.get(t.href);
     return [slug ? `${SHORT_HOST}/s/${slug}` : prettyLabel(t.href)];
   });
-  // Body is 1px smaller than the 40px name, weight 400. ponytail: fixed size,
-  // not length-fit — a very long post can run tall; card is 1350px so there's room.
-  const bodySize = 39;
+  const body = bodySize(text.length);
   // Links a touch smaller so a short /s/ link stays on one line.
-  const linkSize = Math.min(bodySize - 6, 44);
+  const linkSize = Math.min(body - 6, 44);
+
+  // "2:21 PM · July 21, 2026" in IST — the feed's own timezone.
+  const d = new Date(post.createdAt);
+  const time = new Intl.DateTimeFormat("en-US", { hour: "numeric", minute: "2-digit", hour12: true, timeZone: "Asia/Kolkata" }).format(d);
+  const date = new Intl.DateTimeFormat("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "Asia/Kolkata" }).format(d);
+  const stamp = `${time} · ${date}`;
+  const avatar = post.avatarUrl || avatarUrl(post.username);
 
   // Plus Jakarta Sans (site display font). Satori needs raw TTF bytes — the
   // next/font woff2 in .next can't be parsed, and Turbopack rejects
@@ -99,112 +102,124 @@ export async function GET(
         style={{
           width: "100%",
           height: "100%",
+          position: "relative",
           display: "flex",
           flexDirection: "column",
           justifyContent: "space-between",
           background: BG,
           color: TEXT,
-          padding: "72px 92px",
+          padding: "96px 88px",
           fontFamily: "Plus Jakarta Sans",
         }}
       >
-        {/* Brand logo — top-right corner (where the bird was) */}
-        <div style={{ display: "flex", justifyContent: "flex-end" }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img alt="" src={LOGO_URL} width={80} height={80} style={{ width: "80px", height: "80px", objectFit: "contain" }} />
+        {/* "Sd" mark — bordered square, pinned top-right corner */}
+        <div
+          style={{
+            position: "absolute",
+            top: "72px",
+            right: "72px",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            width: "76px",
+            height: "76px",
+            borderRadius: "14px",
+            border: `2px solid ${TEXT}`,
+            fontWeight: 700,
+            fontSize: "40px",
+            letterSpacing: "-0.03em",
+          }}
+        >
+          Sd
         </div>
 
-        {/* Post skeleton — header (avatar · name/handle · 3-dots) · body · bar */}
+        {/* centered content group — header · body · timestamp · bar */}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center" }}>
-          {/* header row */}
-          <div style={{ display: "flex", alignItems: "center", gap: "28px", width: "100%" }}>
-            {/* next/og (Satori) renders this server-side, not to the DOM — next/image doesn't apply. */}
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              alt=""
-              src={avatarUrl(post.username)}
-              width={112}
-              height={112}
-              style={{
-                width: "112px",
-                height: "112px",
-                borderRadius: "24px",
-                objectFit: "cover",
-                background: avatarBg(post.username),
-              }}
-            />
-
-            {/* name (+ always-orange tick) over @handle, centered to the avatar */}
-            <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "6px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-                <span style={{ fontWeight: 700, fontSize: "40px", letterSpacing: "-0.02em" }}>{name}</span>
-                <svg width={38} height={38} viewBox="0 0 24 24" fill={BRAND} stroke="none" style={{ marginTop: "3px" }}>
-                  <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
-                  <path d="M9 12l2 2 4-4" fill="none" stroke={BG} strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
-              </div>
-              <span style={{ color: MUTED, fontSize: "30px" }}>@{post.username}</span>
-            </div>
-
-            {/* 3-dots — far right */}
-            <svg width={44} height={44} viewBox="0 0 24 24" fill={MUTED} stroke="none">
-              <circle cx="5" cy="12" r="1.7" />
-              <circle cx="12" cy="12" r="1.7" />
-              <circle cx="19" cy="12" r="1.7" />
-            </svg>
-          </div>
-
-          {/* body + shortened links */}
-          <div style={{ display: "flex", flexDirection: "column", marginTop: "44px" }}>
-            {text && (
-              <div style={{ display: "flex", fontWeight: 400, fontSize: `${bodySize}px`, lineHeight: 1.26, letterSpacing: "-0.025em" }}>
-                {text}
-              </div>
-            )}
-            {links.map((l, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "flex",
-                  marginTop: text || i ? "18px" : "0px",
-                  fontSize: `${linkSize}px`,
-                  lineHeight: 1.3,
-                  letterSpacing: "-0.01em",
-                  color: TEXT,
-                  textDecoration: "underline",
-                  textUnderlineOffset: "6px",
-                }}
-              >
-                {l}
-              </div>
-            ))}
-            {!text && links.length === 0 && (
-              <div style={{ display: "flex", fontSize: "60px", letterSpacing: "-0.025em" }}>A post by {name}</div>
-            )}
-          </div>
-
-          {/* engagement bar — fake 2-digit counts, descending left→right */}
-          <div
+        {/* header row — circular avatar · name/handle */}
+        <div style={{ display: "flex", alignItems: "center", gap: "28px", width: "100%" }}>
+          {/* next/og (Satori) renders this server-side, not to the DOM — next/image doesn't apply. */}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            alt=""
+            src={avatar}
+            width={112}
+            height={112}
             style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "64px",
-              marginTop: "48px",
-              paddingTop: "32px",
-              borderTop: "1px solid rgba(0,0,0,0.12)",
+              width: "112px",
+              height: "112px",
+              borderRadius: "56px",
+              objectFit: "cover",
+              background: avatarBg(post.username),
             }}
-          >
-            <Stat d={HEART} n={FAKE.like} />
-            <Stat d={REPLY} n={FAKE.reply} />
-            <Stat d={REBLOG} n={FAKE.reblog} />
-            <Stat d={BOOKMARK} n={FAKE.bookmark} />
+          />
+
+          {/* name (+ always-orange tick) over @handle */}
+          <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "center", gap: "4px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+              <span style={{ fontWeight: 700, fontSize: "44px", letterSpacing: "-0.02em" }}>{name}</span>
+              <svg width={40} height={40} viewBox="0 0 24 24" fill="none" stroke={GOLD} strokeWidth={1.6} strokeLinejoin="round" style={{ marginTop: "3px" }}>
+                <path d="M12 2l2.4 1.8 3 .2.9 2.9 2.4 1.8-1 2.9 1 2.9-2.4 1.8-.9 2.9-3 .2L12 22l-2.4-1.8-3-.2-.9-2.9L3.3 15.4l1-2.9-1-2.9 2.4-1.8.9-2.9 3-.2z" />
+                <path d="M9 12l2 2 4-4" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <span style={{ color: MUTED, fontSize: "32px" }}>@{post.username}</span>
           </div>
         </div>
 
-        {/* CTA — bold "Read More @" + normal domain */}
+        {/* body + shortened links */}
+        <div style={{ display: "flex", flexDirection: "column", marginTop: "72px" }}>
+          {text && (
+            <div style={{ display: "flex", fontWeight: 700, fontSize: `${body}px`, lineHeight: 1.18, letterSpacing: "-0.03em" }}>
+              {text}
+            </div>
+          )}
+          {links.map((l, i) => (
+            <div
+              key={i}
+              style={{
+                display: "flex",
+                marginTop: text || i ? "20px" : "0px",
+                fontSize: `${linkSize}px`,
+                lineHeight: 1.3,
+                letterSpacing: "-0.01em",
+                color: BRAND,
+              }}
+            >
+              {l}
+            </div>
+          ))}
+          {!text && links.length === 0 && (
+            <div style={{ display: "flex", fontWeight: 700, fontSize: "72px", letterSpacing: "-0.03em" }}>A post by {name}</div>
+          )}
+        </div>
+
+        {/* timestamp */}
+        <div style={{ display: "flex", marginTop: "48px", color: MUTED, fontSize: "34px", letterSpacing: "-0.01em" }}>
+          {stamp}
+        </div>
+
+        {/* engagement bar — fake 2-digit counts, descending left→right */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "64px",
+            marginTop: "40px",
+            paddingTop: "36px",
+            borderTop: "1px solid rgba(255,255,255,0.12)",
+          }}
+        >
+          <Stat d={HEART} n={FAKE.like} />
+          <Stat d={REPLY} n={FAKE.reply} />
+          <Stat d={REBLOG} n={FAKE.reblog} />
+          <Stat d={BOOKMARK} n={FAKE.bookmark} />
+        </div>
+        </div>
+
+        {/* CTA — bottom, centered */}
         <div style={{ display: "flex", justifyContent: "center", alignItems: "baseline", gap: "12px", fontSize: "34px" }}>
-          <span style={{ display: "flex", fontWeight: 700, color: TEXT }}>Read More @</span>
-          <span style={{ display: "flex", fontWeight: 400, color: MUTED }}>{site.domain}</span>
+          <span style={{ display: "flex", fontWeight: 700, color: TEXT }}>Read More on</span>
+          <span style={{ display: "flex", fontWeight: 400, color: MUTED }}>{site.domain}/community</span>
         </div>
       </div>
     ),
