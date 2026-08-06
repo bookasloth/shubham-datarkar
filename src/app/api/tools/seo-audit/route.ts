@@ -1,12 +1,19 @@
 import { NextResponse } from "next/server";
 import { auditExternalUrl } from "@/lib/tools/audit";
 import { AuditError } from "@/lib/tools/safe-fetch";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 // Fetching an arbitrary external URL needs Node (dns lookup for the SSRF guard).
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  // Public, unauthenticated server-side fetch: cap per-IP so it can't be used as
+  // a free bandwidth/fetch amplifier.
+  if (!(await allow(`tools-seo-audit:${clientIp(req.headers)}`, 10, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Please wait a minute." }, { status: 429 });
+  }
+
   let url: string;
   try {
     const body = (await req.json()) as { url?: unknown };
