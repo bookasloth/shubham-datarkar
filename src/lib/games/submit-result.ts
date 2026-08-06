@@ -1,7 +1,7 @@
 "use server";
 
 import { getGameUser } from "@/lib/games/session";
-import { supabaseAuthServer } from "@/lib/supabase/auth-server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { puzzleDateISO, isTodayOrYesterday } from "@/lib/daily";
 import { getMemberContext } from "@/lib/members/session";
 import { can } from "@/lib/members/capabilities";
@@ -28,7 +28,12 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
     if (!can(ctx.capabilities, "view_archive")) return { ok: false, reason: "forbidden" };
   }
 
-  const supabase = await supabaseAuthServer();
+  // Service-role client, not the user's JWT: the write RPCs are no longer
+  // PostgREST-reachable (revoked from authenticated), which is what closes the
+  // forge-a-win hole — the validateResult check above can no longer be bypassed
+  // by calling the RPC directly. The player is passed explicitly as p_user, taken
+  // from the JWT-validated getGameUser() above, never from the client body.
+  const supabase = supabaseAdmin();
   // Two RPCs, not one flagged RPC: only `submit_result` touches streaks, so the
   // archive path cannot farm one even if this call site is wrong.
   // No time is passed: the server derives it from started_at, because time_ms is
@@ -36,17 +41,13 @@ export async function submitResult(input: SubmitInput): Promise<SubmitOutcome> {
   const { error } = await supabase.rpc(
     check.source === "archive" ? "submit_archive_result" : "submit_result",
     {
+      p_user: user.id,
       p_game: input.game,
       p_puzzle: input.puzzleNumber,
       p_date: puzzleDateISO(input.game, input.puzzleNumber),
       p_status: input.status,
       p_guesses: input.guesses.length,
       p_guess_data: input.guesses,
-      // Vestigial and ignored by both RPCs — the server derives the time from
-      // started_at. Passed explicitly because PostgREST resolves an overload by
-      // the exact set of keys sent: omitting it 404s (PGRST202) despite the
-      // parameter having a DEFAULT. Drop once the parameter is dropped.
-      p_time_ms: null,
     },
   );
 
