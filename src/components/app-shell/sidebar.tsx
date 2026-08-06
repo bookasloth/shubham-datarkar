@@ -11,7 +11,7 @@ import {
 } from "./nav-config";
 
 /** Hardcoded card copy — no DB field for these yet (see getShellUser). */
-const CARD_TAGLINE = "Founder · SEO & Growth";
+const CARD_TAGLINE = "Founder and SEO Expert";
 const CARD_BIO = "Building in public. Come for the tools, stay for the games.";
 
 /** The identity slice the profile card renders. Null when signed out. */
