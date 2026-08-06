@@ -10,6 +10,30 @@ import {
   type AppNavItem, type AppNavSection,
 } from "./nav-config";
 
+/** Hardcoded card copy — no DB field for these yet (see getShellUser). */
+const CARD_TAGLINE = "Founder · SEO & Growth";
+const CARD_BIO = "Building in public. Come for the tools, stay for the games.";
+
+/** The identity slice the profile card renders. Null when signed out. */
+export type SidebarProfile = {
+  displayName: string;
+  username: string | null;
+  avatarUrl: string | null;
+  postCount: number;
+  followers: number;
+  following: number;
+};
+
+/** 2500 → "2.5K", 999 → "999". */
+function fmt(n: number): string {
+  if (n < 1000) return String(n);
+  return (n / 1000).toFixed(1).replace(/\.0$/, "") + "K";
+}
+
+function initials(name: string): string {
+  return name.trim().slice(0, 2).toUpperCase() || "SD";
+}
+
 function linkCls(active: boolean): string {
   return cn(
     "block rounded-input px-3 py-1.5 text-sm transition-ui",
@@ -58,7 +82,7 @@ function SidebarLink({
   );
 }
 
-/** Section name row — a plain link; the active section gets the brand pill. */
+/** Section name row — colored icon + label; active section gets the brand pill. */
 function SectionRow({
   section,
   active,
@@ -86,7 +110,8 @@ function SectionRow({
         active ? "bg-brand text-brand-foreground" : "hover:bg-accent",
       )}
     >
-      <Icon className="size-4" /> {section.label}
+      {/* Colored icon like the reference; on the active pill it inherits the pill's foreground. */}
+      <Icon className={cn("size-4", !active && section.color)} /> {section.label}
     </Link>
   );
 }
@@ -147,13 +172,93 @@ function SectionChildren({
   );
 }
 
+/** Cover banner + overlapping avatar + name/tagline/bio + stats (the reference header). */
+function ProfileCard({
+  profile,
+  onNavigate,
+}: {
+  profile: SidebarProfile | null;
+  onNavigate?: () => void;
+}) {
+  return (
+    <div className="overflow-hidden rounded-card border border-border bg-card">
+      {/* Cover — gradient, no image asset needed. */}
+      <div className="h-16 bg-gradient-to-r from-brand/70 via-brand to-foreground/60" />
+      <div className="px-4 pb-4">
+        {/* Avatar overlaps the cover. */}
+        <div className="-mt-8 mb-2 flex justify-center">
+          {profile?.avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element -- external avatar host, avoids next/image host config
+            <img
+              src={profile.avatarUrl}
+              alt=""
+              className="size-16 rounded-input border-4 border-card object-cover"
+            />
+          ) : (
+            <div className="flex size-16 items-center justify-center rounded-input border-4 border-card bg-accent text-lg font-semibold text-foreground">
+              {profile ? initials(profile.displayName) : "SD"}
+            </div>
+          )}
+        </div>
+
+        <div className="text-center">
+          <p className="truncate text-base font-semibold text-foreground">
+            {profile?.displayName ?? "Guest"}
+          </p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {profile ? CARD_TAGLINE : "You're browsing as a guest"}
+          </p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            {profile ? CARD_BIO : "Sign in to post, follow, and play."}
+          </p>
+        </div>
+
+        {profile ? (
+          <div className="mt-4 grid grid-cols-3 divide-x divide-border border-t border-border pt-3 text-center">
+            {[
+              { label: "Posts", value: profile.postCount },
+              { label: "Followers", value: profile.followers },
+              { label: "Following", value: profile.following },
+            ].map((s) => (
+              <div key={s.label} className="px-1">
+                <p className="text-sm font-semibold text-foreground">{fmt(s.value)}</p>
+                <p className="text-xs text-muted-foreground">{s.label}</p>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            onClick={onNavigate}
+            className="mt-4 flex items-center justify-center rounded-btn bg-foreground px-4 py-2 text-sm font-medium text-background transition-ui hover:opacity-85"
+          >
+            Sign in
+          </Link>
+        )}
+
+        {profile?.username && (
+          <Link
+            href={`/community/u/${profile.username}`}
+            onClick={onNavigate}
+            className="mt-3 block text-center text-sm font-medium text-brand transition-ui hover:underline"
+          >
+            View Profile
+          </Link>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AppSidebar({
   signedIn,
   isPremium,
+  profile,
   onNavigate,
 }: {
   signedIn: boolean;
   isPremium: boolean;
+  profile: SidebarProfile | null;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname() ?? "/";
@@ -178,7 +283,9 @@ export function AppSidebar({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex-1 space-y-1">
+      <ProfileCard profile={profile} onNavigate={onNavigate} />
+
+      <div className="mt-3 flex-1 space-y-1">
       {/* Standalone Home row above the sections (Tumblr-style). */}
       <Link
         href="/"
@@ -189,7 +296,7 @@ export function AppSidebar({
           pathname === "/" ? "bg-brand text-brand-foreground" : "hover:bg-accent",
         )}
       >
-        <Home className="size-4" /> Home
+        <Home className={cn("size-4", pathname !== "/" && "text-rose-500")} /> Home
       </Link>
 
       {ordered.map((s) => {
@@ -267,6 +374,13 @@ export function AppSidebar({
         >
           <PenSquare className="size-4" /> Create
         </Link>
+
+        {/* Footer links (reference: About / Support / Contact). */}
+        <nav className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 pt-1 text-xs text-muted-foreground">
+          <Link href="/about" onClick={onNavigate} className="transition-ui hover:text-foreground">About</Link>
+          <Link href="/support" onClick={onNavigate} className="transition-ui hover:text-foreground">Support</Link>
+          <Link href="/contact" onClick={onNavigate} className="transition-ui hover:text-foreground">Contact</Link>
+        </nav>
       </div>
     </div>
   );

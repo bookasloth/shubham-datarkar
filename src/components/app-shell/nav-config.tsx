@@ -16,6 +16,8 @@ export type AppNavSection = {
   key: SectionKey;
   label: string;
   icon: LucideIcon;
+  /** Tailwind text-color for the row icon (profile-card style). */
+  color: string;
   /** Section landing page when it differs from the first item (games hub). */
   home?: string;
   items: AppNavItem[];
@@ -26,6 +28,7 @@ export const APP_NAV: AppNavSection[] = [
     key: "community",
     label: "Community",
     icon: Users,
+    color: "text-blue-500",
     items: [
       { label: "Feed", href: "/community" },
       { label: "Likes", href: "/community/likes", gated: true },
@@ -37,6 +40,7 @@ export const APP_NAV: AppNavSection[] = [
     key: "membership",
     label: "Membership",
     icon: Compass,
+    color: "text-emerald-500",
     items: [
       { label: "Explore", href: "/members/explore" },
       { label: "Latest", href: "/members/latest" },
@@ -50,6 +54,7 @@ export const APP_NAV: AppNavSection[] = [
     key: "game",
     label: "Games",
     icon: Gamepad2,
+    color: "text-violet-500",
     home: "/games",
     items: [
       {
@@ -88,6 +93,7 @@ export const APP_NAV: AppNavSection[] = [
     key: "account",
     label: "Account",
     icon: UserRound,
+    color: "text-amber-500",
     // Single item so sectionHref/activeChildHref keep working; the sidebar
     // renders accountItems() + Logout instead of this list.
     items: [{ label: "Account", href: "/members/account", gated: true }],
