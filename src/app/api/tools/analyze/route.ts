@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { aiAnalyze, type AnalyzeKind } from "@/lib/tools/ai-analyze";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -7,6 +8,12 @@ export const dynamic = "force-dynamic";
 const KINDS: AnalyzeKind[] = ["copy-analyzer", "headline-tester"];
 
 export async function POST(req: Request) {
+  // Public, unauthenticated LLM endpoint: cap per-IP so a scripted loop can't
+  // run up the model bill.
+  if (!(await allow(`tools-analyze:${clientIp(req.headers)}`, 10, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Please wait a minute." }, { status: 429 });
+  }
+
   let kind: string, text: string;
   try {
     const body = (await req.json()) as { kind?: unknown; text?: unknown };

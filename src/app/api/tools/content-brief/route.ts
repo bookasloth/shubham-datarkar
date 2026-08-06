@@ -1,10 +1,17 @@
 import { NextResponse } from "next/server";
 import { aiContentBrief } from "@/lib/tools/ai-brief";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
+  // Public, unauthenticated LLM endpoint: cap per-IP so a scripted loop can't
+  // run up the model bill.
+  if (!(await allow(`tools-content-brief:${clientIp(req.headers)}`, 10, 60_000))) {
+    return NextResponse.json({ error: "Too many requests. Please wait a minute." }, { status: 429 });
+  }
+
   let keyword: string;
   try {
     const body = (await req.json()) as { keyword?: unknown };
