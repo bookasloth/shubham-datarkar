@@ -1,7 +1,7 @@
 "use server";
 
 import { headers } from "next/headers";
-import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 import { allow, clientIp } from "@/lib/rate-limit";
 import { getKitCredentials } from "@/lib/kit/store";
 import { kitAddSubscriberToForm } from "@/lib/kit/client";
@@ -32,13 +32,15 @@ export async function subscribe(
   const e = email.trim().toLowerCase();
   if (!EMAIL_RE.test(e)) return { ok: false, error: "Enter a valid email address." };
 
-  // Anon INSERT is open by design (RLS allows it); rate-limit by IP so the list
-  // can't be script-poisoned with junk addresses.
+  // Rate-limit by IP so the list can't be script-poisoned with junk addresses.
+  // This is the ONLY insert path now: anon direct-INSERT via PostgREST is revoked
+  // (migration 20260806000003), so the write goes through service-role here after
+  // validation + throttling rather than being open on the table.
   if (!(await allow(`subscribe:${clientIp(await headers())}`, 5, 60_000))) {
     return { ok: false, error: "Too many attempts. Please wait a minute." };
   }
 
-  const { error } = await supabaseAnon().from("subscribers").insert({ email: e, source });
+  const { error } = await supabaseAdmin().from("subscribers").insert({ email: e, source });
   if (error && error.code !== "23505") {
     return { ok: false, error: "Something went wrong. Please try again." };
   }
