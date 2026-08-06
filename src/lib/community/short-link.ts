@@ -1,5 +1,5 @@
 import "server-only";
-import { supabaseAnon } from "@/lib/supabase/server";
+import { supabaseAdmin } from "@/lib/supabase/server";
 
 // Display host for shortened links. Swap to "datarkar.com" once that domain is
 // bought and pointed at this Vercel project — the resolver href stays relative
@@ -17,7 +17,9 @@ export const SHORT_HOST = "shubhamdatarkar.com";
 export async function ensureShortLinks(urls: string[]): Promise<Map<string, string>> {
   const uniq = [...new Set(urls)];
   if (uniq.length === 0) return new Map();
-  const { data, error } = await supabaseAnon().rpc("ensure_short_links", { p_urls: uniq });
+  // Service-role: minting is now trusted-server-only (revoked from anon) so an
+  // outsider can't mint arbitrary short links under the domain.
+  const { data, error } = await supabaseAdmin().rpc("ensure_short_links", { p_urls: uniq });
   if (error) {
     console.warn("ensure_short_links failed:", error.message);
     return new Map();
