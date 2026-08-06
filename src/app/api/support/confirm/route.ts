@@ -4,6 +4,7 @@ import { verifyPaymentSignature } from "@/lib/razorpay/verify";
 import { markSupportStatus } from "@/lib/support/server";
 import { postThankyou } from "@/lib/support/thankyou";
 import { postCommunitySupporter } from "@/lib/community/auto/supporter";
+import { allow, clientIp } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,14 @@ export const dynamic = "force-dynamic";
  * body just moves the row off `pending` (no signature — it grants nothing).
  */
 export async function POST(request: Request) {
+  // The failure path flips a pending order to `failed` without a signature
+  // (Razorpay's client failure callback carries none). markSupportStatus already
+  // restricts it to pending rows and a real signed success still overrides it,
+  // but a rate limit blunts a scripted grief-flood against guessed order ids.
+  if (!(await allow(`support-confirm:${clientIp(request.headers)}`, 15, 60_000))) {
+    return NextResponse.json({ ok: false, error: "Too many attempts. Please wait a minute." }, { status: 429 });
+  }
+
   let body: unknown;
   try {
     body = await request.json();
