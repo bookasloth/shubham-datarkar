@@ -181,8 +181,9 @@ function ProfileCard({
   onNavigate?: () => void;
 }) {
   return (
-    <div className="overflow-hidden rounded-card border border-border bg-card">
-      {/* Cover — gradient, no image asset needed. */}
+    <div className="overflow-hidden">
+      {/* Cover — gradient, no image asset needed. Bleeds to the sidebar card's
+          top edge (the card chrome lives on the shell wrapper, not here). */}
       <div className="h-16 bg-gradient-to-r from-brand/70 via-brand to-foreground/60" />
       <div className="px-4 pb-4">
         {/* Avatar overlaps the cover. */}
@@ -285,7 +286,7 @@ export function AppSidebar({
     <div className="flex h-full flex-col">
       <ProfileCard profile={profile} onNavigate={onNavigate} />
 
-      <div className="mt-3 flex-1 space-y-1">
+      <div className="mt-3 flex-1 space-y-1 px-2">
       {/* Standalone Home row above the sections (Tumblr-style). */}
       <Link
         href="/"
@@ -357,7 +358,7 @@ export function AppSidebar({
       </div>
 
       {/* Bottom CTAs — pinned under the scrollable nav (Tumblr's Go Premium / Create). */}
-      <div className="mt-2 space-y-2 border-t border-border pt-3">
+      <div className="mt-2 space-y-2 border-t border-border px-2 pb-2 pt-3">
         {!isPremium && (
           <Link
             href="/members/upgrade"

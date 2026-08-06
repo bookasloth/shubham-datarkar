@@ -108,7 +108,7 @@ export function AppShell({
       <div className="mx-auto flex w-full max-w-[1240px] flex-1 justify-center gap-6 px-4">
         {/* Desktop sidebar — floating card, glued to the middle column */}
         <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-64 shrink-0 py-4 lg:block">
-          <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
+          <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card shadow-sm">
             <AppSidebar signedIn={signedIn} isPremium={isPremium} profile={profile} />
           </div>
         </aside>
