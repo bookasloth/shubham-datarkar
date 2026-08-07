@@ -5,6 +5,7 @@ import { ArrowRight } from "lucide-react";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema, seoLandingSchema } from "@/lib/seo";
 import { seoCities, seoCitySlugs, getSeoCity } from "@/lib/data/seo-cities";
+import { portfolio } from "@/lib/data/portfolio";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { BentoCard } from "@/components/blueprint";
@@ -13,7 +14,17 @@ import { buttonVariants } from "@/components/ui/button";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { Reveal, Stagger, StaggerItem } from "@/components/motion/reveal";
 import { JsonLd } from "@/components/seo/json-ld";
+import { CtaBand } from "@/components/sections/cta-band";
+import { WorkCard } from "@/components/cards/work-card";
 import { cn } from "@/lib/utils";
+
+// SEO proof: the content and campaign work, surfaced as cards. Same real body of
+// work on every city page — not a city-specific claim, so no doorway-duplication risk.
+const seoProofItems = ["ink-pad", "mark-eating"]
+  .map((key) => portfolio.find((g) => g.key === key))
+  .filter((g): g is NonNullable<typeof g> => Boolean(g))
+  .flatMap((g) => g.items)
+  .slice(0, 6);
 
 export const revalidate = 300; // ISR
 export const dynamicParams = false; // unknown city → 404, never a soft-404
@@ -137,6 +148,33 @@ export default async function SeoCityPage({
         </Container>
       </Section>
 
+      {/* Proof — real content & campaign work, so the page isn't all assertion */}
+      {seoProofItems.length > 0 && (
+        <Section className="pt-0">
+          <Container>
+            <h2 className="text-2xl font-bold tracking-tight">Work that ranked and sold</h2>
+            <p className="mt-2 max-w-2xl text-muted-foreground">
+              A slice of the content and campaign work behind the rankings — the same playbook I&apos;d run for a{" "}
+              {c.city} business.
+            </p>
+            <Stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {seoProofItems.map((item) => (
+                <StaggerItem key={item.name}>
+                  <WorkCard item={item} />
+                </StaggerItem>
+              ))}
+            </Stagger>
+            <p className="mt-8 text-sm text-muted-foreground">
+              More of it on the{" "}
+              <Link href="/work" className="font-medium text-foreground underline underline-offset-4">
+                work page
+              </Link>
+              .
+            </p>
+          </Container>
+        </Section>
+      )}
+
       {/* Cross-links to sibling cities (no orphans) */}
       <Section className="border-t border-border pt-12">
         <Container>
@@ -162,6 +200,11 @@ export default async function SeoCityPage({
           </div>
         </Container>
       </Section>
+
+      <CtaBand
+        title={`Want to rank in ${c.city}?`}
+        description="Book a call or send a brief — I'll tell you honestly what SEO can do for your business here, and how fast."
+      />
     </>
   );
 }

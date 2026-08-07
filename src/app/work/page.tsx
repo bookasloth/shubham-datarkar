@@ -1,13 +1,10 @@
-import { ArrowUpRight } from "lucide-react";
 import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
 import { portfolio, portfolioCounts } from "@/lib/data/portfolio";
-import type { WorkItem } from "@/lib/data/portfolio";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { CtaBand } from "@/components/sections/cta-band";
 import { Stagger, StaggerItem } from "@/components/motion/reveal";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { WorkCard } from "@/components/cards/work-card";
 import { JsonLd } from "@/components/seo/json-ld";
 
 export const metadata = buildMetadata({
@@ -17,27 +14,6 @@ export const metadata = buildMetadata({
   ogDescription: "20+ websites, 8+ SaaS products, 200+ content pieces, 30+ campaigns. A decade of work in one place.",
   path: "/work",
 });
-
-function WorkCard({ item }: { item: WorkItem }) {
-  const inner = (
-    <Card interactive={!!item.url} className="flex h-full flex-col p-5">
-      <div className="flex items-start justify-between gap-2">
-        <Badge variant="muted">{item.tag}</Badge>
-        {item.url && <ArrowUpRight className="size-4 text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />}
-      </div>
-      <h3 className="mt-4 text-base font-semibold tracking-tight">{item.name}</h3>
-      <p className="mt-1.5 flex-1 text-sm leading-relaxed text-muted-foreground">{item.description}</p>
-    </Card>
-  );
-  if (item.url) {
-    return (
-      <a href={item.url} target="_blank" rel="noopener noreferrer" className="group block focus-visible:outline-none">
-        {inner}
-      </a>
-    );
-  }
-  return inner;
-}
 
 export default function WorkPage() {
   return (
