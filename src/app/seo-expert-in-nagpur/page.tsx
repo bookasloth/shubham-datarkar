@@ -79,10 +79,13 @@ export default function SeoExpertInNagpurPage() {
         title={c.hero.h1}
         description={
           <>
-            <span className="mb-5 flex flex-col gap-2 sm:flex-row sm:justify-center sm:gap-6">
+            <span className="mb-6 flex flex-wrap justify-center gap-2">
               {c.hero.bullets.map((b) => (
-                <span key={b} className="flex items-center justify-center gap-2 text-sm font-medium text-foreground">
-                  <Check className="size-4 text-brand" /> {b}
+                <span
+                  key={b}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-3 py-1 text-xs font-medium text-foreground backdrop-blur-sm"
+                >
+                  <Check className="size-3.5 text-brand" /> {b}
                 </span>
               ))}
             </span>

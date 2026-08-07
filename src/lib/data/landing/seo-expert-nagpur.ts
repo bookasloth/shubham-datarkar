@@ -20,10 +20,7 @@ export const seoExpertNagpur = {
 
   hero: {
     h1: "SEO Expert in Nagpur Who Helps Businesses Get More Customers, Not Just Higher Rankings",
-    bullets: [
-      "Free 30-minute SEO growth consultation",
-      "Get a custom SEO roadmap for your business",
-    ],
+    bullets: ["Free 30-min consultation", "Free website audit", "Custom growth roadmap"],
     paragraph:
       "Whether you're a local business, startup, ecommerce brand, or established company, I help you generate sustainable leads through search. Every strategy is tailored to your industry, competition, and business goals — so you're investing in growth that compounds month after month.",
     cta: "Book Your Free Consultation",
