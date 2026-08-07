@@ -1,10 +1,9 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema, seoLandingSchema } from "@/lib/seo";
-import { seoCities, seoCitySlugs, getSeoCity } from "@/lib/data/seo-cities";
+import { seoCitySlugs, getSeoCity } from "@/lib/data/seo-cities";
 import { portfolio } from "@/lib/data/portfolio";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
@@ -56,8 +55,6 @@ export default async function SeoCityPage({
   const { city } = await params;
   const c = getSeoCity(city);
   if (!c) notFound();
-
-  const others = seoCities.filter((x) => x.slug !== c.slug);
 
   return (
     <>
@@ -174,32 +171,6 @@ export default async function SeoCityPage({
           </Container>
         </Section>
       )}
-
-      {/* Cross-links to sibling cities (no orphans) */}
-      <Section className="border-t border-border pt-12">
-        <Container>
-          <h2 className="text-lg font-semibold tracking-tight">SEO expert in other cities</h2>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {others.map((o) => (
-              <Link
-                key={o.slug}
-                href={`/seo-expert-india/${o.slug}`}
-                className="inline-flex items-center gap-1 rounded-btn border border-border px-3 py-1.5 text-sm transition-ui hover:bg-accent"
-              >
-                {o.city}
-                <ArrowRight className="size-3" />
-              </Link>
-            ))}
-            <Link
-              href="/seo-expert-india"
-              className="inline-flex items-center gap-1 rounded-btn border border-border px-3 py-1.5 text-sm transition-ui hover:bg-accent"
-            >
-              All of India
-              <ArrowRight className="size-3" />
-            </Link>
-          </div>
-        </Container>
-      </Section>
 
       <CtaBand
         title={`Want to rank in ${c.city}?`}
