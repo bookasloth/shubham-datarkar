@@ -74,6 +74,7 @@ export default function SeoExpertInNagpurPage() {
       {/* 1 — HERO */}
       <PageHero
         blueprint
+        align="center"
         eyebrow="SEO Expert · Nagpur"
         title={c.hero.h1}
         description={
@@ -103,7 +104,7 @@ export default function SeoExpertInNagpurPage() {
       <AnswerBlock text={c.answer} />
 
       {/* 2 — TRUST & CREDIBILITY */}
-      <Section className="pt-0">
+      <Section bleed className="border-y border-border bg-muted py-16 md:py-20">
         <Container>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-card border border-border bg-border md:grid-cols-4">
             {c.trust.stats.map((s) => (
@@ -139,7 +140,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 3 — WHY BUSINESSES HIRE ME */}
-      <Section className="pt-0">
+      <Section className="py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Why businesses hire me
@@ -164,7 +165,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 4 — PROBLEMS YOU SOLVE */}
-      <Section bleed className="border-y border-border bg-card">
+      <Section bleed className="border-y border-border bg-muted py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Is your website facing these problems?
@@ -190,7 +191,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 5 — WHAT HAPPENS DURING THE CONSULTATION */}
-      <Section>
+      <Section className="py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             What happens during the consultation?
@@ -231,7 +232,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 6 — SEO PROCESS */}
-      <Section bleed className="border-y border-border bg-card">
+      <Section bleed className="border-y border-border bg-muted py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">My SEO process</h2>
           <p className="mt-4 text-2xl font-bold tracking-tight">{c.process.heading}</p>
@@ -250,7 +251,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 7 — WHY WORK WITH ME */}
-      <Section>
+      <Section className="py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">Why work with me?</h2>
           <p className="mt-4 text-2xl font-bold tracking-tight">{c.whyWork.heading}</p>
@@ -268,7 +269,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 8 — INDUSTRIES */}
-      <Section className="pt-0">
+      <Section bleed className="border-y border-border bg-muted py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Industries I work with
@@ -285,7 +286,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 9 — CASE STUDIES */}
-      <Section id="case-studies" bleed className="scroll-mt-20 border-y border-border bg-card">
+      <Section id="case-studies" className="scroll-mt-20 py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Client success stories
@@ -318,7 +319,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 10 — FAQ */}
-      <Section>
+      <Section bleed className="border-y border-border bg-muted py-16 md:py-20">
         <Container>
           <h2 className="text-sm font-semibold uppercase tracking-[0.12em] text-muted-foreground">
             Frequently asked questions
@@ -335,7 +336,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 11 — ABOUT */}
-      <Section bleed className="border-y border-border bg-card py-16 md:py-20">
+      <Section className="py-16 md:py-20">
         <Container>
           <Reveal>
             <div className="mx-auto flex max-w-3xl flex-col items-center gap-6 text-center">
@@ -368,7 +369,7 @@ export default function SeoExpertInNagpurPage() {
       </Section>
 
       {/* 12 — FINAL CTA */}
-      <Section>
+      <Section className="py-16 md:py-20">
         <Container>
           <Reveal>
             <div className="relative overflow-hidden rounded-card bg-foreground px-6 py-14 text-center text-background md:px-14 md:py-20">

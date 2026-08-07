@@ -145,7 +145,7 @@ export const seoExpertNagpur = {
         sector: "Local SEO · Food & Beverage",
         result:
           "Ranked #1 for over 40 local search terms, resulting in a 212% increase in monthly online orders.",
-        slug: "local-seo-bakery-uae",
+        slug: "occasion-cakes-local-seo",
       },
       {
         client: "Everything Powerlifting",
