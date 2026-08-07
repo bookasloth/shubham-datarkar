@@ -30,16 +30,6 @@ export function AppShell({
   const signedIn = !!user;
   const isPremium = !!user?.isPremium;
   const currentSection = activeSection(pathname);
-  const profile = user
-    ? {
-        displayName: user.displayName,
-        username: user.username,
-        avatarUrl: user.avatarUrl,
-        postCount: user.postCount,
-        followers: user.followers,
-        following: user.following,
-      }
-    : null;
 
   return (
     <div className="flex min-h-dvh flex-col">
@@ -56,7 +46,7 @@ export function AppShell({
             <SheetContent>
               <SheetHeader><SheetTitle onClick={() => setDrawer(false)}><Logo /></SheetTitle></SheetHeader>
               <SheetBody>
-                <AppSidebar signedIn={signedIn} isPremium={isPremium} profile={profile} onNavigate={() => setDrawer(false)} />
+                <AppSidebar signedIn={signedIn} isPremium={isPremium} onNavigate={() => setDrawer(false)} />
               </SheetBody>
             </SheetContent>
           </Sheet>
@@ -108,8 +98,8 @@ export function AppShell({
       <div className="mx-auto flex w-full max-w-[1240px] flex-1 justify-center gap-6 px-4">
         {/* Desktop sidebar — floating card, glued to the middle column */}
         <aside className="sticky top-16 hidden h-[calc(100dvh-4rem)] w-64 shrink-0 py-4 lg:block">
-          <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card shadow-sm">
-            <AppSidebar signedIn={signedIn} isPremium={isPremium} profile={profile} />
+          <div className="max-h-full overflow-y-auto rounded-card border border-border bg-card p-2 shadow-sm">
+            <AppSidebar signedIn={signedIn} isPremium={isPremium} />
           </div>
         </aside>
         <main className="min-w-0 w-full max-w-[600px] pb-24 lg:pb-10">
