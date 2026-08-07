@@ -31,17 +31,26 @@ export const seoExpertNagpur = {
     "An SEO expert in Nagpur helps a business get found by the customers already searching for it on Google — and turns that visibility into enquiries, calls, and sales. I'm Shubham Datarkar, a Nagpur-based SEO consultant who builds revenue-first search strategies for local businesses, startups, ecommerce brands, and service companies across Nagpur and India.",
 
   trust: {
-    heading: "Results Across Industries. Strategies Built Around Business Goals.",
+    heading: "SEO Results Across Industries.",
     paragraph:
-      "From local restaurants and real estate developers to ecommerce brands and SaaS companies, every business has a different growth challenge. Here are a few examples of how strategic SEO and performance marketing translated into measurable business outcomes.",
+      "From local restaurants and real estate to ecommerce and gaming, every business has a different search challenge. Here's how SEO — technical, local, and content — translated into organic traffic, rankings, and revenue.",
     stats: [
       { value: "150+", label: "SEO campaigns" },
       { value: "7+ yrs", label: "Experience" },
       { value: "Millions", label: "Organic visits generated" },
       { value: "20+", label: "Industries served" },
     ],
-    /** Real client names shown as a text trust strip (logos swap in later). */
-    names: ["Everything Powerlifting", "Khiladi Adda", "Stone & Acres", "Krishna Group", "Banarasee", "NNAWCA"],
+    /** Real client names shown as a text trust strip (SEO clients only). */
+    names: ["Everything Powerlifting", "Occasion Cakes", "Stone & Acres", "The Bogus Company", "Khiladi Adda", "Dhawade Vadewale"],
+    /** SEO-only result cards. Every line talks about search, nothing else. */
+    results: [
+      { name: "Everything Powerlifting", tag: "Ecommerce SEO", description: "Technical SEO, content, and topical authority that tripled monthly organic traffic." },
+      { name: "Occasion Cakes", tag: "Local SEO", description: "Google Business Profile and location pages that ranked #1 for 40+ local searches and lifted online orders 212%." },
+      { name: "Stone & Acres", tag: "Local SEO", description: "Location-based SEO and optimized landing pages that grew qualified organic visits 2.6x." },
+      { name: "The Bogus Company", tag: "Content SEO", description: "Search-first content that ranked pages and pulled sustained organic traffic." },
+      { name: "Khiladi Adda", tag: "SEO Growth", description: "Search and content SEO that compounded organic acquisition for a gaming platform." },
+      { name: "Dhawade Vadewale", tag: "Local SEO", description: "Local SEO for a restaurant franchise to capture nearby, high-intent search demand." },
+    ],
   },
 
   whyHire: {
@@ -138,7 +147,7 @@ export const seoExpertNagpur = {
     heading: "Real Businesses. Measurable Growth.",
     items: [
       {
-        client: "UAE Bakery",
+        client: "Occasion Cakes",
         sector: "Local SEO · Food & Beverage",
         result:
           "Ranked #1 for over 40 local search terms, resulting in a 212% increase in monthly online orders.",

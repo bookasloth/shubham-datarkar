@@ -3,7 +3,6 @@ import { ArrowRight, Check, X, Clock, IndianRupee } from "lucide-react";
 import { site, socials } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema } from "@/lib/seo";
 import { seoExpertNagpur as c } from "@/lib/data/landing/seo-expert-nagpur";
-import { portfolio } from "@/lib/data/portfolio";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Card } from "@/components/ui/card";
@@ -25,13 +24,6 @@ export const metadata = buildMetadata({
   description: c.metaDescription,
   path: c.path,
 });
-
-// Proof samples for the trust section — real content & campaign work.
-const trustWork = ["ink-pad", "mark-eating"]
-  .map((key) => portfolio.find((g) => g.key === key))
-  .filter((g): g is NonNullable<typeof g> => Boolean(g))
-  .flatMap((g) => g.items)
-  .slice(0, 6);
 
 // ProfessionalService + Person JSON-LD for local + entity relevance (AEO/GEO).
 const localBusinessSchema = {
@@ -75,7 +67,6 @@ export default function SeoExpertInNagpurPage() {
       <PageHero
         blueprint
         align="center"
-        eyebrow="SEO Expert · Nagpur"
         title={c.hero.h1}
         description={
           <>
@@ -92,15 +83,17 @@ export default function SeoExpertInNagpurPage() {
             <span className="mx-auto block max-w-2xl">{c.hero.paragraph}</span>
           </>
         }
-        crumbs={[{ label: "Home", href: "/" }, { label: "SEO Expert in Nagpur" }]}
         actions={
-          <>
-            <LeadCtaButton>{c.hero.cta}</LeadCtaButton>
-            <Link href="#case-studies" className={cn(buttonVariants({ variant: "outline", size: "lg" }))}>
+          <div className="flex w-full max-w-xs flex-col items-stretch gap-3">
+            <LeadCtaButton className="w-full">{c.hero.cta}</LeadCtaButton>
+            <Link
+              href="#case-studies"
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }), "w-full")}
+            >
               See results
               <ArrowRight />
             </Link>
-          </>
+          </div>
         }
       />
 
@@ -132,7 +125,7 @@ export default function SeoExpertInNagpurPage() {
             <h2 className="text-2xl font-bold tracking-tight">{c.trust.heading}</h2>
             <p className="mt-2 max-w-2xl text-muted-foreground">{c.trust.paragraph}</p>
             <Stagger className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {trustWork.map((item) => (
+              {c.trust.results.map((item) => (
                 <StaggerItem key={item.name}>
                   <WorkCard item={item} />
                 </StaggerItem>
