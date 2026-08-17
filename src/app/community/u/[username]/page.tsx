@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { buildMetadata } from "@/lib/seo";
 import { getMemberContext } from "@/lib/members/session";
@@ -177,9 +178,8 @@ async function MediaTab({
   return (
     <div className="grid grid-cols-3 gap-1 p-1">
       {media.map((m, i) => (
-        <Link key={`${m.publicId}-${i}`} href={`/community/p/${m.publicId}`} className="block aspect-square overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={m.url} alt="" className="h-full w-full object-cover" />
+        <Link key={`${m.publicId}-${i}`} href={`/community/p/${m.publicId}`} className="relative block aspect-square overflow-hidden">
+          <Image src={m.url} alt="" fill sizes="(max-width: 640px) 33vw, 200px" className="object-cover" />
         </Link>
       ))}
     </div>
