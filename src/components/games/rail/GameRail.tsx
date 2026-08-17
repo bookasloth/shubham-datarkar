@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { HelpCircle, Gamepad2, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -72,8 +73,7 @@ function OtherGamesCard({ game }: { game: GameKey }) {
               className="group flex items-center gap-3 rounded-input px-2 py-2 transition-ui hover:bg-accent"
             >
               <span className={cn("flex size-9 shrink-0 items-center justify-center rounded-[8px]", g.tint)}>
-                {/* plain <img>: CDN host is CSP-allowed but not a next/image remote pattern */}
-                <img src={gameIcon(g.slug)} alt="" aria-hidden="true" width={24} height={24} className="size-6" />
+                <Image src={gameIcon(g.slug)} alt="" aria-hidden="true" width={24} height={24} className="size-6" />
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold leading-tight">{g.name}</span>
