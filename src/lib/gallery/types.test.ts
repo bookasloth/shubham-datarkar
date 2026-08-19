@@ -1,8 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { mapGalleryRow, type GalleryRow } from "./types";
+import { mapGalleryRow, slugify, type GalleryRow } from "./types";
 
 const row: GalleryRow = {
   id: "abc",
+  album_id: null,
   caption: null,
   description: null,
   location: null,
@@ -20,8 +21,25 @@ describe("mapGalleryRow", () => {
     const m = mapGalleryRow(row);
     expect(m.caption).toBe("");
     expect(m.description).toBeNull();
+    expect(m.albumId).toBeNull();
     expect(m.imageUrl).toBe(row.image_url);
     expect(m.width).toBe(1200);
     expect(m.isPublished).toBe(true);
+  });
+
+  it("passes album_id through", () => {
+    expect(mapGalleryRow({ ...row, album_id: "album-1" }).albumId).toBe("album-1");
+  });
+});
+
+describe("slugify", () => {
+  it("lowercases and hyphenates", () => {
+    expect(slugify("Virat Kohli Wallpaper")).toBe("virat-kohli-wallpaper");
+  });
+  it("strips punctuation and collapses separators, no leading/trailing dashes", () => {
+    expect(slugify("  Hello, World!!  ")).toBe("hello-world");
+  });
+  it("falls back to 'album' when nothing usable remains", () => {
+    expect(slugify("!!!")).toBe("album");
   });
 });

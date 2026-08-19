@@ -13,11 +13,12 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { validateImageFile, MAX_IMAGE_BYTES } from "@/lib/media/image-upload";
-import type { GalleryImage } from "@/lib/gallery/types";
+import type { GalleryAlbum, GalleryImage } from "@/lib/gallery/types";
 import {
-  deleteGalleryImage, reorderGalleryImages, setGalleryPublished,
+  assignImagesToAlbum, deleteGalleryImage, reorderGalleryImages, setGalleryPublished,
   updateGalleryImage, uploadGalleryImage,
 } from "@/lib/gallery/actions";
+import { AlbumManager } from "./album-manager";
 
 type Upload = {
   tempId: string;
@@ -36,9 +37,16 @@ async function readDimensions(file: File): Promise<{ width: number; height: numb
   return dims;
 }
 
-export function GalleryManager({ initialImages }: { initialImages: GalleryImage[] }) {
+export function GalleryManager({
+  initialImages,
+  initialAlbums,
+}: {
+  initialImages: GalleryImage[];
+  initialAlbums: GalleryAlbum[];
+}) {
   const { toast } = useToast();
   const [items, setItems] = React.useState<GalleryImage[]>(initialImages);
+  const [albums, setAlbums] = React.useState<GalleryAlbum[]>(initialAlbums);
   const [uploads, setUploads] = React.useState<Upload[]>([]);
   const [editing, setEditing] = React.useState<GalleryImage | null>(null);
   const [dragOver, setDragOver] = React.useState(false);
@@ -147,6 +155,16 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
     }
   };
 
+  const assignAlbum = async (image: GalleryImage, albumId: string | null) => {
+    const before = items;
+    setItems((prev) => prev.map((i) => (i.id === image.id ? { ...i, albumId } : i)));
+    const result = await assignImagesToAlbum([image.id], albumId);
+    if ("error" in result) {
+      setItems(before);
+      toast({ title: "Could not move image", description: result.error, variant: "danger" });
+    }
+  };
+
   const saveEdit = async (image: GalleryImage, fd: FormData) => {
     const patch = {
       caption: String(fd.get("caption") ?? "").trim(),
@@ -170,6 +188,7 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
 
   return (
     <div className="flex flex-col gap-6">
+      <AlbumManager albums={albums} setAlbums={setAlbums} />
       <div
         onDragOver={(e) => {
           e.preventDefault();
@@ -277,6 +296,18 @@ export function GalleryManager({ initialImages }: { initialImages: GalleryImage[
                 <p className="min-h-5 truncate text-sm" title={image.caption}>
                   {image.caption || <span className="text-admin-text-muted">No caption</span>}
                 </p>
+                <label className="sr-only" htmlFor={`album-${image.id}`}>Album</label>
+                <select
+                  id={`album-${image.id}`}
+                  value={image.albumId ?? ""}
+                  onChange={(e) => void assignAlbum(image, e.target.value || null)}
+                  className="h-8 w-full rounded-input border border-admin-border bg-admin-surface px-2 text-xs text-admin-text focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-admin-accent"
+                >
+                  <option value="">No album</option>
+                  {albums.map((a) => (
+                    <option key={a.id} value={a.id}>{a.title}</option>
+                  ))}
+                </select>
                 <div className="flex items-center gap-1">
                   <AdminButton
                     size="icon"
