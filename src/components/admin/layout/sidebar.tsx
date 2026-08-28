@@ -1,14 +1,10 @@
 "use client";
 
-import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { PanelLeft, PanelLeftClose, ChevronDown } from "lucide-react";
+import { PanelLeft, PanelLeftClose } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ADMIN_NAV, isNavItemActive } from "./nav-config";
-
-const STORAGE_KEY = "admin-nav-groups";
-const allOpen = () => Object.fromEntries(ADMIN_NAV.map((g) => [g.heading, true]));
 
 export function Sidebar({
   collapsed,
@@ -18,40 +14,6 @@ export function Sidebar({
   onToggleCollapsed: () => void;
 }) {
   const pathname = usePathname();
-
-  // Deterministic all-open first render (matches SSR); stored prefs load after mount.
-  const [openGroups, setOpenGroups] = React.useState<Record<string, boolean>>(allOpen);
-
-  React.useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setOpenGroups((prev) => ({ ...prev, ...JSON.parse(raw) }));
-    } catch {
-      /* ignore malformed prefs */
-    }
-  }, []);
-
-  const activeHeading = ADMIN_NAV.find((g) =>
-    g.items.some((i) => isNavItemActive(pathname, i.href)),
-  )?.heading;
-
-  // The group holding the current route is always expanded.
-  React.useEffect(() => {
-    if (activeHeading) {
-      setOpenGroups((prev) => (prev[activeHeading] ? prev : { ...prev, [activeHeading]: true }));
-    }
-  }, [activeHeading]);
-
-  const toggle = (heading: string) =>
-    setOpenGroups((prev) => {
-      const next = { ...prev, [heading]: !prev[heading] };
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        /* ignore quota/private-mode */
-      }
-      return next;
-    });
 
   return (
     <aside
@@ -71,65 +33,48 @@ export function Sidebar({
 
       {/* Nav */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
-        {ADMIN_NAV.map((group) => {
-          // In the icon rail there are no headings, so items always show.
-          const open = collapsed || openGroups[group.heading];
-          return (
-            <div key={group.heading} className="mb-4">
-              {!collapsed && (
-                <button
-                  type="button"
-                  onClick={() => toggle(group.heading)}
-                  aria-expanded={!!openGroups[group.heading]}
-                  className="flex w-full items-center justify-between rounded-btn px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-admin-text-muted transition-colors duration-150 hover:text-admin-text"
-                >
-                  <span>{group.heading}</span>
-                  <ChevronDown
-                    className={cn(
-                      "size-3 transition-transform duration-150",
-                      openGroups[group.heading] ? "" : "-rotate-90",
-                    )}
-                    aria-hidden
-                  />
-                </button>
-              )}
-              {open && (
-                <ul className="flex flex-col gap-0.5">
-                  {group.items.map((item) => {
-                    const active = isNavItemActive(pathname, item.href);
-                    const Icon = item.icon;
-                    return (
-                      <li key={item.href}>
-                        <Link
-                          href={item.href}
-                          title={collapsed ? item.label : undefined}
-                          aria-current={active ? "page" : undefined}
-                          className={cn(
-                            "group relative flex items-center gap-3 rounded-btn px-2 py-1.5 text-sm transition-[background-color,color] duration-150",
-                            active
-                              ? "bg-admin-surface-hover font-medium text-admin-text"
-                              : "text-admin-text-muted hover:bg-admin-surface-hover hover:text-admin-text",
-                          )}
-                        >
-                          {/* Orange active indicator */}
-                          <span
-                            className={cn(
-                              "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-admin-accent transition-opacity duration-150",
-                              active ? "opacity-100" : "opacity-0",
-                            )}
-                            aria-hidden
-                          />
-                          <Icon className="size-4 shrink-0" aria-hidden />
-                          {!collapsed && <span className="truncate">{item.label}</span>}
-                        </Link>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          );
-        })}
+        {ADMIN_NAV.map((group) => (
+          <div key={group.heading} className="mb-4">
+            {/* Static section label — scannable, not collapsible. Hidden in the icon rail. */}
+            {!collapsed && (
+              <p className="px-2 py-1 text-[10px] font-medium uppercase tracking-wide text-admin-text-muted">
+                {group.heading}
+              </p>
+            )}
+            <ul className="flex flex-col gap-0.5">
+              {group.items.map((item) => {
+                const active = isNavItemActive(pathname, item.href);
+                const Icon = item.icon;
+                return (
+                  <li key={item.href}>
+                    <Link
+                      href={item.href}
+                      title={collapsed ? item.label : undefined}
+                      aria-current={active ? "page" : undefined}
+                      className={cn(
+                        "group relative flex items-center gap-3 rounded-btn px-2 py-1.5 text-sm transition-[background-color,color] duration-150",
+                        active
+                          ? "bg-admin-surface-hover font-medium text-admin-text"
+                          : "text-admin-text-muted hover:bg-admin-surface-hover hover:text-admin-text",
+                      )}
+                    >
+                      {/* Orange active indicator */}
+                      <span
+                        className={cn(
+                          "absolute left-0 top-1/2 h-5 w-0.5 -translate-y-1/2 rounded-full bg-admin-accent transition-opacity duration-150",
+                          active ? "opacity-100" : "opacity-0",
+                        )}
+                        aria-hidden
+                      />
+                      <Icon className="size-4 shrink-0" aria-hidden />
+                      {!collapsed && <span className="truncate">{item.label}</span>}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
       </nav>
 
       {/* Collapse toggle */}
