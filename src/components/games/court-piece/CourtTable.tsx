@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { MotionConfig, motion, useReducedMotion, type PanInfo } from "framer-motion";
 import { legalPlays } from "@/lib/games/court-piece/trick";
 import { screenSeat, seatsAround, type ScreenPos } from "@/lib/games/court-piece/table-layout";
+import { sortHand, shouldPlayCard } from "@/lib/games/court-piece/table-interactions";
 import {
   getCourtView,
   joinCourtSeat,
@@ -170,6 +172,9 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
     if (!on) hadCourt.current = false;
   }, [g]);
 
+  const reduce = useReducedMotion();
+  const zoneRef = useRef<HTMLDivElement>(null);
+
   if (!g) return null;
   const me = g.yourSeat;
   const around = seatsAround(me);
@@ -178,6 +183,17 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
   const legal = myTurnPlay ? legalPlays(g.yourHand, g.ledSuit) : [];
   const isLegal = (c: Card) => legal.some((l) => l.suit === c.suit && l.rank === c.rank);
   const actor = phaseTurnSeat(g);
+
+  // Drag/flick release → commit a play if dropped over the table, dragged far up,
+  // or flicked up fast. Otherwise the card springs home (dragSnapToOrigin).
+  const endDrag = (card: Card, info: PanInfo) => {
+    const z = zoneRef.current?.getBoundingClientRect();
+    const overZone =
+      !!z && info.point.x >= z.left && info.point.x <= z.right && info.point.y >= z.top && info.point.y <= z.bottom;
+    if (shouldPlayCard({ offsetY: info.offset.y, velocityY: info.velocity.y, overZone })) {
+      run(playCourt(view.code, { type: "PLAY_CARD", card }));
+    }
+  };
 
   const seatCell = (pos: Exclude<ScreenPos, "S">) => {
     const seat = around[pos];
@@ -211,30 +227,43 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
             <div className="col-start-1 row-start-2 self-center">{seatCell("W")}</div>
             <div className="col-start-3 row-start-2 self-center justify-self-end">{seatCell("E")}</div>
             <div className="col-start-2 row-start-2 grid place-items-center">
-              <TrickZone g={g} me={me} sweep={sweep} flash={flash} />
+              <TrickZone g={g} me={me} sweep={sweep} flash={flash} zoneRef={zoneRef} />
             </div>
             <div className="col-start-2 row-start-3 justify-self-center">
               <SeatToken pos="S" seat={me} g={g} active={actor === me} you compact />
             </div>
           </div>
 
-          {/* your hand */}
+          {/* your hand — auto-sorted ♠♥♣♦ 6→A; drag/flick up to play, or tap */}
           <div>
             <p className="mb-1.5 text-center text-[11px] uppercase tracking-wider text-muted-foreground">
-              Your hand{myTurnPlay ? <b className="text-brand"> · your turn</b> : ""}
+              Your hand{myTurnPlay ? <b className="text-brand"> · drag up to play</b> : ""}
             </p>
-            <div key={g.dealNumber} className="cp-deal flex flex-wrap justify-center gap-1.5">
-              {g.yourHand.map((c, i) => (
-                <div key={cardLabel(c)} style={{ animationDelay: `${i * 45}ms` }}>
-                  <CourtCard
-                    card={c}
-                    dim={myTurnPlay && !isLegal(c)}
-                    disabled={busy || !myTurnPlay || !isLegal(c)}
-                    onClick={() => run(playCourt(view.code, { type: "PLAY_CARD", card: c }))}
-                  />
-                </div>
-              ))}
-            </div>
+            <MotionConfig reducedMotion="user">
+              <div className="flex flex-wrap justify-center gap-1.5">
+                {sortHand(g.yourHand).map((c, i) => {
+                  const playable = myTurnPlay && isLegal(c);
+                  return (
+                    <motion.div
+                      key={cardLabel(c)}
+                      layout
+                      drag={playable}
+                      dragSnapToOrigin
+                      whileHover={playable ? { y: -12 } : undefined}
+                      whileDrag={{ scale: 1.06, zIndex: 50 }}
+                      onDragEnd={(_, info) => endDrag(c, info)}
+                      onClick={() => playable && run(playCourt(view.code, { type: "PLAY_CARD", card: c }))}
+                      initial={{ opacity: 0, y: 26 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ type: "spring", stiffness: 460, damping: 34, delay: reduce ? 0 : i * 0.04 }}
+                      className={playable ? "relative cursor-grab touch-none active:cursor-grabbing" : "relative"}
+                    >
+                      <CourtCard card={c} dim={myTurnPlay && !isLegal(c)} />
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </MotionConfig>
           </div>
 
           <PhaseControls g={g} me={me} busy={busy} code={view.code} run={run} canCallCourt={view.canCallCourt} />
@@ -271,7 +300,7 @@ function SeatToken({
   );
 }
 
-function TrickZone({ g, me, sweep, flash }: { g: PlayerView; me: number; sweep: { plays: Play[]; winner: Seat } | null; flash: boolean }) {
+function TrickZone({ g, me, sweep, flash, zoneRef }: { g: PlayerView; me: number; sweep: { plays: Play[]; winner: Seat } | null; flash: boolean; zoneRef: React.RefObject<HTMLDivElement | null> }) {
   const offset: Record<ScreenPos, string> = {
     S: "left-1/2 top-full -translate-x-1/2 -translate-y-[85%]",
     N: "left-1/2 top-0 -translate-x-1/2 -translate-y-[15%]",
@@ -281,7 +310,7 @@ function TrickZone({ g, me, sweep, flash }: { g: PlayerView; me: number; sweep: 
   const shown = sweep ? sweep.plays : g.currentTrick;
   const sweeping = !!sweep;
   return (
-    <div className="relative h-32 w-40">
+    <div ref={zoneRef} className="relative h-32 w-40">
       {shown.length === 0 && !flash && (
         <div className="grid h-full place-items-center text-[11px] uppercase tracking-wider text-muted-foreground">trick</div>
       )}
