@@ -83,6 +83,9 @@ export type RoomState = {
   status: RoomStatus;
   players: [PlayerSlot, PlayerSlot, PlayerSlot, PlayerSlot];
   game: GameState | null;
+  /** Set when the sweeping team declines court this deal — lets bots resume past
+   *  the court window. Reset each deal. */
+  courtDeclined: boolean;
   version: number;
 };
 
@@ -100,9 +103,12 @@ export type PlayerCommand =
 export type RoomView = {
   code: string;
   status: RoomStatus;
+  version: number; // room version — clients poll and apply only newer views
   yourSeat: number; // -1 if not seated
   seats: { seat: Seat; occupied: boolean; isBot: boolean; ready: boolean; connected: boolean; you: boolean }[];
   game: PlayerView | null;
+  /** True when it's the court window and the viewer is on the sweeping team. */
+  canCallCourt: boolean;
 };
 
 /** What a single player is allowed to see — own hand only, others as counts. */

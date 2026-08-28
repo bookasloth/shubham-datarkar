@@ -8,10 +8,37 @@ import {
   applyPlayerCommand,
   startNextDeal,
   botAdvance,
+  declineCourt,
   seatOf,
 } from "./room";
-import { botPickTrump } from "./bots";
-import type { RoomState } from "./types";
+import type { Card, RoomState, Rank, Suit } from "./types";
+
+const c = (rank: Rank, suit: Suit): Card => ({ suit, rank });
+
+/** Active room, seat 0 human (team 0), seats 1-3 bots, parked at the court window:
+ *  team 0 has swept the first six tricks and a BOT (seat 2) leads trick seven. */
+function sweptRoom(): RoomState {
+  let r = createRoom("SWEP", "u0");
+  r = joinRoom(r, "u0", 0);
+  r = fillBots(r);
+  r = setReady(r, "u0", true);
+  r = startGame(r, { seed: 1, dealer: 0 });
+  const g = r.game!;
+  return {
+    ...r,
+    game: {
+      ...g,
+      phase: "playing",
+      trump: "S",
+      turn: 2, // bot on the sweeping team leads trick 7
+      currentTrick: [],
+      ledSuit: null,
+      trickWinners: [0, 0, 0, 0, 0, 0],
+      teamTricks: [6, 0],
+      hands: [[c(14, "S")], [c(6, "H")], [c(13, "S")], [c(6, "D")]],
+    },
+  };
+}
 
 const start = () => ({ seed: 999, dealer: 0 as const });
 
@@ -99,6 +126,34 @@ describe("version monotonicity (optimistic-concurrency token)", () => {
     const before = r.version;
     r = botAdvance(r); // all-bot table -> at least one bot move happens
     expect(r.version).toBeGreaterThan(before);
+  });
+});
+
+describe("court decision-point", () => {
+  it("botAdvance PAUSES at the court window when the sweeping team has a human", () => {
+    const r = botAdvance(sweptRoom());
+    // no bot move applied — still six tricks, empty current trick
+    expect(r.game!.trickWinners).toHaveLength(6);
+    expect(r.game!.currentTrick).toHaveLength(0);
+  });
+
+  it("a human on the sweeping team can call court through the normal command path", () => {
+    const r = applyPlayerCommand(sweptRoom(), "u0", { type: "CALL_COURT" });
+    expect(r.game!.courtCall).toEqual({ callerTeam: 0 });
+  });
+
+  it("declining court lets the bots resume trick seven", () => {
+    let r = declineCourt(sweptRoom(), "u0");
+    expect(r.courtDeclined).toBe(true);
+    r = botAdvance(r);
+    expect(r.game!.currentTrick.length).toBeGreaterThan(0); // bots played into trick 7
+  });
+
+  it("rejects a decline from someone not on the sweeping team", () => {
+    let r = sweptRoom();
+    // seat 1 is a bot; put a human on team 1 to test the guard
+    r = { ...r, players: [r.players[0], { userId: "u1", isBot: false, ready: true, connected: true }, r.players[2], r.players[3]] };
+    expect(() => declineCourt(r, "u1")).toThrow();
   });
 });
 

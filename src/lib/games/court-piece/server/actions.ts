@@ -5,7 +5,9 @@ import { loadRoomByCode, insertRoom, saveRoom } from "./store";
 import {
   applyPlayerCommand,
   botAdvance,
+  courtWindow,
   createRoom,
+  declineCourt,
   fillBots,
   joinRoom,
   seatOf,
@@ -43,7 +45,9 @@ function roomView(room: RoomState, userId: string): RoomView {
     you: p?.userId === userId,
   }));
   const game = room.game && yourSeat >= 0 ? sanitizeFor(room.game, yourSeat as Seat) : null;
-  return { code: room.code, status: room.status, yourSeat, seats, game };
+  const sweeper = courtWindow(room.game);
+  const canCallCourt = sweeper !== null && yourSeat >= 0 && yourSeat % 2 === sweeper;
+  return { code: room.code, status: room.status, version: room.version, yourSeat, seats, game, canCallCourt };
 }
 
 /** Load → transform → optimistic save, retrying a few times on a version conflict. */
@@ -114,6 +118,13 @@ export async function playCourt(code: string, cmd: PlayerCommand): Promise<Actio
   // seat is bound from the authenticated user inside applyPlayerCommand — the
   // client cannot act as another seat. Bots then take any following bot turns.
   const res = await withRoom(code, (r) => botAdvance(applyPlayerCommand(r, user.id, cmd)));
+  return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
+}
+
+export async function declineCourtCall(code: string): Promise<ActionResult> {
+  const user = await getGameUser();
+  if (!user) return { ok: false, reason: "unauthenticated" };
+  const res = await withRoom(code, (r) => botAdvance(declineCourt(r, user.id)));
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
 

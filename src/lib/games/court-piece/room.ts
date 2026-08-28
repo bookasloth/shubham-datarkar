@@ -1,9 +1,26 @@
 import { applyCommand, startDeal } from "./engine";
 import { determineNextDealer } from "./dealer";
 import { botDecideBid, botPickCard, botPickTrump } from "./bots";
-import type { Command, RoomState, PlayerCommand, PlayerSlot, Seat } from "./types";
+import type { Command, GameState, RoomState, PlayerCommand, PlayerSlot, Seat, Team } from "./types";
 
 const teamOf = (seat: Seat): 0 | 1 => (seat % 2) as 0 | 1;
+
+/** Is the game at the court window — six tricks all won by one team, between tricks,
+ *  court not yet called? Returns the sweeping team, or null. */
+export function courtWindow(game: GameState | null): Team | null {
+  if (!game || game.phase !== "playing") return null;
+  if (game.trickWinners.length !== 6 || game.currentTrick.length !== 0 || game.courtCall) return null;
+  const sweeper = game.trickWinners[0];
+  return game.trickWinners.every((t) => t === sweeper) ? sweeper : null;
+}
+
+/** True while the court window is open, a human sits on the sweeping team, and they
+ *  haven't declined — the point at which bots must WAIT for a court decision. */
+function awaitingCourtDecision(room: RoomState): boolean {
+  const sweeper = courtWindow(room.game);
+  if (sweeper === null || room.courtDeclined) return false;
+  return room.players.some((p, i) => p && !p.isBot && teamOf(i as Seat) === sweeper);
+}
 
 /** Seat index of a user in a room, or -1 if not seated. */
 export function seatOf(room: RoomState, userId: string): number {
@@ -17,7 +34,7 @@ const bump = (room: RoomState, patch: Partial<RoomState>): RoomState => ({
 });
 
 export function createRoom(code: string, _creatorId: string): RoomState {
-  return { code, status: "lobby", players: [null, null, null, null], game: null, version: 0 };
+  return { code, status: "lobby", players: [null, null, null, null], game: null, courtDeclined: false, version: 0 };
 }
 
 export function joinRoom(room: RoomState, userId: string, seat: number): RoomState {
@@ -63,7 +80,7 @@ export function startGame(room: RoomState, opts: { seed: number; dealer: Seat })
     totals: [0, 0],
     lastDealerByTeam,
   });
-  return bump(room, { status: "active", game });
+  return bump(room, { status: "active", game, courtDeclined: false });
 }
 
 /** Apply a player's command. The seat is taken from the authenticated user — never
@@ -99,7 +116,17 @@ export function startNextDeal(room: RoomState, seed: number): RoomState {
     totals: g.totals,
     lastDealerByTeam: next.lastDealerByTeam,
   });
-  return bump(room, { game });
+  return bump(room, { game, courtDeclined: false });
+}
+
+/** A human on the sweeping team declines court — bots may then resume. */
+export function declineCourt(room: RoomState, userId: string): RoomState {
+  const sweeper = courtWindow(room.game);
+  if (sweeper === null) throw new Error("not the court window");
+  const seat = seatOf(room, userId);
+  if (seat === -1) throw new Error("not seated");
+  if (teamOf(seat as Seat) !== sweeper) throw new Error("not your team's court decision");
+  return bump(room, { courtDeclined: true });
 }
 
 /** The seat that must act next, or -1 if the deal isn't awaiting a move. */
@@ -117,6 +144,7 @@ function actorSeat(room: RoomState): number {
 export function botAdvance(room: RoomState): RoomState {
   let r = room;
   for (;;) {
+    if (awaitingCourtDecision(r)) break; // wait for the sweeping team's human to decide
     const seat = actorSeat(r);
     if (seat === -1) break;
     const slot = r.players[seat];
