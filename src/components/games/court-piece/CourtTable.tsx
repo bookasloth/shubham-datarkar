@@ -175,6 +175,13 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
   const reduce = useReducedMotion();
   const zoneRef = useRef<HTMLDivElement>(null);
 
+  // 1s tick so the active seat's turn countdown updates live between polls
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
   if (!g) return null;
   const me = g.yourSeat;
   const around = seatsAround(me);
@@ -198,7 +205,19 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
   const seatCell = (pos: Exclude<ScreenPos, "S">) => {
     const seat = around[pos];
     const info = view.seats[seat];
-    return <SeatToken pos={pos} seat={seat} g={g} active={actor === seat} you={info?.you} isBot={info?.isBot} />;
+    return (
+      <SeatToken
+        pos={pos}
+        seat={seat}
+        g={g}
+        active={actor === seat}
+        you={info?.you}
+        isBot={info?.isBot}
+        name={info?.name}
+        deadline={view.turnDeadline}
+        nowMs={nowMs}
+      />
+    );
   };
 
   return (
@@ -230,7 +249,7 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
               <TrickZone g={g} me={me} sweep={sweep} flash={flash} zoneRef={zoneRef} />
             </div>
             <div className="col-start-2 row-start-3 justify-self-center">
-              <SeatToken pos="S" seat={me} g={g} active={actor === me} you compact />
+              <SeatToken pos="S" seat={me} g={g} active={actor === me} you compact name={view.seats[me]?.name} deadline={view.turnDeadline} nowMs={nowMs} />
             </div>
           </div>
 
@@ -274,27 +293,34 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
 }
 
 function SeatToken({
-  pos, seat, g, active, you, isBot, compact,
+  pos, seat, g, active, you, isBot, compact, name, deadline, nowMs,
 }: {
-  pos: ScreenPos; seat: number; g: PlayerView; active: boolean; you?: boolean; isBot?: boolean; compact?: boolean;
+  pos: ScreenPos; seat: number; g: PlayerView; active: boolean; you?: boolean; isBot?: boolean;
+  compact?: boolean; name?: string; deadline?: number | null; nowMs?: number;
 }) {
-  const label = pos === "S" ? "You" : pos === "N" ? "Partner" : isBot ? "Bot" : "Opponent";
+  const label = name || (pos === "S" ? "You" : pos === "N" ? "Partner" : isBot ? "Bot" : "Opponent");
   const badges = [
     seat === g.dealer && ["D", "d"],
     seat === g.trumpCaller && ["T", "c"],
   ].filter(Boolean) as [string, string][];
+  const remain = active && deadline ? Math.max(0, Math.ceil((deadline - (nowMs ?? Date.now())) / 1000)) : null;
   return (
     <div className="flex flex-col items-center gap-1 text-center">
       <div className={`grid size-11 place-items-center rounded-xl border bg-card font-display font-bold text-muted-foreground shadow-sm ${active ? "cp-pulse border-brand" : "border-border"}`}>
-        {label[0]}
+        {(label[0] || "?").toUpperCase()}
       </div>
-      <div className="text-[11px] font-medium leading-tight">{label}{you && !compact ? "" : ""}</div>
+      <div className="max-w-[72px] truncate text-[11px] font-medium leading-tight" title={label}>
+        {label}{you ? " (you)" : ""}
+      </div>
       <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-        {pos === "S" ? `Team ${teamOf(seat) + 1}` : `${g.handCounts[seat]} cards`}
+        {pos === "S" ? `Team ${teamOf(seat) + 1}` : `${g.handCounts[seat]}`}
         {badges.map(([t, k]) => (
           <span key={k} className={k === "d" ? "rounded-full border border-border bg-secondary px-1.5 py-px font-bold text-foreground" : "rounded-full border border-dashed border-brand px-1.5 py-px font-bold text-brand"}>{t}</span>
         ))}
-        {active && <span className="rounded-full bg-brand px-1.5 py-px font-bold text-brand-foreground">◆</span>}
+        {active && remain !== null && (
+          <span className={`rounded-full px-1.5 py-px font-bold tabular-nums ${remain <= 10 ? "bg-brand text-brand-foreground" : "bg-secondary text-foreground"}`}>{remain}s</span>
+        )}
+        {active && remain === null && <span className="rounded-full bg-brand px-1.5 py-px font-bold text-brand-foreground">◆</span>}
       </div>
     </div>
   );

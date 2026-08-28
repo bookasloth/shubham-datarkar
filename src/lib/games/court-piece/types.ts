@@ -77,6 +77,7 @@ export type PlayerSlot = {
   isBot: boolean;
   ready: boolean;
   connected: boolean;
+  name: string;
 } | null;
 
 /** A room wraps the authoritative GameState plus who sits where. Stored as one
@@ -89,6 +90,9 @@ export type RoomState = {
   /** Set when the sweeping team declines court this deal — lets bots resume past
    *  the court window. Reset each deal. */
   courtDeclined: boolean;
+  /** Epoch ms when the current actor's turn began. Drives the turn timeout — an
+   *  idle/dropped human is auto-played after TURN_TIMEOUT_MS so they can't stall. */
+  turnStartedAt: number;
   version: number;
 };
 
@@ -108,10 +112,12 @@ export type RoomView = {
   status: RoomStatus;
   version: number; // room version — clients poll and apply only newer views
   yourSeat: number; // -1 if not seated
-  seats: { seat: Seat; occupied: boolean; isBot: boolean; ready: boolean; connected: boolean; you: boolean }[];
+  seats: { seat: Seat; occupied: boolean; isBot: boolean; ready: boolean; connected: boolean; you: boolean; name: string }[];
   game: PlayerView | null;
   /** True when it's the court window and the viewer is on the sweeping team. */
   canCallCourt: boolean;
+  /** Epoch ms the current human actor is auto-played at, or null (bot/no game). */
+  turnDeadline: number | null;
 };
 
 /** What a single player is allowed to see — own hand only, others as counts. */
