@@ -73,6 +73,13 @@ describe("full deal", () => {
     // every command captured for training/audit
     expect(end.log.length).toBeGreaterThan(9);
     expect(end.hands.every((h) => h.length === 0)).toBe(true);
+    // the last completed trick is captured (four plays + a winner) for the sweep
+    expect(end.lastTrick?.plays).toHaveLength(4);
+    expect(end.lastTrick?.winner).toBeGreaterThanOrEqual(0);
+  });
+
+  it("has no lastTrick before any trick resolves", () => {
+    expect(fresh().lastTrick).toBeNull();
   });
 });
 
