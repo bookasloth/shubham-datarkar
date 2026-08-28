@@ -33,17 +33,20 @@ const bump = (room: RoomState, patch: Partial<RoomState>): RoomState => ({
   version: room.version + 1,
 });
 
+/** A human turn is auto-played after this long, so an idle/dropped player can't stall. */
+export const TURN_TIMEOUT_MS = 30_000;
+
 export function createRoom(code: string, _creatorId: string): RoomState {
-  return { code, status: "lobby", players: [null, null, null, null], game: null, courtDeclined: false, version: 0 };
+  return { code, status: "lobby", players: [null, null, null, null], game: null, courtDeclined: false, turnStartedAt: 0, version: 0 };
 }
 
-export function joinRoom(room: RoomState, userId: string, seat: number): RoomState {
+export function joinRoom(room: RoomState, userId: string, seat: number, name = ""): RoomState {
   if (room.status !== "lobby") throw new Error("room already started");
   if (seat < 0 || seat > 3) throw new Error("seat out of range");
   if (seatOf(room, userId) !== -1) throw new Error("already seated");
   if (room.players[seat]) throw new Error("seat taken");
   const players = [...room.players] as RoomState["players"];
-  players[seat] = { userId, isBot: false, ready: false, connected: true };
+  players[seat] = { userId, isBot: false, ready: false, connected: true, name: name || "Player" };
   return bump(room, { players });
 }
 
@@ -59,8 +62,9 @@ export function setReady(room: RoomState, userId: string, ready: boolean): RoomS
  *  or dropped seats so a short table can still play. */
 export function fillBots(room: RoomState): RoomState {
   if (room.status !== "lobby") throw new Error("room already started");
+  let n = 0;
   const players = room.players.map((p) =>
-    p ?? { userId: null, isBot: true, ready: true, connected: true },
+    p ?? { userId: null, isBot: true, ready: true, connected: true, name: `Bot ${++n}` },
   ) as RoomState["players"];
   return bump(room, { players });
 }
@@ -130,7 +134,7 @@ export function declineCourt(room: RoomState, userId: string): RoomState {
 }
 
 /** The seat that must act next, or -1 if the deal isn't awaiting a move. */
-function actorSeat(room: RoomState): number {
+export function actorSeat(room: RoomState): number {
   const g = room.game;
   if (!g) return -1;
   if (g.phase === "trump_selection") return g.trumpCaller;
@@ -139,29 +143,57 @@ function actorSeat(room: RoomState): number {
   return -1;
 }
 
+/** Is the seat that must act next a human (vs a bot)? */
+export function currentActorIsHuman(room: RoomState): boolean {
+  const s = actorSeat(room);
+  return s >= 0 && !!room.players[s] && !room.players[s]!.isBot;
+}
+
+/** Compute + apply the heuristic bot move for one seat in the current phase. */
+function botMoveFor(room: RoomState, seat: Seat): RoomState {
+  const g = room.game!;
+  const hand = g.hands[seat];
+  let cmd: PlayerCommand;
+  if (g.phase === "trump_selection") {
+    cmd = { type: "SELECT_TRUMP", suit: botPickTrump(hand.slice(0, 5)) };
+  } else if (g.phase === "auction") {
+    const bid = botDecideBid(hand, g.trump!, g.contract);
+    cmd = bid === "pass" ? { type: "PASS" } : { type: "RAISE", call: bid };
+  } else {
+    cmd = { type: "PLAY_CARD", card: botPickCard(hand, g.currentTrick, g.trump!) };
+  }
+  return applySeatCommand(room, seat, cmd);
+}
+
 /** Play out every consecutive bot turn until it's a human's move or the deal ends.
- *  Bots never call court (kept simple). This is how empty seats keep the game moving. */
+ *  This is how empty/bot seats keep the game moving. */
 export function botAdvance(room: RoomState): RoomState {
   let r = room;
   for (;;) {
     if (awaitingCourtDecision(r)) break; // wait for the sweeping team's human to decide
     const seat = actorSeat(r);
-    if (seat === -1) break;
-    const slot = r.players[seat];
-    if (!slot?.isBot) break;
-
-    const g = r.game!;
-    const hand = g.hands[seat];
-    let cmd: PlayerCommand;
-    if (g.phase === "trump_selection") {
-      cmd = { type: "SELECT_TRUMP", suit: botPickTrump(hand.slice(0, 5)) };
-    } else if (g.phase === "auction") {
-      const bid = botDecideBid(hand, g.trump!, g.contract);
-      cmd = bid === "pass" ? { type: "PASS" } : { type: "RAISE", call: bid };
-    } else {
-      cmd = { type: "PLAY_CARD", card: botPickCard(hand, g.currentTrick, g.trump!) };
-    }
-    r = applySeatCommand(r, seat as Seat, cmd);
+    if (seat === -1 || !r.players[seat]?.isBot) break;
+    r = botMoveFor(r, seat as Seat);
   }
   return r;
+}
+
+/** The human seat whose turn has run past the timeout, or null. Bots are excluded
+ *  (botAdvance handles them); non-playing states don't time out. */
+export function timedOutSeat(room: RoomState, now: number, timeoutMs = TURN_TIMEOUT_MS): Seat | null {
+  if (!room.turnStartedAt || now - room.turnStartedAt <= timeoutMs) return null;
+  if (awaitingCourtDecision(room)) return null; // handled as a court decline elsewhere
+  const seat = actorSeat(room);
+  const slot = seat >= 0 ? room.players[seat] : null;
+  return slot && !slot.isBot ? (seat as Seat) : null;
+}
+
+/** Resolve an idle/dropped turn: auto-decline a stalled court window, or bot-play a
+ *  timed-out human's move, then let bots continue. One resolution per call; the
+ *  caller re-stamps turnStartedAt so the next idle turn is handled on a later poll. */
+export function autoPlayTimedOut(room: RoomState, now: number, timeoutMs = TURN_TIMEOUT_MS): RoomState {
+  if (!room.game || !room.turnStartedAt || now - room.turnStartedAt <= timeoutMs) return room;
+  if (awaitingCourtDecision(room)) return botAdvance(bump(room, { courtDeclined: true }));
+  const seat = timedOutSeat(room, now, timeoutMs);
+  return seat === null ? room : botAdvance(botMoveFor(room, seat));
 }

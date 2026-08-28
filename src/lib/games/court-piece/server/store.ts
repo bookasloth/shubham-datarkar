@@ -22,6 +22,17 @@ export async function loadRoomByCode(code: string): Promise<LoadedRoom | null> {
   return { id: data.id, version: data.version, room: data.state as RoomState };
 }
 
+/** A player's display name for the table — profile display_name, else username. */
+export async function getDisplayName(userId: string): Promise<string> {
+  const sb = supabaseAdmin();
+  const { data } = await sb
+    .from("profiles")
+    .select("display_name, username")
+    .eq("id", userId)
+    .maybeSingle();
+  return (data?.display_name as string) || (data?.username as string) || "Player";
+}
+
 export async function insertRoom(room: RoomState, createdBy: string): Promise<void> {
   const sb = supabaseAdmin();
   const { error } = await sb.from("cp_games").insert({

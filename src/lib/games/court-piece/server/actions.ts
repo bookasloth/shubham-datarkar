@@ -1,12 +1,14 @@
 "use server";
 
 import { getGameUser } from "@/lib/games/session";
-import { loadRoomByCode, insertRoom, saveRoom } from "./store";
+import { loadRoomByCode, insertRoom, saveRoom, getDisplayName } from "./store";
 import {
   applyPlayerCommand,
+  autoPlayTimedOut,
   botAdvance,
   courtWindow,
   createRoom,
+  currentActorIsHuman,
   declineCourt,
   fillBots,
   joinRoom,
@@ -14,6 +16,7 @@ import {
   setReady,
   startGame,
   startNextDeal,
+  TURN_TIMEOUT_MS,
 } from "../room";
 import { sanitizeFor } from "../engine";
 import type { PlayerCommand, RoomState, RoomView, Seat } from "../types";
@@ -33,6 +36,10 @@ function genCode(): string {
   return out;
 }
 
+/** Stamp the current actor's turn start — called after any move so the timeout
+ *  clock resets for whoever must act next. */
+const stampTurn = (room: RoomState): RoomState => ({ ...room, turnStartedAt: Date.now() });
+
 /** Build the client-facing view — never leaks other hands or user ids. */
 function roomView(room: RoomState, userId: string): RoomView {
   const yourSeat = seatOf(room, userId);
@@ -43,11 +50,13 @@ function roomView(room: RoomState, userId: string): RoomView {
     ready: p?.ready ?? false,
     connected: p?.connected ?? false,
     you: p?.userId === userId,
+    name: p?.name ?? "",
   }));
   const game = room.game && yourSeat >= 0 ? sanitizeFor(room.game, yourSeat as Seat) : null;
   const sweeper = courtWindow(room.game);
   const canCallCourt = sweeper !== null && yourSeat >= 0 && yourSeat % 2 === sweeper;
-  return { code: room.code, status: room.status, version: room.version, yourSeat, seats, game, canCallCourt };
+  const turnDeadline = currentActorIsHuman(room) && room.turnStartedAt ? room.turnStartedAt + TURN_TIMEOUT_MS : null;
+  return { code: room.code, status: room.status, version: room.version, yourSeat, seats, game, canCallCourt, turnDeadline };
 }
 
 /** Load → transform → optimistic save, retrying a few times on a version conflict. */
@@ -72,8 +81,9 @@ async function withRoom(
 export async function createCourtRoom(): Promise<ActionResult> {
   const user = await getGameUser();
   if (!user) return { ok: false, reason: "unauthenticated" };
+  const name = await getDisplayName(user.id);
   let room = createRoom(genCode(), user.id);
-  room = joinRoom(room, user.id, 0); // creator takes the first seat
+  room = joinRoom(room, user.id, 0, name); // creator takes the first seat
   await insertRoom(room, user.id);
   return { ok: true, view: roomView(room, user.id) };
 }
@@ -81,7 +91,8 @@ export async function createCourtRoom(): Promise<ActionResult> {
 export async function joinCourtSeat(code: string, seat: number): Promise<ActionResult> {
   const user = await getGameUser();
   if (!user) return { ok: false, reason: "unauthenticated" };
-  const res = await withRoom(code, (r) => joinRoom(r, user.id, seat));
+  const name = await getDisplayName(user.id);
+  const res = await withRoom(code, (r) => joinRoom(r, user.id, seat, name));
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
 
@@ -107,7 +118,7 @@ export async function startCourtGame(code: string): Promise<ActionResult> {
   if (!user) return { ok: false, reason: "unauthenticated" };
   const res = await withRoom(code, (r) => {
     if (seatOf(r, user.id) === -1) throw new Error("not seated");
-    return botAdvance(startGame(r, { seed: rndSeed(), dealer: rndSeat() }));
+    return stampTurn(botAdvance(startGame(r, { seed: rndSeed(), dealer: rndSeat() })));
   });
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
@@ -117,14 +128,14 @@ export async function playCourt(code: string, cmd: PlayerCommand): Promise<Actio
   if (!user) return { ok: false, reason: "unauthenticated" };
   // seat is bound from the authenticated user inside applyPlayerCommand — the
   // client cannot act as another seat. Bots then take any following bot turns.
-  const res = await withRoom(code, (r) => botAdvance(applyPlayerCommand(r, user.id, cmd)));
+  const res = await withRoom(code, (r) => stampTurn(botAdvance(applyPlayerCommand(r, user.id, cmd))));
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
 
 export async function declineCourtCall(code: string): Promise<ActionResult> {
   const user = await getGameUser();
   if (!user) return { ok: false, reason: "unauthenticated" };
-  const res = await withRoom(code, (r) => botAdvance(declineCourt(r, user.id)));
+  const res = await withRoom(code, (r) => stampTurn(botAdvance(declineCourt(r, user.id))));
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
 
@@ -133,7 +144,7 @@ export async function nextCourtDeal(code: string): Promise<ActionResult> {
   if (!user) return { ok: false, reason: "unauthenticated" };
   const res = await withRoom(code, (r) => {
     if (seatOf(r, user.id) === -1) throw new Error("not seated");
-    return botAdvance(startNextDeal(r, rndSeed()));
+    return stampTurn(botAdvance(startNextDeal(r, rndSeed())));
   });
   return res.ok ? { ok: true, view: roomView(res.room, user.id) } : res;
 }
@@ -143,5 +154,19 @@ export async function getCourtView(code: string): Promise<ActionResult> {
   if (!user) return { ok: false, reason: "unauthenticated" };
   const loaded = await loadRoomByCode(code);
   if (!loaded) return { ok: false, reason: "not_found" };
+
+  // Any player's poll enforces the turn clock: an idle/dropped human is auto-played
+  // so a real game can't stall. Only writes when a turn has actually expired.
+  const expired =
+    !!loaded.room.game &&
+    loaded.room.turnStartedAt > 0 &&
+    Date.now() - loaded.room.turnStartedAt > TURN_TIMEOUT_MS;
+  if (expired) {
+    const res = await withRoom(code, (r) => {
+      const next = autoPlayTimedOut(r, Date.now());
+      return next === r ? r : stampTurn(next); // no-op if someone already moved
+    });
+    if (res.ok) return { ok: true, view: roomView(res.room, user.id) };
+  }
   return { ok: true, view: roomView(loaded.room, user.id) };
 }

@@ -10,6 +10,9 @@ import {
   botAdvance,
   declineCourt,
   seatOf,
+  timedOutSeat,
+  autoPlayTimedOut,
+  TURN_TIMEOUT_MS,
 } from "./room";
 import type { Card, RoomState, Rank, Suit } from "./types";
 
@@ -129,6 +132,47 @@ describe("version monotonicity (optimistic-concurrency token)", () => {
   });
 });
 
+describe("player names", () => {
+  it("stores a display name for a seated player and numbers the bots", () => {
+    let r = createRoom("NAME", "u0");
+    r = joinRoom(r, "u0", 0, "Asha");
+    expect(r.players[0]!.name).toBe("Asha");
+    r = fillBots(r);
+    expect(r.players[1]!.name).toBe("Bot 1");
+    expect(r.players[3]!.name).toBe("Bot 3");
+  });
+
+  it("falls back to 'Player' when no name is given", () => {
+    const r = joinRoom(createRoom("NAME", "u0"), "u0", 0);
+    expect(r.players[0]!.name).toBe("Player");
+  });
+});
+
+describe("turn timeout — auto-play an idle/dropped human", () => {
+  it("flags the current human's seat once its turn runs past the timeout", () => {
+    const r = { ...activeRoom(), turnStartedAt: 1000 }; // trump caller = seat 1 (human)
+    expect(timedOutSeat(r, 1000 + TURN_TIMEOUT_MS + 1)).toBe(1);
+    expect(timedOutSeat(r, 1000 + 500)).toBeNull(); // still fresh
+  });
+
+  it("does not time out before the turn even started (turnStartedAt 0)", () => {
+    expect(timedOutSeat(activeRoom(), 10_000_000)).toBeNull();
+  });
+
+  it("auto-plays for the timed-out human so the game advances", () => {
+    const r = { ...activeRoom(), turnStartedAt: 1000 };
+    const after = autoPlayTimedOut(r, 1000 + TURN_TIMEOUT_MS + 1);
+    // the trump call was made for seat 1 → the deal moved on past trump selection
+    expect(after.game!.phase).not.toBe("trump_selection");
+    expect(after.version).toBeGreaterThan(r.version);
+  });
+
+  it("leaves a fresh turn untouched", () => {
+    const r = { ...activeRoom(), turnStartedAt: 1000 };
+    expect(autoPlayTimedOut(r, 1000 + 500)).toBe(r);
+  });
+});
+
 describe("court decision-point", () => {
   it("botAdvance PAUSES at the court window when the sweeping team has a human", () => {
     const r = botAdvance(sweptRoom());
@@ -152,7 +196,7 @@ describe("court decision-point", () => {
   it("rejects a decline from someone not on the sweeping team", () => {
     let r = sweptRoom();
     // seat 1 is a bot; put a human on team 1 to test the guard
-    r = { ...r, players: [r.players[0], { userId: "u1", isBot: false, ready: true, connected: true }, r.players[2], r.players[3]] };
+    r = { ...r, players: [r.players[0], { userId: "u1", isBot: false, ready: true, connected: true, name: "Rey" }, r.players[2], r.players[3]] };
     expect(() => declineCourt(r, "u1")).toThrow();
   });
 });
