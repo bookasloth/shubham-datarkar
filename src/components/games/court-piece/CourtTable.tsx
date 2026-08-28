@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { legalPlays } from "@/lib/games/court-piece/trick";
+import { screenSeat, seatsAround, type ScreenPos } from "@/lib/games/court-piece/table-layout";
 import {
   getCourtView,
   joinCourtSeat,
@@ -12,13 +13,13 @@ import {
   declineCourtCall,
   nextCourtDeal,
 } from "@/lib/games/court-piece/server/actions";
-import type { Card, Contract, PlayerView, RoomView, Suit } from "@/lib/games/court-piece/types";
+import type { Card, Contract, Play, PlayerView, RoomView, Seat, Suit } from "@/lib/games/court-piece/types";
 import { GameStage } from "@/components/games/shell/GameStage";
 import { GameHeader } from "@/components/games/shell/GameHeader";
 import { CourtCard, cardLabel } from "./CourtCard";
 
 const SUIT: Record<Suit, string> = { S: "♠", H: "♥", D: "♦", C: "♣" };
-const seatName = (i: number) => ["South", "West", "North", "East"][i];
+const isRed = (s: Suit) => s === "H" || s === "D";
 const teamOf = (seat: number) => seat % 2;
 
 type Result = { ok: true; view: RoomView } | { ok: false; reason: string };
@@ -29,8 +30,6 @@ export default function CourtTable({ code }: { code: string }) {
   const [busy, setBusy] = useState(false);
   const finishedRef = useRef(false);
 
-  // Apply a view only if it's at least as new as what we already show — so a slow
-  // poll can never revert a fresh result (versions increase monotonically).
   const applyView = useCallback((v: RoomView) => {
     finishedRef.current = v.status === "finished";
     setView((cur) => (!cur || v.version >= cur.version ? v : cur));
@@ -48,8 +47,7 @@ export default function CourtTable({ code }: { code: string }) {
     [applyView],
   );
 
-  // Poll for other players'/bots' moves. Turn-based, so ~1.5s latency is fine and
-  // reconnect is automatic. Stops fetching once the match is over.
+  // Poll for other players'/bots' moves (~1.5s). Reconnect is automatic; stops at end.
   useEffect(() => {
     let alive = true;
     const load = () => {
@@ -68,155 +66,239 @@ export default function CourtTable({ code }: { code: string }) {
     };
   }, [code, applyView]);
 
-  if (error) return <Shell><p className="text-[var(--danger)]">Error: {error}</p></Shell>;
-  if (!view) return <Shell><p className="text-muted-foreground">Loading room {code}…</p></Shell>;
+  let body: React.ReactNode;
+  if (error) body = <p className="text-[var(--danger)]">Error: {error}</p>;
+  else if (!view) body = <p className="text-muted-foreground">Loading room {code}…</p>;
+  else if (view.status === "lobby") return <Lobby view={view} code={code} run={run} busy={busy} />;
+  else return <Table view={view} run={run} busy={busy} />;
 
-  if (view.status === "lobby") return <Lobby view={view} code={code} run={run} busy={busy} />;
-  return <Table view={view} run={run} busy={busy} />;
-}
-
-function Shell({ children }: { children: React.ReactNode }) {
   return (
-    <GameStage>
-      <GameHeader title="Court Piece" />
-      <div className="w-full max-w-xl">{children}</div>
-    </GameStage>
+    <div data-game="court-piece">
+      <GameStage>
+        <GameHeader title="Court Piece" />
+        <div className="w-full max-w-xl">{body}</div>
+      </GameStage>
+    </div>
   );
 }
+
+/* ------------------------------- lobby ------------------------------- */
 
 function Lobby({ view, code, run, busy }: { view: RoomView; code: string; run: (p: Promise<Result>) => void; busy: boolean }) {
   const seated = view.yourSeat >= 0;
   const filled = view.seats.every((s) => s.occupied);
   const allReady = view.seats.every((s) => !s.occupied || s.ready);
   return (
-    <Shell>
-      <div className="space-y-6">
-        <div className="rounded-lg border border-border p-4 text-center">
-          <p className="text-sm text-muted-foreground">Invite code</p>
-          <p className="font-display text-3xl tracking-[0.3em]">{code}</p>
-          <p className="mt-1 text-xs text-muted-foreground">Share it — friends join and pick a seat.</p>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3">
-          {view.seats.map((s) => (
-            <div key={s.seat} className="rounded-lg border border-border p-3 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="font-medium">{seatName(s.seat)}</span>
-                <span className="text-xs text-muted-foreground">Team {teamOf(s.seat) + 1}</span>
-              </div>
-              <div className="mt-1 text-muted-foreground">
-                {!s.occupied && "empty"}
-                {s.occupied && s.isBot && "Bot"}
-                {s.occupied && !s.isBot && (s.you ? "You" : "Player")}
-                {s.occupied && s.ready && " · ready"}
-              </div>
-              {!s.occupied && !seated && (
-                <button className={btn} disabled={busy} onClick={() => run(joinCourtSeat(code, s.seat))}>
-                  Sit here
-                </button>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {seated && (
-          <div className="flex flex-wrap gap-2">
-            <button className={btn} disabled={busy} onClick={() => run(setCourtReady(code, true))}>Ready</button>
-            <button className={btn} disabled={busy || filled} onClick={() => run(addCourtBots(code))}>Fill with bots</button>
-            <button
-              className={btnPrimary}
-              disabled={busy || !filled || !allReady}
-              onClick={() => run(startCourtGame(code))}
-            >
-              Start game
-            </button>
+    <div data-game="court-piece">
+      <GameStage>
+        <GameHeader title="Court Piece" />
+        <div className="w-full max-w-md space-y-6">
+          <div className="rounded-xl border border-border bg-card p-4 text-center">
+            <p className="text-sm text-muted-foreground">Invite code</p>
+            <p className="font-display text-3xl font-extrabold tracking-[0.3em] text-brand">{code}</p>
+            <p className="mt-1 text-xs text-muted-foreground">Share it — friends join and pick a seat.</p>
           </div>
-        )}
-      </div>
-    </Shell>
+
+          <div className="grid grid-cols-2 gap-3">
+            {view.seats.map((s) => (
+              <div key={s.seat} className="rounded-xl border border-border bg-card p-3 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">Seat {s.seat + 1}</span>
+                  <span className="text-xs text-muted-foreground">Team {teamOf(s.seat) + 1}</span>
+                </div>
+                <div className="mt-0.5 text-muted-foreground">
+                  {!s.occupied && "empty"}
+                  {s.occupied && s.isBot && "Bot"}
+                  {s.occupied && !s.isBot && (s.you ? "You" : "Player")}
+                  {s.occupied && s.ready && " · ready"}
+                </div>
+                {!s.occupied && !seated && (
+                  <button className={btn} disabled={busy} onClick={() => run(joinCourtSeat(code, s.seat))}>
+                    Sit here
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+
+          {seated && (
+            <div className="flex flex-wrap gap-2">
+              <button className={btn} disabled={busy} onClick={() => run(setCourtReady(code, true))}>Ready</button>
+              <button className={btn} disabled={busy || filled} onClick={() => run(addCourtBots(code))}>Fill with bots</button>
+              <button className={btnPrimary} disabled={busy || !filled || !allReady} onClick={() => run(startCourtGame(code))}>
+                Start game
+              </button>
+            </div>
+          )}
+        </div>
+      </GameStage>
+    </div>
   );
 }
 
+/* ------------------------------- table ------------------------------- */
+
 function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) => void; busy: boolean }) {
   const g = view.game;
-  const code = view.code;
-  if (!g) return <Shell><p>Waiting…</p></Shell>;
 
+  // trick-sweep: when a trick completes, briefly replay it sweeping to the winner
+  const [sweep, setSweep] = useState<{ plays: Play[]; winner: Seat; n: number } | null>(null);
+  const prevTricks = useRef(0);
+  useEffect(() => {
+    if (!g) return;
+    const done = g.trickWinners.length;
+    if (done > prevTricks.current && g.lastTrick) {
+      setSweep({ ...g.lastTrick, n: done });
+      const t = setTimeout(() => setSweep((s) => (s?.n === done ? null : s)), 620);
+      prevTricks.current = done;
+      return () => clearTimeout(t);
+    }
+    prevTricks.current = done;
+  }, [g]);
+
+  // court flash when a court is called
+  const [flash, setFlash] = useState(false);
+  const hadCourt = useRef(false);
+  useEffect(() => {
+    const on = !!g?.courtCall;
+    if (on && !hadCourt.current) {
+      setFlash(true);
+      const t = setTimeout(() => setFlash(false), 1700);
+      hadCourt.current = true;
+      return () => clearTimeout(t);
+    }
+    if (!on) hadCourt.current = false;
+  }, [g]);
+
+  if (!g) return null;
   const me = g.yourSeat;
+  const around = seatsAround(me);
+  const myTeam = teamOf(me);
   const myTurnPlay = g.phase === "playing" && g.turn === me;
   const legal = myTurnPlay ? legalPlays(g.yourHand, g.ledSuit) : [];
   const isLegal = (c: Card) => legal.some((l) => l.suit === c.suit && l.rank === c.rank);
+  const actor = phaseTurnSeat(g);
+
+  const seatCell = (pos: Exclude<ScreenPos, "S">) => {
+    const seat = around[pos];
+    const info = view.seats[seat];
+    return <SeatToken pos={pos} seat={seat} g={g} active={actor === seat} you={info?.you} isBot={info?.isBot} />;
+  };
 
   return (
-    <Shell>
-      <div className="space-y-5">
-        {/* status bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border p-3 text-sm">
-          <span>Deal {g.dealNumber + 1}</span>
-          <span>Trump: {g.trump ? SUIT[g.trump] : "—"}</span>
-          <span>Contract: {g.contract} · declarer {seatName(g.declarer)}</span>
-          <span className="font-medium">
-            Team 1 {g.totals[0]} — {g.totals[1]} Team 2
-          </span>
-        </div>
+    <div data-game="court-piece">
+      <GameStage>
+        <GameHeader title="Court Piece" />
+        <div className="w-full max-w-xl space-y-4">
+          {/* status bar */}
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border border-border bg-card px-3.5 py-2 text-[13px]">
+            <span className="text-muted-foreground">Deal <b className="font-display text-foreground">{g.dealNumber + 1}</b></span>
+            <span className="inline-flex items-center gap-1.5">
+              <span className="text-muted-foreground">Trump</span>
+              {g.trump ? (
+                <span className={`font-display text-base font-bold ${isRed(g.trump) ? "text-[var(--danger)]" : "text-foreground"}`}>{SUIT[g.trump]}</span>
+              ) : <span className="text-muted-foreground">—</span>}
+            </span>
+            <span className="text-muted-foreground">Call <b className="font-display text-foreground">{g.contract}</b></span>
+            <span className="font-display font-bold tabular-nums">
+              You <span className="text-brand">{g.totals[myTeam]}</span> — {g.totals[myTeam === 0 ? 1 : 0]} Them
+            </span>
+          </div>
 
-        {/* seats */}
-        <div className="grid grid-cols-2 gap-2 text-xs">
-          {view.seats.map((s) => {
-            const badges = [
-              s.seat === g.dealer && "dealer",
-              s.seat === g.trumpCaller && "caller",
-              phaseTurnSeat(g) === s.seat && "to act",
-            ].filter(Boolean);
-            return (
-              <div key={s.seat} className={`rounded-md border p-2 ${phaseTurnSeat(g) === s.seat ? "border-foreground" : "border-border"}`}>
-                <div className="flex justify-between">
-                  <span className="font-medium">{seatName(s.seat)}{s.you ? " (you)" : ""}</span>
-                  <span className="text-muted-foreground">{g.handCounts[s.seat]} cards</span>
+          {/* felt */}
+          <div className="cp-felt grid min-h-[300px] grid-cols-[1fr_1.5fr_1fr] grid-rows-[auto_1fr_auto] gap-2 rounded-2xl border border-border p-3">
+            <div className="col-start-2 row-start-1 justify-self-center">{seatCell("N")}</div>
+            <div className="col-start-1 row-start-2 self-center">{seatCell("W")}</div>
+            <div className="col-start-3 row-start-2 self-center justify-self-end">{seatCell("E")}</div>
+            <div className="col-start-2 row-start-2 grid place-items-center">
+              <TrickZone g={g} me={me} sweep={sweep} flash={flash} />
+            </div>
+            <div className="col-start-2 row-start-3 justify-self-center">
+              <SeatToken pos="S" seat={me} g={g} active={actor === me} you compact />
+            </div>
+          </div>
+
+          {/* your hand */}
+          <div>
+            <p className="mb-1.5 text-center text-[11px] uppercase tracking-wider text-muted-foreground">
+              Your hand{myTurnPlay ? <b className="text-brand"> · your turn</b> : ""}
+            </p>
+            <div key={g.dealNumber} className="cp-deal flex flex-wrap justify-center gap-1.5">
+              {g.yourHand.map((c, i) => (
+                <div key={cardLabel(c)} style={{ animationDelay: `${i * 45}ms` }}>
+                  <CourtCard
+                    card={c}
+                    dim={myTurnPlay && !isLegal(c)}
+                    disabled={busy || !myTurnPlay || !isLegal(c)}
+                    onClick={() => run(playCourt(view.code, { type: "PLAY_CARD", card: c }))}
+                  />
                 </div>
-                <div className="text-muted-foreground">{badges.join(" · ") || " "}</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* current trick */}
-        <div className="rounded-lg border border-border p-3">
-          <p className="mb-2 text-xs text-muted-foreground">
-            Current trick · team tricks {g.teamTricks[0]}–{g.teamTricks[1]}
-            {g.courtCall ? " · COURT CALLED" : ""}
-          </p>
-          <div className="flex gap-4">
-            {g.currentTrick.length === 0 && <span className="text-sm text-muted-foreground">—</span>}
-            {g.currentTrick.map((p) => (
-              <div key={p.seat} className="text-center">
-                <CourtCard card={p.card} size="sm" disabled />
-                <div className="mt-1 text-[10px] text-muted-foreground">{seatName(p.seat)}</div>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
 
-        {/* phase controls */}
-        <PhaseControls g={g} me={me} busy={busy} code={code} run={run} canCallCourt={view.canCallCourt} />
-
-        {/* your hand */}
-        <div>
-          <p className="mb-2 text-xs text-muted-foreground">Your hand{myTurnPlay ? " — your turn" : ""}</p>
-          <div className="flex flex-wrap gap-2">
-            {g.yourHand.map((c) => (
-              <CourtCard
-                key={cardLabel(c)}
-                card={c}
-                dim={myTurnPlay && !isLegal(c)}
-                disabled={busy || !myTurnPlay || !isLegal(c)}
-                onClick={() => run(playCourt(code, { type: "PLAY_CARD", card: c }))}
-              />
-            ))}
-          </div>
+          <PhaseControls g={g} me={me} busy={busy} code={view.code} run={run} canCallCourt={view.canCallCourt} />
         </div>
+      </GameStage>
+    </div>
+  );
+}
+
+function SeatToken({
+  pos, seat, g, active, you, isBot, compact,
+}: {
+  pos: ScreenPos; seat: number; g: PlayerView; active: boolean; you?: boolean; isBot?: boolean; compact?: boolean;
+}) {
+  const label = pos === "S" ? "You" : pos === "N" ? "Partner" : isBot ? "Bot" : "Opponent";
+  const badges = [
+    seat === g.dealer && ["D", "d"],
+    seat === g.trumpCaller && ["T", "c"],
+  ].filter(Boolean) as [string, string][];
+  return (
+    <div className="flex flex-col items-center gap-1 text-center">
+      <div className={`grid size-11 place-items-center rounded-xl border bg-card font-display font-bold text-muted-foreground shadow-sm ${active ? "cp-pulse border-brand" : "border-border"}`}>
+        {label[0]}
       </div>
-    </Shell>
+      <div className="text-[11px] font-medium leading-tight">{label}{you && !compact ? "" : ""}</div>
+      <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+        {pos === "S" ? `Team ${teamOf(seat) + 1}` : `${g.handCounts[seat]} cards`}
+        {badges.map(([t, k]) => (
+          <span key={k} className={k === "d" ? "rounded-full border border-border bg-secondary px-1.5 py-px font-bold text-foreground" : "rounded-full border border-dashed border-brand px-1.5 py-px font-bold text-brand"}>{t}</span>
+        ))}
+        {active && <span className="rounded-full bg-brand px-1.5 py-px font-bold text-brand-foreground">◆</span>}
+      </div>
+    </div>
+  );
+}
+
+function TrickZone({ g, me, sweep, flash }: { g: PlayerView; me: number; sweep: { plays: Play[]; winner: Seat } | null; flash: boolean }) {
+  const offset: Record<ScreenPos, string> = {
+    S: "left-1/2 top-full -translate-x-1/2 -translate-y-[85%]",
+    N: "left-1/2 top-0 -translate-x-1/2 -translate-y-[15%]",
+    W: "left-0 top-1/2 -translate-x-[10%] -translate-y-1/2",
+    E: "right-0 top-1/2 translate-x-[10%] -translate-y-1/2",
+  };
+  const shown = sweep ? sweep.plays : g.currentTrick;
+  const sweeping = !!sweep;
+  return (
+    <div className="relative h-32 w-40">
+      {shown.length === 0 && !flash && (
+        <div className="grid h-full place-items-center text-[11px] uppercase tracking-wider text-muted-foreground">trick</div>
+      )}
+      {shown.map((p) => {
+        const pos = screenSeat(p.seat as Seat, me as Seat);
+        return (
+          <div key={`${p.seat}-${cardLabel(p.card)}`} className={`absolute ${offset[pos]} ${sweeping ? "cp-sweep" : "cp-play"}`}>
+            <CourtCard card={p.card} size="sm" />
+          </div>
+        );
+      })}
+      {flash && (
+        <div className="cp-court pointer-events-none absolute inset-0 grid place-items-center">
+          <span className="font-display text-2xl font-extrabold text-brand drop-shadow">COURT · +52</span>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -230,7 +312,7 @@ function PhaseControls({
     return (
       <Controls label="Call trump from your first five">
         {(["S", "H", "D", "C"] as Suit[]).map((s) => (
-          <button key={s} className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "SELECT_TRUMP", suit: s }))}>
+          <button key={s} className={`${btn} text-lg ${isRed(s) ? "text-[var(--danger)]" : ""}`} disabled={busy} onClick={() => run(playCourt(code, { type: "SELECT_TRUMP", suit: s }))}>
             {SUIT[s]}
           </button>
         ))}
@@ -238,13 +320,11 @@ function PhaseControls({
     );
   }
   if (g.phase === "auction" && g.auctionTurn === me) {
-    const raises: Contract[] = ([6, 7, 8] as Contract[]).filter((c) => c > g.contract);
+    const raises = ([6, 7, 8] as Contract[]).filter((c) => c > g.contract);
     return (
       <Controls label={`Auction — contract at ${g.contract}`}>
         {raises.map((c) => (
-          <button key={c} className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "RAISE", call: c }))}>
-            Raise {c}
-          </button>
+          <button key={c} className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "RAISE", call: c }))}>Raise {c}</button>
         ))}
         <button className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "PASS" }))}>Pass</button>
       </Controls>
@@ -253,7 +333,7 @@ function PhaseControls({
   if (canCallCourt) {
     return (
       <Controls label="You swept the first six — call court?">
-        <button className={btnPrimary} disabled={busy} onClick={() => run(playCourt(code, { type: "CALL_COURT" }))}>Call court (+52 / −52)</button>
+        <button className={btnPrimary} disabled={busy} onClick={() => run(playCourt(code, { type: "CALL_COURT" }))}>Call court · +52 / −52</button>
         <button className={btn} disabled={busy} onClick={() => run(declineCourtCall(code))}>Decline, play on</button>
       </Controls>
     );
@@ -266,16 +346,16 @@ function PhaseControls({
     );
   }
   if (g.phase === "match_complete") {
-    return <p className="text-center font-display text-xl">Team {(g.matchWinner ?? 0) + 1} wins the match.</p>;
+    return <p className="text-center font-display text-xl font-bold">Team {(g.matchWinner ?? 0) + 1} wins the match.</p>;
   }
-  return null;
+  return <div className="min-h-[2px]" />;
 }
 
 function Controls({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-lg border border-border p-3">
-      <p className="mb-2 text-xs text-muted-foreground">{label}</p>
-      <div className="flex flex-wrap gap-2">{children}</div>
+    <div className="rounded-xl border border-border bg-card p-3">
+      <p className="mb-2 text-center text-[11px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <div className="flex flex-wrap justify-center gap-2">{children}</div>
     </div>
   );
 }
@@ -287,5 +367,5 @@ function phaseTurnSeat(g: PlayerView): number {
   return -1;
 }
 
-const btn = "rounded-md border border-border px-3 py-1.5 text-sm hover:border-foreground disabled:opacity-40 disabled:hover:border-border";
-const btnPrimary = "rounded-md bg-primary px-3 py-1.5 text-sm text-primary-foreground hover:opacity-90 disabled:opacity-40";
+const btn = "rounded-lg border border-border bg-card px-3 py-1.5 text-sm hover:border-foreground disabled:opacity-40 disabled:hover:border-border";
+const btnPrimary = "rounded-lg bg-brand px-3 py-1.5 text-sm font-medium text-brand-foreground hover:opacity-90 disabled:opacity-40";

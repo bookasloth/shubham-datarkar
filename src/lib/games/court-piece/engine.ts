@@ -43,6 +43,7 @@ export function startDeal(input: StartDealInput): GameState {
     ledSuit: null,
     trickWinners: [],
     teamTricks: [0, 0],
+    lastTrick: null,
     courtCall: null,
     totals: [...input.totals] as [number, number],
     lastDealerByTeam: [...input.lastDealerByTeam] as [Seat, Seat],
@@ -127,6 +128,7 @@ export function applyCommand(state: GameState, command: Command): GameState {
       s.teamTricks = [...state.teamTricks] as [number, number];
       s.teamTricks[wt] += 1;
       s.trickWinners = [...state.trickWinners, wt];
+      s.lastTrick = { plays: trick, winner };
       s.currentTrick = [];
       s.ledSuit = null;
       s.turn = winner;
@@ -184,6 +186,7 @@ export function sanitizeFor(state: GameState, viewer: Seat): PlayerView {
     ledSuit: state.ledSuit,
     trickWinners: state.trickWinners,
     teamTricks: state.teamTricks,
+    lastTrick: state.lastTrick,
     courtCall: state.courtCall,
     totals: state.totals,
     matchWinner: state.matchWinner,

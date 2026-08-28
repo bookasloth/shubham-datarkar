@@ -58,6 +58,9 @@ export type GameState = {
   ledSuit: Suit | null;
   trickWinners: Team[];
   teamTricks: [number, number];
+  /** The most recently completed trick — its four plays and winning seat. Drives
+   *  the trick-sweep animation; null until the first trick resolves. */
+  lastTrick: { plays: Play[]; winner: Seat } | null;
   courtCall: { callerTeam: Team } | null;
   totals: [number, number];
   lastDealerByTeam: [Seat, Seat];
@@ -126,6 +129,7 @@ export type PlayerView = {
   ledSuit: Suit | null;
   trickWinners: Team[];
   teamTricks: [number, number];
+  lastTrick: { plays: Play[]; winner: Seat } | null;
   courtCall: { callerTeam: Team } | null;
   totals: [number, number];
   matchWinner: Team | null;
