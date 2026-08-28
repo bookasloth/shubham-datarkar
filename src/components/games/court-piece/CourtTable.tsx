@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { legalPlays } from "@/lib/games/court-piece/trick";
 import {
   getCourtView,
@@ -9,6 +9,7 @@ import {
   addCourtBots,
   startCourtGame,
   playCourt,
+  declineCourtCall,
   nextCourtDeal,
 } from "@/lib/games/court-piece/server/actions";
 import type { Card, Contract, PlayerView, RoomView, Suit } from "@/lib/games/court-piece/types";
@@ -26,19 +27,46 @@ export default function CourtTable({ code }: { code: string }) {
   const [view, setView] = useState<RoomView | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const finishedRef = useRef(false);
 
-  const run = useCallback(async (p: Promise<Result>) => {
-    setBusy(true);
-    setError(null);
-    const res = await p;
-    if (res.ok) setView(res.view);
-    else setError(res.reason);
-    setBusy(false);
+  // Apply a view only if it's at least as new as what we already show — so a slow
+  // poll can never revert a fresh result (versions increase monotonically).
+  const applyView = useCallback((v: RoomView) => {
+    finishedRef.current = v.status === "finished";
+    setView((cur) => (!cur || v.version >= cur.version ? v : cur));
   }, []);
 
+  const run = useCallback(
+    async (p: Promise<Result>) => {
+      setBusy(true);
+      setError(null);
+      const res = await p;
+      if (res.ok) applyView(res.view);
+      else setError(res.reason);
+      setBusy(false);
+    },
+    [applyView],
+  );
+
+  // Poll for other players'/bots' moves. Turn-based, so ~1.5s latency is fine and
+  // reconnect is automatic. Stops fetching once the match is over.
   useEffect(() => {
-    getCourtView(code).then((res) => (res.ok ? setView(res.view) : setError(res.reason)));
-  }, [code]);
+    let alive = true;
+    const load = () => {
+      if (finishedRef.current) return;
+      getCourtView(code).then((res) => {
+        if (!alive) return;
+        if (res.ok) applyView(res.view);
+        else setError(res.reason);
+      });
+    };
+    load();
+    const id = setInterval(load, 1500);
+    return () => {
+      alive = false;
+      clearInterval(id);
+    };
+  }, [code, applyView]);
 
   if (error) return <Shell><p className="text-[var(--danger)]">Error: {error}</p></Shell>;
   if (!view) return <Shell><p className="text-muted-foreground">Loading room {code}…</p></Shell>;
@@ -119,13 +147,6 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
   const legal = myTurnPlay ? legalPlays(g.yourHand, g.ledSuit) : [];
   const isLegal = (c: Card) => legal.some((l) => l.suit === c.suit && l.rank === c.rank);
 
-  const swept6 =
-    g.phase === "playing" &&
-    g.trickWinners.length === 6 &&
-    g.currentTrick.length === 0 &&
-    g.trickWinners.every((t) => t === g.trickWinners[0]);
-  const canCallCourt = swept6 && g.trickWinners[0] === teamOf(me);
-
   return (
     <Shell>
       <div className="space-y-5">
@@ -177,7 +198,7 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
         </div>
 
         {/* phase controls */}
-        <PhaseControls g={g} me={me} busy={busy} code={code} run={run} canCallCourt={canCallCourt} />
+        <PhaseControls g={g} me={me} busy={busy} code={code} run={run} canCallCourt={view.canCallCourt} />
 
         {/* your hand */}
         <div>
@@ -233,6 +254,7 @@ function PhaseControls({
     return (
       <Controls label="You swept the first six — call court?">
         <button className={btnPrimary} disabled={busy} onClick={() => run(playCourt(code, { type: "CALL_COURT" }))}>Call court (+52 / −52)</button>
+        <button className={btn} disabled={busy} onClick={() => run(declineCourtCall(code))}>Decline, play on</button>
       </Controls>
     );
   }
