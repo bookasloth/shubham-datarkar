@@ -271,7 +271,7 @@ function Table({ view, run, busy }: { view: RoomView; run: (p: Promise<Result>) 
                       whileHover={playable ? { y: -12 } : undefined}
                       whileDrag={{ scale: 1.06, zIndex: 50 }}
                       onDragEnd={(_, info) => endDrag(c, info)}
-                      onClick={() => playable && run(playCourt(view.code, { type: "PLAY_CARD", card: c }))}
+                      onTap={() => playable && run(playCourt(view.code, { type: "PLAY_CARD", card: c }))}
                       initial={{ opacity: 0, y: 26 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ type: "spring", stiffness: 460, damping: 34, delay: reduce ? 0 : i * 0.04 }}
@@ -375,15 +375,7 @@ function PhaseControls({
     );
   }
   if (g.phase === "auction" && g.auctionTurn === me) {
-    const raises = ([6, 7, 8] as Contract[]).filter((c) => c > g.contract);
-    return (
-      <Controls label={`Auction — contract at ${g.contract}`}>
-        {raises.map((c) => (
-          <button key={c} className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "RAISE", call: c }))}>Raise {c}</button>
-        ))}
-        <button className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "PASS" }))}>Pass</button>
-      </Controls>
-    );
+    return <AuctionControls g={g} code={code} busy={busy} run={run} />;
   }
   if (canCallCourt) {
     return (
@@ -404,6 +396,43 @@ function PhaseControls({
     return <p className="text-center font-display text-xl font-bold">Team {(g.matchWinner ?? 0) + 1} wins the match.</p>;
   }
   return <div className="min-h-[2px]" />;
+}
+
+function AuctionControls({
+  g, code, busy, run,
+}: {
+  g: PlayerView; code: string; busy: boolean; run: (p: Promise<Result>) => void;
+}) {
+  // Default the trump to what's currently called; raising with a different suit
+  // re-calls trump. If left unchanged, the raise keeps the existing trump.
+  const [trump, setTrump] = useState<Suit>(g.trump ?? "S");
+  const raises = ([6, 7, 8] as Contract[]).filter((c) => c > g.contract);
+  return (
+    <Controls label={`Auction — contract at ${g.contract}. Raise (change trump if you want).`}>
+      <div className="flex items-center gap-1">
+        <span className="mr-1 text-[11px] text-muted-foreground">Trump</span>
+        {(["S", "H", "D", "C"] as Suit[]).map((s) => (
+          <button
+            key={s}
+            type="button"
+            aria-pressed={trump === s}
+            onClick={() => setTrump(s)}
+            className={`rounded-lg border px-2 py-1 text-lg ${isRed(s) ? "text-[var(--danger)]" : "text-foreground"} ${
+              trump === s ? "border-brand ring-1 ring-brand" : "border-border"
+            }`}
+          >
+            {SUIT[s]}
+          </button>
+        ))}
+      </div>
+      {raises.map((c) => (
+        <button key={c} className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "RAISE", call: c, suit: trump }))}>
+          Raise {c}
+        </button>
+      ))}
+      <button className={btn} disabled={busy} onClick={() => run(playCourt(code, { type: "PASS" }))}>Pass</button>
+    </Controls>
+  );
 }
 
 function Controls({ label, children }: { label: string; children: React.ReactNode }) {

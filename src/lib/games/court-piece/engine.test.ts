@@ -41,6 +41,27 @@ describe("SELECT_TRUMP", () => {
   });
 });
 
+describe("RAISE can also change the trump", () => {
+  it("a raise with a suit re-sets trump; a later raise without a suit keeps it", () => {
+    let s = fresh();
+    s = applyCommand(s, { type: "SELECT_TRUMP", seat: 1, suit: "H" });
+    expect(s.trump).toBe("H");
+    s = applyCommand(s, { type: "RAISE", seat: s.auctionTurn, call: 6, suit: "S" });
+    expect(s.trump).toBe("S");
+    expect(s.contract).toBe(6);
+    s = applyCommand(s, { type: "RAISE", seat: s.auctionTurn, call: 7 });
+    expect(s.trump).toBe("S"); // unchanged when no suit given
+  });
+
+  it("rejects a raise carrying an invalid trump suit", () => {
+    let s = fresh();
+    s = applyCommand(s, { type: "SELECT_TRUMP", seat: 1, suit: "H" });
+    expect(() =>
+      applyCommand(s, { type: "RAISE", seat: s.auctionTurn, call: 6, suit: "X" as never }),
+    ).toThrow();
+  });
+});
+
 describe("turn & legality enforcement (playing)", () => {
   const start = () => {
     let s = fresh();

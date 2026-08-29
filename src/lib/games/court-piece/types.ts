@@ -35,7 +35,7 @@ export type Phase = "trump_selection" | "auction" | "playing" | "deal_complete" 
 /** An authoritative command applied to the game. Every one is logged (training/audit). */
 export type Command =
   | { type: "SELECT_TRUMP"; seat: Seat; suit: Suit }
-  | { type: "RAISE"; seat: Seat; call: Contract }
+  | { type: "RAISE"; seat: Seat; call: Contract; suit?: Suit }
   | { type: "PASS"; seat: Seat }
   | { type: "PLAY_CARD"; seat: Seat; card: Card }
   | { type: "CALL_COURT"; seat: Seat };
@@ -100,7 +100,7 @@ export type RoomState = {
  *  from the authenticated user, so a client can never act as another seat. */
 export type PlayerCommand =
   | { type: "SELECT_TRUMP"; suit: Suit }
-  | { type: "RAISE"; call: Contract }
+  | { type: "RAISE"; call: Contract; suit?: Suit }
   | { type: "PASS" }
   | { type: "PLAY_CARD"; card: Card }
   | { type: "CALL_COURT" };
