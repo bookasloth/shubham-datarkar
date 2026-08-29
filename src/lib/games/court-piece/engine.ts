@@ -80,6 +80,11 @@ export function applyCommand(state: GameState, command: Command): GameState {
       if (state.phase !== "auction") throw new Error("not in auction");
       if (command.seat !== state.auctionTurn) throw new Error("not your turn to bid");
       if (!isLegalRaise(command.call, state.contract)) throw new Error("illegal raise");
+      // The raiser takes the contract and may re-call trump along with the raise.
+      if (command.suit !== undefined) {
+        if (!SUITS.includes(command.suit)) throw new Error("invalid trump suit");
+        s.trump = command.suit;
+      }
       s.contract = command.call;
       s.declarer = command.seat;
       s.passes = 0;
