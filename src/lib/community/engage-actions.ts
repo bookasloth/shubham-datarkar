@@ -193,27 +193,23 @@ export async function voteOnPoll(postId: string, optionIndex: number): Promise<E
   const { sb, user, error } = await gate();
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
-  const { data: post } = await sb
-    .from("community_posts")
-    .select("type, poll")
-    .eq("id", postId)
-    .maybeSingle();
-  if (!post || post.type !== "poll" || !post.poll) return { error: "That isn't a poll." };
-
-  const poll = post.poll as { options: { i: number }[]; closes_at?: string };
-  if (poll.closes_at && new Date(poll.closes_at).getTime() <= Date.now()) {
-    return { error: "This poll has closed." };
-  }
-  if (!poll.options.some((o) => o.i === optionIndex)) return { error: "Unknown option." };
-
-  const { error: err } = await sb
-    .from("community_poll_votes")
-    .insert({ post_id: postId, user_id: user.id, option_index: optionIndex });
-  if (err) {
-    // 23505 = unique violation on (post_id, user_id): vote is once-only by design.
-    if (err.code === "23505") return { error: "You already voted." };
-    return { error: err.message };
-  }
+  // All checks (is-a-poll, live, valid option, not closed, once-only) now live in
+  // the community_poll_vote definer RPC — the table's direct insert is revoked, so
+  // this is the only write path and a raw PostgREST call can't bypass the rules.
+  const { data: code, error: err } = await sb.rpc("community_poll_vote", {
+    p_post: postId,
+    p_option: optionIndex,
+  });
+  if (err) return { error: err.message };
+  const MESSAGE: Record<string, string> = {
+    not_poll: "That isn't a poll.",
+    draft: "That poll isn't live yet.",
+    unknown_option: "Unknown option.",
+    closed: "This poll has closed.",
+    already: "You already voted.",
+    signed_out: GATE.SIGNED_OUT,
+  };
+  if (code !== "ok") return { error: MESSAGE[code as string] ?? "Couldn't record your vote." };
   revalidatePath("/community");
   // The rendered URL keys on public_id, not this UUID — revalidate the whole
   // dynamic segment rather than a path that would never match.
