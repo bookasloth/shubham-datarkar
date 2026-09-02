@@ -5,14 +5,14 @@ import { tokenizeLinks, prettyLabel } from "@/lib/community/linkify";
 import { ensureShortLinks, SHORT_HOST } from "@/lib/community/short-link";
 import { getPostByPublicId } from "@/lib/community/queries";
 
-// Downloadable share card for a single community post. Instagram portrait
-// (1080x1350, 4:5), X/Twitter-style dark quote card: circular real avatar with
+// Downloadable share card for a single community post. Instagram Story / Reel
+// portrait (1080x1920, 9:16), X/Twitter-style dark quote card: circular real avatar with
 // name/@handle beside it · "Sd" mark top-right · big body text · timestamp.
 // Same next/og (Satori) pipeline as the blog OG images, so no new deps. Runs on
 // the default (nodejs) runtime so the DB read + short-link RPC work — do NOT
 // switch to edge.
 
-export const size = { width: 1080, height: 1350 };
+export const size = { width: 1080, height: 1920 };
 
 const BRAND = "#ff4800";
 const GOLD = "#e0a516";
@@ -23,15 +23,15 @@ const MUTED = "#7a7a80";
 // Body scales down as the post gets longer so short posts read huge and long
 // ones still fit the 1350px canvas. ponytail: fixed buckets, not per-char fit.
 function bodySize(len: number): number {
-  if (len <= 90) return 78;
-  if (len <= 180) return 58;
-  if (len <= 300) return 46;
-  return 38;
+  if (len <= 90) return 60;
+  if (len <= 180) return 46;
+  if (len <= 300) return 38;
+  return 32;
 }
 
-// Fake engagement — 2-digit, descending left→right (likes highest).
-// ponytail: static display numbers, not real post counts (share-card polish).
-const FAKE = { like: 87, reply: 64, reblog: 42, bookmark: 21 };
+// Decorative engagement — a fresh random 2-digit number (10–99) per render, per
+// stat. Not real post counts; the card is a share graphic, not a dashboard.
+const rnd2 = () => 10 + Math.floor(Math.random() * 90);
 
 const HEART = "M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z";
 const REPLY = "M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z";
@@ -169,7 +169,7 @@ export async function GET(
         {/* body + shortened links */}
         <div style={{ display: "flex", flexDirection: "column", marginTop: "72px" }}>
           {text && (
-            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", fontWeight: 700, fontSize: `${body}px`, lineHeight: 1.18, letterSpacing: "-0.03em" }}>
+            <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", fontWeight: 400, fontSize: `${body}px`, lineHeight: 1.28, letterSpacing: "-0.01em" }}>
               {text.split(/\s+/).map((w, i) => {
                 const tag = /^#[^\s#]+$/.test(w);
                 return (
@@ -214,7 +214,7 @@ export async function GET(
           {stamp}
         </div>
 
-        {/* engagement bar — fake 2-digit counts, descending left→right */}
+        {/* engagement bar — random 2-digit counts, fresh every render */}
         <div
           style={{
             display: "flex",
@@ -225,10 +225,10 @@ export async function GET(
             borderTop: "1px solid rgba(255,255,255,0.12)",
           }}
         >
-          <Stat d={HEART} n={FAKE.like} />
-          <Stat d={REPLY} n={FAKE.reply} />
-          <Stat d={REBLOG} n={FAKE.reblog} />
-          <Stat d={BOOKMARK} n={FAKE.bookmark} />
+          <Stat d={HEART} n={rnd2()} />
+          <Stat d={REPLY} n={rnd2()} />
+          <Stat d={REBLOG} n={rnd2()} />
+          <Stat d={BOOKMARK} n={rnd2()} />
         </div>
         </div>
 
@@ -247,7 +247,9 @@ export async function GET(
       ],
       headers: {
         "Content-Disposition": `attachment; filename="post-${id}.png"`,
-        "Cache-Control": "public, max-age=600, s-maxage=600",
+        // no-store so the random engagement counts are fresh on every download,
+        // not served from a 10-min cache. It's a download endpoint, hit rarely.
+        "Cache-Control": "no-store",
       },
     },
   );
