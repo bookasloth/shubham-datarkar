@@ -11,6 +11,7 @@ import { NewsletterPrefs } from "@/components/members/newsletter-prefs";
 import { PersonalDetailsCard } from "@/components/members/personal-details-card";
 import UsernameForm from "@/components/games/UsernameForm";
 import { AvatarUploader } from "@/components/members/avatar-uploader";
+import { DeactivateAccount } from "@/components/members/deactivate-account";
 import { getMyAccount } from "@/lib/members/account-queries";
 
 export const metadata = buildMetadata({ title: "Account", path: "/members/account", noIndex: true });
@@ -29,7 +30,7 @@ export default async function AccountPage() {
   const supabase = await supabaseAuthServer();
   const { data: profile } = await supabase
     .from("profiles")
-    .select("username, avatar_url")
+    .select("username, avatar_url, deactivated_at")
     .eq("id", user!.id)
     .maybeSingle();
 
@@ -156,6 +157,13 @@ export default async function AccountPage() {
               Sign out
             </Button>
           </form>
+        </div>
+      </section>
+
+      <section className="rounded-card border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">Deactivate account</h2>
+        <div className="mt-3">
+          <DeactivateAccount deactivated={Boolean(profile?.deactivated_at)} />
         </div>
       </section>
     </div>

@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { getMemberContext } from "@/lib/members/session";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 
@@ -52,5 +53,30 @@ export async function updateMyAccount(
     p_whatsapp: whatsapp,
   });
   if (error) return { ok: false, error: "Could not save. Try again." };
+  return { ok: true };
+}
+
+/**
+ * Deactivate or reactivate the current account (v1: reversible, no deletion).
+ *
+ * Writes through the `community_set_deactivated` security-definer RPC, which
+ * scopes to auth.uid() — the session client can't set the column directly
+ * (profiles UPDATE is column-allowlisted). Deactivating stamps deactivated_at;
+ * every read path (RLS policy + the community read RPCs) then hides the account
+ * and its content. Reactivating nulls it and everything returns.
+ */
+export async function setAccountDeactivated(
+  off: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  const { user } = await getMemberContext();
+  if (!user) return { ok: false, error: "Not signed in." };
+
+  const sb = await supabaseAuthServer();
+  const { error } = await sb.rpc("community_set_deactivated", { p_off: off });
+  if (error) return { ok: false, error: "Could not update your account. Try again." };
+
+  revalidatePath("/members/account");
+  revalidatePath("/community");
+  revalidatePath("/community/me");
   return { ok: true };
 }
