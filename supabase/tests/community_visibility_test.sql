@@ -122,7 +122,7 @@ reset role;
 -- 3. Deactivation (v1): hides the account's content everywhere; reversible.
 -- =====================================================================
 
-update public.profiles set deactivated_at = now() where id = :'A';
+update public.profiles set deactivated_at = now() where id = '11111111-1111-1111-1111-111111111111';
 
 -- Stranger C: author's posts vanish from both the base table and the feed.
 set local role authenticated;
@@ -145,7 +145,7 @@ end $$;
 reset role;
 
 -- Reactivate → everything returns for the stranger.
-update public.profiles set deactivated_at = null where id = :'A';
+update public.profiles set deactivated_at = null where id = '11111111-1111-1111-1111-111111111111';
 set local role authenticated;
 set local request.jwt.claims to '{"sub":"33333333-3333-3333-3333-333333333333","email":"vis_stranger@test.local"}';
 do $$ begin
