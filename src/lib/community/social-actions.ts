@@ -3,6 +3,7 @@ import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { notifyFollow } from "./community-notify";
 import { GATE } from "./gate-messages";
+import { withinCommunityLimit } from "./limits";
 
 export type FollowResult =
   { following: boolean; followers: number } | { error: string };
@@ -77,6 +78,7 @@ export async function toggleFollow(username: string): Promise<FollowResult> {
   if (r.error !== undefined || r.sb === undefined)
     return { error: r.error ?? "Something went wrong." };
   const { sb, user, targetId } = r;
+  if (!(await withinCommunityLimit(user.id, "follow"))) return { error: GATE.RATE };
 
   // Also enforced by the no_self_follow CHECK; caught here for a readable message.
   if (targetId === user.id) return { error: "You can't follow yourself." };
@@ -122,6 +124,7 @@ export async function toggleMute(username: string): Promise<MuteResult> {
   if (r.error !== undefined || r.sb === undefined)
     return { error: r.error ?? "Something went wrong." };
   const { sb, user, targetId } = r;
+  if (!(await withinCommunityLimit(user.id, "mute"))) return { error: GATE.RATE };
 
   if (targetId === user.id) return { error: "You can't mute yourself." };
 

@@ -6,11 +6,14 @@ import { uploadCommunityImages } from "./upload-images";
 import { notifyReply, notifyMentions } from "./community-notify";
 import { clampParentDepth } from "./reply-depth";
 import { GATE } from "./gate-messages";
+import { withinCommunityLimit, type LimitAction } from "./limits";
 
 export type EngageResult = { ok: true } | { error: string };
 
-/** Auth + post gate shared by every engagement write. */
-async function gate() {
+/** Auth + post gate shared by every engagement write. Pass an action to also
+ *  enforce that action's per-user rate budget — over budget returns GATE.RATE
+ *  before any DB write happens. */
+async function gate(action?: LimitAction) {
   const sb = await supabaseAuthServer();
   const {
     data: { user },
@@ -18,11 +21,14 @@ async function gate() {
   if (!user) return { sb, user: null, error: GATE.SIGNED_OUT };
   const { data: canPost } = await sb.rpc("community_can_post");
   if (!canPost) return { sb, user: null, error: GATE.UNVERIFIED };
+  if (action && !(await withinCommunityLimit(user.id, action))) {
+    return { sb, user: null, error: GATE.RATE };
+  }
   return { sb, user, error: null };
 }
 
 export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("vote");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
@@ -60,7 +66,7 @@ export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageR
 }
 
 export async function toggleBookmark(postId: string): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("bookmark");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
@@ -80,7 +86,7 @@ export async function toggleBookmark(postId: string): Promise<EngageResult> {
 }
 
 export async function toggleReblog(postId: string): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("reblog");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: existing } = await sb
@@ -112,7 +118,7 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
  * bare reblogs only, so the toggle never lies about a quote.
  */
 export async function createQuote(postId: string, body: string): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("quote");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   // A quote must say something — reuse the text-post rules (500 cap, non-empty,
@@ -160,13 +166,19 @@ export async function reportPost(postId: string, reason: string): Promise<Engage
     data: { user },
   } = await sb.auth.getUser();
   if (!user) return { error: "Sign in to report." };
+  // Rate-limited on the user (report has no community_can_post gate — a banned
+  // user must still be able to report abuse — so the limit is the only brake on
+  // a report flood burying the moderation queue).
+  if (!(await withinCommunityLimit(user.id, "report"))) return { error: GATE.RATE };
 
   const { error } = await sb.from("community_reports").insert({
     post_id: postId,
     reporter_id: user.id,
     reason: reason.trim().slice(0, 300) || null,
   });
-  if (error) return { error: error.message };
+  // 23505 = the (post_id, reporter_id) unique index: you already reported this
+  // post. Idempotent — the end state is what was wanted, so report success.
+  if (error && error.code !== "23505") return { error: error.message };
   return { ok: true };
 }
 
@@ -178,6 +190,7 @@ export async function deleteOwnPost(postId: string): Promise<EngageResult> {
     data: { user },
   } = await sb.auth.getUser();
   if (!user) return { error: GATE.SIGNED_OUT };
+  if (!(await withinCommunityLimit(user.id, "delete"))) return { error: GATE.RATE };
 
   const { error } = await sb
     .from("community_posts")
@@ -190,7 +203,7 @@ export async function deleteOwnPost(postId: string): Promise<EngageResult> {
 }
 
 export async function voteOnPoll(postId: string, optionIndex: number): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("poll_vote");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const { data: post } = await sb
@@ -226,7 +239,7 @@ export async function createReply(
   body: string,
   images: File[] = [],
 ): Promise<EngageResult> {
-  const { sb, user, error } = await gate();
+  const { sb, user, error } = await gate("reply");
   if (error || !user) return { error: error ?? GATE.SIGNED_OUT };
 
   const files = images.filter((f) => f && f.size > 0);
