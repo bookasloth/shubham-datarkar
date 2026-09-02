@@ -13,6 +13,7 @@ import {
 import { OPEN_COMMAND_EVENT } from "@/components/layout/command-menu";
 import { AppSidebar } from "./sidebar";
 import { ProfileMenu } from "./profile-menu";
+import { NotificationsBell } from "@/components/community/notifications-bell";
 import { APP_NAV, activeSection, sectionHref } from "./nav-config";
 import type { ShellUser } from "@/lib/app-shell/user";
 
@@ -73,6 +74,7 @@ export function AppShell({
           </button>
 
           <div className="flex items-center gap-2">
+            {signedIn && <NotificationsBell />}
             <ThemeToggle />
             {signedIn ? (
               <ProfileMenu

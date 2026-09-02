@@ -96,7 +96,7 @@ export async function createPost(
       // ISO string → scheduled. Only send the key when it's not "now".
       ...(valid.publishAt !== undefined ? { publish_at: valid.publishAt } : {}),
     })
-    .select("public_id")
+    .select("id, public_id")
     .maybeSingle();
   if (error) return { error: error.message };
 
@@ -109,7 +109,7 @@ export async function createPost(
       ? `https://shubhamdatarkar.com/community/p/${inserted.public_id}`
       : "https://shubhamdatarkar.com/community";
     await notifyPostCreated(user.id, href);
-    await notifyMentions(valid.body ?? "", user.id, href);
+    await notifyMentions(valid.body ?? "", user.id, href, [], inserted?.id as string | undefined);
   }
 
   revalidatePath("/community");
@@ -138,14 +138,14 @@ export async function publishDraft(postId: string): Promise<{ ok: true } | { err
     .update({ publish_at: new Date().toISOString() })
     .eq("id", postId)
     .eq("user_id", user.id)
-    .select("public_id, body")
+    .select("id, public_id, body")
     .maybeSingle();
   if (error) return { error: error.message };
   if (!row) return { error: "That draft no longer exists." };
 
   const href = `https://shubhamdatarkar.com/community/p/${row.public_id}`;
   await notifyPostCreated(user.id, href);
-  await notifyMentions((row.body as string) ?? "", user.id, href);
+  await notifyMentions((row.body as string) ?? "", user.id, href, [], row.id as string);
 
   revalidatePath("/community");
   revalidatePath("/community/me");

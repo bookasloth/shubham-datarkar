@@ -31,6 +31,7 @@ export const APP_NAV: AppNavSection[] = [
     color: "text-blue-500",
     items: [
       { label: "Feed", href: "/community" },
+      { label: "Notifications", href: "/community/notifications", gated: true },
       { label: "Likes", href: "/community/likes", gated: true },
       { label: "Shares", href: "/community/reblogs", gated: true },
       { label: "Saved", href: "/community/bookmarks", gated: true },
