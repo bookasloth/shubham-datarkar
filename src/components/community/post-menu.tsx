@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { reportPost, deleteOwnPost } from "@/lib/community/engage-actions";
+import { reportPost, deleteOwnPost, restorePost } from "@/lib/community/engage-actions";
 import { toggleMute } from "@/lib/community/social-actions";
 import { setPostHidden, setPostDemoted, adminDeletePost } from "@/lib/community/admin-actions";
 import { usePostCardFrame } from "./post-card-frame";
@@ -112,9 +112,45 @@ export function PostMenu({
     });
   }
 
+  // Soft delete: pull the card, then offer Undo. On a standalone post page the
+  // card can't hide into a feed, so navigate away and Undo returns to the post.
   function onDelete() {
-    if (!window.confirm("Delete this post? This can't be undone.")) return;
-    removeThenRun(() => deleteOwnPost(postId), "Couldn't delete the post");
+    const runUndo = () => {
+      start(async () => {
+        const err = errOf(await restorePost(postId));
+        if (err) toast({ title: "Couldn't restore the post", description: err, variant: "danger" });
+        else if (standalone) router.push(`/community/p/${publicId}`);
+        else frame?.restore();
+      });
+    };
+    const afterDelete = () =>
+      toast({
+        title: "Post deleted",
+        description: "It's hidden from the community.",
+        action: { label: "Undo", onClick: runUndo },
+      });
+
+    if (standalone) {
+      start(async () => {
+        const err = errOf(await deleteOwnPost(postId));
+        if (err) toast({ title: "Couldn't delete the post", description: err, variant: "danger" });
+        else {
+          router.push("/community");
+          afterDelete();
+        }
+      });
+      return;
+    }
+    frame?.remove();
+    start(async () => {
+      const err = errOf(await deleteOwnPost(postId));
+      if (err) {
+        frame?.restore();
+        toast({ title: "Couldn't delete the post", description: err, variant: "danger" });
+      } else {
+        afterDelete();
+      }
+    });
   }
 
   // Admin actions throw on failure (unlike the {error} unions above). Hide/demote
