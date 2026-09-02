@@ -4,6 +4,7 @@ import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { validatePost } from "./validate";
 import { uploadCommunityImages } from "./upload-images";
 import { notifyReply, notifyMentions } from "./community-notify";
+import { notify } from "./notify";
 import { clampParentDepth } from "./reply-depth";
 import { GATE } from "./gate-messages";
 
@@ -52,6 +53,19 @@ export async function toggleVote(postId: string, value: 1 | -1): Promise<EngageR
       .eq("user_id", user.id));
   }
   if (err) return { error: err.message };
+  // Notify the post owner on a NEW up-vote only — not on unvote (existing) and
+  // not on a down-vote (removed feature; value is always 1). notify() skips
+  // self and muted, and never throws.
+  if (!existing && value === 1) {
+    const { data: owner } = await sb
+      .from("community_posts")
+      .select("user_id")
+      .eq("id", postId)
+      .maybeSingle();
+    if (owner?.user_id) {
+      await notify({ recipientId: owner.user_id as string, actorId: user.id, verb: "like", postId });
+    }
+  }
   // No revalidatePath here: the client bar is authoritative for the viewer's own
   // vote and reconciles in place, so revalidating would force a needless
   // whole-feed RSC refetch after every tap (and fight the optimistic update). The
@@ -99,6 +113,17 @@ export async function toggleReblog(postId: string): Promise<EngageResult> {
     if (err.code === "23505") return { ok: true };
     return { error: err.message };
   }
+  // Notify the source author on a new reblog (insert path only, not un-reblog).
+  if (!existing) {
+    const { data: src } = await sb
+      .from("community_posts")
+      .select("user_id")
+      .eq("id", postId)
+      .maybeSingle();
+    if (src?.user_id) {
+      await notify({ recipientId: src.user_id as string, actorId: user.id, verb: "reblog", postId });
+    }
+  }
   // Client bar is authoritative; skip the feed refetch.
   return { ok: true };
 }
@@ -140,13 +165,16 @@ export async function createQuote(postId: string, body: string): Promise<EngageR
   });
   if (err) return { error: err.message };
 
-  // Same notify contract as a reply/mention: tell the quoted author, and anyone
-  // @-mentioned in the quote body, once each.
+  // In-app: tell the quoted author. Then the email/in-app mention fan-out for
+  // anyone @-mentioned in the quote body (excluding the quoted author, already
+  // notified here).
+  await notify({ recipientId: source.user_id as string, actorId: user.id, verb: "quote", postId: source.id as string });
   await notifyMentions(
     valid.body ?? "",
     user.id,
     `https://shubhamdatarkar.com/community/p/${source.public_id}`,
     [source.user_id as string],
+    source.id as string,
   );
   revalidatePath("/community");
   return { ok: true };
@@ -267,13 +295,16 @@ export async function createReply(
   // Notify the DIRECT parent author only (whoever owns the row we attached to),
   // never the whole ancestor chain — one email per reply.
   await notifyReply(parentId, user.id, valid.body ?? "");
-  // Exclude the parent author: notifyReply already emailed them about this same
+  // In-app reply notification to the same direct parent author.
+  await notify({ recipientId: parentNode.user_id, actorId: user.id, verb: "reply", postId: target.id });
+  // Exclude the parent author: notifyReply already notified them about this same
   // reply, and mentioning them in it shouldn't earn a second copy.
   await notifyMentions(
     valid.body ?? "",
     user.id,
     `https://shubhamdatarkar.com/community/p/${target.public_id}`,
     [parentNode.user_id],
+    target.id,
   );
   revalidatePath("/community/p/[id]", "page");
   revalidatePath("/community");

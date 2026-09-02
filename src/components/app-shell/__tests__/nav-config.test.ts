@@ -7,10 +7,11 @@ describe("APP_NAV", () => {
   it("has the four sections in order", () => {
     expect(APP_NAV.map((s) => s.key)).toEqual(["community", "membership", "game", "account"]);
   });
-  it("names community links Feed / Likes / Shares / Saved", () => {
+  it("names community links Feed / Notifications / Likes / Shares / Saved", () => {
     const community = APP_NAV.find((s) => s.key === "community")!;
     expect(community.items.map((i) => [i.label, i.href])).toEqual([
       ["Feed", "/community"],
+      ["Notifications", "/community/notifications"],
       ["Likes", "/community/likes"],
       ["Shares", "/community/reblogs"],
       ["Saved", "/community/bookmarks"],

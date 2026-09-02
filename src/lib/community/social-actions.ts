@@ -2,6 +2,7 @@
 import { revalidatePath } from "next/cache";
 import { supabaseAuthServer } from "@/lib/supabase/auth-server";
 import { notifyFollow } from "./community-notify";
+import { notify } from "./notify";
 import { GATE } from "./gate-messages";
 
 export type FollowResult =
@@ -106,6 +107,9 @@ export async function toggleFollow(username: string): Promise<FollowResult> {
   // Best-effort and awaited after the write is committed — a dead SMTP box must
   // never fail a follow that already happened.
   await notifyFollow(targetId, user.id);
+  // In-app follow notification (no post to link — the bell resolves it to the
+  // actor's profile).
+  await notify({ recipientId: targetId, actorId: user.id, verb: "follow" });
   return { following: true, followers: await countFollowers(sb, targetId) };
 }
 

@@ -4,6 +4,7 @@ import { getUserEmail } from "@/lib/email/user-email";
 import { sendTemplate } from "@/lib/email/send-template";
 import { communityWelcome, postPublished, newComment, mentioned, followed } from "@/lib/email/templates/community";
 import { mentionedHandles } from "@/lib/community/linkify";
+import { notify } from "@/lib/community/notify";
 import { claim, istParts } from "@/lib/email/dispatch/dedupe";
 
 const SITE = "https://shubhamdatarkar.com";
@@ -57,6 +58,9 @@ export async function notifyMentions(
   actorId: string,
   href: string,
   excludeUserIds: string[] = [],
+  /** When set, each mentioned member also gets an in-app 'mention' notification
+   *  deep-linked to this post. */
+  postId?: string,
 ): Promise<void> {
   try {
     const handles = mentionedHandles(body);
@@ -82,6 +86,8 @@ export async function notifyMentions(
     for (const t of targets) {
       const targetId = t.id as string;
       if (skip.has(targetId)) continue;
+      // In-app mention notification (independent of email delivery).
+      if (postId) await notify({ recipientId: targetId, actorId, verb: "mention", postId });
       const email = await getUserEmail(targetId);
       if (!email) continue;
       await sendTemplate(email, mentioned({ author, excerpt, href }));
