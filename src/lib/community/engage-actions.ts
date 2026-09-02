@@ -220,12 +220,28 @@ export async function deleteOwnPost(postId: string): Promise<EngageResult> {
   if (!user) return { error: GATE.SIGNED_OUT };
   if (!(await withinCommunityLimit(user.id, "delete"))) return { error: GATE.RATE };
 
-  const { error } = await sb
-    .from("community_posts")
-    .delete()
-    .eq("id", postId)
-    .eq("user_id", user.id);
+  // Soft delete (recoverable, and it doesn't cascade away other people's replies
+  // the way a hard delete did). The definer RPC is owner-scoped; the shared
+  // visibility predicate hides deleted_at rows from every read path.
+  const { data, error } = await sb.rpc("community_soft_delete", { p_post: postId });
   if (error) return { error: error.message };
+  if (data == null) return { error: "That post is already gone." };
+  revalidatePath("/community");
+  return { ok: true };
+}
+
+/** Restore a post the owner soft-deleted (the Undo path). Guarded server-side to
+ *  the owner's own deleted rows — it can't un-hide an admin-moderated post. */
+export async function restorePost(postId: string): Promise<EngageResult> {
+  const sb = await supabaseAuthServer();
+  const {
+    data: { user },
+  } = await sb.auth.getUser();
+  if (!user) return { error: GATE.SIGNED_OUT };
+
+  const { data, error } = await sb.rpc("community_restore", { p_post: postId });
+  if (error) return { error: error.message };
+  if (data == null) return { error: "That post can't be restored." };
   revalidatePath("/community");
   return { ok: true };
 }

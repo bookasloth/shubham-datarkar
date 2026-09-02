@@ -12,6 +12,8 @@ type ToastInput = {
   description?: string;
   variant?: ToastVariant;
   duration?: number;
+  /** Optional single action button (e.g. Undo). Clicking it dismisses the toast. */
+  action?: { label: string; onClick: () => void };
 };
 
 type ToastRecord = ToastInput & { id: number };
@@ -75,6 +77,17 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
               <div className="flex-1">
                 <p className="text-sm font-medium">{t.title}</p>
                 {t.description && <p className="mt-0.5 text-sm text-muted-foreground">{t.description}</p>}
+                {t.action && (
+                  <button
+                    onClick={() => {
+                      t.action!.onClick();
+                      remove(t.id);
+                    }}
+                    className="mt-1.5 rounded-btn text-sm font-medium text-brand transition-ui hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                  >
+                    {t.action.label}
+                  </button>
+                )}
               </div>
               <button
                 onClick={() => remove(t.id)}
