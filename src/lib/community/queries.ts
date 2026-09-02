@@ -243,6 +243,19 @@ export async function getProfileByUsername(
     .eq("username", username.toLowerCase())
     .maybeSingle();
   if (!data) return null;
+
+  // A deactivated or banned account 404s for everyone but its owner (who can
+  // still reach it to reactivate). community_author_active is a definer that can
+  // read the moderation/deactivation columns the anon/authenticated grants
+  // withhold; false = banned or deactivated. The owner-self check comes first so
+  // a deactivated member isn't locked out of their own profile.
+  const {
+    data: { user: viewer },
+  } = await sb.auth.getUser();
+  if (viewer?.id !== data.id) {
+    const { data: active } = await sb.rpc("community_author_active", { p_author: data.id });
+    if (active === false) return null;
+  }
   // Same badge the feed shows next to this handle — gold founder, orange
   // supporter, grey verified. Falls back to grey if the RPC is unreachable,
   // which under-claims rather than minting a badge nobody earned.
