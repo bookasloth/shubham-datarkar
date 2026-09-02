@@ -27,6 +27,22 @@ alter table public.community_posts add column if not exists deleted_at timestamp
 create index if not exists community_posts_not_deleted_idx
   on public.community_posts (created_at desc) where deleted_at is null;
 
+-- ---------- self-heal dependencies from 20260902000001 ----------
+-- community_visible_public below calls community_author_active, which (with the
+-- profiles.deactivated_at column it reads) is created in 20260902000001. Redeclare
+-- them idempotently here so this migration applies even if that one didn't land —
+-- create-or-replace / add-if-not-exists make it a no-op when they already exist.
+alter table public.profiles add column if not exists deactivated_at timestamptz;
+grant select (deactivated_at) on public.profiles to authenticated;
+
+create or replace function public.community_author_active(p_author uuid)
+returns boolean language sql stable security definer set search_path = public as $$
+  select coalesce(
+    (select not banned and deactivated_at is null from public.profiles where id = p_author),
+    false);
+$$;
+grant execute on function public.community_author_active(uuid) to anon, authenticated;
+
 -- ---------- predicate gains deleted_at (default null so a bare 4-arg call still
 -- resolves during any transition; every real call site below passes it) ----------
 drop function if exists public.community_visible_public(boolean, timestamptz, uuid, text);
