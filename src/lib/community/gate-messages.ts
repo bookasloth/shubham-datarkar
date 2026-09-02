@@ -10,4 +10,5 @@
 export const GATE = {
   SIGNED_OUT: "Sign in first.",
   UNVERIFIED: "Verify your email first.",
+  RATE: "You're doing that too fast. Give it a minute.",
 } as const;

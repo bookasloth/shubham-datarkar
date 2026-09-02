@@ -5,6 +5,8 @@ import { validatePost } from "./validate";
 import { notifyPostCreated, notifyMentions } from "./community-notify";
 import { unfurl } from "./unfurl";
 import { uploadCommunityImages } from "./upload-images";
+import { withinCommunityLimit } from "./limits";
+import { GATE } from "./gate-messages";
 import type { PostMeta } from "./types";
 
 export type CreatePostState =
@@ -23,6 +25,11 @@ export async function createPost(
 
   const { data: canPost } = await sb.rpc("community_can_post");
   if (!canPost) return { error: "Verify your email to post." };
+
+  // Rate-limit before validation/upload so a flood can't burn image-storage or
+  // the mention-email fanout (posting is the amplifier's throttle: capped posts
+  // → capped emails).
+  if (!(await withinCommunityLimit(user.id, "post"))) return { error: GATE.RATE };
 
   const files = (formData.getAll("images") as File[]).filter((f) => f && f.size > 0);
   const valid = validatePost({
@@ -124,6 +131,7 @@ export async function publishDraft(postId: string): Promise<{ ok: true } | { err
     data: { user },
   } = await sb.auth.getUser();
   if (!user) return { error: "Sign in to publish." };
+  if (!(await withinCommunityLimit(user.id, "publish"))) return { error: GATE.RATE };
 
   const { data: row, error } = await sb
     .from("community_posts")
