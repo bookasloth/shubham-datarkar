@@ -133,19 +133,18 @@ export async function publishDraft(postId: string): Promise<{ ok: true } | { err
   if (!user) return { error: "Sign in to publish." };
   if (!(await withinCommunityLimit(user.id, "publish"))) return { error: GATE.RATE };
 
-  const { data: row, error } = await sb
-    .from("community_posts")
-    .update({ publish_at: new Date().toISOString() })
-    .eq("id", postId)
-    .eq("user_id", user.id)
-    .select("id, public_id, body")
-    .maybeSingle();
+  // Definer RPC, not a direct update: the only UPDATE policy on community_posts
+  // is admin-only, so the session-client update matched zero rows for every
+  // non-admin (the F-10 bug). The RPC scopes to auth.uid() and only ever sets
+  // publish_at, so it can't be used to unhide a moderated post.
+  const { data, error } = await sb.rpc("community_publish_draft", { p_post: postId });
   if (error) return { error: error.message };
-  if (!row) return { error: "That draft no longer exists." };
+  const row = Array.isArray(data) ? data[0] : data;
+  if (!row?.public_id) return { error: "That draft no longer exists." };
 
   const href = `https://shubhamdatarkar.com/community/p/${row.public_id}`;
   await notifyPostCreated(user.id, href);
-  await notifyMentions((row.body as string) ?? "", user.id, href, [], row.id as string);
+  await notifyMentions((row.body as string) ?? "", user.id, href, [], postId);
 
   revalidatePath("/community");
   revalidatePath("/community/me");
