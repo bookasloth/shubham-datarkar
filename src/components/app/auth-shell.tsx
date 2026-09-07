@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Image from "next/image";
 import { ShieldCheck } from "lucide-react";
 
 const LOGO_WHITE = "https://company-assets.bookasloth.in/images/sd/website/logo-white.webp";
@@ -65,8 +66,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
 
         {/* wordmark, centered and faint over the line-art */}
         <div className="absolute inset-0 flex items-center justify-center p-12">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={LOGO_WHITE} alt="" width={512} height={128} className="h-10 w-auto opacity-95" />
+          <Image src={LOGO_WHITE} alt="" width={512} height={128} className="h-10 w-auto opacity-95" />
         </div>
       </div>
     </div>

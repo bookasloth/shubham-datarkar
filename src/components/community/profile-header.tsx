@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { CommunityAvatar } from "@/components/community/community-avatar";
 import { BadgeTick } from "@/components/community/badge-tick";
 import { FollowButton } from "@/components/community/follow-button";
@@ -41,8 +42,7 @@ export function ProfileHeader({ profile, social, isSelf, showFollow }: ProfileHe
       {/* Cover band */}
       <div className="relative h-40 w-full overflow-hidden bg-gradient-to-br from-muted to-muted-foreground/20 sm:h-52">
         {profile.coverUrl && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={profile.coverUrl} alt="" className="h-full w-full object-cover" />
+          <Image src={profile.coverUrl} alt="" fill sizes="(max-width: 640px) 100vw, 600px" className="object-cover" />
         )}
         {isSelf && <CoverUploader current={profile.coverUrl} />}
       </div>
