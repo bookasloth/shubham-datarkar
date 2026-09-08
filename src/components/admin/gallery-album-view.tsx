@@ -5,8 +5,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDown, ArrowLeft, ArrowUp, Eye, EyeOff, Pencil, RotateCw, Star,
-  Trash2, UploadCloud, X,
+  ArrowDown, ArrowLeft, ArrowUp, Eye, EyeOff, Pencil, Star,
+  Trash2, UploadCloud,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/components/ui/toast";
@@ -17,30 +17,14 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { validateImageFile, MAX_IMAGE_BYTES } from "@/lib/media/image-upload";
+import { MAX_IMAGE_BYTES } from "@/lib/media/image-upload";
 import type { GalleryAlbum, GalleryImage } from "@/lib/gallery/types";
 import {
   assignImagesToAlbum, deleteAlbum, deleteGalleryImage, reorderGalleryImages,
   setAlbumCover, setAlbumPublished, setGalleryPublished, updateAlbum,
-  updateGalleryImage, uploadGalleryImage,
+  updateGalleryImage,
 } from "@/lib/gallery/actions";
-
-type Upload = {
-  tempId: string;
-  file: File;
-  previewUrl: string;
-  width: number;
-  height: number;
-  status: "uploading" | "failed";
-  error?: string;
-};
-
-async function readDimensions(file: File): Promise<{ width: number; height: number }> {
-  const bitmap = await createImageBitmap(file);
-  const dims = { width: bitmap.width, height: bitmap.height };
-  bitmap.close();
-  return dims;
-}
+import { useGalleryUploader, UploadDock } from "./gallery-uploader";
 
 /**
  * One album's contents (or the "Unfiled" bucket when `album` is null): a
@@ -59,79 +43,20 @@ export function GalleryAlbumView({
   const { toast } = useToast();
   const [album, setAlbum] = React.useState(initialAlbum);
   const [items, setItems] = React.useState<GalleryImage[]>(initialImages);
-  const [uploads, setUploads] = React.useState<Upload[]>([]);
   const [editing, setEditing] = React.useState<GalleryImage | null>(null);
   const [settingsOpen, setSettingsOpen] = React.useState(false);
   const [dragOver, setDragOver] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
-  const counter = React.useRef(0);
 
   const albumId = album?.id ?? null;
   const otherAlbums = albums.filter((a) => a.id !== albumId);
 
-  // --- upload (targets this album) -----------------------------------------
+  // --- upload (direct-to-storage, targets this album) ----------------------
 
-  const send = React.useCallback(
-    async (up: Upload) => {
-      const fd = new FormData();
-      fd.set("file", up.file);
-      fd.set("width", String(up.width));
-      fd.set("height", String(up.height));
-      if (albumId) fd.set("albumId", albumId);
-      const result = await uploadGalleryImage(fd);
-      if ("error" in result) {
-        setUploads((prev) =>
-          prev.map((u) => (u.tempId === up.tempId ? { ...u, status: "failed", error: result.error } : u)),
-        );
-        toast({ title: "Upload failed", description: result.error, variant: "danger" });
-        return;
-      }
-      URL.revokeObjectURL(up.previewUrl);
-      setUploads((prev) => prev.filter((u) => u.tempId !== up.tempId));
-      setItems((prev) => [...prev, result.image]);
-    },
-    [albumId, toast],
-  );
-
-  const addFiles = React.useCallback(
-    async (list: FileList | File[] | null) => {
-      if (!list) return;
-      for (const file of Array.from(list)) {
-        const invalid = validateImageFile(file);
-        if (invalid) {
-          toast({ title: file.name, description: invalid, variant: "danger" });
-          continue;
-        }
-        let dims: { width: number; height: number };
-        try {
-          dims = await readDimensions(file);
-        } catch {
-          toast({ title: file.name, description: "Could not read this image.", variant: "danger" });
-          continue;
-        }
-        const up: Upload = {
-          tempId: `up-${++counter.current}`,
-          file,
-          previewUrl: URL.createObjectURL(file),
-          ...dims,
-          status: "uploading",
-        };
-        setUploads((prev) => [...prev, up]);
-        void send(up);
-      }
-    },
-    [send, toast],
-  );
-
-  const retry = (up: Upload) => {
-    setUploads((prev) => prev.map((u) => (u.tempId === up.tempId ? { ...u, status: "uploading", error: undefined } : u)));
-    void send({ ...up, status: "uploading" });
-  };
-
-  const dismissUpload = (up: Upload) => {
-    URL.revokeObjectURL(up.previewUrl);
-    setUploads((prev) => prev.filter((u) => u.tempId !== up.tempId));
-  };
+  const addUploaded = React.useCallback((image: GalleryImage) => {
+    setItems((prev) => [...prev, image]);
+  }, []);
+  const uploader = useGalleryUploader({ albumId, onUploaded: addUploaded });
 
   // --- optimistic image mutations ------------------------------------------
 
@@ -311,7 +236,7 @@ export function GalleryAlbumView({
         onDrop={(e) => {
           e.preventDefault();
           setDragOver(false);
-          void addFiles(e.dataTransfer.files);
+          void uploader.addFiles(e.dataTransfer.files);
         }}
         className={cn(
           "rounded-card border border-dashed transition-[border-color,background-color] duration-150",
@@ -340,55 +265,19 @@ export function GalleryAlbumView({
           className="sr-only"
           aria-hidden
           onChange={(e) => {
-            void addFiles(e.target.files);
+            void uploader.addFiles(e.target.files);
             e.target.value = "";
           }}
         />
       </div>
 
-      {items.length === 0 && uploads.length === 0 ? (
+      {items.length === 0 ? (
         <AdminEmptyState
           title="No photos here yet"
           description="Drag photos onto the box above to fill this album."
         />
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {uploads.map((up) => (
-            <li
-              key={up.tempId}
-              className="overflow-hidden rounded-card border border-admin-border bg-admin-surface"
-            >
-              <div className="relative aspect-[4/3] bg-admin-surface-hover">
-                {/* eslint-disable-next-line @next/next/no-img-element -- local blob preview */}
-                <img
-                  src={up.previewUrl}
-                  alt=""
-                  className={cn("h-full w-full object-cover", up.status === "uploading" && "opacity-60")}
-                />
-                {up.status === "uploading" && (
-                  <div className="absolute inset-x-0 bottom-0 h-1 animate-pulse bg-admin-accent" />
-                )}
-              </div>
-              <div className="flex items-center justify-between gap-2 p-3">
-                {up.status === "uploading" ? (
-                  <span className="text-xs text-admin-text-muted">Uploading…</span>
-                ) : (
-                  <>
-                    <StatusBadge tone="danger">Failed</StatusBadge>
-                    <div className="flex gap-1">
-                      <AdminButton size="sm" variant="secondary" onClick={() => retry(up)}>
-                        <RotateCw /> Retry
-                      </AdminButton>
-                      <AdminButton size="icon" variant="ghost" aria-label="Dismiss" onClick={() => dismissUpload(up)}>
-                        <X />
-                      </AdminButton>
-                    </div>
-                  </>
-                )}
-              </div>
-            </li>
-          ))}
-
           {items.map((image, index) => {
             const isCover = album?.coverImageId === image.id;
             return (
@@ -580,6 +469,13 @@ export function GalleryAlbumView({
           )}
         </DialogContent>
       </Dialog>
+
+      <UploadDock
+        items={uploader.items}
+        onRetry={uploader.retry}
+        onDismiss={uploader.dismiss}
+        onClearFinished={uploader.clearFinished}
+      />
     </div>
   );
 }

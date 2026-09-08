@@ -4,7 +4,7 @@ import { randomUUID } from "node:crypto";
 import { revalidatePath } from "next/cache";
 import { getAdminUser } from "@/lib/auth/session";
 import { supabaseAdmin } from "@/lib/supabase/server";
-import { validateImageFile, imageExt } from "@/lib/media/image-upload";
+import { ALLOWED_IMAGE_TYPES } from "@/lib/media/image-upload";
 import {
   ALBUM_SELECT, GALLERY_SELECT, mapAlbumRow, mapGalleryRow, slugify,
   type GalleryAlbum, type GalleryAlbumRow, type GalleryImage, type GalleryRow,
@@ -17,6 +17,12 @@ const MAX_DIMENSION = 20000;
 
 export type GalleryActionResult = { ok: true } | { error: string };
 export type GalleryUploadResult = { ok: true; image: GalleryImage } | { error: string };
+export type UploadTargetResult = { ok: true; path: string; signedUrl: string } | { error: string };
+
+/** Lowercased alphanumeric extension, "bin" when unusable. */
+function safeExt(ext: string): string {
+  return String(ext || "").toLowerCase().replace(/[^a-z0-9]/g, "") || "bin";
+}
 
 function revalidateGallery(): void {
   revalidatePath("/gallery");
@@ -31,39 +37,54 @@ function text(formData: FormData, key: string, max: number): string | null {
   return trimmed || null;
 }
 
-export async function uploadGalleryImage(formData: FormData): Promise<GalleryUploadResult> {
+/**
+ * Step 1 of a direct upload: mint a one-shot signed URL the browser PUTs the
+ * file straight to (bypassing the 1 MB server-action body limit and giving the
+ * client real upload-progress events). The path is server-chosen, so the token
+ * only authorises writing this exact object.
+ */
+export async function createGalleryUploadTarget(input: {
+  ext: string;
+  contentType: string;
+}): Promise<UploadTargetResult> {
   if (!(await getAdminUser())) return { error: "Not authorised." };
-
-  const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0) return { error: "Choose an image." };
-  const invalid = validateImageFile(file);
-  if (invalid) return { error: invalid };
-
-  // Dimensions are measured client-side (createImageBitmap) — no image decoder
-  // on the server. Validated as sane positive integers; they only drive layout.
-  const width = Number(formData.get("width"));
-  const height = Number(formData.get("height"));
-  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || width > MAX_DIMENSION || height > MAX_DIMENSION) {
-    return { error: "Could not read image dimensions." };
+  if (!ALLOWED_IMAGE_TYPES.has(input.contentType)) {
+    return { error: "Use a JPG, PNG, WebP, GIF, or AVIF image." };
   }
 
-  // Optional target album — uploads dropped inside an album land there directly.
-  // Any bad id is rejected by the FK on insert (and the object is cleaned up).
-  const rawAlbum = formData.get("albumId");
-  const albumId = typeof rawAlbum === "string" && rawAlbum ? rawAlbum : null;
-
-  const admin = supabaseAdmin();
   const now = new Date();
   const yyyy = now.getUTCFullYear();
   const mm = String(now.getUTCMonth() + 1).padStart(2, "0");
-  const path = `${yyyy}/${mm}/${randomUUID()}.${imageExt(file)}`;
+  const path = `${yyyy}/${mm}/${randomUUID()}.${safeExt(input.ext)}`;
 
-  const { error: upErr } = await admin.storage.from(BUCKET).upload(path, file, {
-    contentType: file.type,
-    upsert: false,
-  });
-  if (upErr) return { error: `Upload failed: ${upErr.message}` };
+  const { data, error } = await supabaseAdmin().storage.from(BUCKET).createSignedUploadUrl(path);
+  if (error || !data) return { error: `Could not start the upload: ${error?.message ?? "unknown error"}` };
 
+  return { ok: true, path, signedUrl: data.signedUrl };
+}
+
+/**
+ * Step 2: the object is now in the bucket — record it. Dimensions are measured
+ * client-side (no server image decoder); validated as sane positive integers.
+ */
+export async function finalizeGalleryUpload(input: {
+  path: string;
+  width: number;
+  height: number;
+  fileSize: number;
+  mimeType: string;
+  albumId: string | null;
+}): Promise<GalleryUploadResult> {
+  if (!(await getAdminUser())) return { error: "Not authorised." };
+
+  const { path, width, height, fileSize, mimeType, albumId } = input;
+  if (typeof path !== "string" || !path) return { error: "Missing upload." };
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0 || width > MAX_DIMENSION || height > MAX_DIMENSION) {
+    return { error: "Could not read image dimensions." };
+  }
+  if (!ALLOWED_IMAGE_TYPES.has(mimeType)) return { error: "Unsupported image type." };
+
+  const admin = supabaseAdmin();
   const publicUrl = admin.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
 
   // New images append after the current tail. Single-admin panel — the max+1
@@ -79,15 +100,16 @@ export async function uploadGalleryImage(formData: FormData): Promise<GalleryUpl
   const { data, error: dbErr } = await admin
     .from("gallery_images")
     .insert({
-      caption: text(formData, "caption", MAX_CAPTION) ?? "",
+      caption: "",
       image_url: publicUrl,
       storage_path: path,
       width,
       height,
-      file_size: file.size,
-      mime_type: file.type,
+      file_size: Number.isFinite(fileSize) && fileSize > 0 ? Math.floor(fileSize) : 0,
+      mime_type: mimeType,
       display_order: displayOrder,
-      album_id: albumId,
+      // Uploads dropped inside an album land there; a bad id fails the FK below.
+      album_id: albumId ?? null,
     })
     .select(GALLERY_SELECT)
     .single();
