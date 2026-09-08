@@ -1,6 +1,6 @@
 import { requireAdmin } from "@/lib/auth/session";
 import { getAllAlbumsAdmin, getAllGalleryImagesAdmin } from "@/lib/gallery/queries";
-import { GalleryManager } from "@/components/admin/gallery-manager";
+import { GalleryAlbumsIndex } from "@/components/admin/gallery-albums-index";
 import { PageHeader } from "@/components/admin";
 
 export const dynamic = "force-dynamic";
@@ -14,8 +14,8 @@ export default async function AdminGalleryPage() {
 
   return (
     <div>
-      <PageHeader title="Gallery" />
-      <GalleryManager initialImages={images} initialAlbums={albums} />
+      <PageHeader title="Gallery" description="Albums are folders — open one to add photos." />
+      <GalleryAlbumsIndex albums={albums} images={images} />
     </div>
   );
 }

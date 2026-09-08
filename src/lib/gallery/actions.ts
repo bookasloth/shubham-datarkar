@@ -47,6 +47,11 @@ export async function uploadGalleryImage(formData: FormData): Promise<GalleryUpl
     return { error: "Could not read image dimensions." };
   }
 
+  // Optional target album — uploads dropped inside an album land there directly.
+  // Any bad id is rejected by the FK on insert (and the object is cleaned up).
+  const rawAlbum = formData.get("albumId");
+  const albumId = typeof rawAlbum === "string" && rawAlbum ? rawAlbum : null;
+
   const admin = supabaseAdmin();
   const now = new Date();
   const yyyy = now.getUTCFullYear();
@@ -82,6 +87,7 @@ export async function uploadGalleryImage(formData: FormData): Promise<GalleryUpl
       file_size: file.size,
       mime_type: file.type,
       display_order: displayOrder,
+      album_id: albumId,
     })
     .select(GALLERY_SELECT)
     .single();

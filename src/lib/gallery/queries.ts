@@ -98,6 +98,28 @@ export async function getAllGalleryImagesAdmin(): Promise<GalleryImage[]> {
   return ((data ?? []) as GalleryRow[]).map(mapGalleryRow);
 }
 
+/** One album by slug, hidden included — the admin album view. */
+export async function getAlbumBySlugAdmin(slug: string): Promise<GalleryAlbum | null> {
+  const { data, error } = await supabaseAdmin()
+    .from("gallery_albums")
+    .select(ALBUM_SELECT)
+    .eq("slug", slug)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return data ? mapAlbumRow(data as GalleryAlbumRow) : null;
+}
+
+/** Images in one album (or unfiled when albumId is null), hidden included. */
+export async function getGalleryImagesByAlbumAdmin(albumId: string | null): Promise<GalleryImage[]> {
+  let q = supabaseAdmin().from("gallery_images").select(GALLERY_SELECT);
+  q = albumId ? q.eq("album_id", albumId) : q.is("album_id", null);
+  const { data, error } = await q
+    .order("display_order", { ascending: true })
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as GalleryRow[]).map(mapGalleryRow);
+}
+
 /** Every album, hidden included — the admin manager list. */
 export async function getAllAlbumsAdmin(): Promise<GalleryAlbum[]> {
   const { data, error } = await supabaseAdmin()
