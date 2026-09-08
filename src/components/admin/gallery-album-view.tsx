@@ -271,6 +271,12 @@ export function GalleryAlbumView({
         />
       </div>
 
+      {album && items.length > 0 && (
+        <p className="-mb-2 text-xs text-admin-text-muted">
+          Tip: <span className="font-medium text-admin-text">Set as cover</span> picks the photo shown on this album&apos;s card in the public gallery.
+        </p>
+      )}
+
       {items.length === 0 ? (
         <AdminEmptyState
           title="No photos here yet"
@@ -320,7 +326,20 @@ export function GalleryAlbumView({
                       <option key={a.id} value={a.id}>{a.title}</option>
                     ))}
                   </select>
-                  <div className="flex items-center gap-1">
+                  {album && (
+                    <AdminButton
+                      size="sm"
+                      variant={isCover ? "secondary" : "ghost"}
+                      className={cn("w-full justify-center", isCover && "text-admin-accent")}
+                      disabled={isCover}
+                      title={isCover ? "This photo is the album cover" : "Show this photo on the album's card in /gallery"}
+                      onClick={() => void makeCover(image)}
+                    >
+                      <Star className={cn(isCover && "fill-current")} />
+                      {isCover ? "Album cover" : "Set as cover"}
+                    </AdminButton>
+                  )}
+                  <div className="flex flex-wrap items-center gap-1">
                     <AdminButton
                       size="icon"
                       variant="ghost"
@@ -330,18 +349,6 @@ export function GalleryAlbumView({
                     >
                       {image.isPublished ? <Eye /> : <EyeOff />}
                     </AdminButton>
-                    {album && (
-                      <AdminButton
-                        size="icon"
-                        variant="ghost"
-                        aria-label="Set as album cover"
-                        title={isCover ? "Album cover" : "Set as cover"}
-                        className={cn(isCover && "text-admin-accent")}
-                        onClick={() => void makeCover(image)}
-                      >
-                        <Star className={cn(isCover && "fill-current")} />
-                      </AdminButton>
-                    )}
                     <AdminButton
                       size="icon"
                       variant="ghost"
