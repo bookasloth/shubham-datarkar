@@ -34,7 +34,7 @@ function filePathToRoute(filePath: string): string {
   return `/${rel}`;
 }
 
-type DynamicExpansion = {
+export type DynamicExpansion = {
   pattern: RegExp;
   expand: () => { route: string }[];
 };
@@ -74,15 +74,18 @@ const DYNAMIC_EXPANSIONS: DynamicExpansion[] = [
 
 export async function discoverPages(
   blogPosts: { category: string; slug: string }[] = [],
+  injected: DynamicExpansion[] = [],
 ): Promise<PageEntry[]> {
   const pageFiles = findPageFiles(APP_DIR);
-  // Inject the DB-sourced blog-post expansion alongside the static ones.
+  // Inject the DB-sourced blog-post expansion alongside the static ones, plus any
+  // caller-supplied expansions (movies/collections/genres come from the DB).
   const expansions: DynamicExpansion[] = [
     ...DYNAMIC_EXPANSIONS,
     {
       pattern: /^\/blog\/\[category\]\/\[slug\]$/,
       expand: () => blogPosts.map((p) => ({ route: `/blog/${p.category}/${p.slug}` })),
     },
+    ...injected,
   ];
   const pages: PageEntry[] = [];
 

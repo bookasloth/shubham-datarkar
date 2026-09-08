@@ -25,6 +25,13 @@ const nextConfig: NextConfig = {
         hostname: "website-assets.shubhamdatarkar.com",
         pathname: "/**",
       },
+      // TMDB poster/backdrop CDN for the movie recommendation module. Must also
+      // be in the CSP img-src below or next/image 400s / gets CSP-blocked.
+      {
+        protocol: "https",
+        hostname: "image.tmdb.org",
+        pathname: "/t/p/**",
+      },
     ],
   },
   // Tree-shake large icon/UI barrels so each page ships only the components it
@@ -84,7 +91,7 @@ const nextConfig: NextConfig = {
       "default-src 'self'",
       `script-src 'self' 'unsafe-inline'${scriptEval} https://checkout.razorpay.com https://va.vercel-scripts.com`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://www.openstreetmap.org",
+      "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://image.tmdb.org https://www.openstreetmap.org",
       "font-src 'self' data:",
       "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com",
       "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://www.openstreetmap.org",
