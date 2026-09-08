@@ -27,16 +27,21 @@ import {
 const MOVIE_WITH_RELATIONS = `${MOVIE_SELECT}, movie_genres(genre:genres(${GENRE_SELECT})), reviews(${REVIEW_SELECT})`;
 
 type MovieRelRow = MovieRow & {
-  movie_genres?: Array<{ genre: GenreRow | null }> | null;
-  reviews?: ReviewRow[] | null;
+  movie_genres?: Array<{ genre: GenreRow | GenreRow[] | null }> | null;
+  // PostgREST returns a to-one embed as an object; reviews.movie_id is UNIQUE
+  // (1:1), so `reviews` comes back as a single object, not an array.
+  reviews?: ReviewRow | ReviewRow[] | null;
 };
 
 function mapMovieWithRelations(row: MovieRelRow): Movie {
   const movie = mapMovieRow(row);
   movie.genres = (row.movie_genres ?? [])
-    .map((g) => (g.genre ? mapGenreRow(g.genre) : null))
+    .map((g) => {
+      const genre = Array.isArray(g.genre) ? g.genre[0] : g.genre;
+      return genre ? mapGenreRow(genre) : null;
+    })
     .filter((g): g is Genre => g !== null);
-  const review = row.reviews?.[0];
+  const review = Array.isArray(row.reviews) ? row.reviews[0] : row.reviews;
   movie.review = review ? mapReviewRow(review) : null;
   return movie;
 }
