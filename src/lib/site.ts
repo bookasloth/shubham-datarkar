@@ -104,6 +104,7 @@ export const rightBrain: NavGroup[] = [
     label: "Community & Play",
     items: [
       { label: "Community", href: "/community", description: "Build-in-public feed" },
+      { label: "Movies", href: "/movies", description: "Films I recommend" },
       { label: "Games", href: "/games", description: "Daily word puzzles" },
       { label: "AI Experiments", href: "/ai-experiments", description: "The lab" },
     ],
@@ -149,6 +150,7 @@ export const footerNav: NavGroup[] = [
       { label: "Resources", href: "/resources" },
       { label: "Tools", href: "/tools" },
       { label: "Products", href: "/products" },
+      { label: "Movies", href: "/movies" },
       { label: "Games", href: "/games" },
     ],
   },

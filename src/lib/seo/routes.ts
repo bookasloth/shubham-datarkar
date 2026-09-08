@@ -49,6 +49,10 @@ const APP_ROUTES = new Set([
   "/community/bookmarks",
   "/unsubscribe",
   "/subscriber-assets",
+  // Movie module utility routes: query-driven / per-user. noIndex metadata +
+  // kept out of the sitemap (the movie + collection pages carry the SEO value).
+  "/movies/search",
+  "/movies/my-list",
 ]);
 
 const APP_PATTERNS = [

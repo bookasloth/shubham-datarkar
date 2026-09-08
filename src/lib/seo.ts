@@ -394,3 +394,82 @@ export function speakingServiceSchema() {
     url: `${site.url}/speaking`,
   };
 }
+
+/**
+ * A recommended movie as a `Movie` node with an embedded editorial `Review`
+ * authored by the Person. One reviewer → a single Review with a reviewRating,
+ * NOT an aggregateRating (which needs multiple ratings). Rating is 0–10 to match
+ * how it's presented. Only emitted fields that have real values.
+ */
+export function movieSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+  datePublished?: string | null;
+  director?: string | null;
+  actors?: string[];
+  genres?: string[];
+  contentRating?: string | null;
+  review?: { rating: number | null; body?: string | null } | null;
+}) {
+  const url = `${site.url}${input.path}`;
+  const node: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Movie",
+    name: input.title,
+    description: input.description,
+    url,
+    ...(input.image ? { image: input.image } : {}),
+    ...(input.datePublished ? { datePublished: input.datePublished } : {}),
+    ...(input.director ? { director: { "@type": "Person", name: input.director } } : {}),
+    ...(input.actors?.length
+      ? { actor: input.actors.map((name) => ({ "@type": "Person", name })) }
+      : {}),
+    ...(input.genres?.length ? { genre: input.genres } : {}),
+    ...(input.contentRating ? { contentRating: input.contentRating } : {}),
+  };
+  if (input.review && input.review.rating != null) {
+    node.review = {
+      "@type": "Review",
+      author: personRef,
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: input.review.rating,
+        bestRating: 10,
+        worstRating: 0,
+      },
+      ...(input.review.body ? { reviewBody: input.review.body } : {}),
+    };
+  }
+  return node;
+}
+
+/**
+ * A curated collection as a `CollectionPage` whose mainEntity is an ordered
+ * `ItemList` of the movies it holds — feeds discovery + internal-link signals.
+ */
+export function collectionSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  movies: { title: string; path: string }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: input.title,
+    description: input.description,
+    url: `${site.url}${input.path}`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: input.movies.length,
+      itemListElement: input.movies.map((m, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${site.url}${m.path}`,
+        name: m.title,
+      })),
+    },
+  };
+}

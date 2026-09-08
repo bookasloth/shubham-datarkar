@@ -2,13 +2,30 @@ import type { MetadataRoute } from "next";
 import { site } from "@/lib/site";
 import { getPublishedPosts } from "@/lib/blog/queries";
 import { getPublishedEntityDates } from "@/lib/content/queries";
-import { discoverPages } from "@/lib/seo/discovery";
+import { discoverPages, type DynamicExpansion } from "@/lib/seo/discovery";
 import { isIndexable } from "@/lib/seo/routes";
+import {
+  getPublishedMovieSlugs,
+  getPublishedCollectionSlugs,
+  getGenres,
+} from "@/lib/movies/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
   const posts = await getPublishedPosts();
-  const pages = await discoverPages(posts);
+
+  // DB-sourced movie module URLs, expanded into the sitemap.
+  const [movieSlugs, collectionSlugs, genres] = await Promise.all([
+    getPublishedMovieSlugs(),
+    getPublishedCollectionSlugs(),
+    getGenres(),
+  ]);
+  const movieExpansions: DynamicExpansion[] = [
+    { pattern: /^\/movies\/\[slug\]$/, expand: () => movieSlugs.map((m) => ({ route: `/movies/${m.slug}` })) },
+    { pattern: /^\/collections\/\[slug\]$/, expand: () => collectionSlugs.map((c) => ({ route: `/collections/${c.slug}` })) },
+    { pattern: /^\/movies\/genre\/\[slug\]$/, expand: () => genres.map((g) => ({ route: `/movies/genre/${g.slug}` })) },
+  ];
+  const pages = await discoverPages(posts, movieExpansions);
 
   // Real last-modified per route. Only set where a genuine content date exists
   // (blog posts + DB-driven entities); static pages get no lastmod rather than a
@@ -25,8 +42,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const d of serviceDates) lastMod.set(`/services/${d.slug}`, new Date(d.updatedAt));
   for (const d of caseStudyDates) lastMod.set(`/case-studies/${d.slug}`, new Date(d.updatedAt));
   for (const d of productDates) lastMod.set(`/products/${d.slug}`, new Date(d.updatedAt));
+  for (const m of movieSlugs) lastMod.set(`/movies/${m.slug}`, new Date(m.updatedAt));
+  for (const c of collectionSlugs) lastMod.set(`/collections/${c.slug}`, new Date(c.updatedAt));
 
-  const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies"];
+  const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies", "/movies", "/collections"];
   const WEEKLY_PATHS = new Set(["/", "/me", "/blog"]);
 
   // Routes that ship a dedicated opengraph-image — a real representative image
