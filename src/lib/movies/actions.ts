@@ -8,6 +8,7 @@ import { slugify, type CastMember } from "./types";
 import {
   searchMovies,
   getMovieDetails,
+  tmdbConfigured,
   type TmdbSearchResult,
   type TmdbMovieDetails,
 } from "./tmdb";
@@ -23,6 +24,9 @@ export type TmdbImportResult =
   | { ok: true; details: TmdbMovieDetails; existingSlug: string | null }
   | { error: string };
 export type MyListResult = { ok: true; saved: boolean } | { error: string };
+export type RefreshArtworkResult =
+  | { ok: true; updated: number; skipped: number; failed: number }
+  | { error: string };
 
 /* ------------------------------ Input shapes ------------------------------ */
 
@@ -157,6 +161,77 @@ export async function importFromTmdb(tmdbId: number): Promise<TmdbImportResult> 
   } catch (e) {
     return { error: e instanceof Error ? e.message : "TMDB import failed." };
   }
+}
+
+type ArtworkRow = {
+  id: string;
+  title: string;
+  release_year: number | null;
+  tmdb_id: number | null;
+  trailer_url: string | null;
+  movie_cast: unknown;
+};
+
+/** Resolve one movie's artwork from TMDB → "updated" | "skipped" | "failed". */
+async function refreshOne(
+  admin: ReturnType<typeof supabaseAdmin>,
+  row: ArtworkRow,
+): Promise<"updated" | "skipped" | "failed"> {
+  try {
+    let tmdbId = row.tmdb_id;
+    if (!tmdbId) {
+      const results = await searchMovies(row.title);
+      const match =
+        (row.release_year ? results.find((r) => r.releaseYear === row.release_year) : undefined) ??
+        results[0];
+      tmdbId = match?.tmdbId ?? null;
+    }
+    if (!tmdbId) return "skipped";
+
+    const d = await getMovieDetails(tmdbId);
+    const patch: Record<string, unknown> = { tmdb_id: tmdbId };
+    if (d.posterUrl) patch.poster_url = d.posterUrl;
+    if (d.backdropUrl) patch.backdrop_url = d.backdropUrl;
+    // Backfill only when empty — never clobber curated trailer/cast.
+    if (!row.trailer_url && d.trailerUrl) patch.trailer_url = d.trailerUrl;
+    const hasCast = Array.isArray(row.movie_cast) && row.movie_cast.length > 0;
+    if (!hasCast && d.cast.length) patch.movie_cast = d.cast;
+
+    if (!patch.poster_url && !patch.backdrop_url) return "skipped";
+    const { error } = await admin.from("movies").update(patch).eq("id", row.id);
+    return error ? "failed" : "updated";
+  } catch {
+    return "failed";
+  }
+}
+
+/**
+ * Bulk-fetch poster/backdrop art (and backfill tmdb_id/trailer/cast where empty)
+ * for every movie. Movies without a tmdb_id are matched by title + year. Never
+ * touches editorial fields. Runs the lookups in parallel batches to stay well
+ * inside the server-action time budget.
+ */
+export async function refreshArtworkFromTmdb(): Promise<RefreshArtworkResult> {
+  if (!(await getAdminUser())) return { error: "Not authorised." };
+  if (!tmdbConfigured()) return { error: "TMDB is not configured (set TMDB_ACCESS_TOKEN)." };
+
+  const admin = supabaseAdmin();
+  const { data, error } = await admin
+    .from("movies")
+    .select("id, title, release_year, tmdb_id, trailer_url, movie_cast");
+  if (error) return { error: "Could not load movies." };
+  const rows = (data ?? []) as ArtworkRow[];
+
+  const tally = { updated: 0, skipped: 0, failed: 0 };
+  const BATCH = 8;
+  for (let i = 0; i < rows.length; i += BATCH) {
+    const results = await Promise.all(rows.slice(i, i + BATCH).map((r) => refreshOne(admin, r)));
+    for (const r of results) tally[r]++;
+  }
+
+  revalidateMovies();
+  revalidateCollections();
+  return { ok: true, ...tally };
 }
 
 /* ------------------------------ Movie writes ------------------------------ */

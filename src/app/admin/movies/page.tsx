@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { AdminButton, PageHeader } from "@/components/admin";
 import { getAllMoviesAdmin } from "@/lib/movies/queries";
+import { RefreshArtworkButton } from "@/components/admin/refresh-artwork-button";
 import { MoviesTable } from "./movies-table";
 
 export const dynamic = "force-dynamic";
@@ -14,6 +15,7 @@ export default async function AdminMoviesPage() {
         description="Every movie in the recommendation library — metadata, ratings, and my reviews."
         actions={
           <div className="flex gap-2">
+            <RefreshArtworkButton />
             <AdminButton asChild size="sm" variant="secondary">
               <Link href="/admin/collections">Collections</Link>
             </AdminButton>
