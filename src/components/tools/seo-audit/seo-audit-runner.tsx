@@ -27,6 +27,16 @@ const DEEP_STEPS = [
 ];
 const ORDER = ["queued", "discovering", "crawling", "scoring", "ready", "analyzing", "complete"];
 
+// Never assume an affected-URL string is a valid absolute URL — a site-level
+// finding may carry a label. Fall back to the raw string instead of throwing.
+function pathOf(u: string): string {
+  try {
+    return new URL(u).pathname || u;
+  } catch {
+    return u;
+  }
+}
+
 function colorFor(score: number): string {
   if (score >= 85) return "bg-success";
   if (score >= 70) return "bg-warning";
@@ -286,7 +296,7 @@ function FindingCard({ f }: { f: Finding }) {
       {f.affectedUrls.length > 0 && (
         <ul className="mt-2 flex flex-col gap-0.5">
           {f.affectedUrls.slice(0, 5).map((u) => (
-            <li key={u} className="truncate font-mono text-xs text-muted-foreground">{new URL(u).pathname || u}</li>
+            <li key={u} className="truncate font-mono text-xs text-muted-foreground">{pathOf(u)}</li>
           ))}
         </ul>
       )}

@@ -89,6 +89,23 @@ describe("scoreAudit", () => {
     expect(seq).toEqual([...seq].sort((a, b) => a - b));
   });
 
+  it("keeps non-URL labels (blocked AI crawlers) out of affectedUrls", () => {
+    const ctx = strongCtx();
+    ctx.robots = parseRobotsInfo(
+      ["GPTBot", "ClaudeBot", "PerplexityBot", "CCBot", "Bytespider", "Amazonbot"]
+        .map((ua) => `User-agent: ${ua}\nDisallow: /`)
+        .join("\n\n") + "\n\nUser-agent: *\nDisallow:",
+    );
+    const { findings } = scoreAudit(ctx);
+    const crawler = findings.find((f) => f.id === "ai-crawlers");
+    expect(crawler).toBeDefined();
+    // Every affectedUrl must be a parseable absolute URL (the render calls new URL()).
+    for (const u of crawler!.affectedUrls) expect(() => new URL(u)).not.toThrow();
+    // The blocked crawler name is surfaced in evidence, not as a fake URL.
+    expect(crawler!.evidence).toContain("GPTBot");
+    expect(crawler!.affectedUrls).not.toContain("GPTBot");
+  });
+
   it("does not model llms.txt as a scoring factor (spec §13/§26)", () => {
     const { scores } = scoreAudit(strongCtx());
     const keys = scores.aiCategories.map((c) => c.key);
