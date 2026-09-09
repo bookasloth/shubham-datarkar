@@ -43,6 +43,7 @@ const SCHEMA: Record<string, unknown> = {
     opportunitySummary: { type: "string", description: "2-3 sentences: the single biggest visibility opportunity for this site" },
     opportunities: {
       type: "array",
+      maxItems: 10,
       description: "5-10 prioritized by Impact x Confidence x Opportunity / Effort, rank 1 = do first",
       items: {
         type: "object",
@@ -60,6 +61,7 @@ const SCHEMA: Record<string, unknown> = {
     },
     topicMap: {
       type: "array",
+      maxItems: 8,
       description: "primary topics and the supporting branches; covered=true if the site addresses it",
       items: {
         type: "object",
@@ -68,7 +70,7 @@ const SCHEMA: Record<string, unknown> = {
         properties: {
           topic: { type: "string" },
           covered: { type: "boolean" },
-          children: { type: "array", items: { type: "object", additionalProperties: false, required: ["topic", "covered"], properties: { topic: { type: "string" }, covered: { type: "boolean" } } } },
+          children: { type: "array", maxItems: 8, items: { type: "object", additionalProperties: false, required: ["topic", "covered"], properties: { topic: { type: "string" }, covered: { type: "boolean" } } } },
         },
       },
     },
@@ -78,7 +80,7 @@ const SCHEMA: Record<string, unknown> = {
       required: ["now", "next", "later"],
       properties: { now: { type: "array", items: { type: "string" } }, next: { type: "array", items: { type: "string" } }, later: { type: "array", items: { type: "string" } } },
     },
-    llmFindings: { type: "array", items: FINDING_SCHEMA },
+    llmFindings: { type: "array", maxItems: 12, items: FINDING_SCHEMA },
   },
 };
 
@@ -131,6 +133,7 @@ export async function synthesizeReport(input: SynthesisInput): Promise<AuditRepo
     schema: SCHEMA,
     model: KALAMAI_MODEL,
     effort: "medium",
+    maxTokens: 8000, // the report (opportunities + topic map + findings + plan) overflows 4096 on big sites
     fake: { ...FAKE_REPORT, llmFindings: FAKE_REPORT.llmFindings.map(({ id: _id, source: _s, ...rest }) => rest) },
   });
 

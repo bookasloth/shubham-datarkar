@@ -168,6 +168,20 @@ export function scoreStep(row: AuditRow): Transition {
   };
 }
 
+/** A useful report built from the deterministic findings when the LLM synthesis fails. */
+export function fallbackReport(findings: Finding[]): AuditReport {
+  const top = findings.slice(0, 6);
+  return {
+    opportunitySummary: top.length
+      ? `This audit surfaced ${findings.length} issues across traditional SEO and AI-search visibility. The highest-impact fixes are listed below.`
+      : "The fundamentals look solid. A few refinements can further strengthen search and AI-answer visibility.",
+    opportunities: top.map((f, i) => ({ rank: i + 1, title: f.title, summary: f.recommendation, impact: f.severity, category: f.category, effort: "medium" as const })),
+    topicMap: [],
+    actionPlan: { now: top.slice(0, 3).map((f) => f.recommendation), next: top.slice(3, 6).map((f) => f.recommendation), later: [] },
+    llmFindings: [],
+  };
+}
+
 /**
  * analyzing → complete: the paid LLM pass, run only after the email gate. Re-fetch
  * the important pages, extract each on Haiku (§24), synthesize the report on Sonnet,
@@ -203,13 +217,23 @@ export async function analyzeStep(row: AuditRow, deps: AuditDeps): Promise<Trans
     })
   ).filter((e): e is PageExtract => e !== null);
 
-  const report: AuditReport = await synthesizeReport({
-    domain: row.domain,
-    scores: { seo: scores.seo, ai: scores.ai, overall: scores.overall },
-    classesPresent: [...new Set(pages.filter((p) => p.ok).map((p) => p.class))],
-    deterministicFindings: (row.findings ?? []).map((f) => ({ title: f.title, severity: f.severity, category: f.category })),
-    extracts,
-  });
+  // Synthesis is the one LLM call that can hard-fail the audit. If it throws
+  // (timeout, truncated JSON, provider blip), the visitor has already given
+  // their email — degrade to a report built from the deterministic findings
+  // rather than dead-ending them on an error screen.
+  let report: AuditReport;
+  try {
+    report = await synthesizeReport({
+      domain: row.domain,
+      scores: { seo: scores.seo, ai: scores.ai, overall: scores.overall },
+      classesPresent: [...new Set(pages.filter((p) => p.ok).map((p) => p.class))],
+      deterministicFindings: (row.findings ?? []).map((f) => ({ title: f.title, severity: f.severity, category: f.category })),
+      extracts,
+    });
+  } catch (e) {
+    console.warn("[seo-audit] synthesis failed, using deterministic fallback", e);
+    report = fallbackReport(row.findings ?? []);
+  }
 
   // Merge deterministic findings with the LLM's, dedupe by title.
   const seen = new Set((row.findings ?? []).map((f) => f.title.toLowerCase()));

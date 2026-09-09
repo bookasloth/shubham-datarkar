@@ -117,6 +117,8 @@ export async function runJson<T>(args: {
   cachePrefix?: string;
   /** Override the default Sonnet model — e.g. Haiku for cheap high-volume extraction. */
   model?: string;
+  /** Raise the output cap for larger structured results (default 4096). */
+  maxTokens?: number;
   fake: T;
 }): Promise<{ data: T; usage: LlmUsage }> {
   if (isFakeLlm()) return { data: args.fake, usage: ZERO_USAGE };
@@ -126,7 +128,7 @@ export async function runJson<T>(args: {
   const res = await withRetry(() =>
     getClient().messages.create({
       model: args.model ?? KALAMAI_MODEL,
-      max_tokens: 4096,
+      max_tokens: args.maxTokens ?? 4096,
       thinking: { type: "disabled" },
       output_config: { effort: args.effort ?? "low", format: { type: "json_schema", schema: args.schema } },
       system,

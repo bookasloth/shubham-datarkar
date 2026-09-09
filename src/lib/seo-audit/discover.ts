@@ -8,6 +8,16 @@
 import type { DiscoveredUrl, PageClass } from "./types";
 
 const DEFAULT_BUDGET = 12;
+const MAX_PER_FAMILY = 2; // cap near-identical variant pages (e.g. one shoe in 9 colours)
+
+// Target sample composition: one each of the structural pages, then a shared
+// pool split across the three "content" classes. The split is not fixed —
+// round-robin over what the site actually has, so a product-only store fills
+// the pool with products and an agency fills it with services (spec §14).
+const SINGLE_CLASSES: PageClass[] = ["about", "contact"]; // at most 1 each
+const CONTENT_CLASSES: PageClass[] = ["service", "product", "article"]; // ~3 each, flexes
+const CONTENT_POOL = 9; // service + product + article slots shared
+const FILLER_CLASSES: PageClass[] = ["category", "location", "author", "other"];
 
 // File extensions that are never HTML pages worth auditing.
 const ASSET_EXT =
@@ -117,6 +127,22 @@ function depth(url: string): number {
 }
 
 /**
+ * A "family" key that collapses variant siblings: the parent path plus the
+ * first three dash-tokens of the last segment. `/products/avancus-apex-power-v3-black`
+ * and `…-grey` share the family `/products/avancus-apex-power`, so the crawl
+ * samples the product instead of nine colours of it.
+ */
+function familyKey(url: string): string {
+  const u = safeUrl(url);
+  if (!u) return url;
+  const parts = u.pathname.replace(/\/+$/, "").split("/").filter(Boolean);
+  if (parts.length === 0) return "/";
+  const last = parts[parts.length - 1];
+  const fam = last.split("-").slice(0, 3).join("-");
+  return parts.slice(0, -1).join("/") + "/" + fam;
+}
+
+/**
  * Build the prioritized, budgeted crawl list from the homepage HTML and any
  * already-fetched sitemap `<loc>` values. The homepage is always included and
  * always first. Remaining slots go to the highest-priority classes, breaking
@@ -147,6 +173,65 @@ export function discoverUrls(input: {
     .map((url) => ({ url, class: classifyUrl(url), priority: PRIORITY[classifyUrl(url)] }))
     .sort((a, b) => a.priority - b.priority || depth(a.url) - depth(b.url) || a.url.localeCompare(b.url));
 
-  const list: DiscoveredUrl[] = [{ url: home, class: "home", priority: 0 }, ...ranked];
-  return list.slice(0, Math.max(1, budget));
+  // Cap variant families so near-duplicate pages don't monopolise the budget.
+  const famCount = new Map<string, number>();
+  const capped = ranked.filter((u) => {
+    const k = familyKey(u.url);
+    const n = famCount.get(k) ?? 0;
+    if (n >= MAX_PER_FAMILY) return false;
+    famCount.set(k, n + 1);
+    return true;
+  });
+
+  const slots = Math.max(1, budget) - 1; // homepage takes one
+  const picks = selectByPattern(capped, slots);
+  picks.sort((a, b) => a.priority - b.priority || depth(a.url) - depth(b.url) || a.url.localeCompare(b.url));
+
+  return [{ url: home, class: "home", priority: 0 }, ...picks];
+}
+
+/**
+ * Sample the crawl to a representative shape: at most one About and one Contact,
+ * a shared pool of ~9 spread across service/product/article by round-robin (so
+ * the split follows what the site actually has), then structural fillers, then
+ * any remainder to use the budget. Pages come pre-sorted by priority/depth, so
+ * shifting off the front of each class keeps the best of each.
+ */
+function selectByPattern(capped: DiscoveredUrl[], slots: number): DiscoveredUrl[] {
+  const byClass = new Map<PageClass, DiscoveredUrl[]>();
+  for (const u of capped) (byClass.get(u.class) ?? byClass.set(u.class, []).get(u.class)!).push(u);
+  const picks: DiscoveredUrl[] = [];
+
+  const takeOne = (cls: PageClass): boolean => {
+    if (picks.length >= slots) return false;
+    const arr = byClass.get(cls);
+    if (arr && arr.length) {
+      picks.push(arr.shift()!);
+      return true;
+    }
+    return false;
+  };
+
+  for (const c of SINGLE_CLASSES) takeOne(c);
+
+  // Shared content pool: round-robin so plentiful classes absorb the slots that
+  // sparse/absent ones don't use (product-only store → pool fills with products).
+  let pool = Math.min(slots - picks.length, CONTENT_POOL);
+  for (let progress = true; pool > 0 && progress; ) {
+    progress = false;
+    for (const c of CONTENT_CLASSES) {
+      if (pool <= 0) break;
+      if (takeOne(c)) {
+        pool--;
+        progress = true;
+      }
+    }
+  }
+
+  for (const c of FILLER_CLASSES) while (takeOne(c));
+  for (const u of capped) {
+    if (picks.length >= slots) break;
+    if (!picks.includes(u)) picks.push(u); // fill any leftover budget (extra content pages)
+  }
+  return picks;
 }
