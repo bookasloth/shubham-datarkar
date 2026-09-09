@@ -292,14 +292,24 @@ function toFindings(evaluated: EvaluatedCheck[], category: "seo" | "ai"): Findin
     const f = e.spec.finding;
     // Soften severity when the check is only partially failing.
     const severity = e.ratio >= 0.5 ? downgrade(f.severity) : f.severity;
-    const evidence = e.total > 1 ? `${e.failing.length} of ${e.total} pages affected` : e.failing.length ? e.failing.slice(0, 6).join(", ") : "Site-wide";
+    // A site-level check's `failing` can be non-URL labels (e.g. blocked AI
+    // crawler names). Only real URLs belong in affectedUrls — labels go to the
+    // evidence text, so the report UI never tries to parse a label as a URL.
+    const urls = e.failing.filter((x) => /^https?:\/\//i.test(x));
+    const labels = e.failing.filter((x) => !/^https?:\/\//i.test(x));
+    const evidence =
+      e.total > 1
+        ? `${e.failing.length} of ${e.total} pages affected`
+        : labels.length
+          ? labels.slice(0, 8).join(", ")
+          : "Site-wide";
     out.push({
       id: e.spec.id,
       title: f.title,
       problem: f.title,
       why: f.why,
       evidence,
-      affectedUrls: e.failing.slice(0, 10),
+      affectedUrls: urls.slice(0, 10),
       severity,
       category,
       recommendation: f.recommendation,
