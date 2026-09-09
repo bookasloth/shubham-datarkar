@@ -10,23 +10,35 @@ import {
   getGenres,
 } from "@/lib/movies/queries";
 import { getPublishedPlaylistSlugs } from "@/lib/playlists/queries";
+import {
+  getPublishedBookSlugsWithDates,
+  getPublishedCollectionSlugs as getPublishedBookCollectionSlugs,
+  getBookGenres,
+} from "@/lib/books/queries";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = site.url;
   const posts = await getPublishedPosts();
 
   // DB-sourced movie module URLs, expanded into the sitemap.
-  const [movieSlugs, collectionSlugs, genres, playlistSlugs] = await Promise.all([
-    getPublishedMovieSlugs(),
-    getPublishedCollectionSlugs(),
-    getGenres(),
-    getPublishedPlaylistSlugs(),
-  ]);
+  const [movieSlugs, collectionSlugs, genres, playlistSlugs, bookSlugs, bookCollectionSlugs, bookGenres] =
+    await Promise.all([
+      getPublishedMovieSlugs(),
+      getPublishedCollectionSlugs(),
+      getGenres(),
+      getPublishedPlaylistSlugs(),
+      getPublishedBookSlugsWithDates(),
+      getPublishedBookCollectionSlugs(),
+      getBookGenres(),
+    ]);
   const movieExpansions: DynamicExpansion[] = [
     { pattern: /^\/movies\/\[slug\]$/, expand: () => movieSlugs.map((m) => ({ route: `/movies/${m.slug}` })) },
     { pattern: /^\/collections\/\[slug\]$/, expand: () => collectionSlugs.map((c) => ({ route: `/collections/${c.slug}` })) },
     { pattern: /^\/movies\/genre\/\[slug\]$/, expand: () => genres.map((g) => ({ route: `/movies/genre/${g.slug}` })) },
     { pattern: /^\/playlists\/\[slug\]$/, expand: () => playlistSlugs.map((p) => ({ route: `/playlists/${p.slug}` })) },
+    { pattern: /^\/books\/\[slug\]$/, expand: () => bookSlugs.map((b) => ({ route: `/books/${b.slug}` })) },
+    { pattern: /^\/books\/shelf\/\[slug\]$/, expand: () => bookCollectionSlugs.map((s) => ({ route: `/books/shelf/${s}` })) },
+    { pattern: /^\/books\/genre\/\[slug\]$/, expand: () => bookGenres.map((g) => ({ route: `/books/genre/${g.slug}` })) },
   ];
   const pages = await discoverPages(posts, movieExpansions);
 
@@ -48,8 +60,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const m of movieSlugs) lastMod.set(`/movies/${m.slug}`, new Date(m.updatedAt));
   for (const c of collectionSlugs) lastMod.set(`/collections/${c.slug}`, new Date(c.updatedAt));
   for (const p of playlistSlugs) lastMod.set(`/playlists/${p.slug}`, new Date(p.updatedAt));
+  for (const b of bookSlugs) lastMod.set(`/books/${b.slug}`, new Date(b.updatedAt));
 
-  const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies", "/movies", "/collections", "/playlists"];
+  const HIGH_PRIORITY_PREFIXES = ["/blog", "/services", "/case-studies", "/movies", "/collections", "/playlists", "/books"];
   const WEEKLY_PATHS = new Set(["/", "/me", "/blog"]);
 
   // Routes that ship a dedicated opengraph-image — a real representative image

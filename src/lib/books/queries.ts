@@ -1,7 +1,8 @@
 import "server-only";
 
-import { supabaseAnon, supabaseAdmin } from "@/lib/supabase/server";
+import { supabaseAnon, supabaseAdmin, createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { rankSimilarBooks, matchBookQuery } from "./public-queries-helpers";
 import {
   BOOK_COLLECTION_SELECT,
   BOOK_NOTE_SELECT,
@@ -99,6 +100,24 @@ export async function getPublishedBookSlugs(): Promise<string[]> {
   return ((data ?? []) as { slug: string }[]).map((r) => r.slug);
 }
 
+/** Slugs + updated_at of every published book — for generateStaticParams / sitemap. */
+export async function getPublishedBookSlugsWithDates(): Promise<{ slug: string; updatedAt: string }[]> {
+  const { data, error } = await supabaseAnon()
+    .from("books")
+    .select("slug, updated_at")
+    .eq("is_published", true);
+  if (error) return [];
+  return ((data ?? []) as { slug: string; updated_at: string }[]).map((r) => ({
+    slug: r.slug,
+    updatedAt: r.updated_at,
+  }));
+}
+
+/** Books similar to `book`: shared genres + same author, ranked, self excluded. */
+export async function getSimilarBooks(book: BookWithRelations, limit = 14): Promise<BookWithRelations[]> {
+  return rankSimilarBooks(book, await getPublishedBooks(200), limit);
+}
+
 /** Published books tagged with the genre at `slug`. */
 export async function getBooksByGenre(slug: string): Promise<BookWithRelations[]> {
   const { data: genre } = await supabaseAnon().from("book_genres_ref").select("id").eq("slug", slug).maybeSingle();
@@ -117,6 +136,29 @@ export async function getBooksByGenre(slug: string): Promise<BookWithRelations[]
     .order("created_at", { ascending: false });
   if (error) return [];
   return ((data ?? []) as unknown as BookRelRow[]).map(mapBookWithRelations);
+}
+
+export async function getBookGenres(): Promise<Genre[]> {
+  const { data, error } = await supabaseAnon().from("book_genres_ref").select(GENRE_SELECT).order("name");
+  if (error) return [];
+  return ((data ?? []) as GenreRow[]).map(mapGenreRow);
+}
+
+export async function getGenreBySlug(slug: string): Promise<Genre | null> {
+  const { data } = await supabaseAnon().from("book_genres_ref").select(GENRE_SELECT).eq("slug", slug).maybeSingle();
+  return data ? mapGenreRow(data as GenreRow) : null;
+}
+
+/**
+ * Search published books by title, author, isbn, genre, or mood.
+ * ponytail: in-memory filter over the published set (mirrors movies' search) —
+ * fine for a hand-curated catalogue.
+ */
+export async function searchPublishedBooks(q: string): Promise<BookWithRelations[]> {
+  const query = q.trim().toLowerCase();
+  if (!query) return [];
+  const all = await getPublishedBooks(500);
+  return all.filter((b) => matchBookQuery(b, query));
 }
 
 /* ------------------------------ Auto feeds ------------------------------ */
@@ -170,6 +212,12 @@ export async function getPublishedCollections(): Promise<BookCollection[]> {
     return [];
   }
   return ((data ?? []) as BookCollectionRow[]).map(mapCollectionRow);
+}
+
+export async function getPublishedCollectionSlugs(): Promise<string[]> {
+  const { data, error } = await supabaseAnon().from("book_collections").select("slug").eq("is_published", true);
+  if (error) return [];
+  return ((data ?? []) as { slug: string }[]).map((r) => r.slug);
 }
 
 /** Published books in a collection, in the collection's saved order. */
@@ -285,6 +333,33 @@ export async function getHomepageSections(): Promise<ResolvedBookHomepageSection
       return { id: s.id, title: s.title, kind: s.kind, hero: null, collectionSlug: null, books };
     }),
   );
+}
+
+// ===========================================================================
+// MY LIST (session client — each user reads only their own rows via RLS)
+// ===========================================================================
+
+/** The current user's saved books (full), newest save first. */
+export async function getMyBookListBooks(): Promise<BookWithRelations[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return [];
+  const { data: links } = await supabase
+    .from("user_book_list")
+    .select("book_id, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  const ids = (links ?? []).map((l) => (l as { book_id: string }).book_id);
+  if (ids.length === 0) return [];
+  const { data: books } = await supabaseAnon()
+    .from("books")
+    .select(BOOK_WITH_RELATIONS)
+    .in("id", ids)
+    .eq("is_published", true);
+  const byId = new Map(((books ?? []) as unknown as BookRelRow[]).map((b) => [b.id, mapBookWithRelations(b)]));
+  return ids.map((id) => byId.get(id)).filter((b): b is BookWithRelations => b != null);
 }
 
 // ===========================================================================

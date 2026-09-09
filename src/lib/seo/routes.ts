@@ -53,6 +53,9 @@ const APP_ROUTES = new Set([
   // kept out of the sitemap (the movie + collection pages carry the SEO value).
   "/movies/search",
   "/movies/my-list",
+  // Books module utility routes: query-driven / per-user, same treatment.
+  "/books/search",
+  "/books/my-list",
 ]);
 
 const APP_PATTERNS = [
