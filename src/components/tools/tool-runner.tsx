@@ -14,8 +14,8 @@ import { CopyButton } from "@/components/ui/copy-button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Spinner } from "@/components/ui/spinner";
 import { analyzeReadability, type Readability } from "@/lib/tools/readability";
-import { ToolLeadCapture } from "@/components/tools/tool-lead-capture";
 import { ShareResult } from "@/components/tools/share-result";
+import { SeoAuditRunner as SeoAuditTool } from "@/components/tools/seo-audit/seo-audit-runner";
 
 /* ---------------------------- UTM Builder (real) ---------------------------- */
 function UtmBuilder() {
@@ -278,154 +278,6 @@ function ReadabilityChecker() {
   );
 }
 
-/* ---------------------------- SEO Audit (real) ---------------------------- */
-type AuditCheck = { id: string; label: string; passed: boolean; category: string; priority: "high" | "medium" | "low" };
-type AuditReport = {
-  url: string;
-  overall: number;
-  color: "red" | "orange" | "yellow" | "green";
-  scores: { seo: number; geo: number; aeo: number };
-  title: string | null;
-  titleLength: number;
-  description: string | null;
-  descriptionLength: number;
-  h1Count: number;
-  wordCount: number;
-  schemas: string[];
-  passed: AuditCheck[];
-  failed: AuditCheck[];
-};
-
-function SeoAuditRunner() {
-  const [url, setUrl] = React.useState("");
-  const [state, setState] = React.useState<"idle" | "loading" | "done" | "error">("idle");
-  const [report, setReport] = React.useState<AuditReport | null>(null);
-  const [error, setError] = React.useState("");
-  const [unlocked, setUnlocked] = React.useState(false);
-
-  async function run(e: React.FormEvent) {
-    e.preventDefault();
-    if (!url.trim()) return;
-    setState("loading");
-    setError("");
-    setUnlocked(false);
-    try {
-      const res = await fetch("/api/tools/seo-audit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error ?? "Audit failed.");
-        setState("error");
-        return;
-      }
-      setReport(data as AuditReport);
-      setState("done");
-    } catch {
-      setError("Couldn't run the audit. Check your connection and try again.");
-      setState("error");
-    }
-  }
-
-  return (
-    <div className="grid gap-6">
-      <form onSubmit={run} className="flex flex-col gap-3 sm:flex-row">
-        <Input
-          type="url"
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          placeholder="https://yoursite.com"
-          className="flex-1"
-        />
-        <Button type="submit" loading={state === "loading"} className="w-fit shrink-0">
-          Audit
-          {state !== "loading" && <ArrowRight />}
-        </Button>
-      </form>
-      <Badge variant="muted" className="w-fit">Real technical audit · runs on our server</Badge>
-
-      {state === "error" && (
-        <Alert variant="danger">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
-
-      {state === "done" && report && (
-        <Card className="p-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <a href={report.url} target="_blank" rel="noopener noreferrer" className="truncate text-sm font-medium text-muted-foreground underline-offset-4 hover:underline">
-              {report.url}
-            </a>
-            <span className="font-display text-4xl font-extrabold tracking-tight">{report.overall}/100</span>
-          </div>
-          <div className="mt-2 h-2 overflow-hidden rounded-full bg-muted">
-            <div className="h-full rounded-full bg-foreground" style={{ width: `${report.overall}%` }} />
-          </div>
-
-          <div className="mt-5 grid grid-cols-3 gap-3">
-            {(["seo", "geo", "aeo"] as const).map((k) => (
-              <div key={k} className="rounded-card border border-border p-3 text-center">
-                <div className="text-xs uppercase tracking-wider text-muted-foreground">{k}</div>
-                <div className="mt-0.5 font-display text-xl font-bold tabular-nums">{report.scores[k]}</div>
-              </div>
-            ))}
-          </div>
-
-          <dl className="mt-5 grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-            <Stat label="Title" value={report.title ? `${report.titleLength} chars` : "missing"} />
-            <Stat label="Description" value={report.description ? `${report.descriptionLength} chars` : "missing"} />
-            <Stat label="H1s" value={`${report.h1Count}`} />
-            <Stat label="Words" value={`${report.wordCount}`} />
-          </dl>
-
-          {report.failed.length > 0 && (
-            <div className="mt-6">
-              <p className="text-sm font-semibold">Fix these ({report.failed.length})</p>
-              <ul className="mt-2 flex flex-col gap-2">
-                {(unlocked ? report.failed : report.failed.slice(0, 3)).map((c) => (
-                  <li key={c.id} className="flex items-center justify-between gap-3 rounded-card border border-border p-3 text-sm">
-                    <span>{c.label}</span>
-                    <Badge variant={c.priority === "high" ? "danger" : "warning"}>{c.priority}</Badge>
-                  </li>
-                ))}
-              </ul>
-              {!unlocked && report.failed.length > 3 && (
-                <ToolLeadCapture
-                  className="mt-4"
-                  source="seo-audit"
-                  title={`See all ${report.failed.length} issues`}
-                  blurb="Get the full audit — every issue on this page — plus one SEO signal every Tuesday. Free."
-                  cta="Unlock the full report"
-                  onSuccess={() => setUnlocked(true)}
-                />
-              )}
-            </div>
-          )}
-
-          {report.passed.length > 0 && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              ✓ {report.passed.length} checks already passing{report.schemas.length ? ` · schema: ${report.schemas.slice(0, 4).join(", ")}` : ""}.
-            </p>
-          )}
-          <div className="mt-5">
-            <ShareResult tool="Free SEO Audit" score={report.overall} label="SEO Score" />
-          </div>
-        </Card>
-      )}
-    </div>
-  );
-}
-
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-card border border-border p-3">
-      <dt className="text-xs text-muted-foreground">{label}</dt>
-      <dd className="mt-0.5 font-semibold">{value}</dd>
-    </div>
-  );
-}
 
 /* ------------------------- AI Analyzer (real, Haiku) ------------------------- */
 const aiConfigs: Record<string, { label: string; placeholder: string; multiline: boolean; cta: string }> = {
@@ -688,7 +540,7 @@ export function ToolRunner({ slug, status }: { slug: string; status: string }) {
   if (slug === "roas-calculator") return <RoasCalculator />;
   if (slug === "schema-generator") return <SchemaGenerator />;
   if (slug === "readability-checker") return <ReadabilityChecker />;
-  if (slug === "seo-audit") return <SeoAuditRunner />;
+  if (slug === "seo-audit") return <SeoAuditTool />;
   if (slug === "content-brief") return <ContentBriefRunner />;
   if (aiConfigs[slug]) return <AiAnalyzer slug={slug} />;
   return (

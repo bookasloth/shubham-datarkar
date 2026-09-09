@@ -3,38 +3,41 @@ import type { Tool } from "@/lib/data/types";
 export const tools: Tool[] = [
   {
     slug: "seo-audit",
-    name: "Instant SEO Audit",
+    name: "SEO + AI Visibility Audit",
     icon: "Gauge",
     category: "SEO",
-    description: "Enter a URL and get a technical SEO audit in seconds. No signup for the core report.",
+    description:
+      "See how visible your website is to Google and AI search. A free audit of your traditional SEO and your AI-answer readiness — what's holding you back from rankings and from being cited in AI answers.",
     status: "Live",
     uses: 9100,
     seo: {
-      title: "Free Instant SEO Audit Tool",
+      title: "Free SEO + AI Visibility Audit — Google and AI Search",
       description:
-        "Enter any URL and get a free technical SEO audit in seconds — no signup required for the core report. Find what's broken and what's winnable fast.",
+        "How visible is your website to Google AND AI? Get a free audit with two scores — traditional SEO and AI-search visibility — plus the biggest opportunities to be found and cited. No signup for the core report.",
     },
     content: {
       appCategory: "BusinessApplication",
       overview: [
-        "The Instant SEO Audit crawls any URL and returns a technical SEO report in seconds — no signup for the core checks. It looks at the things that actually move rankings: title and meta tags, headings, canonicals, indexability, structured data, Open Graph, and page basics.",
-        "It's built for founders and marketers who want a straight answer to \"what's broken and what's winnable\" without paying for a heavy enterprise crawler or waiting on an agency audit.",
+        "This audit answers two questions: can search engines crawl, understand and rank your site — and can AI systems understand, extract, trust and cite it when answering relevant questions? It crawls your important pages and returns two scores, SEO and AI Visibility, weighted 50/50, so you can see at a glance where you stand on both.",
+        "It's built for founders and marketers who want a straight answer to \"what's holding us back from Google and from AI answers\" — not another meta-tag checker. The core report is free and needs no signup; the full report with every affected page, prioritized opportunities and an action plan is one email away.",
       ],
       features: [
-        "Title, meta description, and heading structure checks",
-        "Canonical, robots, and indexability signals",
-        "Structured data (JSON-LD) and Open Graph detection",
-        "Core on-page basics — no signup for the core report",
+        "Two scores: traditional SEO and AI-search visibility, weighted 50/50",
+        "Multi-page crawl — homepage, service, product, about and key content pages",
+        "Technical SEO: indexability, canonicals, metadata, headings, structured data, internal links",
+        "AI visibility: answerability, citability, entity clarity, trust signals, topical coverage",
+        "Evidence-based findings with affected pages and a prioritized action plan",
       ],
       howTo: [
-        "Paste the full URL of the page you want to audit.",
-        "Run the audit — the core technical report returns in seconds.",
-        "Work down the findings, fixing the highest-impact issues first.",
+        "Enter your website URL — we crawl your most important pages, not just the homepage.",
+        "Get your SEO and AI Visibility scores plus your top findings, free and instantly.",
+        "Enter your email to unlock the full report: every issue, the affected pages, and what to fix first.",
       ],
       faq: [
-        { question: "Is the SEO audit really free?", answer: "Yes. The core technical report is free and needs no signup. Paste a URL and you get the findings in seconds." },
-        { question: "What does the audit check?", answer: "The on-page technical fundamentals: title and meta tags, heading structure, canonical and robots/indexability signals, structured data, Open Graph, and core page basics — the things that decide whether a page can rank at all." },
-        { question: "Do I need to install anything?", answer: "No. It runs in the browser. Enter a URL and go — nothing to download or configure." },
+        { question: "What's the difference between the SEO and AI Visibility scores?", answer: "The SEO score measures whether search engines can crawl, understand, index and rank your site. The AI Visibility score measures whether AI systems can understand, extract, trust and cite your content when answering relevant questions. Both matter, so we weight them 50/50 and show them separately." },
+        { question: "Is this just a schema and llms.txt checker?", answer: "No. It analyzes your actual content — whether your important pages answer the questions buyers ask, how easily an AI can extract a clear answer, and how clearly your site communicates who you are and what you offer. Structured data is treated as a way to help machines understand content that must match your visible pages, not a magic ranking lever." },
+        { question: "Will this tell me I'll rank in ChatGPT?", answer: "No — and be wary of any tool that promises that. AI ranking isn't deterministic. This audit measures readiness and observable signals: whether your content is accessible, extractable, trustworthy and clearly structured. That's what you can actually influence." },
+        { question: "Is the audit really free?", answer: "Yes. Both scores and your top findings are free with no signup. The full report — every affected page, all findings, prioritized opportunities and an action plan — is unlocked with your email and emailed to you." },
       ],
     },
   },
