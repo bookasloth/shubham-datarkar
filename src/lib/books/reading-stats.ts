@@ -33,8 +33,7 @@ export function computeReadingStats(books: BookWithRelations[]): ReadingStats {
 
     if (reading.status === "finished") {
       pagesRead += reading.totalPages ?? book.pageCount ?? 0;
-      const finishedYear = reading.finishedAt ? new Date(reading.finishedAt).getFullYear() : null;
-      if (finishedYear === currentYear) finishedThisYear += 1;
+      if (reading.finishedAt && Number(reading.finishedAt.slice(0, 4)) === currentYear) finishedThisYear += 1;
     }
 
     if (book.review?.rating != null) {
