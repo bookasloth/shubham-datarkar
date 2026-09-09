@@ -151,7 +151,9 @@ join (values
 on conflict (book_id) do nothing;
 
 -- ===========================================================================
--- BOOK_NOTES  (published; a few highlights per book)
+-- BOOK_NOTES  (published; a few highlights per book; guarded inserts —
+-- no unique constraint on this table, so (book_id, chapter, page) is used
+-- as the idempotency key instead of on conflict)
 -- ===========================================================================
 insert into public.book_notes (book_id, chapter, page, quote, note, tags, position, published)
 select b.id, v.chapter, v.page, v.quote, v.note, v.tags, v.position, true
@@ -162,7 +164,10 @@ join (values
   ('thinking-fast-and-slow', 'Part I', 20, 'Nothing in life is as important as you think it is while you are thinking about it.', 'A good check whenever a single decision starts to feel disproportionately high-stakes in the moment.', ARRAY['bias','decision-making'], 0),
   ('deep-work', 'Rule #1', 63, 'Clarity about what matters provides clarity about what does not.', 'Useful filter for saying no to shallow requests without feeling guilty about it.', ARRAY['focus','productivity'], 0)
 ) as v(slug, chapter, page, quote, note, tags, position) on b.slug = v.slug
-on conflict do nothing;
+where not exists (
+  select 1 from public.book_notes n
+  where n.book_id = b.id and n.chapter = v.chapter and n.page = v.page
+);
 
 -- ===========================================================================
 -- BOOK_GENRES  (link by slug; idempotent)
