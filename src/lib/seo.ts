@@ -446,6 +446,54 @@ export function movieSchema(input: {
 }
 
 /**
+ * A recommended book as a `Book` node with an embedded editorial `Review`
+ * authored by the Person. Mirrors `movieSchema`: one reviewer → a single
+ * Review with a reviewRating (not an aggregateRating), 0-10 scale. Only
+ * emitted fields that have real values.
+ */
+export function bookSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string;
+  author?: string | null;
+  isbn?: string | null;
+  numberOfPages?: number | null;
+  datePublished?: string | null;
+  genres?: string[];
+  review?: { rating: number | null; body?: string | null } | null;
+}) {
+  const url = `${site.url}${input.path}`;
+  const node: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "Book",
+    name: input.title,
+    description: input.description,
+    url,
+    ...(input.image ? { image: input.image } : {}),
+    ...(input.author ? { author: { "@type": "Person", name: input.author } } : {}),
+    ...(input.isbn ? { isbn: input.isbn } : {}),
+    ...(input.numberOfPages ? { numberOfPages: input.numberOfPages } : {}),
+    ...(input.datePublished ? { datePublished: input.datePublished } : {}),
+    ...(input.genres?.length ? { genre: input.genres } : {}),
+  };
+  if (input.review && input.review.rating != null) {
+    node.review = {
+      "@type": "Review",
+      author: personRef,
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: input.review.rating,
+        bestRating: 10,
+        worstRating: 0,
+      },
+      ...(input.review.body ? { reviewBody: input.review.body } : {}),
+    };
+  }
+  return node;
+}
+
+/**
  * A curated playlist as a `MusicPlaylist` node. Only fields with real values are
  * emitted; `creator` is the Person by default (admin curates) unless a distinct
  * creator name is given. The playlist audio itself lives on the external
