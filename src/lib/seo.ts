@@ -446,6 +446,59 @@ export function movieSchema(input: {
 }
 
 /**
+ * A curated playlist as a `MusicPlaylist` node. Only fields with real values are
+ * emitted; `creator` is the Person by default (admin curates) unless a distinct
+ * creator name is given. The playlist audio itself lives on the external
+ * platform — this node describes the editorial entry on the site.
+ */
+export function musicPlaylistSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  image?: string | null;
+  creator?: string | null;
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "MusicPlaylist",
+    name: input.title,
+    description: input.description,
+    url: `${site.url}${input.path}`,
+    ...(input.image ? { image: input.image } : {}),
+    creator: input.creator ? { "@type": "Person", name: input.creator } : personRef,
+  };
+}
+
+/**
+ * The playlist directory as a `CollectionPage` whose mainEntity is an ordered
+ * `ItemList` of the playlists it links to — feeds discovery + internal links.
+ */
+export function playlistCollectionSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  items: { title: string; path: string }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    name: input.title,
+    description: input.description,
+    url: `${site.url}${input.path}`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: input.items.length,
+      itemListElement: input.items.map((it, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${site.url}${it.path}`,
+        name: it.title,
+      })),
+    },
+  };
+}
+
+/**
  * A curated collection as a `CollectionPage` whose mainEntity is an ordered
  * `ItemList` of the movies it holds — feeds discovery + internal-link signals.
  */
