@@ -18,7 +18,7 @@ export type BookMetadata = {
   categories: string[];
 };
 
-type GoogleVolume = {
+export type GoogleVolume = {
   id: string;
   volumeInfo?: {
     title?: string;
@@ -63,24 +63,26 @@ export function normalizeVolume(v: GoogleVolume): BookMetadata {
   };
 }
 
-async function gbFetch(path: string): Promise<any | null> {
+type GoogleVolumesResponse = { items?: GoogleVolume[] };
+
+async function gbFetch<T>(path: string): Promise<T | null> {
   const sep = path.includes("?") ? "&" : "?";
   const url = `${BASE}${path}${KEY ? `${sep}key=${KEY}` : ""}`;
   const res = await fetch(url, { next: { revalidate: 86400 } });
   if (!res.ok) return null;
-  return res.json();
+  return res.json() as Promise<T>;
 }
 
 export async function searchBooks(query: string): Promise<BookMetadata[]> {
   const q = query.trim();
   if (!q) return [];
-  const data = await gbFetch(`/volumes?q=${encodeURIComponent(q)}&maxResults=12`);
+  const data = await gbFetch<GoogleVolumesResponse>(`/volumes?q=${encodeURIComponent(q)}&maxResults=12`);
   const items: GoogleVolume[] = data?.items ?? [];
   return items.map(normalizeVolume);
 }
 
 export async function getBookDetails(googleId: string): Promise<BookMetadata | null> {
-  const data = await gbFetch(`/volumes/${encodeURIComponent(googleId)}`);
+  const data = await gbFetch<GoogleVolume>(`/volumes/${encodeURIComponent(googleId)}`);
   if (!data?.id) return null;
   return normalizeVolume(data);
 }

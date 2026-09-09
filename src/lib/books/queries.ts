@@ -122,6 +122,7 @@ export type AutoFeed = (typeof AUTO_FEEDS)[number];
  * move to an indexed query if the shelf grows past a few hundred books.
  */
 export async function getAutoFeed(feed: string): Promise<BookWithRelations[]> {
+  if (!AUTO_FEEDS.includes(feed as AutoFeed)) return [];
   const all = await getPublishedBooks();
   switch (feed as AutoFeed) {
     case "currently_reading":

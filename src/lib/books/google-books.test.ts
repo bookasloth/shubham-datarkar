@@ -1,8 +1,8 @@
 // src/lib/books/google-books.test.ts
 import { describe, it, expect } from "vitest";
-import { normalizeVolume } from "./google-books";
+import { normalizeVolume, type GoogleVolume } from "./google-books";
 
-const sample = {
+const sample: GoogleVolume = {
   id: "abc123",
   volumeInfo: {
     title: "The Psychology of Money",
@@ -24,7 +24,7 @@ const sample = {
 
 describe("normalizeVolume", () => {
   it("maps fields and prefers ISBN_13", () => {
-    const b = normalizeVolume(sample as any);
+    const b = normalizeVolume(sample);
     expect(b.googleId).toBe("abc123");
     expect(b.title).toBe("The Psychology of Money");
     expect(b.authors).toEqual(["Morgan Housel"]);
@@ -32,11 +32,11 @@ describe("normalizeVolume", () => {
     expect(b.pageCount).toBe(256);
   });
   it("upgrades cover URL to https", () => {
-    const b = normalizeVolume(sample as any);
+    const b = normalizeVolume(sample);
     expect(b.cover?.startsWith("https://")).toBe(true);
   });
   it("tolerates a bare volume with no volumeInfo fields", () => {
-    const b = normalizeVolume({ id: "x", volumeInfo: {} } as any);
+    const b = normalizeVolume({ id: "x", volumeInfo: {} } as GoogleVolume);
     expect(b.googleId).toBe("x");
     expect(b.title).toBe("");
     expect(b.authors).toEqual([]);
