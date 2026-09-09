@@ -13,7 +13,7 @@ type Row = {
   id: string;
   title: string;
   slug: string;
-  count: number;
+  count: number | null;
   published: boolean;
   updatedAt: string;
 };
@@ -42,7 +42,7 @@ export function ShelvesTable({ rows }: { rows: Row[] }) {
         </Link>
       ),
     },
-    { key: "count", header: "Books", sortValue: (r) => r.count, cell: (r) => r.count },
+    { key: "count", header: "Books", sortValue: (r) => r.count ?? -1, cell: (r) => (r.count == null ? "—" : String(r.count)) },
     {
       key: "status",
       header: "Status",

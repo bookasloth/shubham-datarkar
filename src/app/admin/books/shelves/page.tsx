@@ -28,8 +28,8 @@ export default async function AdminShelvesPage() {
           id: s.id,
           title: s.title,
           slug: s.slug,
-          // ponytail: BookCollection has no bookCount field yet — render 0 rather than block on a new query.
-          count: 0,
+          // ponytail: BookCollection has no bookCount field yet — render — rather than block on a new query.
+          count: null as number | null,
           published: s.isPublished,
           updatedAt: s.updatedAt,
         }))}
