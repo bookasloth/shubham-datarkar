@@ -7,7 +7,7 @@ import {
 import { ENTITY_LIST } from "@/lib/content/registry";
 
 export type AdminNavItem = { label: string; href: string; icon: LucideIcon };
-export type AdminNavGroup = { heading: string; items: AdminNavItem[] };
+export type AdminNavGroup = { heading: string; icon: LucideIcon; items: AdminNavItem[] };
 
 const ENTITY_ICONS: Record<string, LucideIcon> = {
   "case-studies": Layers,
@@ -24,9 +24,10 @@ const contentEntityItems: AdminNavItem[] = ENTITY_LIST.map((e) => ({
 }));
 
 export const ADMIN_NAV: AdminNavGroup[] = [
-  { heading: "Overview", items: [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }] },
+  { heading: "Overview", icon: LayoutDashboard, items: [{ label: "Dashboard", href: "/admin", icon: LayoutDashboard }] },
   {
     heading: "Content",
+    icon: FileText,
     items: [
       { label: "Posts", href: "/admin/posts", icon: FileText },
       { label: "Updates", href: "/admin/updates", icon: Megaphone },
@@ -38,6 +39,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "Library",
+    icon: Library,
     items: [
       { label: "Resources", href: "/admin/resources", icon: Library },
       { label: "Taxonomy", href: "/admin/resources/taxonomy", icon: Tags },
@@ -46,6 +48,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "Audience",
+    icon: Users,
     items: [
       { label: "People", href: "/admin/people", icon: Contact },
       { label: "Plans", href: "/admin/plans", icon: Gem },
@@ -58,6 +61,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "Community",
+    icon: MessagesSquare,
     items: [
       { label: "Community", href: "/admin/community", icon: MessagesSquare },
       { label: "Announcements", href: "/admin/announcements", icon: Bell },
@@ -66,6 +70,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "Commerce",
+    icon: CreditCard,
     items: [
       { label: "Payments", href: "/admin/payments", icon: CreditCard },
       { label: "Affiliate", href: "/admin/affiliate", icon: Share2 },
@@ -73,6 +78,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "Distribution",
+    icon: Share2,
     items: [
       { label: "Links", href: "/admin/links", icon: Link2 },
       { label: "Games", href: "/admin/games", icon: Gamepad2 },
@@ -81,6 +87,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
   },
   {
     heading: "SEO",
+    icon: Search,
     items: [
       { label: "SEO Overview", href: "/admin/seo", icon: Search },
       { label: "Pages", href: "/admin/seo/pages", icon: FileText },
@@ -90,6 +97,21 @@ export const ADMIN_NAV: AdminNavGroup[] = [
 ];
 
 const ALL_ITEMS: AdminNavItem[] = ADMIN_NAV.flatMap((g) => g.items);
+
+/** The section (group) the current route lives in: the group owning the
+ *  deepest item that matches `pathname`. Unknown routes fall back to the
+ *  first group so the rail + panel always have an active section. */
+export function resolveActiveGroup(pathname: string): AdminNavGroup {
+  let best: { group: AdminNavGroup; len: number } | null = null;
+  for (const group of ADMIN_NAV) {
+    for (const item of group.items) {
+      if (isNavItemActive(pathname, item.href) && (!best || item.href.length > best.len)) {
+        best = { group, len: item.href.length };
+      }
+    }
+  }
+  return best?.group ?? ADMIN_NAV[0];
+}
 
 /** /admin matches only exactly; every other item matches itself + descendants. */
 export function isNavItemActive(pathname: string, href: string): boolean {
