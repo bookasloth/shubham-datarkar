@@ -190,7 +190,8 @@ grant select on public.books to anon, authenticated;
 
 alter table public.book_reading enable row level security;
 drop policy if exists book_reading_public_read on public.book_reading;
-create policy book_reading_public_read on public.book_reading for select to anon, authenticated using (true);
+create policy book_reading_public_read on public.book_reading for select to anon, authenticated
+  using (exists (select 1 from public.books b where b.id = book_reading.book_id and b.is_published = true));
 drop policy if exists book_reading_admin_all on public.book_reading;
 create policy book_reading_admin_all on public.book_reading for all to authenticated using (public.is_admin()) with check (public.is_admin());
 grant select on public.book_reading to anon, authenticated;
