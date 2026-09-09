@@ -301,6 +301,43 @@ export function BookEditor({
       toast({ title: res.error, variant: "danger" });
       return;
     }
+    const tagList = noteForm.tags.split(",").map((s) => s.trim()).filter(Boolean);
+    const now = new Date().toISOString();
+    if (editingNoteId) {
+      setNotes((cur) =>
+        cur.map((n) =>
+          n.id === editingNoteId
+            ? {
+                ...n,
+                chapter: noteForm.chapter || null,
+                page: noteForm.page ? Number(noteForm.page) : null,
+                quote: noteForm.quote || null,
+                note: noteForm.note || null,
+                tags: tagList,
+                published: noteForm.published,
+                updatedAt: now,
+              }
+            : n,
+        ),
+      );
+    } else {
+      setNotes((cur) => [
+        ...cur,
+        {
+          id: res.id,
+          bookId: book.id,
+          chapter: noteForm.chapter || null,
+          page: noteForm.page ? Number(noteForm.page) : null,
+          quote: noteForm.quote || null,
+          note: noteForm.note || null,
+          tags: tagList,
+          position: cur.length,
+          published: noteForm.published,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ]);
+    }
     setNoteForm(emptyNoteForm);
     setEditingNoteId(null);
     router.refresh();
@@ -342,6 +379,39 @@ export function BookEditor({
     if ("error" in res) {
       toast({ title: res.error, variant: "danger" });
       return;
+    }
+    const now = new Date().toISOString();
+    if (editingPageId) {
+      setPages((cur) =>
+        cur.map((p) =>
+          p.id === editingPageId
+            ? {
+                ...p,
+                pageType: pageForm.pageType,
+                title: pageForm.title || null,
+                content: pageForm.content || null,
+                published: pageForm.published,
+                updatedAt: now,
+              }
+            : p,
+        ),
+      );
+    } else {
+      setPages((cur) => [
+        ...cur,
+        {
+          id: res.id,
+          bookId: book.id,
+          position: cur.length,
+          pageType: pageForm.pageType,
+          title: pageForm.title || null,
+          content: pageForm.content || null,
+          metadata: {},
+          published: pageForm.published,
+          createdAt: now,
+          updatedAt: now,
+        },
+      ]);
     }
     setPageForm(emptyPageForm);
     setEditingPageId(null);
