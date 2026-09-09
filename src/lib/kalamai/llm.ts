@@ -115,6 +115,8 @@ export async function runJson<T>(args: {
   schema: Record<string, unknown>;
   effort?: "low" | "medium" | "high";
   cachePrefix?: string;
+  /** Override the default Sonnet model — e.g. Haiku for cheap high-volume extraction. */
+  model?: string;
   fake: T;
 }): Promise<{ data: T; usage: LlmUsage }> {
   if (isFakeLlm()) return { data: args.fake, usage: ZERO_USAGE };
@@ -123,7 +125,7 @@ export async function runJson<T>(args: {
   const system = buildSystem(args.cachePrefix, args.system, false); // structured output → can't share the streamed cache
   const res = await withRetry(() =>
     getClient().messages.create({
-      model: KALAMAI_MODEL,
+      model: args.model ?? KALAMAI_MODEL,
       max_tokens: 4096,
       thinking: { type: "disabled" },
       output_config: { effort: args.effort ?? "low", format: { type: "json_schema", schema: args.schema } },

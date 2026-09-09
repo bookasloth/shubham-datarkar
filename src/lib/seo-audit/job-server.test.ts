@@ -24,8 +24,8 @@ function deps(pages: Record<string, string>): AuditDeps {
 }
 
 const baseRow = (over: Partial<AuditRow>): AuditRow => ({
-  id: "a1", url: "https://acme.com/", status: "queued", progress: 0, page_budget: 12,
-  crawl_cursor: 0, urls: [], crawl_meta: null, pages: [], created_at: new Date().toISOString(), ...over,
+  id: "a1", url: "https://acme.com/", domain: "acme.com", status: "queued", progress: 0, page_budget: 12,
+  crawl_cursor: 0, urls: [], crawl_meta: null, pages: [], scores: null, findings: null, created_at: new Date().toISOString(), ...over,
 });
 
 describe("discoverStep", () => {

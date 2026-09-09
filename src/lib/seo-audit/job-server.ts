@@ -2,12 +2,16 @@ import "server-only";
 import { supabaseAdmin } from "@/lib/supabase/server";
 import { mapWithConcurrency } from "@/lib/seo/fetch-html";
 import { safeFetchDetailed, safeFetchText, type DetailedFetch } from "@/lib/tools/safe-fetch";
+import { extractPage } from "@/lib/kalamai/extract";
 import { discoverUrls, parseSitemap, isSitemapLoc, normalizeUrl } from "./discover";
 import { extractSignals, type PageSignals } from "./signals";
 import { parseRobotsInfo } from "./robots";
 import { scoreAudit } from "./scoring";
+import { extractPageForAi, type PageExtract } from "./llm-extract";
+import { synthesizeReport } from "./llm-synthesize";
+import { scoreLead } from "./lead-score";
 import { logAuditEvent } from "./events-server";
-import type { DiscoveredUrl } from "./types";
+import type { AuditReport, AuditScores, DiscoveredUrl, Finding } from "./types";
 
 const BATCH = 6;
 const CONCURRENCY = 6;
@@ -27,6 +31,7 @@ export type CrawlMeta = { robotsTxt: string | null; sitemapUrls: string[]; favic
 export type AuditRow = {
   id: string;
   url: string;
+  domain: string;
   status: string;
   progress: number;
   page_budget: number;
@@ -34,8 +39,14 @@ export type AuditRow = {
   urls: DiscoveredUrl[];
   crawl_meta: CrawlMeta | null;
   pages: PageSignals[];
+  scores: AuditScores | null;
+  findings: Finding[] | null;
   created_at: string;
 };
+
+// Which page classes are worth the (paid) per-page LLM extraction, and how many.
+const IMPORTANT_CLASSES = new Set(["home", "service", "product", "about"]);
+const MAX_LLM_PAGES = 6;
 
 export type StepResult = { status: string; progress: number };
 type Transition = { patch: Record<string, unknown>; result: StepResult };
@@ -154,6 +165,60 @@ export function scoreStep(row: AuditRow): Transition {
   };
 }
 
+/**
+ * analyzing → complete: the paid LLM pass, run only after the email gate. Re-fetch
+ * the important pages, extract each on Haiku (§24), synthesize the report on Sonnet,
+ * and compute the internal lead score. Scores set at `scoring` are NOT touched.
+ */
+export async function analyzeStep(row: AuditRow, deps: AuditDeps): Promise<Transition> {
+  const scores = row.scores ?? { seo: 0, ai: 0, overall: 0, color: "red", seoCategories: [], aiCategories: [] };
+  const pages = row.pages ?? [];
+  const okByUrl = new Map(pages.filter((p) => p.ok).map((p) => [p.url, p]));
+
+  const important = (row.urls ?? [])
+    .filter((u) => IMPORTANT_CLASSES.has(u.class) && okByUrl.has(u.url))
+    .slice(0, MAX_LLM_PAGES);
+
+  const extracts = (
+    await mapWithConcurrency(important, 4, async (u): Promise<PageExtract | null> => {
+      try {
+        const r = await deps.fetchPage(u.url);
+        if (!r.body) return null;
+        const ex = extractPage(r.body);
+        return await extractPageForAi({
+          url: u.url,
+          pageClass: u.class,
+          title: ex.title,
+          h1: ex.headings.find((h) => h.level === 1)?.text ?? null,
+          headings: ex.headings.map((h) => h.text),
+          schemaTypes: ex.jsonldTypes,
+          body: ex.bodyText,
+        });
+      } catch {
+        return null;
+      }
+    })
+  ).filter((e): e is PageExtract => e !== null);
+
+  const report: AuditReport = await synthesizeReport({
+    domain: row.domain,
+    scores: { seo: scores.seo, ai: scores.ai, overall: scores.overall },
+    classesPresent: [...new Set(pages.filter((p) => p.ok).map((p) => p.class))],
+    deterministicFindings: (row.findings ?? []).map((f) => ({ title: f.title, severity: f.severity, category: f.category })),
+    extracts,
+  });
+
+  // Merge deterministic findings with the LLM's, dedupe by title.
+  const seen = new Set((row.findings ?? []).map((f) => f.title.toLowerCase()));
+  const mergedFindings = [...(row.findings ?? []), ...report.llmFindings.filter((f) => !seen.has(f.title.toLowerCase()))];
+
+  const lead = scoreLead({ seo: scores.seo, ai: scores.ai }, pages);
+  return {
+    patch: { status: "complete", progress: 100, report, findings: mergedFindings, lead_score: lead.score, lead_bucket: lead.bucket },
+    result: { status: "complete", progress: 100 },
+  };
+}
+
 // ---- runner (DB read + single-flight lock + persist) -----------------------
 
 /** Advance one transition and persist it. The caller re-invokes until terminal (`ready`/`complete`/`failed`). */
@@ -180,10 +245,12 @@ export async function runAuditStep(id: string, deps: AuditDeps = defaultDeps()):
     if (row.status === "queued") t = await discoverStep(row, deps);
     else if (row.status === "crawling") t = await crawlStep(row, deps);
     else if (row.status === "scoring") t = scoreStep(row);
+    else if (row.status === "analyzing") t = await analyzeStep(row, deps);
     else return { status: row.status, progress: row.progress };
 
     await db.from("seo_audits").update({ ...t.patch, locked_at: null, updated_at: new Date().toISOString() }).eq("id", id);
     if (t.result.status === "ready") await logAuditEvent("audit_completed", id);
+    if (t.result.status === "complete") await logAuditEvent("report_generated", id);
     return t.result;
   } catch (e) {
     const message = (e instanceof Error ? e.message : String(e)).slice(0, 500);
