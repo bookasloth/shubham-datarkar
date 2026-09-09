@@ -28,7 +28,7 @@ const row: AuditRow = {
   ],
   crawl_meta: null,
   pages: [mkPage({ url: "https://x.com/", class: "home" }), mkPage({ url: "https://x.com/services/seo", class: "service" }), mkPage({ url: "https://x.com/blog/z", class: "article" })],
-  scores, findings, created_at: new Date().toISOString(),
+  scores, findings, email: null, created_at: new Date().toISOString(),
 };
 
 describe("analyzeStep (fake LLM)", () => {

@@ -11,6 +11,8 @@ import { extractPageForAi, type PageExtract } from "./llm-extract";
 import { synthesizeReport } from "./llm-synthesize";
 import { scoreLead } from "./lead-score";
 import { logAuditEvent } from "./events-server";
+import { sendTemplate } from "@/lib/email/send-template";
+import { seoAuditReport } from "@/lib/email/templates/seo-audit";
 import type { AuditReport, AuditScores, DiscoveredUrl, Finding } from "./types";
 
 const BATCH = 6;
@@ -41,6 +43,7 @@ export type AuditRow = {
   pages: PageSignals[];
   scores: AuditScores | null;
   findings: Finding[] | null;
+  email: string | null;
   created_at: string;
 };
 
@@ -221,6 +224,30 @@ export async function analyzeStep(row: AuditRow, deps: AuditDeps): Promise<Trans
 
 // ---- runner (DB read + single-flight lock + persist) -----------------------
 
+/** Email the finished report to the lead. Fail-safe — a mail hiccup never fails the job. */
+async function sendReportEmail(row: AuditRow, patch: Record<string, unknown>): Promise<void> {
+  const email = row.email;
+  const report = patch.report as AuditReport | undefined;
+  const scores = row.scores;
+  if (!email || !report || !scores) return;
+  try {
+    await sendTemplate(
+      email,
+      seoAuditReport({
+        domain: row.domain,
+        seo: scores.seo,
+        ai: scores.ai,
+        overall: scores.overall,
+        opportunitySummary: report.opportunitySummary,
+        opportunities: report.opportunities.map((o) => ({ title: o.title, summary: o.summary })),
+        findings: [...(row.findings ?? []), ...report.llmFindings].map((f) => ({ title: f.title, recommendation: f.recommendation })),
+      }),
+    );
+  } catch (e) {
+    console.warn("[seo-audit] report email failed", e);
+  }
+}
+
 /** Advance one transition and persist it. The caller re-invokes until terminal (`ready`/`complete`/`failed`). */
 export async function runAuditStep(id: string, deps: AuditDeps = defaultDeps()): Promise<StepResult> {
   const db = supabaseAdmin();
@@ -250,7 +277,10 @@ export async function runAuditStep(id: string, deps: AuditDeps = defaultDeps()):
 
     await db.from("seo_audits").update({ ...t.patch, locked_at: null, updated_at: new Date().toISOString() }).eq("id", id);
     if (t.result.status === "ready") await logAuditEvent("audit_completed", id);
-    if (t.result.status === "complete") await logAuditEvent("report_generated", id);
+    if (t.result.status === "complete") {
+      await logAuditEvent("report_generated", id);
+      await sendReportEmail(row, t.patch);
+    }
     return t.result;
   } catch (e) {
     const message = (e instanceof Error ? e.message : String(e)).slice(0, 500);

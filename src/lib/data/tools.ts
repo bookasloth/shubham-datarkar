@@ -11,9 +11,9 @@ export const tools: Tool[] = [
     status: "Live",
     uses: 9100,
     seo: {
-      title: "Free SEO + AI Visibility Audit — Google and AI Search",
+      title: "Free SEO & AI Visibility Audit",
       description:
-        "How visible is your website to Google AND AI? Get a free audit with two scores — traditional SEO and AI-search visibility — plus the biggest opportunities to be found and cited. No signup for the core report.",
+        "See how visible your website is to Google and AI search. Get two scores — traditional SEO and AI-answer readiness — plus your biggest fixes, free.",
     },
     content: {
       appCategory: "BusinessApplication",
