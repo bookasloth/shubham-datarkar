@@ -172,3 +172,79 @@ export async function safeFetchHtml(raw: string): Promise<{ finalUrl: string; ht
   }
   throw new AuditError("That page redirects too many times.");
 }
+
+export type DetailedFetch = {
+  finalUrl: string;
+  status: number; // final HTTP status (0 if the request never completed)
+  redirectHops: number;
+  contentType: string;
+  xRobotsTag: string | null;
+  /** Text body when the response is text/html/xml/plain and status < 400, else null. */
+  body: string | null;
+};
+
+/**
+ * Multi-page audit fetch. Same SSRF guard as `safeFetchHtml` — resolves + pins
+ * the IP per hop, re-validates redirects, caps time + size — but instead of
+ * throwing on non-200 it RETURNS the status so the crawler can record a 404 /
+ * redirect / non-HTML page as a finding rather than aborting the whole audit.
+ * Still throws AuditError for genuine policy violations (bad scheme, private IP,
+ * oversize, redirect loop) — those are refusals, not page states.
+ */
+export async function safeFetchDetailed(raw: string): Promise<DetailedFetch> {
+  let url = parseTarget(raw);
+
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const pinnedIp = await resolvePinnedIp(url.hostname);
+    const dispatcher = pinnedDispatcher(pinnedIp);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    try {
+      let res: Response;
+      try {
+        res = await fetch(url.toString(), {
+          method: "GET",
+          redirect: "manual",
+          signal: controller.signal,
+          dispatcher,
+          headers: {
+            "User-Agent": "Mozilla/5.0 (compatible; ShubhamDatarkarSEOAudit/1.0; +https://shubhamdatarkar.com/tools/seo-audit)",
+            Accept: "text/html,application/xhtml+xml,application/xml,text/plain",
+          },
+        } as RequestInit & { dispatcher: Agent });
+      } catch {
+        return { finalUrl: url.toString(), status: 0, redirectHops: hop, contentType: "", xRobotsTag: null, body: null };
+      }
+
+      if (res.status >= 300 && res.status < 400) {
+        const loc = res.headers.get("location");
+        if (!loc) return { finalUrl: url.toString(), status: res.status, redirectHops: hop, contentType: "", xRobotsTag: res.headers.get("x-robots-tag"), body: null };
+        if (hop === MAX_REDIRECTS) throw new AuditError("That page redirects too many times.");
+        const next = new URL(loc, url);
+        if (next.protocol !== "http:" && next.protocol !== "https:") throw new AuditError("That page redirects somewhere unsupported.");
+        url = next;
+        continue;
+      }
+
+      const contentType = res.headers.get("content-type") ?? "";
+      const xRobotsTag = res.headers.get("x-robots-tag");
+      const isText = /(?:text\/html|application\/xhtml|application\/xml|text\/xml|text\/plain|application\/rss)/i.test(contentType);
+      const body = res.ok && isText ? await readCapped(res).catch(() => null) : null;
+      return { finalUrl: url.toString(), status: res.status, redirectHops: hop, contentType, xRobotsTag, body };
+    } finally {
+      clearTimeout(timer);
+      void dispatcher.close();
+    }
+  }
+  throw new AuditError("That page redirects too many times.");
+}
+
+/** Fetch a plain-text resource (robots.txt, sitemap.xml). Null on any non-200 / error. */
+export async function safeFetchText(raw: string): Promise<string | null> {
+  try {
+    const r = await safeFetchDetailed(raw);
+    return r.status >= 200 && r.status < 300 ? r.body : null;
+  } catch {
+    return null;
+  }
+}

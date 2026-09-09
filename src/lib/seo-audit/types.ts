@@ -65,3 +65,42 @@ export type Finding = {
   recommendation: string;
   source: "deterministic" | "llm";
 };
+
+/** A prioritized opportunity for the paid-service narrative (spec §16, §22). */
+export type Opportunity = {
+  rank: number;
+  title: string;
+  summary: string;
+  impact: Severity;
+  category: "seo" | "ai";
+  effort: "low" | "medium" | "high";
+};
+
+/** A branch of the topical map (spec §10). `covered` = the site addresses it. */
+export type TopicNode = { topic: string; covered: boolean; children?: TopicNode[] };
+
+export type ActionPlan = { now: string[]; next: string[]; later: string[] };
+
+/** The deep, LLM-generated report unlocked after the email gate. */
+export type AuditReport = {
+  opportunitySummary: string;
+  opportunities: Opportunity[];
+  topicMap: TopicNode[];
+  actionPlan: ActionPlan;
+  llmFindings: Finding[];
+};
+
+/** The public, gated projection of an audit row returned by the status route. */
+export type AuditView = {
+  id: string;
+  url: string;
+  domain: string;
+  status: string;
+  progress: number;
+  reportStatus: "free" | "unlocked";
+  pageCount: number | null;
+  scores: AuditScores | null;
+  findings: Finding[]; // top few pre-unlock; all post-unlock
+  findingsTotal: number;
+  report: AuditReport | null; // only post-unlock
+};

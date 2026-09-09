@@ -14,6 +14,7 @@ create table if not exists public.seo_audits (
   page_budget int not null default 12,
   crawl_cursor int not null default 0,
   urls jsonb not null default '[]'::jsonb,        -- discovered {url,class,priority}[]
+  crawl_meta jsonb,                               -- {robotsTxt, sitemapUrls[], faviconPresent}
   pages jsonb not null default '[]'::jsonb,       -- crawled per-page signals
   scores jsonb,                                   -- {seo,ai,overall,color,categories}
   findings jsonb,                                 -- deterministic + (post-unlock) LLM findings
