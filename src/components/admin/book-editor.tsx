@@ -668,7 +668,7 @@ export function BookEditor({
           <Label>Shelves</Label>
           {allShelves.length === 0 ? (
             <p className="text-xs text-muted-foreground">
-              No shelves yet — <Link href="/admin/collections/new" className="underline">create one</Link>.
+              No shelves yet — <Link href="/admin/books/shelves/new" className="underline">create one</Link>.
             </p>
           ) : (
             <div className="flex flex-wrap gap-1.5">
