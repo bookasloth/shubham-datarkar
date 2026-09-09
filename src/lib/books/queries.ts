@@ -5,9 +5,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import {
   BOOK_COLLECTION_SELECT,
   BOOK_NOTE_SELECT,
+  BOOK_PAGE_SELECT,
+  GENRE_SELECT,
   mapBookRow,
   mapCollectionRow,
+  mapGenreRow,
   mapNoteRow,
+  mapPageRow,
   mapReadingRow,
   mapReviewRow,
   type BookRow,
@@ -15,9 +19,13 @@ import {
   type BookCollectionRow,
   type BookNote,
   type BookNoteRow,
+  type BookPage,
+  type BookPageRow,
   type BookReadingRow,
   type BookReviewRow,
   type BookWithRelations,
+  type Genre,
+  type GenreRow,
 } from "./types";
 
 // Book carries its 1:1 reading status + editorial review, plus genres. Alias
@@ -331,4 +339,61 @@ export async function getCollectionByIdAdmin(
   const collection = mapCollectionRow(data as BookCollectionRow);
   const books = await getBooksInCollection(id, supabaseAdmin(), false);
   return { collection, books };
+}
+
+export async function getAllBookGenresAdmin(): Promise<Genre[]> {
+  const { data, error } = await supabaseAdmin().from("book_genres_ref").select(GENRE_SELECT).order("name");
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as GenreRow[]).map(mapGenreRow);
+}
+
+/** Genre ids a book belongs to — prefills the admin form. */
+export async function getBookGenreIdsAdmin(bookId: string): Promise<string[]> {
+  const { data } = await supabaseAdmin().from("book_genres").select("genre_id").eq("book_id", bookId);
+  return (data ?? []).map((r) => (r as { genre_id: string }).genre_id);
+}
+
+/** Collection ids a book belongs to — prefills the admin form. */
+export async function getBookCollectionIdsAdmin(bookId: string): Promise<string[]> {
+  const { data } = await supabaseAdmin()
+    .from("book_collection_items")
+    .select("collection_id")
+    .eq("book_id", bookId);
+  return (data ?? []).map((r) => (r as { collection_id: string }).collection_id);
+}
+
+/** All notes (incl. unpublished), ordered by position — admin editor. */
+export async function getNotesAdmin(bookId: string): Promise<BookNote[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("book_notes")
+    .select(BOOK_NOTE_SELECT)
+    .eq("book_id", bookId)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as BookNoteRow[]).map(mapNoteRow);
+}
+
+/** All pages (incl. unpublished), ordered by position — admin editor. */
+export async function getBookPagesAdmin(bookId: string): Promise<BookPage[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("book_pages")
+    .select(BOOK_PAGE_SELECT)
+    .eq("book_id", bookId)
+    .order("position", { ascending: true });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as BookPageRow[]).map(mapPageRow);
+}
+
+export type BookPickerEntry = { id: string; title: string; author: string | null; coverUrl: string | null; year: number | null };
+
+/** Lightweight book list for the shelf/collection editor picker. */
+export async function getBooksForPickerAdmin(): Promise<BookPickerEntry[]> {
+  const { data, error } = await supabaseAdmin()
+    .from("books")
+    .select("id, title, author, cover_url, publication_year")
+    .order("title", { ascending: true });
+  if (error) throw new Error(error.message);
+  return ((data ?? []) as { id: string; title: string; author: string | null; cover_url: string | null; publication_year: number | null }[]).map(
+    (r) => ({ id: r.id, title: r.title, author: r.author, coverUrl: r.cover_url, year: r.publication_year }),
+  );
 }
