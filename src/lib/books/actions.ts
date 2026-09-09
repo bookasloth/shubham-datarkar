@@ -285,39 +285,21 @@ async function setBookCollectionsInternal(
   }
 }
 
-/** Set a collection's book membership; new books are appended at the collection's tail. */
+/** Replace a collection's ordered book membership with `bookIds` (in order). */
 export async function setCollectionBooks(collectionId: string, bookIds: string[]): Promise<ActionResult> {
   if (!(await getAdminUser())) return { error: "Not authorised." };
   if (!Array.isArray(bookIds) || bookIds.length > 2000) return { error: "Invalid selection." };
   const admin = supabaseAdmin();
-
-  const wanted = new Set(bookIds);
-  const { data: current } = await admin
-    .from("book_collection_items")
-    .select("book_id")
-    .eq("collection_id", collectionId);
-  const currentIds = new Set((current ?? []).map((r) => (r as { book_id: string }).book_id));
-
-  const toRemove = [...currentIds].filter((id) => !wanted.has(id));
-  if (toRemove.length) {
-    await admin.from("book_collection_items").delete().eq("collection_id", collectionId).in("book_id", toRemove);
-  }
-
-  const toAdd = bookIds.filter((id) => !currentIds.has(id));
-  if (toAdd.length) {
-    const { data: tail } = await admin
-      .from("book_collection_items")
-      .select("sort_order")
-      .eq("collection_id", collectionId)
-      .order("sort_order", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    let next = (tail?.sort_order ?? -1) + 1;
-    const rows = toAdd.map((book_id) => ({ collection_id: collectionId, book_id, sort_order: next++ }));
+  await admin.from("book_collection_items").delete().eq("collection_id", collectionId);
+  const rows = [...new Set(bookIds)].map((book_id, i) => ({
+    collection_id: collectionId,
+    book_id,
+    sort_order: i,
+  }));
+  if (rows.length) {
     const { error } = await admin.from("book_collection_items").insert(rows);
     if (error) return { error: "Could not save the collection's books." };
   }
-
   revalidateBooks();
   return { ok: true };
 }
