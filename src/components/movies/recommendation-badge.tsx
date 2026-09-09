@@ -2,8 +2,8 @@ import { cn } from "@/lib/utils";
 
 // Emphasis is monochrome by design (site palette reserves the brand orange for
 // focus/selection). Top recommendations invert to solid; a pass reads muted.
-const EMPHASIS = new Set(["Must Watch", "Highly Recommended"]);
-const PASS = new Set(["Skip It"]);
+const EMPHASIS = new Set(["Must Watch", "Highly Recommended", "Must Read"]);
+const PASS = new Set(["Skip It", "Not For Me"]);
 
 export function RecommendationBadge({
   type,

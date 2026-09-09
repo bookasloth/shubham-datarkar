@@ -52,8 +52,8 @@ export default async function BooksHomePage() {
             />
           ))}
 
-          {fallback?.recent && fallback.recent.length > 0 && (
-            <BookRail title="Recently Added" books={fallback.recent} />
+          {fallback?.recent && fallback.recent.length > 1 && (
+            <BookRail title="Recently Added" books={fallback.recent.slice(1)} />
           )}
 
           {collections.length > 0 && (
