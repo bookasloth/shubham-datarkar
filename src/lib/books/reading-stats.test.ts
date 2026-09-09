@@ -1,10 +1,19 @@
 // src/lib/books/reading-stats.test.ts
 import { describe, it, expect } from "vitest";
 import { computeReadingStats } from "./reading-stats";
+import type { BookWithRelations, BookReading, BookReview } from "./types";
 
 const yr = new Date().getFullYear();
-const mk = (o: any) => ({ id: o.id, title: o.title ?? "T", slug: o.slug ?? o.id, pageCount: o.pageCount ?? null,
-  reading: o.reading ?? null, review: o.review ?? null, genres: [] } as any);
+type MkInput = Partial<{
+  id: string;
+  title: string;
+  slug: string;
+  pageCount: number | null;
+  reading: Partial<BookReading> | null;
+  review: Partial<BookReview> | null;
+}>;
+const mk = (o: MkInput) => ({ id: o.id, title: o.title ?? "T", slug: o.slug ?? o.id, pageCount: o.pageCount ?? null,
+  reading: o.reading ?? null, review: o.review ?? null, genres: [] } as unknown as BookWithRelations);
 
 describe("computeReadingStats", () => {
   const books = [
