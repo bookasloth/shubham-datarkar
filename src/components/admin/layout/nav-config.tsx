@@ -2,7 +2,7 @@ import {
   LayoutDashboard, FileText, Megaphone, Layers, FolderGit2, Package, Wrench,
   Quote, Users, Mail, CreditCard, Share2, Link2, Plug, Gamepad2, Search,
   Library, Tags, MessageSquarePlus, Bell, BarChart3, MessagesSquare,
-  Contact, Send, Inbox, Coins, Hammer, Gem, Images, Clapperboard, Film, type LucideIcon,
+  Contact, Send, Inbox, Coins, Hammer, Gem, Images, Clapperboard, Film, ListMusic, type LucideIcon,
 } from "lucide-react";
 import { ENTITY_LIST } from "@/lib/content/registry";
 
@@ -34,6 +34,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
       { label: "Gallery", href: "/admin/gallery", icon: Images },
       { label: "Movies", href: "/admin/movies", icon: Clapperboard },
       { label: "Collections", href: "/admin/collections", icon: Film },
+      { label: "Playlists", href: "/admin/playlists", icon: ListMusic },
       ...contentEntityItems,
     ],
   },
