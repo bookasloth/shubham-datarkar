@@ -27,9 +27,12 @@ export function Footer() {
           <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
             {footerNav.map((group) => (
               <nav key={group.label} aria-label={group.label}>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                {/* Not a heading: the footer renders before the page <h1> in DOM
+                    order, so an <h3> here made the document outline open at H3.
+                    The <nav aria-label> already names the group for a11y. */}
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                   {group.label}
-                </h3>
+                </p>
                 <ul className="mt-4 flex flex-col gap-2.5">
                   {group.items.map((item) => (
                     <li key={item.href}>

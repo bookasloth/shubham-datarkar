@@ -1,4 +1,4 @@
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import type { Service } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -31,7 +31,22 @@ export default async function ServicesPage() {
   const services = await getPublishedEntities<Service>("services");
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }])} />
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Services", path: "/services" }]),
+          itemListPageSchema({
+            name: "Marketing, SEO & AI Services",
+            description:
+              "SEO, performance marketing, content, AI automation, and founder advisory — productized engagements with clear, compounding outcomes.",
+            path: "/services",
+            items: services.map((s) => ({
+              name: s.name,
+              path: `/services/${s.slug}`,
+              description: s.outcome,
+            })),
+          }),
+        ]}
+      />
       <PageHero
         blueprint
         eyebrow="Services"

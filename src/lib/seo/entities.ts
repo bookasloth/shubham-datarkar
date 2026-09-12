@@ -93,16 +93,12 @@ export function personNode() {
       { "@id": ORG_IDS.bookASloth },
       { "@id": ORG_IDS.greyHawks },
     ],
-    // Real client ratings: a straight 5.0 across 30+ reviews. reviewCount is the
-    // honest floor of "30+". The individual Review nodes (reviewSchema) each
-    // carry the matching 5-star reviewRating.
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: 5,
-      bestRating: 5,
-      worstRating: 1,
-      reviewCount: 30,
-    },
+    // No `aggregateRating` here: this Person node is emitted on EVERY page by the
+    // root layout, but the supporting `Review` nodes (reviewSchema) and visible
+    // ratings render only on /testimonials. A rating with no reviews on the page
+    // is a Google review-snippet policy violation (manual-action risk) and isn't
+    // a supported rich-result type on a bare Person. Ratings belong on a node
+    // that carries real Review children on the same page.
   };
 }
 

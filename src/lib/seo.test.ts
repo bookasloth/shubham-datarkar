@@ -7,7 +7,9 @@ import {
   reviewSchema,
   speakingServiceSchema,
   seoLandingSchema,
+  itemListPageSchema,
 } from "@/lib/seo";
+import { personNode } from "@/lib/seo/entities";
 import { site } from "@/lib/site";
 import type { Service, Product, Testimonial } from "@/lib/data/types";
 
@@ -190,5 +192,40 @@ describe("seoLandingSchema", () => {
     expect(cat.itemListElement).toHaveLength(3);
     expect(cat.itemListElement[0]).toMatchObject({ "@type": "Offer", name: "Silver SEO Package", price: "6999", priceCurrency: "INR" });
     expect("aggregateRating" in s).toBe(false);
+  });
+});
+
+describe("personNode", () => {
+  it("carries NO aggregateRating (it rides every page without on-page reviews — policy risk)", () => {
+    expect("aggregateRating" in personNode()).toBe(false);
+  });
+});
+
+describe("itemListPageSchema", () => {
+  const items = [
+    { name: "SEO", path: "/services/seo", description: "Own search." },
+    { name: "Ads", path: "/services/ads" },
+  ];
+
+  it("builds a CollectionPage with an ordered ItemList of absolute-URL items", () => {
+    const s = itemListPageSchema({ name: "Services", description: "All of them", path: "/services", items });
+    expect(s["@type"]).toBe("CollectionPage");
+    const list = s.mainEntity as { "@type": string; numberOfItems: number; itemListElement: Record<string, unknown>[] };
+    expect(list["@type"]).toBe("ItemList");
+    expect(list.numberOfItems).toBe(2);
+    expect(list.itemListElement[0]).toMatchObject({
+      "@type": "ListItem",
+      position: 1,
+      url: `${site.url}/services/seo`,
+      name: "SEO",
+      description: "Own search.",
+    });
+    // description omitted when the item has none
+    expect("description" in list.itemListElement[1]).toBe(false);
+  });
+
+  it("honours an explicit type (Blog for the post index)", () => {
+    const s = itemListPageSchema({ type: "Blog", name: "Blog", description: "Essays", path: "/blog", items });
+    expect(s["@type"]).toBe("Blog");
   });
 });
