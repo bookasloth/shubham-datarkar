@@ -694,7 +694,11 @@
   .drawer-left[data-state="open"] { animation: sheet-in-left var(--dur-slow) var(--ease-out-quint); }
   .drawer-left[data-state="closed"] { animation: sheet-out-left var(--dur-base) ease-in; }
   .acc-anim[data-state="open"] { animation: accordion-down var(--dur-base) var(--ease-out-quint); }
-  .acc-anim[data-state="closed"] { animation: accordion-up var(--dur-fast) var(--ease-out-quint); }
+  /* height:0 persists the collapsed state (the animation alone reverts to auto
+     on end). Needed once AccordionContent uses forceMount — which keeps closed
+     answers in the server HTML for crawlers — so they stay visually collapsed.
+     No effect on non-forceMount accordions: they unmount closed content. */
+  .acc-anim[data-state="closed"] { height: 0; animation: accordion-up var(--dur-fast) var(--ease-out-quint); }
 
   @keyframes collapsible-down { from { height: 0; } to { height: var(--radix-collapsible-content-height); } }
   @keyframes collapsible-up { from { height: var(--radix-collapsible-content-height); } to { height: 0; } }

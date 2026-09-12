@@ -132,7 +132,12 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                   {serviceFaqs.map((f) => (
                     <AccordionItem key={f.question} value={f.question}>
                       <AccordionTrigger>{f.question}</AccordionTrigger>
-                      <AccordionContent>{f.answer}</AccordionContent>
+                      {/* forceMount: Radix unmounts collapsed content, which left
+                          the FAQ answers absent from the server HTML — visible
+                          only to JSON-LD parsers, not to AI/extraction crawlers
+                          that read rendered text. forceMount keeps the answer in
+                          the DOM (CSS-collapsed when closed) so it's citable. */}
+                      <AccordionContent forceMount>{f.answer}</AccordionContent>
                     </AccordionItem>
                   ))}
                 </Accordion>

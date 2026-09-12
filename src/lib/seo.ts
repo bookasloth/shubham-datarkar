@@ -160,6 +160,40 @@ export function caseStudySchema(input: {
   };
 }
 
+/**
+ * A hub/listing page as a `CollectionPage` whose `mainEntity` is an ordered
+ * `ItemList` of the things it links to. Lets parsers see the listed items
+ * (services, posts) from the index itself, which was otherwise invisible — the
+ * index pages only carried Breadcrumb + the site graph. `description` optional
+ * per item (e.g. a post excerpt / service outcome).
+ */
+export function itemListPageSchema(input: {
+  type?: "CollectionPage" | "Blog";
+  name: string;
+  description: string;
+  path: string;
+  items: { name: string; path: string; description?: string }[];
+}) {
+  return {
+    "@context": "https://schema.org",
+    "@type": input.type ?? "CollectionPage",
+    name: input.name,
+    description: input.description,
+    url: `${site.url}${input.path}`,
+    mainEntity: {
+      "@type": "ItemList",
+      numberOfItems: input.items.length,
+      itemListElement: input.items.map((it, i) => ({
+        "@type": "ListItem",
+        position: i + 1,
+        url: `${site.url}${it.path}`,
+        name: it.name,
+        ...(it.description ? { description: it.description } : {}),
+      })),
+    },
+  };
+}
+
 export function breadcrumbSchema(items: { name: string; path: string }[]) {
   return {
     "@context": "https://schema.org",

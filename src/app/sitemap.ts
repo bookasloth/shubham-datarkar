@@ -57,6 +57,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const d of serviceDates) lastMod.set(`/services/${d.slug}`, new Date(d.updatedAt));
   for (const d of caseStudyDates) lastMod.set(`/case-studies/${d.slug}`, new Date(d.updatedAt));
   for (const d of productDates) lastMod.set(`/products/${d.slug}`, new Date(d.updatedAt));
+
+  // Hub pages change whenever a child does — stamp them with the newest child
+  // date so crawlers prioritise recrawls instead of seeing a bare <loc>.
+  const newest = (dates: Date[]) => dates.reduce((a, b) => (b > a ? b : a), new Date(0));
+  if (serviceDates.length) lastMod.set("/services", newest(serviceDates.map((d) => new Date(d.updatedAt))));
+  if (posts.length) lastMod.set("/blog", newest(posts.map((p) => new Date(p.dateModified ?? p.date))));
   for (const m of movieSlugs) lastMod.set(`/movies/${m.slug}`, new Date(m.updatedAt));
   for (const c of collectionSlugs) lastMod.set(`/collections/${c.slug}`, new Date(c.updatedAt));
   for (const p of playlistSlugs) lastMod.set(`/playlists/${p.slug}`, new Date(p.updatedAt));

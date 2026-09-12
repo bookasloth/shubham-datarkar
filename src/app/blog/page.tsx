@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { site } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import { blogCategories } from "@/lib/data/posts";
 import { getPublishedPosts } from "@/lib/blog/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -85,6 +85,20 @@ async function BlogFeed() {
 
   return (
     <>
+      <JsonLd
+        data={itemListPageSchema({
+          type: "Blog",
+          name: "Marketing, SEO & AI Essays",
+          description:
+            "Essays, playbooks, and teardowns on SEO, AI, performance marketing, content, and SaaS.",
+          path: "/blog",
+          items: posts.map((p) => ({
+            name: p.title,
+            path: `/blog/${p.category}/${p.slug}`,
+            description: p.excerpt,
+          })),
+        })}
+      />
       <Link href={`/blog/${lead.category}/${lead.slug}`} className="group mt-8 block">
         <Card interactive className="overflow-hidden md:grid md:grid-cols-2">
           <BlogHeroArt className="hidden md:block" />
