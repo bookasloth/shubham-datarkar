@@ -23,7 +23,15 @@ export async function generateMetadata({ params }: { params: Promise<{ category:
   const { category } = await params;
   const cat = blogCategories.find((c) => c.slug === category);
   if (!cat) return buildMetadata({ title: "Blog", path: `/blog/${category}` });
-  return buildMetadata({ title: `${cat.label} Articles`, description: cat.description, path: `/blog/${cat.slug}` });
+  // noindex an empty category — a thin, cite-nothing page until it holds posts.
+  // Self-correcting: once a post lands in the category, it indexes again.
+  const hasPosts = (await getPublishedPostsByCategory(cat.slug as BlogCategory)).length > 0;
+  return buildMetadata({
+    title: `${cat.label} Articles`,
+    description: cat.description,
+    path: `/blog/${cat.slug}`,
+    noIndex: !hasPosts,
+  });
 }
 
 export default async function BlogCategoryPage({ params }: { params: Promise<{ category: string }> }) {

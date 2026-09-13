@@ -1,5 +1,5 @@
 import { Film } from "lucide-react";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import {
   getHomepageSections,
   getPublishedMovies,
@@ -9,6 +9,7 @@ import {
 import { MovieHero } from "@/components/movies/movie-hero";
 import { MovieRail } from "@/components/movies/movie-rail";
 import { CollectionCard } from "@/components/movies/collection-card";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 300;
 
@@ -20,9 +21,10 @@ export const metadata = buildMetadata({
 });
 
 export default async function MoviesHomePage() {
-  const [sections, collections] = await Promise.all([
+  const [sections, collections, allMovies] = await Promise.all([
     getHomepageSections(),
     getPublishedCollections(),
+    getPublishedMovies(),
   ]);
 
   const hasSectionContent = sections.some((s) => s.hero || s.movies.length > 0);
@@ -39,6 +41,22 @@ export default async function MoviesHomePage() {
 
   return (
     <div className="space-y-10">
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Movies", path: "/movies" }]),
+          ...(allMovies.length
+            ? [
+                itemListPageSchema({
+                  name: "Movies I Recommend",
+                  description:
+                    "A personally curated, cinematic guide to films worth your time — ratings, verdicts, and honest reviews.",
+                  path: "/movies",
+                  items: allMovies.map((m) => ({ name: m.title, path: `/movies/${m.slug}` })),
+                }),
+              ]
+            : []),
+        ]}
+      />
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Handpicked by Shubham

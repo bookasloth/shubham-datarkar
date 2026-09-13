@@ -1,9 +1,10 @@
 import { BookOpen } from "lucide-react";
-import { buildMetadata } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import { getHomepageSections, getPublishedBooks, getPublishedCollections } from "@/lib/books/queries";
 import { BookHero } from "@/components/books/book-hero";
 import { BookRail } from "@/components/books/book-rail";
 import { BookShelfCard } from "@/components/books/book-collection-card";
+import { JsonLd } from "@/components/seo/json-ld";
 
 export const revalidate = 300;
 
@@ -14,7 +15,11 @@ export const metadata = buildMetadata({
 });
 
 export default async function BooksHomePage() {
-  const [sections, collections] = await Promise.all([getHomepageSections(), getPublishedCollections()]);
+  const [sections, collections, allBooks] = await Promise.all([
+    getHomepageSections(),
+    getPublishedCollections(),
+    getPublishedBooks(),
+  ]);
 
   const hasSectionContent = sections.some((s) => s.hero || s.books.length > 0);
 
@@ -28,6 +33,21 @@ export default async function BooksHomePage() {
 
   return (
     <div className="space-y-10">
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Books", path: "/books" }]),
+          ...(allBooks.length
+            ? [
+                itemListPageSchema({
+                  name: "Books I'm Reading & Recommend",
+                  description: "The books I'm reading, what I think, and what I've learned.",
+                  path: "/books",
+                  items: allBooks.map((b) => ({ name: b.title, path: `/books/${b.slug}` })),
+                }),
+              ]
+            : []),
+        ]}
+      />
       <header className="space-y-1">
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-muted-foreground">
           Handpicked by Shubham

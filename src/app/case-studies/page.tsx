@@ -1,4 +1,4 @@
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import type { CaseStudy } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -24,7 +24,22 @@ export default async function CaseStudiesPage() {
   const caseStudies = await getPublishedEntities<CaseStudy>("case_studies");
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Case Studies", path: "/case-studies" }])} />
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Case Studies", path: "/case-studies" }]),
+          itemListPageSchema({
+            name: "SEO & Growth Case Studies",
+            description:
+              "Real outcomes with real numbers — SEO, performance marketing, AI content, and brand repositioning case studies.",
+            path: "/case-studies",
+            items: caseStudies.map((c) => ({
+              name: c.title,
+              path: `/case-studies/${c.slug}`,
+              description: `${c.sector} · ${c.client}`,
+            })),
+          }),
+        ]}
+      />
       <PageHero
         blueprint
         eyebrow="Case studies"

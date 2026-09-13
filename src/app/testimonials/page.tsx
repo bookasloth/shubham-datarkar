@@ -1,4 +1,4 @@
-import { buildMetadata, breadcrumbSchema, reviewSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, reviewSchema, personAggregateRatingNode } from "@/lib/seo";
 import type { Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { stats } from "@/lib/data/site-content";
@@ -28,6 +28,9 @@ export default async function TestimonialsPage() {
         data={[
           breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Testimonials", path: "/testimonials" }]),
           ...reviewSchema(testimonials),
+          // Aggregate is legit only here — backed by the Review nodes above, all
+          // itemReviewed the same #person. Guarded on real reviews existing.
+          ...(testimonials.length ? [personAggregateRatingNode(testimonials.length)] : []),
         ]}
       />
       <PageHero

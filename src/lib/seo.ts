@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
-import { personRef } from "./seo/entities";
+import { personRef, PERSON_ID } from "./seo/entities";
 import type { Service, Product, Testimonial } from "@/lib/data/types";
 
 type SeoInput = {
@@ -331,6 +331,30 @@ export function productSchema(product: Product) {
  * `reviewRating` (every client rates 5). The Person node carries the matching
  * `AggregateRating` (5.0 / 30+). Real ratings, not fabricated.
  */
+/**
+ * AggregateRating for the Person, emitted as a node that merges onto the global
+ * `#person` by `@id`. This is the ONE place an aggregate is legitimate: the
+ * /testimonials page renders real Review nodes (reviewSchema) whose `itemReviewed`
+ * is this same `#person`, so the aggregate is backed by on-page reviews. Every
+ * testimonial is a genuine 5★ (see reviewSchema), so the mean is 5.0 — no
+ * fabrication. NEVER emit this on a page without the matching Review nodes.
+ * Caller must guard on `reviewCount > 0`.
+ */
+export function personAggregateRatingNode(reviewCount: number, ratingValue = 5) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    "@id": PERSON_ID,
+    aggregateRating: {
+      "@type": "AggregateRating",
+      ratingValue,
+      reviewCount,
+      bestRating: 5,
+      worstRating: 1,
+    },
+  };
+}
+
 export function reviewSchema(testimonials: Testimonial[]) {
   return testimonials.map((t) => ({
     "@context": "https://schema.org",
