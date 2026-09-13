@@ -8,6 +8,7 @@ import {
   speakingServiceSchema,
   seoLandingSchema,
   itemListPageSchema,
+  personAggregateRatingNode,
 } from "@/lib/seo";
 import { personNode } from "@/lib/seo/entities";
 import { site } from "@/lib/site";
@@ -198,6 +199,20 @@ describe("seoLandingSchema", () => {
 describe("personNode", () => {
   it("carries NO aggregateRating (it rides every page without on-page reviews — policy risk)", () => {
     expect("aggregateRating" in personNode()).toBe(false);
+  });
+});
+
+describe("personAggregateRatingNode", () => {
+  it("merges an AggregateRating onto the #person by @id, 5.0 mean by default", () => {
+    const n = personAggregateRatingNode(8);
+    expect(n["@id"]).toBe(`${site.url}/#person`);
+    expect(n["@type"]).toBe("Person");
+    expect(n.aggregateRating).toMatchObject({
+      "@type": "AggregateRating",
+      ratingValue: 5,
+      reviewCount: 8,
+      bestRating: 5,
+    });
   });
 });
 

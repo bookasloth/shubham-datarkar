@@ -1,4 +1,4 @@
-import { buildMetadata, breadcrumbSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, itemListPageSchema } from "@/lib/seo";
 import type { Product } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { Container, Section } from "@/components/layout/container";
@@ -22,7 +22,18 @@ export default async function ProductsPage() {
   const products = await getPublishedEntities<Product>("products");
   return (
     <>
-      <JsonLd data={breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Products", path: "/products" }])} />
+      <JsonLd
+        data={[
+          breadcrumbSchema([{ name: "Home", path: "/" }, { name: "Products", path: "/products" }]),
+          itemListPageSchema({
+            name: "SaaS Products by Timewheel",
+            description:
+              "The Timewheel Internet product portfolio — scheduling, ticketing, communities, creator tools, messaging, and SEO.",
+            path: "/products",
+            items: products.map((p) => ({ name: p.name, path: `/products/${p.slug}`, description: p.tagline })),
+          }),
+        ]}
+      />
       <PageHero
         blueprint
         eyebrow="Products"
