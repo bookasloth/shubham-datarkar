@@ -21,6 +21,7 @@ import {
   GoogleTagManager,
   GoogleTagManagerNoScript,
 } from "@/components/analytics/google-tag-manager";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -114,6 +115,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AttributionProbe />
         <MetaPixel />
         <GoogleTagManager />
+        <GoogleAnalytics />
       </body>
     </html>
   );
