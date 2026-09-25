@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { subscribe } from "@/lib/subscribers/actions";
 import { EMAIL_RE } from "@/lib/validation/email";
+import { trackLead } from "@/lib/analytics/track-lead";
 import { cn } from "@/lib/utils";
 
 /**
@@ -47,6 +48,7 @@ export function ToolLeadCapture({
       setStatus("error");
       return;
     }
+    trackLead(`tool:${source}`);
     setStatus("success");
     onSuccess?.();
   }

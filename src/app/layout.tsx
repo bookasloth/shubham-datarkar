@@ -16,6 +16,12 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import { Analytics } from "@vercel/analytics/next";
 import { AiReferrer } from "@/components/analytics/ai-referrer";
 import { AttributionProbe } from "@/components/analytics/attribution-probe";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
+import {
+  GoogleTagManager,
+  GoogleTagManagerNoScript,
+} from "@/components/analytics/google-tag-manager";
+import { GoogleAnalytics } from "@/components/analytics/google-analytics";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -80,6 +86,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       className={`${jakarta.variable} ${poppins.variable}`}
     >
       <body className="min-h-dvh bg-background text-foreground antialiased">
+        <GoogleTagManagerNoScript />
         <ThemeProvider>
           <ToastProvider>
             {/* Accessibility: skip directly to main content */}
@@ -106,6 +113,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Analytics />
         <AiReferrer />
         <AttributionProbe />
+        <MetaPixel />
+        <GoogleTagManager />
+        <GoogleAnalytics />
       </body>
     </html>
   );

@@ -89,12 +89,12 @@ const nextConfig: NextConfig = {
     // embeddable tool widgets.
     const directives = [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${scriptEval} https://checkout.razorpay.com https://va.vercel-scripts.com`,
+      `script-src 'self' 'unsafe-inline'${scriptEval} https://checkout.razorpay.com https://va.vercel-scripts.com https://connect.facebook.net https://www.googletagmanager.com`,
       "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://image.tmdb.org https://www.openstreetmap.org",
+      "img-src 'self' data: blob: https://*.supabase.co https://company-assets.bookasloth.in https://website-assets.shubhamdatarkar.com https://image.tmdb.org https://www.openstreetmap.org https://www.facebook.com https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com",
       "font-src 'self' data:",
-      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com",
-      "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://www.openstreetmap.org https://open.spotify.com https://embed.music.apple.com",
+      "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.razorpay.com https://*.vercel-insights.com https://va.vercel-scripts.com https://www.facebook.com https://connect.facebook.net https://www.googletagmanager.com https://www.google-analytics.com https://region1.google-analytics.com https://analytics.google.com",
+      "frame-src 'self' https://checkout.razorpay.com https://api.razorpay.com https://www.youtube.com https://www.youtube-nocookie.com https://www.openstreetmap.org https://open.spotify.com https://embed.music.apple.com https://www.googletagmanager.com",
       "object-src 'none'",
       "base-uri 'self'",
       "form-action 'self'",

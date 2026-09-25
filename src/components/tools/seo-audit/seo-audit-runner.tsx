@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { EMAIL_RE } from "@/lib/validation/email";
 import { cn } from "@/lib/utils";
+import { trackLead } from "@/lib/analytics/track-lead";
 import { ShareResult } from "@/components/tools/share-result";
 import type { AuditView, CategoryScore, Finding, Opportunity, Severity, TopicNode } from "@/lib/seo-audit/types";
 
@@ -412,6 +413,7 @@ function EmailGate({ auditId, findingsTotal, onUnlocked }: { auditId: string; fi
       const res = await fetch("/api/tools/seo-audit/unlock", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: auditId, email }) });
       const j = await res.json();
       if (!res.ok) throw new Error(j.error ?? "Couldn't send your report.");
+      trackLead("seo-audit");
       onUnlocked();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong.");
