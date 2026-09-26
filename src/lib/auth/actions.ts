@@ -230,6 +230,28 @@ export async function signInWithMagicLink(
 }
 
 /**
+ * Start a LinkedIn OAuth sign-in. Supabase mints the provider authorize URL
+ * (setting the PKCE verifier cookie); we redirect the browser to it. LinkedIn
+ * sends the user back to our Supabase callback, which redirects to
+ * /auth/callback — the same route the magic link uses — where the code is
+ * exchanged for a session. Doubles as signup: Supabase creates the user on
+ * first LinkedIn login. A plain form action (no useActionState) so failures
+ * just bounce back to /login with a flag.
+ */
+export async function signInWithLinkedIn(formData: FormData): Promise<void> {
+  const safe = safeNext(String(formData.get("next") ?? ""));
+  const callback = `${await origin()}/auth/callback${safe ? `?next=${encodeURIComponent(safe)}` : ""}`;
+
+  const supabase = await supabaseAuthServer();
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "linkedin_oidc",
+    options: { redirectTo: callback },
+  });
+  if (error || !data?.url) redirect("/login?error=oauth");
+  redirect(data.url);
+}
+
+/**
  * Send a branded password-reset email via admin.generateLink. Always reports
  * success — we must not leak whether an account exists — so every failure is
  * swallowed. The link lands on /auth/confirm, which verifies the token_hash

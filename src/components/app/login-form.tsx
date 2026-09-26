@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { PasswordField } from "@/components/app/password-field";
+import { LinkedInButton } from "@/components/app/linkedin-button";
 import { cn } from "@/lib/utils";
 import {
   signIn,
@@ -67,6 +68,11 @@ export function LoginForm({
           That sign-in link was invalid or expired. Request a new one.
         </Banner>
       )}
+      {errorParam === "oauth" && (
+        <Banner role="alert" tone="error">
+          Could not sign in with LinkedIn. Try again, or use your email.
+        </Banner>
+      )}
 
       <Card className="p-6">
         {view === "magic" ? (
@@ -77,12 +83,16 @@ export function LoginForm({
             onBack={() => setView("signin")}
           />
         ) : (
-          <CredentialsForm
-            next={next}
-            email={email}
-            setEmail={setEmail}
-            onMagic={() => setView("magic")}
-          />
+          <div className="grid gap-4">
+            <LinkedInButton next={next} />
+            <Divider />
+            <CredentialsForm
+              next={next}
+              email={email}
+              setEmail={setEmail}
+              onMagic={() => setView("magic")}
+            />
+          </div>
         )}
       </Card>
 

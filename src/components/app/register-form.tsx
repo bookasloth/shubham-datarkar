@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Logo } from "@/components/brand/logo";
 import { PasswordField } from "@/components/app/password-field";
+import { LinkedInButton } from "@/components/app/linkedin-button";
 import { signUp, type SignInState } from "@/lib/auth/actions";
 
 export function RegisterForm({ next = "" }: { next?: string }) {
@@ -29,6 +30,13 @@ export function RegisterForm({ next = "" }: { next?: string }) {
       </div>
 
       <Card className="p-6">
+        <LinkedInButton next={next} />
+        <div className="relative py-4 text-center">
+          <span aria-hidden className="absolute left-0 top-1/2 h-px w-full bg-border" />
+          <span className="relative z-10 bg-card px-2 text-xs uppercase tracking-wide text-muted-foreground">
+            or
+          </span>
+        </div>
         <form action={formAction} className="grid gap-4">
           <input type="hidden" name="next" value={next} />
 
