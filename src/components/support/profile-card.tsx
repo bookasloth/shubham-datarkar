@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { BadgeCheck } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
@@ -70,8 +71,7 @@ export function ProfileCard({ supporterCount }: { supporterCount?: number }) {
             aria-label="Celebrate"
             className="rounded-btn transition-ui hover:scale-110 active:scale-95 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={COFFEE_TOFFEE_LOGO} alt="" className="size-5" />
+            <Image src={COFFEE_TOFFEE_LOGO} alt="" width={20} height={20} className="size-5" />
           </button>
           <span className="font-semibold text-foreground">{count}</span>
           <span className="text-muted-foreground">supporters and counting</span>
