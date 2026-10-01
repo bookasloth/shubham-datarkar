@@ -9,6 +9,7 @@ import { renderEmail } from "@/lib/email/template";
 import { sendTemplate } from "@/lib/email/send-template";
 import { contactConfirmation } from "@/lib/email/templates/contact";
 import { toAttributionRow, type FirstTouch } from "@/lib/attribution";
+import { sendMetaEvent } from "@/lib/analytics/meta-capi";
 import { EMAIL_RE } from "@/lib/validation/email";
 import { allow, clientIp } from "@/lib/rate-limit";
 
@@ -19,6 +20,13 @@ export type ContactInput = {
   budget?: string;
   message: string;
   attribution?: FirstTouch | null;
+  /** Meta dedup id — the browser Pixel fired `Lead` with this same id. */
+  eventId?: string;
+  /** Lead's phone, for CAPI match quality (hashed before send, never stored raw here). */
+  phone?: string;
+  /** Meta browser cookies forwarded from the client for CAPI match quality. */
+  fbc?: string;
+  fbp?: string;
   /** Honeypot: must stay empty. A real user never sees this field. */
   company?: string;
 };
@@ -80,6 +88,26 @@ export async function submitContact(input: ContactInput): Promise<ContactResult>
     return { ok: false, error: "Couldn't send your message. Please try again." };
   }
   const id = String(data.id);
+
+  // Server-side Lead to Meta, deduped against the browser Pixel via eventId.
+  // No-ops without a CAPI token; never blocks the submission.
+  if (input.eventId) {
+    const hdrs = await headers();
+    await sendMetaEvent({
+      eventName: "Lead",
+      eventId: input.eventId,
+      email,
+      phone: input.phone ?? null,
+      fbc: input.fbc ?? null,
+      fbp: input.fbp ?? null,
+      clientIp: clientIp(hdrs),
+      userAgent: hdrs.get("user-agent"),
+      eventSourceUrl: input.attribution?.landingPage
+        ? `https://shubhamdatarkar.com${input.attribution.landingPage}`
+        : undefined,
+      customData: { content_name: projectType ?? "contact" },
+    });
+  }
 
   try {
     const creds = await getEmailCredentials();

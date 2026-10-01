@@ -11,6 +11,12 @@ export type FirstTouch = {
   utmSource: string | null;
   utmMedium: string | null;
   utmCampaign: string | null;
+  utmContent: string | null;
+  utmTerm: string | null;
+  // Paid-click IDs. fbclid is what lets Meta match a booking back to the exact
+  // Instagram Reel ad; without it, paid attribution is guesswork.
+  fbclid: string | null;
+  gclid: string | null;
   pagesSeen: number;
 };
 
@@ -49,6 +55,10 @@ export function parseFirstTouch(href: string, referrer: string): FirstTouch {
     utmSource: q.get("utm_source"),
     utmMedium: q.get("utm_medium"),
     utmCampaign: q.get("utm_campaign"),
+    utmContent: q.get("utm_content"),
+    utmTerm: q.get("utm_term"),
+    fbclid: q.get("fbclid"),
+    gclid: q.get("gclid"),
     pagesSeen: 1,
   };
 }
@@ -70,6 +80,33 @@ export function toAttributionRow(a: FirstTouch | null | undefined): Record<strin
     utm_source: clamp(a.utmSource, 120),
     utm_medium: clamp(a.utmMedium, 120),
     utm_campaign: clamp(a.utmCampaign, 120),
+    utm_content: clamp(a.utmContent, 120),
+    utm_term: clamp(a.utmTerm, 120),
+    fbclid: clamp(a.fbclid, 255),
+    gclid: clamp(a.gclid, 255),
     pages_seen: Number.isFinite(pages) ? Math.max(1, Math.min(9999, Math.trunc(pages))) : null,
   };
+}
+
+/**
+ * Query params to carry onto the external booking URL (bookasloth.com), so the
+ * scheduler — a different origin that can't read our localStorage — knows the
+ * booking came from a Reel. The booking webhook reads these back. Only non-empty
+ * values are included to keep the URL clean.
+ */
+export function bookingQuery(a: FirstTouch | null | undefined): Record<string, string> {
+  const out: Record<string, string> = {};
+  if (!a) return out;
+  const add = (k: string, v: string | null) => {
+    if (v) out[k] = String(v).slice(0, 255);
+  };
+  add("utm_source", a.utmSource);
+  add("utm_medium", a.utmMedium);
+  add("utm_campaign", a.utmCampaign);
+  add("utm_content", a.utmContent);
+  add("utm_term", a.utmTerm);
+  add("fbclid", a.fbclid);
+  add("gclid", a.gclid);
+  add("sd_landing", a.landingPage);
+  return out;
 }

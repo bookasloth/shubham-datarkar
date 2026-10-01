@@ -6,7 +6,8 @@ import { X, Check, ArrowRight, ArrowLeft, CalendarCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { submitContact } from "@/lib/contact/actions";
-import { readFirstTouch } from "@/components/analytics/attribution-probe";
+import { readFirstTouch, readFbCookies } from "@/components/analytics/attribution-probe";
+import { trackLead, newEventId } from "@/lib/analytics/track-lead";
 import { EMAIL_RE } from "@/lib/validation/email";
 import { cn } from "@/lib/utils";
 
@@ -217,6 +218,12 @@ export function LeadModal({ variant = "seo" }: { variant?: "seo" | "webdev" }) {
       .map((s) => `${s.summaryLabel}: ${answers[s.key]?.trim() || "—"}`);
     const message = [...summary, `Phone: ${contact.phone.trim()}`, "", `Source: ${flow.source}`].join("\n");
 
+    // Fire the browser Pixel Lead and reuse its id for the server CAPI twin so
+    // Meta deduplicates the pair instead of counting the lead twice.
+    const eventId = newEventId();
+    trackLead(`consultation:${variant}`, eventId);
+    const fb = readFbCookies();
+
     try {
       const res = await submitContact({
         name: contact.name,
@@ -225,6 +232,10 @@ export function LeadModal({ variant = "seo" }: { variant?: "seo" | "webdev" }) {
         budget: flow.budgetKey ? answers[flow.budgetKey] || undefined : undefined,
         message,
         attribution: readFirstTouch(),
+        eventId,
+        phone: contact.phone,
+        fbc: fb.fbc,
+        fbp: fb.fbp,
       });
       if (!res.ok) {
         setSubmitError(res.error ?? "Something went wrong. Please try again.");
@@ -260,7 +271,7 @@ export function LeadModal({ variant = "seo" }: { variant?: "seo" | "webdev" }) {
                   <Check className="size-7" />
                 </div>
                 <Dialog.Title className="mt-6 font-display text-2xl font-extrabold tracking-tight md:text-3xl">
-                  You&rsquo;re booked in — nearly there
+                  Request received — nearly there
                 </Dialog.Title>
                 <p className="mt-3 max-w-md text-muted-foreground">
                   Thanks, {contact.name.split(" ")[0] || "there"}. {flow.successBody}

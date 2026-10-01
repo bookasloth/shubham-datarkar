@@ -1,15 +1,13 @@
 import Link from "next/link";
 import { CalendarCheck, Check } from "lucide-react";
-import { BrandIcon } from "@/components/ui/brand-icon";
 import { site } from "@/lib/site";
 import { buildMetadata, breadcrumbSchema, faqSchema } from "@/lib/seo";
 import { personRef } from "@/lib/seo/entities";
 import { Container, Section } from "@/components/layout/container";
 import { PageHero } from "@/components/layout/page-hero";
 import { Card } from "@/components/ui/card";
-import { buttonVariants } from "@/components/ui/button";
+import { BookingLink } from "@/components/book/booking-link";
 import { JsonLd } from "@/components/seo/json-ld";
-import { cn } from "@/lib/utils";
 
 export const metadata = buildMetadata({
   title: "Book a Free Working Session",
@@ -103,15 +101,7 @@ export default function BookPage() {
             <p className="mx-auto mt-2 max-w-md text-muted-foreground">
               Scheduling opens in my calendar app. Pick a time, get an instant confirmation, and we&apos;re set.
             </p>
-            <a
-              href={site.bookingUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(buttonVariants({ size: "lg" }), "mt-8")}
-            >
-              <BrandIcon name="CalendarCheck" />
-              Open the calendar
-            </a>
+            <BookingLink source="book-page" className="mt-8" />
 
             <ul className="mx-auto mt-10 grid max-w-md gap-3 text-left">
               {expect.map((item) => (

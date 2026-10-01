@@ -47,3 +47,24 @@ export function readFirstTouch(): FirstTouch | null {
     return null;
   }
 }
+
+/**
+ * Reads the Meta browser cookies the Pixel sets (`_fbp` always; `_fbc` only when
+ * the visit carried an fbclid). Forwarded with CAPI events so the server-side
+ * event matches the same user as the browser Pixel event — the single biggest
+ * lever on Meta match quality. Empty object when the pixel hasn't set them yet.
+ */
+export function readFbCookies(): { fbp?: string; fbc?: string } {
+  try {
+    const jar = document.cookie.split("; ");
+    const pick = (name: string) => jar.find((c) => c.startsWith(`${name}=`))?.split("=")[1];
+    const out: { fbp?: string; fbc?: string } = {};
+    const fbp = pick("_fbp");
+    const fbc = pick("_fbc");
+    if (fbp) out.fbp = decodeURIComponent(fbp);
+    if (fbc) out.fbc = decodeURIComponent(fbc);
+    return out;
+  } catch {
+    return {};
+  }
+}
