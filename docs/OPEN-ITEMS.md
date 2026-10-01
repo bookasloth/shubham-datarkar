@@ -1,11 +1,58 @@
 # Open Items — shubhamdatarkar.com
 
 > Living handoff doc. Each workstream is written to be actioned cold by a fresh
-> Claude session (or a human). Last updated 2026-07-16.
+> Claude session (or a human). Last updated 2026-10-01.
 >
-> **Status at last update:** all 5 `/support/updates` social sub-projects built +
-> merged (PRs #24, #31). SEO Phase 1 code complete (6/6). DB activated (3
-> support migrations + `support-media` bucket) and verified. Site not yet live.
+> **Status at last update:** site is LIVE in prod on `shubhamdatarkar.com`
+> (Vercel, owner's own account — a SEPARATE Vercel account from the one the
+> Vercel MCP connects to, which is Book A Sloth). Instagram Reel → consultation
+> funnel measurement shipped + prod-verified (Workstream D). Older status: all 5
+> `/support/updates` social sub-projects merged (PRs #24, #31); SEO Phase 1 code
+> complete (6/6); support DB activated.
+
+## Workstream D — Instagram Reel consultation funnel (DONE, 2026-10-01)
+
+**Goal:** make the funnel Reel → `/book` → booked call measurable end to end, so
+"how many consultation bookings came from Instagram Reels?" is answerable and Meta
+can optimize for + exclude bookers.
+
+**Shipped + prod-verified** (PR #428 funnel, PR #429 admin view; both merged, live):
+
+- Site analytics already present: Meta Pixel `4568625823364495`, GA4
+  `G-S7YQPEJWD2`, GTM `GTM-MK7RTJR`, Vercel Analytics (all in `src/app/layout.tsx`).
+- First-touch attribution now captures `fbclid`/`gclid` + full `utm_*`
+  (`src/lib/attribution.ts`, localStorage `sd_first_touch`), forwards `_fbp`/`_fbc`.
+- `/book` uses `BookingLink` (fires `ViewContent` + `InitiateCheckout`, appends
+  attribution+fbclid onto the bookasloth URL). Lead modal fires `Lead`; CTAs fire
+  `ConsultCTAClick`. All events carry a shared `event_id` for Pixel↔CAPI dedup.
+- Server CAPI: `src/lib/analytics/meta-capi.ts` (SHA-256 hashes PII, no-ops without
+  token). Booking webhook `POST /api/bookings/webhook` (HMAC `x-bookasloth-signature`,
+  idempotent on `external_id`) writes a `bookings` row + fires the `Schedule`
+  conversion. Contact action fires a deduped server `Lead`.
+- `bookings` table + `fbclid`/`gclid`/`utm_content`/`utm_term` columns on `contacts`
+  (migration `20261001000001`, RUN on owner's Supabase).
+- `/admin/bookings` — read-only table (source/campaign/creative + Paid-click badge +
+  header count of total & Instagram bookings), under Audience nav.
+- **Prod env SET** on the site's Vercel: `META_CAPI_ACCESS_TOKEN`,
+  `BOOKASLOTH_WEBHOOK_SECRET` (= `K7mQ2xV9pL4zN8cR1tY6`), optional `META_PIXEL_ID`.
+- Verified: prod webhook bad-sig→401 / valid→200; CAPI `Schedule` landed in Meta
+  Events Manager (Test Events, Processed, Server); `/admin/bookings` live.
+
+**Remaining (owner's side, separate bookasloth repo — owner has their own):**
+bookasloth.com must, on a confirmed booking, POST `/api/bookings/webhook` with the
+carried attribution, signed `HMAC-SHA256(rawBody, BOOKASLOTH_WEBHOOK_SECRET)` hex in
+`x-bookasloth-signature`. Body keys: `external_id`, `name`, `email`, `phone`,
+`booked_at`, `source`, `attribution{utm_*,fbclid,gclid,landing_page,referrer,ai_source}`,
+`fbc`, `fbp`. Until that lands, `/admin/bookings` stays empty and no `Schedule`
+conversions fire for real bookings.
+
+**Deferred (P2):** consent banner (India DPDP), `BookingAbandoned` event,
+attribution on the other ~14 site-wide booking CTAs (only `/book` + lead modal
+instrumented). Context: memory `funnel-attribution-capi`.
+
+**Rotate later:** the CAPI token + webhook secret were pasted in chat during setup —
+regenerate (Events Manager / change the string both Vercels) if that transcript is
+shared.
 
 ## Blueprint program — deferred item (added 2026-07-23)
 
