@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { gameIcon } from "@/lib/games/registry";
 
 /**
@@ -25,8 +26,7 @@ export function GameHeader({
       <span aria-hidden="true" />
       <h1 className="col-start-2 flex min-w-0 items-center gap-2 font-display text-xl font-bold">
         {slug && (
-          // plain <img>: CDN host is CSP-allowed but not a next/image remote pattern
-          <img src={gameIcon(slug)} alt="" aria-hidden="true" width={28} height={28} className="size-7 rounded-btn" />
+          <Image src={gameIcon(slug)} alt="" aria-hidden="true" width={28} height={28} className="size-7 rounded-btn" />
         )}
         {title}
       </h1>
