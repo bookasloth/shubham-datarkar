@@ -70,11 +70,11 @@ export const BROADCAST_TEMPLATES: BroadcastTemplate[] = [
   {
     id: "w1_5-slots-left",
     name: "W1.5 — Only 5 slots left",
-    description: "Scarcity follow-up to W1. CTA → /book-session.",
+    description: "Scarcity follow-up to W1. CTA → /book.",
     subject: "Only 5 blueprint sessions left this week",
     text:
       "There are 5 blueprint sessions left this week — after that bookings close until next cycle. " +
-      "Secure your slot: https://shubhamdatarkar.com/book-session",
+      "Secure your slot: https://shubhamdatarkar.com/book",
     html: renderEmail({
       preheader: "Only 5 blueprint sessions remaining before this week closes.",
       headerTagline: "5 Blueprint Sessions Remaining",
@@ -90,7 +90,7 @@ export const BROADCAST_TEMPLATES: BroadcastTemplate[] = [
         ]) +
         P("This session gives you clarity fast.") +
         `<p style="margin:0 0 24px;font-size:14px;font-weight:500;color:#202124;line-height:1.7">30 minutes.<br>Focused strategy.<br>Clear next moves.</p>`,
-      cta: { label: "Secure Your Slot", href: "https://shubhamdatarkar.com/book-session" },
+      cta: { label: "Secure Your Slot", href: "https://shubhamdatarkar.com/book" },
       afterCta: SMALL(
         "If it aligns, we'll build something serious. If not, you'll still walk away sharper.",
       ),

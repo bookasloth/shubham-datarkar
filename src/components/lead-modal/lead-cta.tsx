@@ -5,11 +5,13 @@ import type { VariantProps } from "class-variance-authority";
 import { CalendarCheck } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { trackCtaClick } from "@/lib/analytics/track-lead";
 import { OPEN_LEAD_EVENT } from "./lead-modal";
 
 type ButtonVariants = VariantProps<typeof buttonVariants>;
 
 function openLead() {
+  trackCtaClick("lead-modal-cta");
   window.dispatchEvent(new Event(OPEN_LEAD_EVENT));
 }
 

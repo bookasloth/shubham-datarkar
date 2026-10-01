@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { aiSourceFor, parseFirstTouch, toAttributionRow } from "./attribution";
+import { aiSourceFor, parseFirstTouch, toAttributionRow, bookingQuery } from "./attribution";
 
 describe("aiSourceFor", () => {
   it("names known AI answer engines", () => {
@@ -26,6 +26,17 @@ describe("parseFirstTouch", () => {
     expect(t.utmSource).toBe("li");
     expect(t.utmMedium).toBe("social");
     expect(t.utmCampaign).toBe("aeo");
+  });
+
+  it("captures paid-click ids and full utm set", () => {
+    const t = parseFirstTouch(
+      "https://x.com/?utm_content=reel_a&utm_term=seo&fbclid=FB123&gclid=GA456",
+      "",
+    );
+    expect(t.utmContent).toBe("reel_a");
+    expect(t.utmTerm).toBe("seo");
+    expect(t.fbclid).toBe("FB123");
+    expect(t.gclid).toBe("GA456");
   });
 
   it("leaves utm fields null when absent and starts pagesSeen at 1", () => {
@@ -68,5 +79,27 @@ describe("toAttributionRow", () => {
   it("rejects a non-numeric pagesSeen", () => {
     const row = toAttributionRow({ ...base, pagesSeen: Number.NaN });
     expect(row.pages_seen).toBeNull();
+  });
+
+  it("maps the paid-click columns", () => {
+    const t = parseFirstTouch("https://x.com/?utm_content=reel_a&fbclid=FB123", "");
+    const row = toAttributionRow(t);
+    expect(row.utm_content).toBe("reel_a");
+    expect(row.fbclid).toBe("FB123");
+  });
+});
+
+describe("bookingQuery", () => {
+  it("is empty for no attribution", () => {
+    expect(bookingQuery(null)).toEqual({});
+  });
+
+  it("carries only non-empty params onto the external booking url", () => {
+    const t = parseFirstTouch("https://x.com/book?utm_source=ig&fbclid=FB1", "");
+    const q = bookingQuery(t);
+    expect(q.utm_source).toBe("ig");
+    expect(q.fbclid).toBe("FB1");
+    expect(q.sd_landing).toBe("/book");
+    expect("utm_medium" in q).toBe(false); // absent → omitted, not null
   });
 });
