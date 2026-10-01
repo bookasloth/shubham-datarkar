@@ -80,125 +80,92 @@ program is shipped + live. Context: memory `blueprint-design-system-program`.
 
 ---
 
-## Workstream A — Production deploy to Vercel (owner + light code)
+## Workstream A — Production deploy to Vercel — ✅ DONE
 
-**Goal:** Get the site live on `shubhamdatarkar.com` via the owner's own Vercel
-account. Currently no Vercel account; site not live.
+Site is **live** on `shubhamdatarkar.com` via the owner's own Vercel account
+(verified this session: public pages 200, `/admin` auth-gated + rendering). Prod
+env vars set; Supabase points at the owner's own project; DNS cut over; **no
+`middleware.ts`** (confirmed). Payments are **Razorpay**, not Zoho — the doc's old
+"Zoho activation" step is obsolete; `src/lib/razorpay/*` + webhook
+`/api/members/webhook` are wired. SMTP + integration creds live in the owner's
+Supabase (`/admin/integrations`) and carry over.
 
-**Reference:** `DEPLOYMENT.md` §0 (ordered go-live runbook), §0b (local dev),
-§2 (migrations), §9 (Hostinger→Vercel DNS cutover + SEO go-live).
-
-**Steps:**
-
-1. Create Vercel account → Import GitHub repo `bookasloth/shubham-datarkar` →
-   framework auto-detects Next.js.
-2. Set **Production env vars** in Vercel (the only env-based config; everything
-   else is DB-stored). Full list is in `.env.example`:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-   - `SUPABASE_SERVICE_ROLE_KEY`
-   - `ADMIN_EMAIL` (the one allowed to sign into `/admin`)
-   - `COMMENTER_TOKEN_SECRET` — **generate FRESH** (local values were exposed in
-     chat; do not reuse):
-     `node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"`
-   - `COMMENTER_OTP_PEPPER` — **generate FRESH** (same command)
-   - `GOOGLE_SITE_VERIFICATION` / `BING_SITE_VERIFICATION` — optional, only if
-     doing meta-tag verification (see Workstream B).
-3. Confirm the Supabase URL/keys point to the owner's OWN project (the one the 3
-   support migrations + bucket were applied to), not BAS.
-4. Deploy. Confirm the build is green on Vercel.
-5. **DNS cutover** per `DEPLOYMENT.md` §9 — point `shubhamdatarkar.com`
-   (currently Hostinger) at Vercel; add the domain in Vercel.
-6. **Zoho Payments activation** (needed for payments + the auto thank-you post):
-   activate the Zoho account, then in `/admin/integrations` confirm the webhook
-   secret and update the Zoho webhook URL to
-   `https://shubhamdatarkar.com/api/support/webhook`. (Zoho is fully built —
-   only activation + prod URL left.)
-7. **SMTP:** already stored in the owner's Supabase via `/admin/integrations` →
-   carries over. Confirm a test send works (powers comment OTP + notifications).
-
-**Acceptance:** site loads on the custom domain; `/admin` login works; posting a
-support update appears at `/support/updates`; a real test payment flips the
-support to paid AND auto-posts a `thankyou` update; OTP comment verification
-email arrives.
+> NOTE: the owner's site Vercel is a SEPARATE account from the one the Vercel MCP
+> connects to in tooling (that one is Book A Sloth). Site env changes must be made
+> in the owner's own Vercel, then redeploy.
 
 ---
 
-## Workstream B — SEO Task 6 external verification (owner)
+## Workstream B — SEO external verification (GSC + Bing) — ✅ DONE (verify in consoles)
 
-**Goal:** Finish SEO Phase 1 — verify the site in Google Search Console + Bing
-Webmaster, submit the sitemap. The CODE shipped in PR #31 (`src/app/layout.tsx`
-renders env-gated `google-site-verification` / `msvalidate.01` meta tags;
-`.env.example` documents the vars). Only the external tokens + verify remain.
-
-**Depends on:** Workstream A (site live on the domain).
-
-**Two verification paths — pick one:**
-
-- **DNS (recommended at cutover):** do GSC/Bing TXT-record verification during
-  the DNS step. The env meta tags are then redundant (see `DEPLOYMENT.md` §9
-  note). Leave `GOOGLE_/BING_SITE_VERIFICATION` empty.
-- **Meta tag:** in GSC add property → "HTML tag" method → copy the `content`
-  value → set `GOOGLE_SITE_VERIFICATION` in Vercel → redeploy → Verify. Repeat
-  in Bing Webmaster (or import the property from GSC) → `BING_SITE_VERIFICATION`.
-
-**Then (both paths):** submit `https://shubhamdatarkar.com/sitemap.xml` in GSC
-and Bing. Bing is the retrieval path for ChatGPT Search.
-
-**Reference:** SEO plan Phase 4 §1–2 in
-`docs/superpowers/plans/2026-06-18-seo-geo-aeo-implementation.md`.
-
-**Acceptance:** both GSC and Bing show the property verified; sitemap submitted
-and accepted in both.
+Per the 2026-07 SEO/GEO/AEO overhaul (memory `seo-aeo-geo-audit-2026-07`): sitemap
+submitted to Google Search Console + Bing Webmaster. Verification meta-tag plumbing
+exists (`google-site-verification` / `msvalidate.01`). This is external state — if
+a fresh session needs certainty, log into GSC/Bing and confirm the property shows
+verified and `https://shubhamdatarkar.com/sitemap.xml` is accepted.
 
 ---
 
-## Workstream C — SEO Phases 2–4 (code + editorial, large)
+## Workstream C — SEO Phases 2–4 — mostly ✅ DONE (audited 2026-10-01)
 
-**Goal:** Execute the deferred SEO/GEO/AEO roadmap. Full task specs already exist
-in `docs/superpowers/plans/2026-06-18-seo-geo-aeo-implementation.md` — read it
-first. Phase 1 is done (6/6 code; only Workstream B is external). Per the plan,
-**pick one phase, spin it into its own focused plan + PR** (don't do all at
-once). Items tagged **[EDITORIAL]** need the owner's actual words; **[ASSET]**
-needs real images.
+Full specs: `docs/superpowers/plans/2026-06-18-seo-geo-aeo-implementation.md`.
+Most of this shipped in the 2026-07 SEO overhaul (PRs #281/#282/#284/#286, memory
+`seo-aeo-geo-audit-2026-07`). Status below verified against the codebase
+2026-10-01.
 
-### Phase 2 (SHOULD) — structure, media, measurement
+### Phase 2 — ✅ mostly done
 
-- **2A** Per-post OG images: `src/app/blog/[category]/[slug]/opengraph-image.tsx`
-  (model on `src/app/opengraph-image.tsx`), then pass `image` into
-  `articleSchema()` in the post page.
-- **2B** `howToSchema` + `imageObjectSchema` + `videoObjectSchema` in
-  `src/lib/seo.ts` (mark up the YouTube embed in the SEO pillar post; replace its
-  placeholder video id).
-- **2C** FAQ schema on money pages — `faqSchema()` already exists; add FAQ
-  sections + emit on `/services`, each `/services/[slug]`, `/products/[slug]`.
-  **[EDITORIAL]** for the Q&A copy.
-- **2D** Answer-first 40–70-word intros + question-style H2s on cornerstone
-  posts/services. **[EDITORIAL]** — highest-leverage GEO tactic.
-- **2E** Analytics + AI-referrer tracking: add `@vercel/analytics` next to the
-  existing `<SpeedInsights/>` in `layout.tsx`; track AI referrers
-  (chat.openai.com, perplexity.ai, gemini.google.com, copilot.microsoft.com).
-- **2F** Real images via `next/image` + alt on flagship posts/case studies.
-  **[ASSET]**.
-- **2G** Visible freshness / `dateModified`: add `updated_at` to `POST_COLS` in
-  `src/lib/blog/queries.ts`, map to `post.dateModified`, pass into
-  `articleSchema`, surface "Updated <date>". No DB migration (column exists).
-- **2H** `profilePageSchema()` (`@type: ProfilePage`) on `/about`; extend
-  `Person.knowsAbout`.
-- **2I** Title/description uniqueness audit (≤60 / ≤155). **[EDITORIAL]**.
+- **2A** Per-post OG images — ✅ `src/app/blog/[category]/[slug]/opengraph-image.tsx`.
+- **2B** `howToSchema` / `imageObjectSchema` / `videoObjectSchema` — ❌ NOT DONE.
+  None in `src/lib/seo.ts` (only an inline logo `ImageObject` in `publisherOrg()`).
+  Add if/when a how-to post or real video embed needs markup.
+- **2C** FAQ schema — ⚠️ PARTIAL. `faqSchema()` emitted on `/services/[slug]` +
+  11 other pages, but NOT on the `/services` index or `/products/[slug]`. Add there
+  (needs Q&A copy **[EDITORIAL]**).
+- **2D** Answer-first intros + question-style H2s on cornerstone pages —
+  **[EDITORIAL]**, owner's words. Treated as part of the overhaul; re-review if
+  targeting specific pages.
+- **2E** Analytics + AI-referrer tracking — ✅ `@vercel/analytics` in
+  `layout.tsx:16,113`; `AiReferrer` component fires `ai_referral`
+  (`src/components/analytics/ai-referrer.tsx`). (Meta Pixel + GA4 + GTM also live —
+  see Workstream D.)
+- **2F** Real images via `next/image` + alt on flagship posts/case studies —
+  **[ASSET]**, needs real images. Open.
+- **2G** Visible freshness / `dateModified` — ✅ `updated_at` in `POST_COLS`,
+  mapped to `post.dateModified`, "Updated <date>" surfaced + in article schema.
+- **2H** `profilePageSchema()` on `/about` + `Person.knowsAbout` — ✅
+  (`src/lib/seo.ts:88`, `src/app/about/page.tsx:66`, `src/lib/seo/entities.ts`).
+- **2I** Title/description uniqueness audit (≤60 / ≤155) — **[EDITORIAL]**, open.
 
-### Phase 3 (COULD) — all code
+### Phase 3 — ✅ done except two
 
-`public/llms-full.txt`; IndexNow ping on publish; RSS feed at
-`src/app/feed.xml/route.ts`; `Service`/`Product`/`Offer`/`Review` schema;
-`Event` schema on `/speaking`; `hreflang` only if a `.in`/Hindi variant is added.
+- ✅ `public/llms.txt` + `public/llms-full.txt`.
+- ✅ IndexNow ping on publish (`src/lib/seo/indexnow.ts`, called from
+  `src/lib/blog/actions.ts`).
+- ✅ RSS feed `src/app/feed.xml/route.ts`.
+- ✅ `Service` / `Product` / `Offer` / `Review` schema in `src/lib/seo.ts`.
+- ❌ `Event` schema on `/speaking` — deferred BY DESIGN; `/speaking` emits an honest
+  `Service` schema until concrete, dated talks exist (see comment in
+  `src/lib/seo.ts`). Swap to `Event` when there are real talks.
+- `hreflang` — only if a `.in`/Hindi variant is ever added. Not applicable now.
 
-### Phase 4 (off-page) — non-code
+### Phase 4 (off-page) — non-code, ongoing
 
-GSC/Bing verify (= Workstream B); cross-link consistent profiles (must match
-`sameAs` in `src/lib/site.ts`); earn brand mentions; Wikidata/Wikipedia
-eligibility; off-site reviews; periodic AI-visibility tracking (prompt
-ChatGPT/Perplexity/Gemini with target queries, log citations).
+GSC/Bing verify = Workstream B (done). Remaining is relationship/authority work:
+cross-link consistent profiles (match `sameAs` in `src/lib/site.ts`); earn brand
+mentions; Wikidata/Wikipedia eligibility; off-site reviews; periodic AI-visibility
+tracking (prompt ChatGPT/Perplexity/Gemini with target queries, log citations).
+
+---
+
+## What actually remains (the short list)
+
+**Code:** 2B (HowTo/Video/ImageObject schema — only when content needs it), 2C
+(faqSchema on `/services` index + `/products/[slug]`), Phase-3 `Event` schema on
+`/speaking` (when real talks exist). **Assets/editorial:** 2F real images, 2D/2I
+copy. **Owner/off-page:** confirm GSC/Bing still verified; Phase-4 authority work;
+Workstream D's bookasloth→webhook call (owner has their own). **Infra deferred:**
+Blueprint F3 Partial Prerendering (top of this doc).
 
 **Acceptance (per task):** new schema validates in Google Rich Results Test;
 `tsc` / `build` / tests green; editorial items reviewed by owner.
