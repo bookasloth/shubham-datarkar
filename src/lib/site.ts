@@ -10,7 +10,6 @@ export const site = {
   role: "Founder · Marketer · Copywriter",
   domain: "shubhamdatarkar.com",
   url: "https://shubhamdatarkar.com",
-  altUrl: "https://shubhamdatarkar.in",
   email: "hello@shubhamdatarkar.com",
   location: "Nagpur, India",
   tagline: "Build what you market. Market what you build.",

@@ -68,8 +68,6 @@ const nextConfig: NextConfig = {
       // emails — collapse it to the one real page.
       { source: "/subscribe", destination: "/newsletter", permanent: true },
       toApex("www.shubhamdatarkar.com"),
-      toApex("shubhamdatarkar.in"),
-      toApex("www.shubhamdatarkar.in"),
     ];
   },
   // Security headers (audit M-1). Clickjacking, MIME-sniff, referrer, and a CSP

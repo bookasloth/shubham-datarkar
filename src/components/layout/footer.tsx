@@ -57,8 +57,6 @@ export function Footer() {
             </span>
             <span aria-hidden>·</span>
             <span>{site.domain}</span>
-            <span aria-hidden>·</span>
-            <span>{site.altUrl.replace("https://", "")}</span>
           </div>
           <ul className="flex flex-wrap items-center gap-4">
             {socials.map((s) => (
