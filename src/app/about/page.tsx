@@ -34,7 +34,7 @@ const aboutFaqs = [
   {
     question: "Who is Shubham Datarkar?",
     answer:
-      "Shubham Datarkar is a founder, marketer, and copywriter based in Nagpur, India, known online as The Kalamwala. He writes the copy, runs the marketing, and builds the software across a creative studio (The Bogus Company), a booking SaaS (Book A Sloth, where he is CMO), and his own internet company (Timewheel Internet).",
+      "Shubham Datarkar is the Founder & CEO of Timewheel Internet, Nagpur's top digital marketing, advertising and SaaS development company. Known online as The Kalamwala, he writes the copy, runs the marketing, and builds the software — across Timewheel, a creative studio (The Bogus Company), and a booking SaaS (Book A Sloth, where he is CMO).",
   },
   {
     question: "What does 'The Kalamwala' mean?",
@@ -49,7 +49,7 @@ const aboutFaqs = [
   {
     question: "What companies is Shubham Datarkar behind?",
     answer:
-      "The Bogus Company (a creative and advertising studio), Book A Sloth (a booking and scheduling SaaS, where he is CMO), and Timewheel Internet (his internet and SaaS studio). He has also co-founded Grey Hawks Media, a performance marketing agency.",
+      "The Bogus Company (a creative and advertising studio), Book A Sloth (a booking and scheduling SaaS, where he is CMO), and Timewheel Internet (Nagpur's top digital marketing, advertising and SaaS development company, where he is Founder & CEO). He has also co-founded Grey Hawks Media, a performance marketing agency.",
   },
   {
     question: "Where is Shubham Datarkar based?",
