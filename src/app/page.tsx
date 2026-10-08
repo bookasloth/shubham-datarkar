@@ -21,10 +21,10 @@ import { cn } from "@/lib/utils";
 export const metadata = buildMetadata({
   path: "/",
   titleAbsolute: true,
-  // The home page is the money keyword. Front-load AEO/GEO/SEO instead of
-  // falling back to the generic site bio.
+  // Lead with the Timewheel Founder & CEO entity claim, then the AEO/GEO/SEO
+  // money keyword. Kept under ~160 chars so Google shows it whole.
   description:
-    "SEO, AEO & GEO consultant in India. I make 0–10 Cr founder-led companies the answer AI recommends — the name ChatGPT, Claude, Gemini, and Perplexity cite when someone asks who to hire.",
+    "Founder & CEO of Timewheel Internet — Nagpur's top digital marketing, advertising & SaaS development company. SEO, AEO & GEO that gets your brand cited by AI.",
   ogTitle: "Get your brand cited by AI — SEO · AEO · GEO",
   ogDescription:
     "When a founder asks ChatGPT who to hire, you're either the answer or you're invisible. AEO, GEO, and the SEO underneath it.",
