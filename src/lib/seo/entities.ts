@@ -35,7 +35,9 @@ export function personNode() {
     alternateName: [site.alias, "Shubham N Datarkar"],
     url: site.url,
     email: `mailto:${site.email}`,
+    description: site.description,
     jobTitle: [
+      "Founder & CEO, Timewheel Internet",
       "Digital Marketer",
       "SEO Consultant",
       "AI Marketing Strategist",
@@ -148,10 +150,25 @@ function orgNodes() {
         "@type": "Organization",
         "@id": ORG_IDS.timewheel,
         name: "Timewheel Internet",
+        legalName: "Timewheel Internet Pvt Ltd",
         description:
-          "Internet and SaaS studio building booking, membership, and event products.",
+          "Nagpur's top digital marketing, advertising and SaaS development company and agency, founded and led by Shubham Datarkar (Founder & CEO).",
         founder: personRef,
-        knowsAbout: ["SaaS", "Internet Products", "Booking Software", "Membership Software"],
+        address: {
+          "@type": "PostalAddress",
+          addressLocality: "Nagpur",
+          addressRegion: "Maharashtra",
+          addressCountry: "IN",
+        },
+        areaServed: ["Nagpur", "India"],
+        knowsAbout: [
+          "Digital Marketing",
+          "Advertising",
+          "SaaS Development",
+          "Search Engine Optimization",
+          "Performance Marketing",
+          "Internet Products",
+        ],
       },
       {
         "@type": "Organization",

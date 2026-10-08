@@ -31,10 +31,10 @@ const facts = [
 ];
 
 const bios = {
-  short: "Shubham Datarkar (The Kalamwala) is a copywriter, marketer, and builder — CMO at Book A Sloth and founder of Timewheel Internet.",
+  short: "Shubham Datarkar (The Kalamwala) is a copywriter, marketer, and builder — Founder & CEO of Timewheel Internet, Nagpur's top digital marketing, advertising and SaaS development company, and CMO at Book A Sloth.",
   medium:
-    "Shubham Datarkar, known as The Kalamwala, is a Nagpur-based copywriter, marketer, and builder. He is the CMO of Book A Sloth, founder & CEO of Timewheel Internet, and makes ads and software through The Bogus Company. His craft spans copywriting, SEO, content marketing, and full-stack development.",
-  long: "Shubham N Datarkar — The Kalamwala — is an Indian copywriter, marketer, and builder based in Nagpur. Over nearly a decade he has written for brands big and small — including an IPL 2021 animation TVC for Disney+ Hotstar — and grown into marketing leadership. Today he is CMO at Book A Sloth (the operating system for India's booking economy), founder & CEO of Timewheel Internet, and the maker behind The Bogus Company. He builds things that make other things easier — ads, brands, and entire software — guided by one idea: automation should feel human, and creativity should be measurable.",
+    "Shubham Datarkar, known as The Kalamwala, is a Nagpur-based copywriter, marketer, and builder. He is Founder & CEO of Timewheel Internet (Nagpur's top digital marketing, advertising and SaaS development company), CMO of Book A Sloth, and makes ads and software through The Bogus Company. His craft spans copywriting, SEO, content marketing, and full-stack development.",
+  long: "Shubham N Datarkar — The Kalamwala — is an Indian copywriter, marketer, and builder based in Nagpur. Over nearly a decade he has written for brands big and small — including an IPL 2021 animation TVC for Disney+ Hotstar — and grown into marketing leadership. Today he is Founder & CEO of Timewheel Internet — Nagpur's top digital marketing, advertising and SaaS development company — CMO at Book A Sloth (the operating system for India's booking economy), and the maker behind The Bogus Company. He builds things that make other things easier — ads, brands, and entire software — guided by one idea: automation should feel human, and creativity should be measurable.",
 };
 
 export default function MediaKitPage() {
