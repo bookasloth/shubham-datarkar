@@ -4,7 +4,7 @@ import { site, sameAs } from "@/lib/site";
  * Stable `@id` URIs for the site's core entities.
  *
  * Before this existed, `personSchema()` inlined a full Person node on all ~100
- * pages, and `articleSchema`/`serviceSchema`/`reviewSchema` each inlined another
+ * pages, and `articleSchema`/`serviceSchema` each inlined another
  * copy. Search engines saw ~100 unlinked Person entities instead of one entity
  * referenced ~100 times. Every schema now references these IDs, and the full
  * nodes are emitted exactly once each — the Person + WebSite in the root layout,
@@ -93,12 +93,9 @@ export function personNode() {
       { "@id": ORG_IDS.bookASloth },
       { "@id": ORG_IDS.greyHawks },
     ],
-    // No `aggregateRating` here: this Person node is emitted on EVERY page by the
-    // root layout, but the supporting `Review` nodes (reviewSchema) and visible
-    // ratings render only on /testimonials. A rating with no reviews on the page
-    // is a Google review-snippet policy violation (manual-action risk) and isn't
-    // a supported rich-result type on a bare Person. Ratings belong on a node
-    // that carries real Review children on the same page.
+    // No `aggregateRating` / `review` anywhere on the Person: Google review
+    // snippets reject Person as a rating parent or `itemReviewed` (GSC "Invalid
+    // object type"), and self-testimonials are self-serving reviews anyway.
   };
 }
 

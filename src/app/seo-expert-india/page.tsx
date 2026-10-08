@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { BrandIcon } from "@/components/ui/brand-icon";
 import { site, socials, companies } from "@/lib/site";
-import { buildMetadata, breadcrumbSchema, faqSchema, reviewSchema, seoLandingSchema } from "@/lib/seo";
+import { buildMetadata, breadcrumbSchema, faqSchema, seoLandingSchema } from "@/lib/seo";
 import type { CaseStudy, Testimonial } from "@/lib/data/types";
 import { getPublishedEntities } from "@/lib/content/queries";
 import { seoExpertIndia as c } from "@/lib/data/landing/seo-expert-india";
@@ -58,7 +58,6 @@ export default async function SeoExpertIndiaPage() {
             { name: c.h1, path: c.path },
           ]),
           faqSchema(c.faqs),
-          ...reviewSchema(shownTestimonials),
         ]}
       />
       <PageHero

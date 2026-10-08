@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { site } from "@/lib/site";
 import { personRef, PERSON_ID } from "./seo/entities";
-import type { Service, Product, Testimonial } from "@/lib/data/types";
+import type { Service, Product } from "@/lib/data/types";
 
 type SeoInput = {
   /**
@@ -326,52 +326,10 @@ export function productSchema(product: Product) {
   };
 }
 
-/**
- * Client testimonials as `Review` nodes about the Person, each with a real 5★
- * `reviewRating` (every client rates 5). The Person node carries the matching
- * `AggregateRating` (5.0 / 30+). Real ratings, not fabricated.
- */
-/**
- * AggregateRating for the Person, emitted as a node that merges onto the global
- * `#person` by `@id`. This is the ONE place an aggregate is legitimate: the
- * /testimonials page renders real Review nodes (reviewSchema) whose `itemReviewed`
- * is this same `#person`, so the aggregate is backed by on-page reviews. Every
- * testimonial is a genuine 5★ (see reviewSchema), so the mean is 5.0 — no
- * fabrication. NEVER emit this on a page without the matching Review nodes.
- * Caller must guard on `reviewCount > 0`.
- */
-export function personAggregateRatingNode(reviewCount: number, ratingValue = 5) {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Person",
-    "@id": PERSON_ID,
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue,
-      reviewCount,
-      bestRating: 5,
-      worstRating: 1,
-    },
-  };
-}
-
-export function reviewSchema(testimonials: Testimonial[]) {
-  return testimonials.map((t) => ({
-    "@context": "https://schema.org",
-    "@type": "Review",
-    reviewBody: t.quote,
-    // Every client rates 5 — the honest per-review counterpart to the Person's
-    // AggregateRating (see entities.ts). No fabrication: real ratings are 5.0.
-    reviewRating: { "@type": "Rating", ratingValue: 5, bestRating: 5, worstRating: 1 },
-    author: {
-      "@type": "Person",
-      name: t.name,
-      ...(t.role ? { jobTitle: t.role } : {}),
-      ...(t.company ? { worksFor: { "@type": "Organization", name: t.company } } : {}),
-    },
-    itemReviewed: personRef,
-  }));
-}
+// ponytail: no Review / AggregateRating for testimonials. Google review snippets
+// reject a Person as `itemReviewed` / rating parent (GSC "Invalid object type"),
+// and testimonials about yourself are self-serving reviews — never star-eligible.
+// Testimonials stay visible on-page; they just aren't marked up as reviews.
 
 /**
  * Free web tool as a `SoftwareApplication` — the right type for a browser tool.

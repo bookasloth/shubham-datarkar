@@ -4,15 +4,13 @@ import {
   buildMetadata,
   serviceSchema,
   productSchema,
-  reviewSchema,
   speakingServiceSchema,
   seoLandingSchema,
   itemListPageSchema,
-  personAggregateRatingNode,
 } from "@/lib/seo";
 import { personNode } from "@/lib/seo/entities";
 import { site } from "@/lib/site";
-import type { Service, Product, Testimonial } from "@/lib/data/types";
+import type { Service, Product } from "@/lib/data/types";
 
 const makeService = (over: Partial<Service> = {}): Service => ({
   slug: "seo",
@@ -130,23 +128,6 @@ describe("productSchema", () => {
   });
 });
 
-describe("reviewSchema", () => {
-  const testimonials: Testimonial[] = [
-    { quote: "Rare clarity.", name: "Sri", role: "Founder", company: "Ad Agency", initials: "SR" },
-  ];
-
-  it("maps each testimonial to a 5-star Review of the Person", () => {
-    const [r] = reviewSchema(testimonials);
-    expect(r["@type"]).toBe("Review");
-    expect(r.reviewBody).toBe("Rare clarity.");
-    expect((r.author as { name?: string }).name).toBe("Sri");
-    // The review is about the canonical Person, referenced by @id.
-    expect(r.itemReviewed).toEqual({ "@id": `${site.url}/#person` });
-    // Real 5-star rating (clients rate 5.0; see the Person's AggregateRating).
-    expect((r.reviewRating as { ratingValue?: number }).ratingValue).toBe(5);
-  });
-});
-
 describe("speakingServiceSchema", () => {
   it("is a Speaking & Workshops Service, not an Event", () => {
     const s = speakingServiceSchema();
@@ -199,20 +180,6 @@ describe("seoLandingSchema", () => {
 describe("personNode", () => {
   it("carries NO aggregateRating (it rides every page without on-page reviews — policy risk)", () => {
     expect("aggregateRating" in personNode()).toBe(false);
-  });
-});
-
-describe("personAggregateRatingNode", () => {
-  it("merges an AggregateRating onto the #person by @id, 5.0 mean by default", () => {
-    const n = personAggregateRatingNode(8);
-    expect(n["@id"]).toBe(`${site.url}/#person`);
-    expect(n["@type"]).toBe("Person");
-    expect(n.aggregateRating).toMatchObject({
-      "@type": "AggregateRating",
-      ratingValue: 5,
-      reviewCount: 8,
-      bestRating: 5,
-    });
   });
 });
 
