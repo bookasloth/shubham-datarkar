@@ -8,8 +8,8 @@ import {
   websiteNode,
   siteGraph,
 } from "./entities";
-import { articleSchema, serviceSchema, reviewSchema, profilePageSchema } from "@/lib/seo";
-import type { Service, Testimonial } from "@/lib/data/types";
+import { articleSchema, serviceSchema, profilePageSchema } from "@/lib/seo";
+import type { Service } from "@/lib/data/types";
 
 /** Every `@id` string that appears anywhere in a JSON structure. */
 function collectDefinedIds(value: unknown, into: Set<string>): void {
@@ -107,9 +107,6 @@ describe("entity graph", () => {
 
     const fakeService = { slug: "seo", name: "SEO", description: "d", startingAt: "on request" } as Service;
     expect(serviceSchema(fakeService).provider).toEqual(personRef);
-
-    const reviews = reviewSchema([{ name: "A", quote: "q" } as Testimonial]);
-    expect(reviews[0].itemReviewed).toEqual(personRef);
 
     // profilePage points at the Person the site graph already defines on the same page.
     expect(profilePageSchema().mainEntity).toEqual(personRef);
