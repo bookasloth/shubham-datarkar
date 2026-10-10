@@ -6,6 +6,7 @@ import { buildMetadata, articleSchema, breadcrumbSchema } from "@/lib/seo";
 import { blogCategories, author } from "@/lib/data/posts";
 import { getPublishedPost, getPublishedPosts } from "@/lib/blog/queries";
 import { autolinkBlocks, buildLinkIndex } from "@/lib/blog/autolink";
+import { buildExternalIndex } from "@/lib/blog/external-links";
 import type { Post } from "@/lib/data/types";
 import { Container, Section } from "@/components/layout/container";
 import { Breadcrumb } from "@/components/ui/breadcrumb";
@@ -66,8 +67,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ catego
     )
     .slice(0, 4);
 
-  // Automatic in-body internal links to canonical posts for shared tags.
-  const linkedBody = autolinkBlocks(post.body, buildLinkIndex(post, candidates));
+  // Automatic in-body internal links to canonical posts for shared tags, then
+  // outbound contextual links to the founder's ventures (topical deep links).
+  const internallyLinked = autolinkBlocks(post.body, buildLinkIndex(post, candidates));
+  const linkedBody = autolinkBlocks(internallyLinked, buildExternalIndex(post), 2);
   const affiliateDomains = await getAffiliateDomains();
 
   return (

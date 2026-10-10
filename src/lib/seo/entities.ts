@@ -148,6 +148,7 @@ function orgNodes() {
         "@id": ORG_IDS.timewheel,
         name: "Timewheel Internet",
         legalName: "Timewheel Internet Pvt Ltd",
+        url: "https://timewheel.co.in",
         description:
           "Nagpur's top digital marketing, advertising and SaaS development company and agency, founded and led by Shubham Datarkar (Founder & CEO).",
         founder: personRef,
@@ -179,9 +180,9 @@ function orgNodes() {
         "@type": "Organization",
         "@id": ORG_IDS.bookASloth,
         name: "Book A Sloth",
-        // The only org with a public site today; a real url makes this node
-        // independently resolvable. The others honestly have none — omitted
-        // rather than fabricated.
+        // Each org with a live public site carries its real url so the node is
+        // independently resolvable. The Bogus Company and Grey Hawks have no
+        // public site yet — omitted rather than fabricated.
         url: "https://bookasloth.com",
         description: "Booking and scheduling SaaS. Shubham Datarkar is CMO.",
         employee: personRef,

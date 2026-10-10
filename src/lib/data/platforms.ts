@@ -20,7 +20,7 @@ export const platforms: Platform[] = [
     blurb: "Time-focused digital products",
     description: "Building membership software, booking systems, and event ticketing tools designed for simplicity and operational control.",
     category: "SaaS Studio",
-    url: "https://timewheel.in",
+    url: "https://timewheel.co.in",
     icon: "Clock",
     accent: "linear-gradient(135deg, #FBD0D5 0%, #FBEFC9 35%, #C9EFD2 70%, #CFE0FB 100%)",
   },
