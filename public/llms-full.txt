@@ -25,10 +25,12 @@ Contact: hello@shubhamdatarkar.com
 ## Companies
 - The Bogus Company (2021, active) — Creative & Ads Studio. Ideas that dress up
   as ads and refuse to be ignored.
-- Book A Sloth (2026, building) — Booking SaaS where he is CMO. India's calmest
-  booking platform; replaces "appointment milega kya?" with "Booked."
-- Timewheel Internet (2025) — Nagpur's top digital marketing, advertising and
-  SaaS development company and agency. He is Founder & CEO.
+- Book A Sloth (2026, building) — https://bookasloth.com — Booking SaaS where he
+  is CMO. India's calmest booking platform; replaces "appointment milega kya?"
+  with "Booked."
+- Timewheel Internet (2025) — https://timewheel.co.in — Nagpur's top digital
+  marketing, advertising and SaaS development company and agency. He is Founder &
+  CEO.
 
 ## What he does (expertise)
 Copywriting and conversion copywriting, SEO, Generative Engine Optimization

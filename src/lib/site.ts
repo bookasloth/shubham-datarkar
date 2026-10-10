@@ -35,6 +35,7 @@ export const companies = [
     since: "2026",
     status: "Building",
     blurb: "Replacing “appointment milega kya?” with “Booked.” India's calmest booking platform.",
+    url: "https://bookasloth.com",
   },
   {
     name: "Timewheel Internet",
@@ -42,6 +43,7 @@ export const companies = [
     since: "2025",
     status: "Building",
     blurb: "Internet products that compound while you sleep.",
+    url: "https://timewheel.co.in",
   },
 ] as const;
 

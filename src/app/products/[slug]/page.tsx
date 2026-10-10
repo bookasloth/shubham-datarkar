@@ -206,7 +206,12 @@ export default async function ProductBrandPage({ params }: { params: Promise<{ s
       {/* Related */}
       <Section>
         <Container>
-          <h2 className="mb-8 text-2xl font-bold tracking-tight">More from Timewheel</h2>
+          <h2 className="mb-8 text-2xl font-bold tracking-tight">
+            More from{" "}
+            <a href="https://timewheel.co.in" target="_blank" rel="noopener" className="hover:underline">
+              Timewheel
+            </a>
+          </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {related.map((p) => (
               <ProductCard key={p.slug} product={p} />

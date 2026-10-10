@@ -292,9 +292,16 @@ export default async function HomePage() {
           <div className="mx-auto max-w-3xl text-center">
             <SectionHeading eyebrow="Who's behind this" title="Shubham Datarkar" align="center" />
             <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground">
-              I&rsquo;m Shubham Datarkar — Founder &amp; CEO of Timewheel Internet, Nagpur&rsquo;s top digital
-              marketing, advertising and SaaS development company, and the builder behind The Bogus Company and Book
-              A Sloth. I build the systems I write about, which is the only reason the advice
+              I&rsquo;m Shubham Datarkar — Founder &amp; CEO of{" "}
+              <a href="https://timewheel.co.in" target="_blank" rel="noopener" className="underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground">
+                Timewheel Internet
+              </a>
+              , Nagpur&rsquo;s top digital marketing, advertising and SaaS development company, and the builder behind
+              The Bogus Company and{" "}
+              <a href="https://bookasloth.com" target="_blank" rel="noopener" className="underline underline-offset-4 decoration-foreground/30 hover:decoration-foreground">
+                Book A Sloth
+              </a>
+              . I build the systems I write about, which is the only reason the advice
               survives contact with reality.
             </p>
             <div className="mt-8 flex justify-center">

@@ -158,7 +158,15 @@ export default function AboutPage() {
                     <span className="font-display text-sm font-bold">{co.since}</span>
                     <Badge variant={co.status === "Active" ? "success" : "muted"}>{co.status}</Badge>
                   </div>
-                  <h3 className="mt-4 text-lg font-semibold tracking-tight">{co.name}</h3>
+                  <h3 className="mt-4 text-lg font-semibold tracking-tight">
+                    {"url" in co && co.url ? (
+                      <a href={co.url} target="_blank" rel="noopener" className="hover:underline">
+                        {co.name}
+                      </a>
+                    ) : (
+                      co.name
+                    )}
+                  </h3>
                   <p className="text-sm font-medium text-muted-foreground">{co.kind}</p>
                   <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{co.blurb}</p>
                 </Card>
